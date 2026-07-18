@@ -1,60 +1,51 @@
-# aps v1.1: agent-ready AppState dogfood harness
+# aps 0.2.0: agent-ready AppState dogfood harness
 
 ## Goal
 
-Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo AppState through stable CLI contracts.
+Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo AppState through stable CLI contracts while the project remains pre-public 0.x.
 
 ## Why now
 
-- v1 shipped the baseline CLI and AppState demo surface (PR #1).
-- Agents need predictable JSON, state isolation, and bounded watch behavior before deeper dogfood use.
-- The next milestone should harden existing scope without SyncState, plugins, daemons, or dynamic schemas.
+- 0.1.0 shipped the baseline CLI and AppState demo surface (PR #1).
+- Agents need predictable JSON, state isolation, and bounded watch behavior.
+- Stay on 0.x until the repo is public; do not imply a 1.0 release.
 
 ## Success criteria
 
-- [ ] Core README commands support machine-readable JSON output with `--json`.
-- [ ] JSON output is stable, valid, documented, and covered by tests.
-- [ ] State root is configurable through `APS_HOME`.
-- [ ] `--state-dir` overrides `APS_HOME` for commands that touch state.
-- [ ] State directory behavior is tested for default, environment, and flag-based paths.
-- [ ] `watch` supports bounded execution with `--count` and `--timeout`.
-- [ ] `watch` supports newline-delimited JSON output with `--jsonl`.
-- [ ] Linux CI runs a smoke workflow that builds the CLI and exercises core commands.
-- [ ] One deeper AppState dogfood path uses structured `FileState` (persistence, paths, Codable, watch) without dynamic schemas.
-- [ ] SpecSync artifacts from v1 are archived after merge; active SpecSync content tracks v1.1 work.
-- [ ] README explains JSON mode, state root configuration, watch bounds, and the FileState dogfood flow.
+- [x] `get`, `set`, `dump`, `keys`, and `reset` support `--json`.
+- [x] State root is configurable through `APS_HOME`.
+- [x] `--state-dir` overrides `APS_HOME` for commands that touch state.
+- [x] State directory behavior is tested for default, environment, and flag-based paths.
+- [x] `watch` supports bounded execution with `--count` and `--timeout`.
+- [x] `watch` supports newline-delimited JSON output with `--jsonl`.
+- [x] Linux CI runs a smoke workflow that builds the CLI and exercises core commands.
+- [x] Demo key `profile` uses structured `FileState` with Codable `{name, version}`.
+- [x] SpecSync artifacts from 0.1.x are archived; active SpecSync tracks 0.2.0 work.
+- [x] README documents JSON mode, state root, watch bounds, and `profile`.
+- [x] CLI `--version` reports `0.2.0`.
 
-## Explicit out of scope
+## Explicit out of scope for 0.x
 
 - SyncState, SecureState, and ModelState
 - Plugin APIs, daemon mode, network APIs, or background services
 - Dynamic schema language or user-defined state keys
-- Production-grade persistence guarantees beyond the fixed demo state root
-- Cross-platform CI beyond the Linux smoke workflow
 
-## Workstreams
+## Tickets
 
-### A. CLI contracts and state root
-
-1. Add `--json` for core commands used in README examples
-2. Define stable JSON shapes and error output
-3. Add `APS_HOME` and `--state-dir`
-4. Test default, env, and flag-based state roots
-
-### B. Watch hardening and FileState dogfood
-
-1. Add `watch --count` and `--timeout`
-2. Add `watch --jsonl`
-3. Add structured `FileState` dogfood key/model
-4. Test watch bounds and JSONL event shape
-
-### C. CI, SpecSync, and docs
-
-1. Add Linux CI smoke workflow
-2. Archive merged v1 SpecSync change (this PR starts that)
-3. Keep active SpecSync focused on v1.1 delivery
-4. Update README agent-usage examples
+| ID | Item |
+|----|------|
+| APS-01 | `--json` on core commands |
+| APS-02 | Stable JSON shapes + tests |
+| APS-03 | `APS_HOME` state root |
+| APS-04 | `--state-dir` override |
+| APS-05 | State-dir path tests |
+| APS-06 | `watch --count` / `--timeout` |
+| APS-07 | `watch --jsonl` |
+| APS-08 | Linux CI smoke |
+| APS-09 | Structured `profile` FileState |
+| APS-10 | SpecSync archive hygiene |
+| APS-11 | README agent usage |
 
 ## Definition of done
 
-All success criteria checked; tests and Linux CI smoke pass on main; README examples work from a clean checkout; JSON/JSONL documented; v1 SpecSync archived; no out-of-scope systems introduced.
+All success criteria checked; tests and Linux CI smoke pass; README examples work from a clean checkout; no out-of-scope 0.x systems introduced.

@@ -1,9 +1,10 @@
 ---
 module: aps-cli
-version: 8
+version: 9
 status: active
 files:
   - Sources/aps/Aps.swift
+  - Sources/aps/CLIOutput.swift
   - Sources/aps/DemoKey.swift
 db_tables: []
 depends_on:
@@ -22,24 +23,29 @@ agents can get, set, watch, dump, list, and reset typed application state.
 
 | Export | Description |
 |--------|-------------|
-| `DemoKey` | Fixed schema enum (`CaseIterable`, `ExpressibleByArgument`, `Sendable`). |
+| `DemoKey` | Fixed schema enum including `profile`. |
+| `ProfileDocument` | Codable `{name, version}` FileState document. |
+| `name` | ProfileDocument display name field. |
+| `version` | ProfileDocument integer version field. |
+| `init` | ProfileDocument memberwise initializer. |
 | `APSError` | Typed CLI/domain errors. |
 | `counter` | Int key stored in AppState `State`. |
 | `message` | String key stored in AppState `State`. |
 | `flag` | Bool key stored in AppState `StoredState`. |
 | `note` | String key stored in AppState `FileState`. |
+| `profile` | ProfileDocument key stored in AppState `FileState`. |
 | `unknownKey` | Unknown demo key token. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
 | `persistenceFailed` | Disk-backed key did not persist after write. |
 | `storage` | Human storage kind (`State` / `StoredState` / `FileState`). |
-| `valueType` | Human value type (`Int` / `String` / `Bool`). |
+| `valueType` | Human value type (`Int` / `String` / `Bool` / `ProfileDocument`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
 | `detail` | One-line description for `keys`. |
 | `description` | Actionable error text for humans and ValidationError bridging. |
 
-Command tree (informational): `Aps` is the `@main` root (`ParsableCommand`) with get, set, watch, dump, keys, and reset / reset --all. CLI `boot()` calls `APSPaths.configure()`.
+Command tree (informational): `Aps` is the `@main` root with get, set, watch, dump, keys, and reset. Shared `StateOptions` expose `--json` and `--state-dir`.
 
 ## Invariants
 
@@ -103,3 +109,4 @@ Then the watcher prints `changed` within one poll interval.
 | 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
+| 2026-07-18 | CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate: Ship aps 0.2.0 agent-ready JSON state-dir watch and profile FileState |

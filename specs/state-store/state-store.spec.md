@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 8
+version: 9
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -23,24 +23,24 @@ non-UI use.
 
 | Export | Description |
 |--------|-------------|
-| `StateStore` | MainActor AppState facade used by the CLI. |
-| `APSClock` | Clock protocol for dump timestamps. |
-| `SystemAPSClock` | Production `APSClock` backed by `Date()`. |
-| `JSONCoding` | Shared pretty JSON helpers. |
+| `StateStore` | MainActor facade over demo AppState keys. |
 | `init` | Loads clock/jsonCoding dependencies without forcing `~/.aps`. |
-| `get` | Return the string form of a demo key. |
-| `set` | Parse and write; throw `APSError.invalidValue` or `persistenceFailed` on failure. |
-| `reset` | Restore one key to its AppState initial value. |
-| `resetAll` | Restore every demo key. |
-| `dump` | Pretty JSON snapshot using `@AppDependency` clock + jsonCoding. |
-| `watchBlocking` | Observation + RunLoop poll loop; `note` polls via direct disk read. |
-| `parseBool` | Accept true/false/1/0/yes/no/on/off (case-insensitive). |
-| `now` | Current `Date` from an `APSClock`. |
-| `encodePretty` | Encode an `Encodable` value as pretty UTF-8 JSON text. |
-| `decode` | Decode a `Decodable` value from UTF-8 JSON text. |
-| `readNoteFromDisk` | Read `note.json` without touching AppState's FileState cache. |
-
-Application demo surface (informational): `Application.counter` / `message` / `flag` / `note` / `clock` / `jsonCoding`. `APSPaths.configure()` is invoked from CLI `boot()`, not `StateStore.init`.
+| `get` | Returns the current string rendering for a demo key. |
+| `set` | Parses and writes a demo key value. |
+| `reset` | Restores one demo key to its initial value. |
+| `resetAll` | Restores every demo key. |
+| `dump` | Pretty JSON snapshot with typed values. |
+| `watchBlocking` | Observation + polling watch loop. |
+| `profileDocument` | Typed profile FileState accessor. |
+| `readNoteFromDisk` | Direct `note.json` read bypassing cache. |
+| `readProfileFromDisk` | Direct `profile.json` read bypassing cache. |
+| `parseBool` | Bool token parser for flag values. |
+| `APSClock` | Injected clock dependency protocol. |
+| `now` | APSClock current instant. |
+| `SystemAPSClock` | Date-backed clock. |
+| `JSONCoding` | Shared encode/decode helpers. |
+| `encodePretty` | Pretty JSON encode helper. |
+| `decode` | JSON decode helper. |
 
 ## Invariants
 
@@ -100,3 +100,4 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
+| 2026-07-18 | CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate: Ship aps 0.2.0 agent-ready JSON state-dir watch and profile FileState |

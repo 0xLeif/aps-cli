@@ -30,6 +30,16 @@ extension Application {
         )
     }
 
+    /// Structured profile document on disk via `FileState`.
+    @MainActor
+    var profile: FileState<ProfileDocument> {
+        fileState(
+            initial: ProfileDocument(),
+            filename: "profile.json",
+            isBase64Encoded: false
+        )
+    }
+
     /// Wall-clock used when stamping watch/dump output.
     var clock: Dependency<any APSClock> {
         dependency(SystemAPSClock())
@@ -43,17 +53,33 @@ extension Application {
 
 /// Stable paths for CLI-persisted `FileState` data.
 ///
+/// Resolution order for `configure(stateDir:)`:
+/// 1. Explicit `--state-dir`
+/// 2. `APS_HOME` environment variable
+/// 3. `~/.aps`
+///
 /// Called from CLI `boot()` only. Tests inject their own
 /// `FileManager.defaultFileStatePath` before constructing `StateStore`.
 enum APSPaths {
     @MainActor
-    static var fileStateDirectory: String {
+    static var defaultFileStateDirectory: String {
         let home = FileManager.default.homeDirectoryForCurrentUser
         return home.appendingPathComponent(".aps", isDirectory: true).path
     }
 
     @MainActor
-    static func configure() {
-        FileManager.defaultFileStatePath = fileStateDirectory
+    static func resolve(stateDir: String?) -> String {
+        if let stateDir, !stateDir.isEmpty {
+            return (stateDir as NSString).expandingTildeInPath
+        }
+        if let home = ProcessInfo.processInfo.environment["APS_HOME"], !home.isEmpty {
+            return (home as NSString).expandingTildeInPath
+        }
+        return defaultFileStateDirectory
+    }
+
+    @MainActor
+    static func configure(stateDir: String? = nil) {
+        FileManager.defaultFileStatePath = resolve(stateDir: stateDir)
     }
 }

@@ -8,15 +8,18 @@ struct Aps: ParsableCommand {
         commandName: "aps",
         abstract: "A tiny CLI that dogfoods AppState outside SwiftUI.",
         discussion: """
-        Demo keys (fixed schema for v1):
-          counter  Int     State        (in-memory)
-          message  String  State        (in-memory)
-          flag     Bool    StoredState  (UserDefaults)
-          note     String  FileState    (~/.aps/note.json)
+        Demo keys (fixed schema for 0.x):
+          counter  Int              State        (in-memory)
+          message  String           State        (in-memory)
+          flag     Bool             StoredState  (UserDefaults)
+          note     String           FileState    (~/.aps/note.json)
+          profile  ProfileDocument  FileState    (~/.aps/profile.json)
+
+        State root: --state-dir > APS_HOME > ~/.aps
 
         Built on https://github.com/0xLeif/AppState
         """,
-        version: "0.1.0",
+        version: "0.2.0",
         subcommands: [
             Get.self,
             Set.self,
@@ -35,13 +38,27 @@ extension Aps {
             abstract: "Print the current value for a demo key."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note")
+        @Argument(help: "Demo key: counter | message | flag | note | profile")
         var key: DemoKey
+
+        @OptionGroup
+        var options: StateOptions
 
         func run() throws {
             try onMainThread {
-                boot()
-                print(StateStore().get(key))
+                boot(stateDir: options.stateDir)
+                let store = StateStore()
+                if options.json {
+                    let payload = CLIOutput.KeyValuePayload(
+                        key: key.rawValue,
+                        type: key.valueType,
+                        storage: key.storage,
+                        value: try CLIOutput.typedValue(for: key, store: store)
+                    )
+                    print(try CLIOutput.encodePretty(payload))
+                } else {
+                    print(store.get(key))
+                }
             }
         }
     }
@@ -51,22 +68,35 @@ extension Aps {
             abstract: "Set a demo key to a value."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note")
+        @Argument(help: "Demo key: counter | message | flag | note | profile")
         var key: DemoKey
 
-        @Argument(help: "New value (Bool: true/false/1/0; Int for counter)")
+        @Argument(help: "New value (Bool: true/false/1/0; Int for counter; JSON for profile)")
         var value: String
+
+        @OptionGroup
+        var options: StateOptions
 
         func run() throws {
             try onMainThread {
-                boot()
+                boot(stateDir: options.stateDir)
                 let store = StateStore()
                 do {
                     try store.set(key, value: value)
                 } catch let error as APSError {
                     throw ValidationError(error.description)
                 }
-                print(store.get(key))
+                if options.json {
+                    let payload = CLIOutput.KeyValuePayload(
+                        key: key.rawValue,
+                        type: key.valueType,
+                        storage: key.storage,
+                        value: try CLIOutput.typedValue(for: key, store: store)
+                    )
+                    print(try CLIOutput.encodePretty(payload))
+                } else {
+                    print(store.get(key))
+                }
             }
         }
     }
@@ -76,20 +106,55 @@ extension Aps {
             abstract: "Print the value whenever it changes (Observation + polling)."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note")
+        @Argument(help: "Demo key: counter | message | flag | note | profile")
         var key: DemoKey
 
         @Option(name: .long, help: "Poll interval in milliseconds (fallback for disk-backed keys).")
         var interval: UInt64 = 250
 
+        @Option(name: .long, help: "Stop after printing this many values (includes the initial value).")
+        var count: Int?
+
+        @Option(name: .long, help: "Stop after this many seconds.")
+        var timeout: Double?
+
+        @Flag(name: .long, help: "Emit one JSON object per line.")
+        var jsonl: Bool = false
+
+        @Option(name: .long, help: "Override state directory (takes precedence over APS_HOME).")
+        var stateDir: String?
+
         func run() throws {
             try onMainThread {
-                boot()
+                boot(stateDir: stateDir)
                 let store = StateStore()
-                store.watchBlocking(key, pollInterval: TimeInterval(interval) / 1000.0) { value in
-                    // Write via FileHandle so output appears immediately when stdout is not a TTY.
-                    if let data = (value + "\n").data(using: .utf8) {
-                        FileHandle.standardOutput.write(data)
+                let deadline = timeout.map { Date().addingTimeInterval($0) }
+                var emitted = 0
+
+                store.watchBlocking(
+                    key,
+                    pollInterval: TimeInterval(interval) / 1000.0,
+                    shouldContinue: {
+                        if let count, emitted >= count { return false }
+                        if let deadline, Date() >= deadline { return false }
+                        return true
+                    }
+                ) { value in
+                    emitted += 1
+                    if jsonl {
+                        let event = CLIOutput.WatchEvent(
+                            key: key.rawValue,
+                            type: key.valueType,
+                            storage: key.storage,
+                            value: (try? CLIOutput.typedValue(for: key, store: store))
+                                ?? .string(value),
+                            timestamp: Date()
+                        )
+                        if let line = try? CLIOutput.encodeLine(event) {
+                            CLIOutput.writeLine(line)
+                        }
+                    } else {
+                        CLIOutput.writeLine(value)
                     }
                 }
             }
@@ -101,9 +166,14 @@ extension Aps {
             abstract: "Print all known demo keys as pretty JSON."
         )
 
+        @OptionGroup
+        var options: StateOptions
+
         func run() throws {
             try onMainThread {
-                boot()
+                boot(stateDir: options.stateDir)
+                // dump is always JSON; --json is accepted for agent symmetry.
+                _ = options.json
                 print(try StateStore().dump())
             }
         }
@@ -114,10 +184,27 @@ extension Aps {
             abstract: "List the fixed demo keys and how they are stored."
         )
 
+        @Flag(name: .long, help: "Emit machine-readable JSON.")
+        var json: Bool = false
+
         func run() throws {
-            print("KEY\tTYPE\tSTORAGE\tDESCRIPTION")
-            for key in DemoKey.allCases {
-                print("\(key.helpSummary)\t\(key.detail)")
+            if json {
+                let payload = CLIOutput.KeysPayload(
+                    keys: DemoKey.allCases.map {
+                        CLIOutput.KeyInfo(
+                            key: $0.rawValue,
+                            type: $0.valueType,
+                            storage: $0.storage,
+                            detail: $0.detail
+                        )
+                    }
+                )
+                print(try CLIOutput.encodePretty(payload))
+            } else {
+                print("KEY\tTYPE\tSTORAGE\tDESCRIPTION")
+                for key in DemoKey.allCases {
+                    print("\(key.helpSummary)\t\(key.detail)")
+                }
             }
         }
     }
@@ -133,6 +220,9 @@ extension Aps {
         @Flag(name: .long, help: "Reset every demo key.")
         var all: Bool = false
 
+        @OptionGroup
+        var options: StateOptions
+
         func run() throws {
             guard all || key != nil else {
                 throw ValidationError("Pass a key or --all. Example: aps reset counter")
@@ -142,14 +232,28 @@ extension Aps {
             }
 
             try onMainThread {
-                boot()
+                boot(stateDir: options.stateDir)
                 let store = StateStore()
                 if all {
                     store.resetAll()
-                    print("reset all keys")
+                    if options.json {
+                        let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
+                        print(try CLIOutput.encodePretty(payload))
+                    } else {
+                        print("reset all keys")
+                    }
                 } else if let key {
                     store.reset(key)
-                    print(store.get(key))
+                    if options.json {
+                        let payload = CLIOutput.ResetPayload(
+                            reset: "key",
+                            key: key.rawValue,
+                            value: try CLIOutput.typedValue(for: key, store: store)
+                        )
+                        print(try CLIOutput.encodePretty(payload))
+                    } else {
+                        print(store.get(key))
+                    }
                 }
             }
         }
@@ -157,9 +261,9 @@ extension Aps {
 }
 
 @MainActor
-private func boot() {
+private func boot(stateDir: String? = nil) {
     Application.logging(isEnabled: false)
-    APSPaths.configure()
+    APSPaths.configure(stateDir: stateDir)
 }
 
 /// Synchronous `@main` starts on the real main thread; treat that as MainActor for AppState.

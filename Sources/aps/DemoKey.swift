@@ -7,12 +7,13 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
     case message
     case flag
     case note
+    case profile
 
     public var storage: String {
         switch self {
         case .counter, .message: return "State"
         case .flag: return "StoredState"
-        case .note: return "FileState"
+        case .note, .profile: return "FileState"
         }
     }
 
@@ -21,6 +22,7 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
         case .counter: return "Int"
         case .message, .note: return "String"
         case .flag: return "Bool"
+        case .profile: return "ProfileDocument"
         }
     }
 
@@ -39,7 +41,20 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
             return "Bool via StoredState / UserDefaults"
         case .note:
             return "String via FileState (~/.aps/note.json)"
+        case .profile:
+            return "Codable {name,version} via FileState (~/.aps/profile.json)"
         }
+    }
+}
+
+/// Structured FileState document dogfooded by the `profile` key.
+public struct ProfileDocument: Codable, Equatable, Sendable {
+    public var name: String
+    public var version: Int
+
+    public init(name: String = "", version: Int = 0) {
+        self.name = name
+        self.version = version
     }
 }
 

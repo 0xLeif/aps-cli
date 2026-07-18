@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 3,
-  "id": "CHG-0003-archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal",
+  "sequence": 4,
+  "id": "CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate",
   "acknowledged_collisions": []
 }

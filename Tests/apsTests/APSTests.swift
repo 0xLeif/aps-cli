@@ -21,6 +21,7 @@ final class APSTests: XCTestCase {
             Application.reset(\.message)
             Application.reset(storedState: \.flag)
             Application.reset(fileState: \.note)
+            Application.reset(fileState: \.profile)
         }
     }
 
@@ -37,9 +38,12 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(DemoKey.counter.storage, "State")
         XCTAssertEqual(DemoKey.flag.storage, "StoredState")
         XCTAssertEqual(DemoKey.note.storage, "FileState")
+        XCTAssertEqual(DemoKey.profile.storage, "FileState")
         XCTAssertEqual(DemoKey.counter.valueType, "Int")
-        XCTAssertEqual(DemoKey.allCases.count, 4)
+        XCTAssertEqual(DemoKey.profile.valueType, "ProfileDocument")
+        XCTAssertEqual(DemoKey.allCases.count, 5)
         XCTAssertTrue(DemoKey.note.detail.contains("FileState"))
+        XCTAssertTrue(DemoKey.profile.detail.contains("profile.json"))
     }
 
     @MainActor
@@ -71,6 +75,30 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    func testProfileStructuredFileStateRoundTrip() async throws {
+        let store = StateStore()
+        try store.set(.profile, value: #"{"name":"agent","version":3}"#)
+        let document = try store.profileDocument()
+        XCTAssertEqual(document, ProfileDocument(name: "agent", version: 3))
+        XCTAssertTrue(store.get(.profile).contains("\"name\""))
+        XCTAssertTrue(store.get(.profile).contains("agent"))
+        XCTAssertEqual(try StateStore.readProfileFromDisk(), document)
+    }
+
+    @MainActor
+    func testInvalidProfileJSON() async {
+        let store = StateStore()
+        do {
+            try store.set(.profile, value: "not-json")
+            XCTFail("Expected invalid value error")
+        } catch let error as APSError {
+            XCTAssertEqual(error, .invalidValue(key: .profile, value: "not-json"))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    @MainActor
     func testInvalidCounterValue() async {
         let store = StateStore()
         do {
@@ -88,11 +116,13 @@ final class APSTests: XCTestCase {
         let store = StateStore()
         try store.set(.counter, value: "3")
         try store.set(.message, value: "hi")
+        try store.set(.profile, value: #"{"name":"x","version":1}"#)
 
         let json = try store.dump()
         XCTAssertTrue(json.contains("\"key\" : \"counter\""))
-        XCTAssertTrue(json.contains("\"value\" : \"3\""))
+        XCTAssertTrue(json.contains("\"value\" : 3"))
         XCTAssertTrue(json.contains("\"key\" : \"message\""))
+        XCTAssertTrue(json.contains("\"key\" : \"profile\""))
         XCTAssertTrue(json.contains("\"storage\" : \"FileState\""))
         XCTAssertTrue(json.contains("timestamp"))
     }
@@ -105,22 +135,67 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    func testCLIOutputTypedValues() async throws {
+        let store = StateStore()
+        try store.set(.counter, value: "9")
+        try store.set(.flag, value: "true")
+        try store.set(.profile, value: #"{"name":"n","version":2}"#)
+
+        XCTAssertEqual(try CLIOutput.typedValue(for: .counter, store: store), .int(9))
+        XCTAssertEqual(try CLIOutput.typedValue(for: .flag, store: store), .bool(true))
+        XCTAssertEqual(
+            try CLIOutput.typedValue(for: .profile, store: store),
+            .object(ProfileDocument(name: "n", version: 2))
+        )
+
+        let payload = CLIOutput.KeyValuePayload(
+            key: "counter",
+            type: "Int",
+            storage: "State",
+            value: .int(9)
+        )
+        let encoded = try CLIOutput.encodePretty(payload)
+        XCTAssertTrue(encoded.contains("\"value\" : 9"))
+    }
+
+    @MainActor
+    func testAPSPathsResolveOrder() async {
+        let previous = ProcessInfo.processInfo.environment["APS_HOME"]
+        defer {
+            if let previous {
+                setenv("APS_HOME", previous, 1)
+            } else {
+                unsetenv("APS_HOME")
+            }
+        }
+
+        setenv("APS_HOME", "/tmp/aps-from-env", 1)
+        XCTAssertEqual(APSPaths.resolve(stateDir: nil), "/tmp/aps-from-env")
+        XCTAssertEqual(APSPaths.resolve(stateDir: "/tmp/aps-flag"), "/tmp/aps-flag")
+        unsetenv("APS_HOME")
+        XCTAssertTrue(APSPaths.resolve(stateDir: nil).hasSuffix("/.aps"))
+    }
+
+    @MainActor
     func testResetRestoresInitialValues() async throws {
         let store = StateStore()
         try store.set(.counter, value: "9")
         try store.set(.message, value: "x")
         try store.set(.flag, value: "true")
         try store.set(.note, value: "n")
+        try store.set(.profile, value: #"{"name":"z","version":9}"#)
 
         store.reset(.counter)
         store.reset(.message)
         store.reset(.flag)
         store.reset(.note)
+        store.reset(.profile)
 
         XCTAssertEqual(store.get(.counter), "0")
         XCTAssertEqual(store.get(.message), "")
         XCTAssertEqual(store.get(.flag), "false")
         XCTAssertEqual(store.get(.note), "")
+        XCTAssertEqual(try store.profileDocument(), ProfileDocument())
     }
 
     @MainActor
@@ -128,9 +203,11 @@ final class APSTests: XCTestCase {
         let store = StateStore()
         try store.set(.counter, value: "5")
         try store.set(.note, value: "keep?")
+        try store.set(.profile, value: #"{"name":"p","version":1}"#)
         store.resetAll()
         XCTAssertEqual(store.get(.counter), "0")
         XCTAssertEqual(store.get(.note), "")
+        XCTAssertEqual(try store.profileDocument(), ProfileDocument())
     }
 
     @MainActor
@@ -196,6 +273,24 @@ final class APSTests: XCTestCase {
         }
 
         XCTAssertEqual(seen, ["before", "changed"])
+    }
+
+    @MainActor
+    func testWatchCountBoundStopsLoop() async throws {
+        let store = StateStore()
+        try store.set(.counter, value: "1")
+        var seen: [String] = []
+        let limit = 1
+        store.watchBlocking(
+            .counter,
+            pollInterval: 0.05,
+            shouldContinue: { seen.count < limit }
+        ) { value in
+            seen.append(value)
+            try? store.set(.counter, value: "99")
+        }
+        XCTAssertEqual(seen.count, 1)
+        XCTAssertEqual(seen.first, "1")
     }
 
     @MainActor

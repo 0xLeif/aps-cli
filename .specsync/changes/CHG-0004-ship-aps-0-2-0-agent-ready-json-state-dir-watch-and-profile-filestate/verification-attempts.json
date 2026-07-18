@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "attempts": [
+    {
+      "timestamp": 1784399250,
+      "commit": "6f18ccb3015b4fc59021e690fefbf5947ade5c73",
+      "contract_digest": "d840c0a9a3d4ba4a726d86aa61e24df281d35c6ade72b3bcfd44a324ea7c4cd9",
+      "workspace_digest": "32bcf044035714dacf90191f9c4d193c052cf586e94c67a44fcaa86e0a1f12e1",
+      "passed": false,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-001",
+        "REQ-aps-cli-010",
+        "REQ-aps-cli-011",
+        "REQ-aps-cli-012",
+        "REQ-aps-cli-013",
+        "REQ-state-store-001",
+        "REQ-state-store-010",
+        "REQ-state-store-011"
+      ]
+    },
+    {
+      "timestamp": 1784399267,
+      "commit": "6f18ccb3015b4fc59021e690fefbf5947ade5c73",
+      "contract_digest": "73c000607b3050c54981b4c29532280dd08bf00b7a15c8ec1801e045fa5496c9",
+      "workspace_digest": "32bcf044035714dacf90191f9c4d193c052cf586e94c67a44fcaa86e0a1f12e1",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-001",
+        "REQ-aps-cli-010",
+        "REQ-aps-cli-011",
+        "REQ-aps-cli-012",
+        "REQ-aps-cli-013",
+        "REQ-state-store-001",
+        "REQ-state-store-010",
+        "REQ-state-store-011"
+      ]
+    },
+    {
+      "timestamp": 1784399287,
+      "commit": "6f18ccb3015b4fc59021e690fefbf5947ade5c73",
+      "contract_digest": "73c000607b3050c54981b4c29532280dd08bf00b7a15c8ec1801e045fa5496c9",
+      "workspace_digest": "0291696ef9ef22a673050ac1b5c94ad68d27cd72b09599597c2a37ca200028b8",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-001",
+        "REQ-aps-cli-010",
+        "REQ-aps-cli-011",
+        "REQ-aps-cli-012",
+        "REQ-aps-cli-013",
+        "REQ-state-store-001",
+        "REQ-state-store-010",
+        "REQ-state-store-011"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784399234,
+      "digest": "8a5448bbf234d6a2b036e6c717ada2986e90830a74cd8e2a743b6c548584d6f0",
+      "note": "Approved 0.2.0 agent-ready CLI contracts: JSON, state root, watch bounds, profile FileState."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784399246,
+      "digest": "d840c0a9a3d4ba4a726d86aa61e24df281d35c6ade72b3bcfd44a324ea7c4cd9",
+      "note": "Re-approve after Public API export inventory matches ProfileDocument and dependency helpers."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784399263,
+      "digest": "73c000607b3050c54981b4c29532280dd08bf00b7a15c8ec1801e045fa5496c9",
+      "note": "Re-approve after requirement evidence mapping in testing.md."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784399283,
+      "digest": "73c000607b3050c54981b4c29532280dd08bf00b7a15c8ec1801e045fa5496c9",
+      "note": "Re-approve after assigning CLIOutput.swift to aps-cli module ownership."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784399288,
+      "digest": "fdb8b3acb85e74cab0e8cb03119529d60a81ee3386e88f9eb9dafd75eee479c3",
+      "note": "Accepted aps 0.2.0 agent-ready surface with CLIOutput ownership."
+    }
+  ],
+  "reopenings": []
+}

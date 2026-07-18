@@ -1,0 +1,40 @@
+name: Linux smoke
+
+# GitHub-hosted Linux build + smoke for the 0.x agent-ready milestone.
+# Complements the private-repo macOS self-hosted CI/Trust workflows.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: linux-smoke-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  linux-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+
+      - name: Swift version
+        run: swift --version
+
+      - name: Build
+        run: swift build -c debug
+
+      - name: Smoke CLI
+        env:
+          APS_BIN: .build/debug/aps
+        run: ./Scripts/smoke.sh
