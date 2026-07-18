@@ -1,6 +1,7 @@
 name: Trust
 
 # Private repo: CorvidLabs trust gate on macOS self-hosted runners.
+# SpecSync acceptance evidence rebound with the Trust-pinned 5.0.1 CLI.
 # Revisit before making the repository public: fork PRs must not run on
 # self-hosted hosts.
 

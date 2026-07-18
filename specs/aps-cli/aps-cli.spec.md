@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 3
+version: 4
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -95,4 +95,5 @@ Then the watcher prints `changed` within one poll interval.
 
 - 1: Initial CLI contract for get/set/watch/dump/keys/reset over the fixed demo schema.
 - 2: Explicit export inventory for SpecSync active-contract checks (`DemoKey`, `APSError`).
+| 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
 | 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |

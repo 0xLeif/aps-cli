@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 3
+version: 4
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -93,4 +93,5 @@ Then keys include message with value "hi" and a timestamp field exists.
 
 - 1: Initial StateStore / Application demo-state contract for the aps CLI.
 - 2: Explicit export inventory for SpecSync active-contract checks.
+| 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
 | 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |

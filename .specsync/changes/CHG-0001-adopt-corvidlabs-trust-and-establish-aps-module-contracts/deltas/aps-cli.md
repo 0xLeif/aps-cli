@@ -1,6 +1,6 @@
 # APS CLI contract introduction
 
-## ADDED
+## MODIFIED
 
 ### REQUIREMENT REQ-aps-cli-005
 
@@ -9,8 +9,6 @@
 Acceptance Criteria
 - Each case is reachable from CLI or StateStore coding paths.
 - `description` is suitable for ValidationError bridging.
-
-## MODIFIED
 
 ### REQUIREMENT REQ-aps-cli-001
 
