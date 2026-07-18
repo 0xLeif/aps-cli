@@ -1,6 +1,6 @@
 ---
 id: CHG-0016-loud-torn-filestate-reads-and-document-multi-writer-semantics-for-issue-38
-state: implementing
+state: accepted
 type: feature
 base_commit: c0c5b4bfb7c712506f9795c80889f03094596629
 ---
