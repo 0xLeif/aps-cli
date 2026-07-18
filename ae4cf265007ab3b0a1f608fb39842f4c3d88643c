@@ -1,0 +1,1 @@
+{"commit":"ae4cf265007ab3b0a1f608fb39842f4c3d88643c","confidence":0.69627375,"humanApproved":false,"note":"Trust workflow range fix; CI build-test-smoke already green","reviewer":"agent:cursor","testsPassed":true,"timestamp":1784394719,"verdict":"proceed"}
