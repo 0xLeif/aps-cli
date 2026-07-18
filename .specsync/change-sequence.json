@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 5,
-  "id": "CHG-0005-document-agent-ticket-claim-labels-for-cursor-and-kimi-fanout",
+  "sequence": 6,
+  "id": "CHG-0006-reconcile-agent-ticket-claiming-rules-and-add-worktree-guidance-in-agents-md",
   "acknowledged_collisions": []
 }
