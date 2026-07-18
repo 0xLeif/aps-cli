@@ -11,6 +11,9 @@ aps get <key>
 aps set <key> <value>
 aps watch <key>          # print on change (Observation + polling)
 aps dump                 # print all known state as JSON
+aps keys                 # list demo keys / storage kinds
+aps reset <key>          # restore one key to its initial value
+aps reset --all
 aps --help
 ```
 
@@ -30,7 +33,7 @@ Dynamic / user-declared keys are intentionally out of scope for v1.
 `aps` injects real services with `@AppDependency` / `Application.dependency`:
 
 - **`clock`** — wall clock for dump timestamps
-- **`jsonCoding`** — shared `JSONEncoder` helpers for `aps dump`
+- **`jsonCoding`** — shared JSON encoder helpers for `aps dump`
 
 ## Requirements
 
@@ -56,6 +59,9 @@ swift build -c release
 ### Examples
 
 ```bash
+# Discover the fixed schema
+swift run aps keys
+
 # In-memory State
 swift run aps set counter 3
 swift run aps get counter
@@ -71,9 +77,13 @@ swift run aps dump
 
 # Watch for changes (Ctrl+C to stop)
 swift run aps watch note --interval 200
+
+# Reset
+swift run aps reset counter
+swift run aps reset --all
 ```
 
-`watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface.
+`watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface — including updates written by another `aps` process.
 
 ## Tests
 
@@ -81,12 +91,19 @@ swift run aps watch note --interval 200
 swift test
 ```
 
+CI builds and smokes the CLI on Linux and macOS (see `.github/workflows`). Locally:
+
+```bash
+./Scripts/smoke.sh
+```
+
 ## Layout
 
 ```text
 Package.swift
 Sources/aps/          # executable + AppState demo surface
-Tests/apsTests/       # parsing + state round-trips
+Tests/apsTests/       # parsing, round-trips, watch, reset
+.github/workflows/    # Linux + macOS CI
 ```
 
 ## Non-goals (v1)

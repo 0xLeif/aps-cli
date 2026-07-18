@@ -17,7 +17,14 @@ struct Aps: ParsableCommand {
         Built on https://github.com/0xLeif/AppState
         """,
         version: "0.1.0",
-        subcommands: [Get.self, Set.self, Watch.self, Dump.self],
+        subcommands: [
+            Get.self,
+            Set.self,
+            Watch.self,
+            Dump.self,
+            Keys.self,
+            Reset.self
+        ],
         defaultSubcommand: nil
     )
 }
@@ -33,9 +40,8 @@ extension Aps {
 
         func run() throws {
             try onMainThread {
-                Application.logging(isEnabled: false)
-                let store = StateStore()
-                print(store.get(key))
+                boot()
+                print(StateStore().get(key))
             }
         }
     }
@@ -53,9 +59,13 @@ extension Aps {
 
         func run() throws {
             try onMainThread {
-                Application.logging(isEnabled: false)
+                boot()
                 let store = StateStore()
-                try store.set(key, value: value)
+                do {
+                    try store.set(key, value: value)
+                } catch let error as APSError {
+                    throw ValidationError(error.description)
+                }
                 print(store.get(key))
             }
         }
@@ -74,7 +84,7 @@ extension Aps {
 
         func run() throws {
             try onMainThread {
-                Application.logging(isEnabled: false)
+                boot()
                 let store = StateStore()
                 store.watchBlocking(key, pollInterval: TimeInterval(interval) / 1000.0) { value in
                     // Write via FileHandle so output appears immediately when stdout is not a TTY.
@@ -93,12 +103,62 @@ extension Aps {
 
         func run() throws {
             try onMainThread {
-                Application.logging(isEnabled: false)
-                let store = StateStore()
-                print(try store.dump())
+                boot()
+                print(try StateStore().dump())
             }
         }
     }
+
+    struct Keys: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "List the fixed demo keys and how they are stored."
+        )
+
+        func run() throws {
+            print("KEY\tTYPE\tSTORAGE\tDESCRIPTION")
+            for key in DemoKey.allCases {
+                print("\(key.helpSummary)\t\(key.detail)")
+            }
+        }
+    }
+
+    struct Reset: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Reset one demo key (or all keys) back to its initial value."
+        )
+
+        @Argument(help: "Demo key to reset. Omit with --all.")
+        var key: DemoKey?
+
+        @Flag(name: .long, help: "Reset every demo key.")
+        var all: Bool = false
+
+        func run() throws {
+            guard all || key != nil else {
+                throw ValidationError("Pass a key or --all. Example: aps reset counter")
+            }
+            if all && key != nil {
+                throw ValidationError("Pass either a key or --all, not both.")
+            }
+
+            try onMainThread {
+                boot()
+                let store = StateStore()
+                if all {
+                    store.resetAll()
+                    print("reset all keys")
+                } else if let key {
+                    store.reset(key)
+                    print(store.get(key))
+                }
+            }
+        }
+    }
+}
+
+@MainActor
+private func boot() {
+    Application.logging(isEnabled: false)
 }
 
 /// Synchronous `@main` starts on the real main thread; treat that as MainActor for AppState.

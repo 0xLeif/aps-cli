@@ -1,0 +1,23 @@
+name: macOS
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Build
+        run: swift build -c release
+      - name: Test
+        run: swift test
+      - name: Smoke CLI
+        env:
+          APS_BIN: .build/release/aps
+        run: ./Scripts/smoke.sh

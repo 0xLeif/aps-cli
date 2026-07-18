@@ -38,6 +38,8 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(DemoKey.flag.storage, "StoredState")
         XCTAssertEqual(DemoKey.note.storage, "FileState")
         XCTAssertEqual(DemoKey.counter.valueType, "Int")
+        XCTAssertEqual(DemoKey.allCases.count, 4)
+        XCTAssertTrue(DemoKey.note.detail.contains("FileState"))
     }
 
     @MainActor
@@ -100,5 +102,81 @@ final class APSTests: XCTestCase {
         let coding = Application.dependency(\.jsonCoding)
         let encoded = try coding.encodePretty(["ok": true])
         XCTAssertTrue(encoded.contains("true"))
+    }
+
+    @MainActor
+    func testResetRestoresInitialValues() async throws {
+        let store = StateStore()
+        try store.set(.counter, value: "9")
+        try store.set(.message, value: "x")
+        try store.set(.flag, value: "true")
+        try store.set(.note, value: "n")
+
+        store.reset(.counter)
+        store.reset(.message)
+        store.reset(.flag)
+        store.reset(.note)
+
+        XCTAssertEqual(store.get(.counter), "0")
+        XCTAssertEqual(store.get(.message), "")
+        XCTAssertEqual(store.get(.flag), "false")
+        XCTAssertEqual(store.get(.note), "")
+    }
+
+    @MainActor
+    func testResetAll() async throws {
+        let store = StateStore()
+        try store.set(.counter, value: "5")
+        try store.set(.note, value: "keep?")
+        store.resetAll()
+        XCTAssertEqual(store.get(.counter), "0")
+        XCTAssertEqual(store.get(.note), "")
+    }
+
+    @MainActor
+    func testWatchDetectsInProcessStateChange() async throws {
+        let store = StateStore()
+        try store.set(.counter, value: "1")
+
+        var seen: [String] = []
+        store.watchBlocking(
+            .counter,
+            pollInterval: 0.05,
+            shouldContinue: { seen.count < 2 }
+        ) { value in
+            seen.append(value)
+            if value == "1" {
+                try? store.set(.counter, value: "2")
+            }
+        }
+
+        XCTAssertEqual(seen, ["1", "2"])
+    }
+
+    @MainActor
+    func testWatchDetectsFileStateChange() async throws {
+        let store = StateStore()
+        try store.set(.note, value: "before")
+
+        var seen: [String] = []
+        store.watchBlocking(
+            .note,
+            pollInterval: 0.05,
+            shouldContinue: { seen.count < 2 }
+        ) { value in
+            seen.append(value)
+            if value == "before" {
+                try? store.set(.note, value: "after")
+            }
+        }
+
+        XCTAssertEqual(seen, ["before", "after"])
+    }
+
+    @MainActor
+    func testClockDependencyIsInjectable() async throws {
+        let clock = Application.dependency(\.clock)
+        let before = clock.now
+        XCTAssertLessThanOrEqual(before.timeIntervalSinceNow, 0)
     }
 }

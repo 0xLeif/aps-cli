@@ -23,6 +23,24 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
         case .flag: return "Bool"
         }
     }
+
+    public var helpSummary: String {
+        "\(rawValue)\t\(valueType)\t\(storage)"
+    }
+
+    /// Human-readable one-liner for `aps keys`.
+    public var detail: String {
+        switch self {
+        case .counter:
+            return "in-memory Int counter (process lifetime)"
+        case .message:
+            return "in-memory String (process lifetime)"
+        case .flag:
+            return "Bool via StoredState / UserDefaults"
+        case .note:
+            return "String via FileState (~/.aps/note.json)"
+        }
+    }
 }
 
 public enum APSError: Error, CustomStringConvertible, Equatable {

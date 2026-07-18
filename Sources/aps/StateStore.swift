@@ -55,6 +55,26 @@ public final class StateStore {
         }
     }
 
+    public func reset(_ key: DemoKey) {
+        switch key {
+        case .counter:
+            Application.reset(\.counter)
+        case .message:
+            Application.reset(\.message)
+        case .flag:
+            Application.reset(storedState: \.flag)
+            UserDefaults.standard.synchronize()
+        case .note:
+            Application.reset(fileState: \.note)
+        }
+    }
+
+    public func resetAll() {
+        for key in DemoKey.allCases {
+            reset(key)
+        }
+    }
+
     public func dump() throws -> String {
         let snapshot = DumpSnapshot(
             timestamp: clock.now,
@@ -75,9 +95,11 @@ public final class StateStore {
     /// - Observation covers in-process mutations (`State`).
     /// - Polling re-reads values so `FileState` / `StoredState` updates can surface when
     ///   Observation alone would not (e.g. another process wrote the file).
+    /// - `shouldContinue` lets tests (and future tooling) stop the loop cleanly.
     public func watchBlocking(
         _ key: DemoKey,
         pollInterval: TimeInterval = 0.25,
+        shouldContinue: () -> Bool = { true },
         onChange: (String) -> Void
     ) {
         var last = get(key)
@@ -85,7 +107,7 @@ public final class StateStore {
 
         let slice = max(pollInterval / 5.0, 0.05)
 
-        while true {
+        while shouldContinue() {
             let flag = ChangeFlag()
 
             withObservationTracking {
@@ -94,7 +116,7 @@ public final class StateStore {
                 flag.mark()
             }
 
-            while true {
+            while shouldContinue() {
                 RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
                 let current = get(key)
                 if flag.isSet || current != last {
