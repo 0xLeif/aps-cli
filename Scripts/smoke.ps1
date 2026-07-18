@@ -166,3 +166,5 @@ $null = Invoke-ApsOk stats --watch --count 1 --timeout 2
 Invoke-ApsExpectFail set counter nope
 
 Write-Host 'smoke ok'
+# Native commands leave $LASTEXITCODE set; clear so pwsh/GHA do not treat success as failure.
+exit 0
