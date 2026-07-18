@@ -35,6 +35,7 @@ non-UI use.
 | `statsSnapshot` | Immutable view of DemoStats counters. |
 | `resetStats` | Clears process-local DemoStats counters. |
 | `profileDocument` | Typed profile FileState accessor. |
+| `profileName` | Slice accessor for ProfileDocument.name. |
 | `readNoteFromDisk` | Direct `note.json` read bypassing cache. |
 | `readProfileFromDisk` | Direct `profile.json` read bypassing cache. |
 | `parseBool` | Bool token parser for flag values. |
