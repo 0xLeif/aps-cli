@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 17,
-  "id": "CHG-0017-add-fledge-plugin-toml-shim-and-validate-in-verify-lane-for-issue-37",
+  "sequence": 18,
+  "id": "CHG-0018-document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue",
   "acknowledged_collisions": []
 }

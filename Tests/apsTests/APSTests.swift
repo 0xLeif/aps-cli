@@ -289,7 +289,9 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(APSPaths.resolve(stateDir: nil), "/tmp/aps-from-env")
         XCTAssertEqual(APSPaths.resolve(stateDir: "/tmp/aps-flag"), "/tmp/aps-flag")
         unsetenv("APS_HOME")
-        XCTAssertTrue(APSPaths.resolve(stateDir: nil).hasSuffix("/.aps"))
+        // Path-component check: Windows uses `\` separators, not a `/.aps` suffix.
+        let defaultHome = APSPaths.resolve(stateDir: nil)
+        XCTAssertEqual(URL(fileURLWithPath: defaultHome).lastPathComponent, ".aps")
     }
 
     @MainActor

@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784414093,
+      "digest": "4f5beecd8e6a1e0053a43af645bd69b018d4e0db66856b5c2b0f9bfa0c1f3719",
+      "note": "Windows readiness audit for issue 36."
+    },
+    {
+      "gate": "definition",
+      "actor": "cursor",
+      "timestamp": 1784414313,
+      "digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
+      "note": "Refresh definition after dropping DemoState from no-spec-change paths"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784414657,
+      "digest": "1213a6d0cdee1a30507d33a895d95ff909360133c1adfc987d62b37bb485bf9d",
+      "note": "Windows readiness audit for issue 36; DemoState left unchanged for no-spec-change ownership."
+    }
+  ],
+  "reopenings": []
+}
