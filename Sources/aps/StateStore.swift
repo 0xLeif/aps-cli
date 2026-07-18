@@ -27,6 +27,9 @@ public final class StateStore {
         Application.load(dependency: \.clock)
         Application.load(dependency: \.jsonCoding)
         Application.load(dependency: \.stats)
+#if canImport(Security)
+        Application.load(dependency: \.keychain)
+#endif
     }
 
     /// Wall clock from the injected `APSClock` dependency.
@@ -57,6 +60,12 @@ public final class StateStore {
             return Application.fileState(\.note).value
         case .profile:
             return (try? encodeProfile(Application.fileState(\.profile).value)) ?? "{\"name\":\"\",\"version\":0}"
+        case .secret:
+#if canImport(Security)
+            return Application.secureState(\.secret).value ?? ""
+#else
+            return ""
+#endif
         }
     }
 
@@ -105,6 +114,17 @@ public final class StateStore {
             guard onDisk == document else {
                 throw APSError.persistenceFailed(key: .profile)
             }
+        case .secret:
+#if canImport(Security)
+            var state = Application.secureState(\.secret)
+            state.value = value
+            let stored = Application.dependency(\.keychain).get(APSKeychain.secretAccount)
+            guard stored == value else {
+                throw APSError.persistenceFailed(key: .secret)
+            }
+#else
+            throw APSError.keychainUnavailable
+#endif
         }
         stats.recordMutation(key: key)
     }
@@ -122,6 +142,12 @@ public final class StateStore {
             Application.reset(fileState: \.note)
         case .profile:
             Application.reset(fileState: \.profile)
+        case .secret:
+#if canImport(Security)
+            Application.reset(secureState: \.secret)
+#else
+            break
+#endif
         }
         stats.recordMutation(key: key)
     }
@@ -192,7 +218,7 @@ public final class StateStore {
     /// Blocking watch for the synchronous CLI: Observation + RunLoop polling.
     ///
     /// - Observation covers in-process mutations (`State`).
-    /// - Polling re-reads values so `FileState` / `StoredState` updates can surface when
+    /// - Polling re-reads values so `FileState` / `StoredState` / `SecureState` updates can surface when
     ///   Observation alone would not (e.g. another process wrote the file).
     /// - For disk-backed keys, polling reads files directly so AppState's FileState cache
     ///   cannot hide cross-process writes.
@@ -241,7 +267,7 @@ public final class StateStore {
                 return (try? encodeProfile(document)) ?? get(key)
             }
             return get(key)
-        case .counter, .message, .flag:
+        case .counter, .message, .flag, .secret:
             return get(key)
         }
     }
@@ -294,6 +320,10 @@ public final class StateStore {
             _ = Application.fileState(\.note).value
         case .profile:
             _ = Application.fileState(\.profile).value
+        case .secret:
+#if canImport(Security)
+            _ = Application.secureState(\.secret).value
+#endif
         }
     }
 

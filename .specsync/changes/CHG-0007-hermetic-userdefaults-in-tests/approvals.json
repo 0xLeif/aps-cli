@@ -20,6 +20,13 @@
       "timestamp": 1784406365,
       "digest": "11709792c043ccdb5516fc1722dcfaf7762f67e17e5f24245150d9c3fc57036d",
       "note": "Re-accept after ObservedDependency tests."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784406793,
+      "digest": "3e4baf2845a9a075b9bcef077f5b4620e7154e3ed2da8e584025d4083b04ea86",
+      "note": "Re-accept after SecureState secret dogfood."
     }
   ],
   "reopenings": [
@@ -81,6 +88,65 @@
       },
       "stale_acceptance_input_digest": "2a1eb31208096ff339578eeb085f5c37cc17c2b2628ff21ddd366a7d8b01ad3c",
       "current_acceptance_input_digest": "37f5f78408754c1691d127f10f8041608cfcbff64a6b35de4dd87344c102a3b8"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0007-hermetic-userdefaults-in-tests",
+      "actor": "agent:cursor",
+      "reason": "APSTests.swift extended for SecureState secret coverage (issue 16).",
+      "timestamp": 1784406765,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784406365,
+        "digest": "11709792c043ccdb5516fc1722dcfaf7762f67e17e5f24245150d9c3fc57036d",
+        "note": "Re-accept after ObservedDependency tests."
+      },
+      "prior_verification": {
+        "timestamp": 1784406357,
+        "commit": "4daccc6061dafcbcb6a9639cf7f2087b7b1e783d",
+        "contract_digest": "0c72a7f1bfaa780b21b7b2ac7904ab5352e8186a8293caf6f91354fddff40610",
+        "workspace_digest": "5a4b9f38f73e7940d9cbe17529be96a3b1bad3fe58049d470b748c41726049ec",
+        "acceptance_input_digest": "37f5f78408754c1691d127f10f8041608cfcbff64a6b35de4dd87344c102a3b8",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "892737ad12d482e123f7e036d8af1cb0fd3aabb465f8c9ac561ed79af04a33bc",
+              "entry_digest": "c84485e5707378b3f73e17a2c56611d32c600a7ab1da4b428e69d3c0c5eea9a7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a008f745a8237c3eeef89ce3edb4a55aa172d5c72c63ad5ba4b986d5d64f221c",
+              "entry_digest": "da6675b6951ca344adae1c062ca2db175f201d8ce7f3da188621a3b954f81361",
+              "owners": [
+                "@exact:test"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "37f5f78408754c1691d127f10f8041608cfcbff64a6b35de4dd87344c102a3b8",
+      "current_acceptance_input_digest": "1f329fd97b079998a4dc8522049819bca4880cee833244b22576f2d27f748a2e"
     }
   ]
 }

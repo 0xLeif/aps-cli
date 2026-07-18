@@ -18,7 +18,9 @@ bin="$APS_BIN"
 test "$("$bin" --version)" = "0.2.0"
 "$bin" keys | grep -q counter
 "$bin" keys | grep -q profile
+"$bin" keys | grep -q secret
 "$bin" keys --json | grep -q '"key" : "profile"'
+"$bin" keys --json | grep -q '"key" : "secret"'
 
 # `set` prints the value; State is process-local so don't expect get in a new process.
 test "$("$bin" set counter 11)" = "11"
@@ -37,6 +39,21 @@ test "$("$bin" get note)" = "smoke-note"
 "$bin" get profile --json | grep -q '"name" : "smoke"'
 "$bin" get profile --json | grep -q '"version" : 2'
 
+# SecureState / Keychain is Darwin-only (Security framework).
+if [[ "$(uname -s)" == "Darwin" ]]; then
+  "$bin" set secret "smoke-secret" >/dev/null
+  test "$("$bin" get secret)" = "smoke-secret"
+  "$bin" get secret --json | grep -q '"storage" : "SecureState"'
+  "$bin" reset secret >/dev/null
+  test -z "$("$bin" get secret)"
+else
+  # Linux: schema lists secret, but set must fail clearly without Keychain.
+  if "$bin" set secret "smoke-secret" >/dev/null 2>&1; then
+    echo "expected secret set to fail without Keychain" >&2
+    exit 1
+  fi
+fi
+
 # --state-dir overrides APS_HOME
 OTHER="$(mktemp -d "${TMPDIR:-/tmp}/aps-smoke-other.XXXXXX")"
 "$bin" set note "other-root" --state-dir "$OTHER" >/dev/null
@@ -45,6 +62,7 @@ test "$("$bin" get note)" = "smoke-note"
 
 "$bin" dump | grep -q '"key" : "flag"'
 "$bin" dump --json | grep -q '"key" : "profile"'
+"$bin" dump --json | grep -q '"key" : "secret"'
 
 "$bin" reset flag >/dev/null
 test "$("$bin" get flag)" = "false"

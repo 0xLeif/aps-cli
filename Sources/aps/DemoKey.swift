@@ -8,19 +8,21 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
     case flag
     case note
     case profile
+    case secret
 
     public var storage: String {
         switch self {
         case .counter, .message: return "State"
         case .flag: return "StoredState"
         case .note, .profile: return "FileState"
+        case .secret: return "SecureState"
         }
     }
 
     public var valueType: String {
         switch self {
         case .counter: return "Int"
-        case .message, .note: return "String"
+        case .message, .note, .secret: return "String"
         case .flag: return "Bool"
         case .profile: return "ProfileDocument"
         }
@@ -43,6 +45,8 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
             return "String via FileState (~/.aps/note.json)"
         case .profile:
             return "Codable {name,version} via FileState (~/.aps/profile.json)"
+        case .secret:
+            return "String via SecureState / Keychain (\(APSKeychain.secretAccount))"
         }
     }
 }
@@ -58,12 +62,30 @@ public struct ProfileDocument: Codable, Equatable, Sendable {
     }
 }
 
+/// Well-known Keychain identity for the `secret` SecureState demo key.
+///
+/// AppState stores SecureState under `Scope.key` (`feature/id`) as the Keychain
+/// account (`kSecAttrAccount`). The feature string is the service-style namespace.
+public enum APSKeychain: Sendable {
+    /// Reverse-DNS style service / feature namespace.
+    public static let service = "dev.leif.aps"
+
+    /// Account id within the service namespace.
+    public static let account = "secret"
+
+    /// Full Keychain account key used by AppState (`service/account`).
+    public static var secretAccount: String {
+        "\(service)/\(account)"
+    }
+}
+
 public enum APSError: Error, CustomStringConvertible, Equatable {
     case unknownKey(String)
     case invalidValue(key: DemoKey, value: String)
     case encodingFailed
     case decodingFailed
     case persistenceFailed(key: DemoKey)
+    case keychainUnavailable
 
     public var description: String {
         switch self {
@@ -76,7 +98,9 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
         case .decodingFailed:
             return "Failed to decode value from UTF-8 JSON"
         case .persistenceFailed(let key):
-            return "Failed to persist \(key.rawValue) to disk"
+            return "Failed to persist \(key.rawValue)"
+        case .keychainUnavailable:
+            return "SecureState (Keychain) is unavailable on this platform. The secret key requires macOS Keychain."
         }
     }
 }

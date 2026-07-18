@@ -23,12 +23,17 @@ Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo A
 - [x] SpecSync artifacts from 0.1.x are archived; active SpecSync tracks 0.2.0 work.
 - [x] README documents JSON mode, state root, watch bounds, and `profile`.
 - [x] CLI `--version` reports `0.2.0`.
+- [x] Demo key `secret` uses AppState `SecureState` (Keychain) with round-trip tests and documented CI behavior.
 
 ## Explicit out of scope for 0.x
 
-- SyncState, SecureState, and ModelState
+- SyncState and ModelState
 - Plugin APIs, daemon mode, network APIs, or background services
 - Dynamic schema language or user-defined state keys
+
+## In scope (added)
+
+- SecureState dogfood via the fixed `secret` demo key (Keychain-backed String). Available where Apple's Security framework exists (macOS). Linux/headless CI behavior is documented; Keychain round-trips are not required on Linux.
 
 ## Tickets
 
@@ -45,6 +50,7 @@ Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo A
 | APS-09 | Structured `profile` FileState |
 | APS-10 | SpecSync archive hygiene |
 | APS-11 | README agent usage |
+| APS-12 | SecureState `secret` Keychain dogfood |
 
 ## Definition of done
 

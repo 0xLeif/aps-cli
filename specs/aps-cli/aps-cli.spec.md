@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 11
+version: 12
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -23,7 +23,7 @@ agents can get, set, watch, dump, list, and reset typed application state.
 
 | Export | Description |
 |--------|-------------|
-| `DemoKey` | Fixed schema enum including `profile`. |
+| `DemoKey` | Fixed schema enum including `profile` and `secret`. |
 | `ProfileDocument` | Codable `{name, version}` FileState document. |
 | `name` | ProfileDocument display name field. |
 | `version` | ProfileDocument integer version field. |
@@ -34,12 +34,18 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `flag` | Bool key stored in AppState `StoredState`. |
 | `note` | String key stored in AppState `FileState`. |
 | `profile` | ProfileDocument key stored in AppState `FileState`. |
+| `secret` | String key stored in AppState `SecureState` (Keychain). |
+| `APSKeychain` | Well-known Keychain service/account for `secret`. |
+| `service` | Reverse-DNS Keychain feature namespace (`dev.leif.aps`). |
+| `account` | Keychain account id (`secret`). |
+| `secretAccount` | Full account key (`dev.leif.aps/secret`). |
+| `keychainUnavailable` | SecureState unavailable without Apple Security. |
 | `unknownKey` | Unknown demo key token. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
 | `persistenceFailed` | Disk-backed key did not persist after write. |
-| `storage` | Human storage kind (`State` / `StoredState` / `FileState`). |
+| `storage` | Human storage kind (`State` / `StoredState` / `FileState` / `SecureState`). |
 | `valueType` | Human value type (`Int` / `String` / `Bool` / `ProfileDocument`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
 | `detail` | One-line description for `keys`. |
@@ -109,4 +115,5 @@ Then the watcher prints `changed` within one poll interval.
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
 | 2026-07-18 | CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate: Ship aps 0.2.0 agent-ready JSON state-dir watch and profile FileState |
 | 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: ObservedDependency DemoStats dogfood |
+| 2026-07-18 | CHG-0012-dogfood-securestate-secret-keychain-demo-key: SecureState secret Keychain dogfood |
 | 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: Dogfood ObservedDependency DemoStats for issue 18 |

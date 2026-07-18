@@ -51,11 +51,15 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(DemoKey.flag.storage, "StoredState")
         XCTAssertEqual(DemoKey.note.storage, "FileState")
         XCTAssertEqual(DemoKey.profile.storage, "FileState")
+        XCTAssertEqual(DemoKey.secret.storage, "SecureState")
         XCTAssertEqual(DemoKey.counter.valueType, "Int")
         XCTAssertEqual(DemoKey.profile.valueType, "ProfileDocument")
-        XCTAssertEqual(DemoKey.allCases.count, 5)
+        XCTAssertEqual(DemoKey.secret.valueType, "String")
+        XCTAssertEqual(DemoKey.allCases.count, 6)
         XCTAssertTrue(DemoKey.note.detail.contains("FileState"))
         XCTAssertTrue(DemoKey.profile.detail.contains("profile.json"))
+        XCTAssertTrue(DemoKey.secret.detail.contains("Keychain"))
+        XCTAssertEqual(APSKeychain.secretAccount, "dev.leif.aps/secret")
     }
 
     @MainActor
@@ -96,6 +100,64 @@ final class APSTests: XCTestCase {
         XCTAssertTrue(store.get(.profile).contains("agent"))
         XCTAssertEqual(try StateStore.readProfileFromDisk(), document)
     }
+
+
+#if canImport(Security)
+    @MainActor
+    func testSecretSecureStateRoundTrip() async throws {
+        let store = StateStore()
+        try store.set(.secret, value: "top-secret")
+        XCTAssertEqual(store.get(.secret), "top-secret")
+
+        let keychain = Application.dependency(\.keychain)
+        XCTAssertEqual(keychain.get(APSKeychain.secretAccount), "top-secret")
+
+        try store.set(.secret, value: "rotated")
+        XCTAssertEqual(store.get(.secret), "rotated")
+        XCTAssertEqual(keychain.get(APSKeychain.secretAccount), "rotated")
+    }
+
+    @MainActor
+    func testSecretResetDeletesKeychainItem() async throws {
+        let store = StateStore()
+        try store.set(.secret, value: "ephemeral")
+        XCTAssertEqual(
+            Application.dependency(\.keychain).get(APSKeychain.secretAccount),
+            "ephemeral"
+        )
+
+        store.reset(.secret)
+        XCTAssertEqual(store.get(.secret), "")
+        XCTAssertNil(Application.dependency(\.keychain).get(APSKeychain.secretAccount))
+    }
+
+    @MainActor
+    func testSecretPersistsAcrossStateStoreInstances() async throws {
+        let writer = StateStore()
+        try writer.set(.secret, value: "shared-secret")
+
+        let reader = StateStore()
+        XCTAssertEqual(reader.get(.secret), "shared-secret")
+
+        reader.reset(.secret)
+        XCTAssertEqual(StateStore().get(.secret), "")
+        XCTAssertNil(Application.dependency(\.keychain).get(APSKeychain.secretAccount))
+    }
+#else
+    @MainActor
+    func testSecretSetFailsWithoutKeychain() async {
+        let store = StateStore()
+        do {
+            try store.set(.secret, value: "nope")
+            XCTFail("Expected keychainUnavailable on platforms without Security")
+        } catch let error as APSError {
+            XCTAssertEqual(error, .keychainUnavailable)
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+        XCTAssertEqual(store.get(.secret), "")
+    }
+#endif
 
     @MainActor
     func testInvalidProfileJSON() async {

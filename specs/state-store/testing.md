@@ -6,3 +6,5 @@
 - dump includes dependency-driven timestamp and all keys
 - DemoStats ObservedDependency records mutations and Combine publishes on change
 - watchStatsBlocking detects dependency mutation
+
+- SecureState `secret` round-trip / Keychain delete (Darwin) or keychainUnavailable (else).

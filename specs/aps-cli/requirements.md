@@ -8,10 +8,10 @@ spec: aps-cli.spec.md
 
 ### REQ-aps-cli-001
 
-The fixed demo schema SHALL include `profile` alongside `counter`, `message`, `flag`, and `note`.
+The fixed demo schema SHALL include `profile` and `secret` alongside `counter`, `message`, `flag`, and `note`.
 
 Acceptance Criteria
-- `aps keys` lists `profile`.
+- `aps keys` lists `profile` and `secret`.
 - `aps set profile '{"name":"a","version":1}'` round-trips through get/dump/reset.
 
 ### REQ-aps-cli-002
@@ -89,3 +89,14 @@ Acceptance Criteria
 - `aps stats --json` includes `mutationCount` and `lastMutatedKey`.
 - `aps stats --watch --count 1` exits after printing the initial snapshot.
 
+
+
+### REQ-aps-cli-015
+
+`secret` SHALL use a well-named Keychain identity and document headless/CI availability.
+
+Acceptance Criteria
+- Keychain account is `dev.leif.aps/secret` (`APSKeychain.secretAccount`).
+- `aps reset secret` deletes the Keychain item on macOS.
+- README documents macOS Keychain access, Linux unavailability, and headless CI caveats.
+- `set secret` on platforms without Security surfaces `keychainUnavailable`.

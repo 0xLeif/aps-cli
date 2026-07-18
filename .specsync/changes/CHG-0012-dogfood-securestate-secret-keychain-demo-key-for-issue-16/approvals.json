@@ -1,0 +1,12 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784406924,
+      "digest": "f931b6b50deee8ecac029eb31f0a16fbdd8e24dd7c2e272dc3c183a91806d91b",
+      "note": "Approve SecureState secret dogfood."
+    }
+  ],
+  "reopenings": []
+}

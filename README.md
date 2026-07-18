@@ -32,8 +32,17 @@ State root resolution: `--state-dir` > `APS_HOME` > `~/.aps`.
 | `flag` | `Bool` | `StoredState` | Persisted (`UserDefaults`; CLI calls `synchronize()` so Linux flushes) |
 | `note` | `String` | `FileState` | Persisted (`$APS_HOME/note.json`) |
 | `profile` | `{name,version}` | `FileState` | Persisted structured Codable (`$APS_HOME/profile.json`) |
+| `secret` | `String` | `SecureState` | Persisted in Keychain (macOS); account `dev.leif.aps/secret` |
 
 Dynamic / user-declared keys are intentionally out of scope for 0.x.
+
+### SecureState / Keychain (`secret`)
+
+- AppState `SecureState` stores the value under Keychain account `dev.leif.aps/secret` (feature `dev.leif.aps`, id `secret`).
+- `aps reset secret` (and `aps reset --all`) deletes that Keychain item; get then returns an empty string.
+- **macOS:** works when the process can access the login Keychain (interactive sessions and typical self-hosted macOS CI).
+- **Linux / headless without Security:** Apple's Security framework is unavailable. `aps keys` still lists `secret`, `get` returns empty, and `set secret` fails with a clear Keychain-unavailable error. Linux smoke skips secret round-trips.
+- **Headless macOS CI:** if the Keychain is locked or inaccessible, set/get may fail with persistence errors. Unlock or use a runner with an available login Keychain.
 
 ### Dependencies
 
@@ -159,7 +168,7 @@ See [`GOAL.md`](GOAL.md) for **aps 0.2.0**: agent-ready AppState dogfood harness
 
 ## Non-goals (0.x)
 
-- No iCloud `SyncState`, Keychain `SecureState`, or SwiftData `ModelState`
+- No iCloud `SyncState` or SwiftData `ModelState` (see `docs/spikes/`)
 - No plugin system, daemon, or network API
 - No dynamic schema language: fixed demo keys only
 

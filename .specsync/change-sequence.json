@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 11,
-  "id": "CHG-0011-dogfood-observeddependency-demostats-for-issue-18",
+  "sequence": 12,
+  "id": "CHG-0012-dogfood-securestate-secret-keychain-demo-key-for-issue-16",
   "acknowledged_collisions": []
 }
