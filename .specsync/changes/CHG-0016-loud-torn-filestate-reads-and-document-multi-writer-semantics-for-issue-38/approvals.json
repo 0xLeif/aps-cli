@@ -1,0 +1,12 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784411514,
+      "digest": "a5191d836270b9ecaa81c40dc29bbf0c0ef641a8cf7053a72edbf6119ef16607",
+      "note": "Loud torn FileState reads for issue 38."
+    }
+  ],
+  "reopenings": []
+}

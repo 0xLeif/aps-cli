@@ -119,6 +119,18 @@ swift run aps stats --json
 
 `watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process. For `note` and `profile`, polling reads the JSON files directly so AppState's FileState cache cannot hide cross-process writes.
 
+### Multi-process FileState semantics
+
+`aps` expects **one writer per key** at a time. Concurrent `aps set` on the same FileState key (`note` / `profile`) is last-writer-wins and is not locked: AppState writes files non-atomically, so two writers can tear a JSON file.
+
+When a FileState file **exists but is undecodable** (torn write), `aps` does **not** fall back to AppState's initial/cached value on the direct disk path:
+
+- `get` / `watch` for `note`, `profile`, and `profileName` fail with `corruptState` and exit code **65** (`EX_DATAERR`)
+- `watch --jsonl` emits one `{"type":"error","error":"corruptState",...}` line before exiting
+- Missing files still resolve to the key's initial value (same as a fresh store)
+
+AppState itself is unchanged; this is an `aps` dogfood/CLI contract only. Repair with `aps reset <key>` (or delete the torn file under the state root).
+
 ## Tests and smoke
 
 ```bash

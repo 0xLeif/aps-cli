@@ -45,6 +45,8 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `decodingFailed` | UTF-8 JSON decode failure. |
 | `persistenceFailed` | Disk/Keychain-backed key did not persist after write. |
 | `keychainUnavailable` | SecureState unavailable without Apple Security. |
+| `corruptState` | FileState file exists but is undecodable (torn write). |
+| `corruptStateExitCode` | Exit code 65 (`EX_DATAERR`) for `corruptState`. |
 | `storage` | Human storage kind (`State` / `StoredState` / `FileState` / `SecureState` / `Slice`). |
 | `valueType` | Human value type (`Int` / `String` / `Bool` / `ProfileDocument`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
@@ -122,3 +124,4 @@ Then the watcher prints `changed` within one poll interval.
 | 2026-07-18 | CHG-0013-dogfood-appstate-slice-via-profilename-for-issue-17: Dogfood AppState Slice via profileName for issue 17 |
 | 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove unreachable APSError.unknownKey |
 | 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15 |
+| 2026-07-18 | CHG-0016-loud-torn-filestate-reads-and-document-multi-writer-semantics-for-issue-38: Loud torn FileState reads + multi-writer docs |

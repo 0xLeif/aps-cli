@@ -33,12 +33,13 @@ Acceptance Criteria
 
 ### REQ-state-store-004
 
-`watchBlocking` SHALL combine Observation with RunLoop polling and honor `shouldContinue`; for `note`, polling SHALL read the file directly so cross-process writes are visible despite AppState FileState caching; `parseBool` accepts common truthy/falsey tokens.
+`watchBlocking` SHALL combine Observation with RunLoop polling and honor `shouldContinue`; for `note`, polling SHALL read the file directly so cross-process writes are visible despite AppState FileState caching; `parseBool` accepts common truthy/falsey tokens. Existing undecodable FileState files SHALL throw `APSError.corruptState` instead of falling back to AppState initials.
 
 Acceptance Criteria
 - In-process `State` mutations are observed.
 - External writes to `note.json` are observed without updating AppState's cache.
 - `shouldContinue` false stops the loop without requiring Ctrl-C.
+- A torn `note.json` during watch throws `corruptState`.
 
 ### REQ-state-store-010
 
@@ -87,4 +88,12 @@ Acceptance Criteria
 Acceptance Criteria
 - After set(.profileName, "x"), profileDocument().name is "x" and profile.json reflects it.
 - get(.profileName) matches the parent name field.
+
+### REQ-state-store-015
+
+Direct disk reads (`readNoteFromDiskIfPresent` / `readProfileFromDiskIfPresent`) SHALL return nil when the file is absent and throw `APSError.corruptState` when the file exists but cannot be decoded.
+
+Acceptance Criteria
+- Missing `note.json` yields nil (not an empty-string fallback from a torn decode).
+- Undecodable on-disk JSON throws `corruptState` for note and profile.
 

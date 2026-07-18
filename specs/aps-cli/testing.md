@@ -8,3 +8,4 @@
 - SecureState `secret` round-trip / Keychain delete (Darwin) or keychainUnavailable (else).
 
 - Slice `profileName` writes land in parent `profile` FileState.
+- Torn FileState files surface `corruptState` (exit 65) on get/watch; missing files stay nil/initial.

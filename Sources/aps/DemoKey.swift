@@ -90,6 +90,11 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
     case decodingFailed
     case persistenceFailed(key: DemoKey)
     case keychainUnavailable
+    /// On-disk FileState exists but cannot be decoded (torn concurrent write).
+    case corruptState(key: DemoKey)
+
+    /// sysexits `EX_DATAERR` (65): input/state data was present but unusable.
+    public static let corruptStateExitCode: Int32 = 65
 
     public var description: String {
         switch self {
@@ -103,6 +108,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "Failed to persist \(key.rawValue)"
         case .keychainUnavailable:
             return "SecureState (Keychain) is unavailable on this platform. The secret key requires macOS Keychain."
+        case .corruptState(let key):
+            return "Corrupt or torn \(key.rawValue) state file (undecodable). Concurrent writers may have torn the file; reset the key or repair the file."
         }
     }
 }

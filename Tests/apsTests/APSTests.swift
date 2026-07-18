@@ -332,7 +332,7 @@ final class APSTests: XCTestCase {
         try store.set(.counter, value: "1")
 
         var seen: [String] = []
-        store.watchBlocking(
+        try store.watchBlocking(
             .counter,
             pollInterval: 0.05,
             shouldContinue: { seen.count < 2 }
@@ -352,7 +352,7 @@ final class APSTests: XCTestCase {
         try store.set(.note, value: "before")
 
         var seen: [String] = []
-        store.watchBlocking(
+        try store.watchBlocking(
             .note,
             pollInterval: 0.05,
             shouldContinue: { seen.count < 2 }
@@ -374,7 +374,7 @@ final class APSTests: XCTestCase {
         let path = FileManager.defaultFileStatePath
 
         var seen: [String] = []
-        store.watchBlocking(
+        try store.watchBlocking(
             .note,
             pollInterval: 0.05,
             shouldContinue: { seen.count < 2 }
@@ -400,7 +400,7 @@ final class APSTests: XCTestCase {
         let path = FileManager.defaultFileStatePath
 
         var events: [CLIOutput.WatchEvent] = []
-        store.watchBlocking(
+        try store.watchBlocking(
             .profile,
             pollInterval: 0.05,
             shouldContinue: { events.count < 2 }
@@ -424,6 +424,72 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(events[1].value, .object(ProfileDocument(name: "leif", version: 4)))
     }
 
+    @MainActor
+    func testReadNoteFromDiskIfPresentMissingIsNil() async throws {
+        // setUp resets FileState, which may write the initial value to disk.
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("note.json")
+        try? FileManager.default.removeItem(at: url)
+        XCTAssertNil(try StateStore.readNoteFromDiskIfPresent())
+    }
+
+    @MainActor
+    func testReadNoteFromDiskRejectsTornFile() async throws {
+        let store = StateStore()
+        try store.set(.note, value: "ok")
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("note.json")
+        try Data("{not-json".utf8).write(to: url)
+
+        XCTAssertThrowsError(try StateStore.readNoteFromDiskIfPresent()) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: .note))
+        }
+        // Must not silently fall back to AppState initial via get().
+        XCTAssertEqual(store.get(.note), "ok")
+        XCTAssertThrowsError(try StateStore.requireDecodableDiskState(for: .note)) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: .note))
+        }
+    }
+
+    @MainActor
+    func testWatchSurfacesTornNoteFileAsCorruptState() async throws {
+        let store = StateStore()
+        try store.set(.note, value: "before")
+        let path = FileManager.defaultFileStatePath
+
+        var seen: [String] = []
+        XCTAssertThrowsError(
+            try store.watchBlocking(
+                .note,
+                pollInterval: 0.05,
+                shouldContinue: { seen.count < 3 }
+            ) { value in
+                seen.append(value)
+                if value == "before" {
+                    let url = URL(fileURLWithPath: path).appendingPathComponent("note.json")
+                    try? Data("<<<torn>>>".utf8).write(to: url)
+                }
+            }
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: .note))
+        }
+        XCTAssertEqual(seen, ["before"])
+    }
+
+    @MainActor
+    func testReadProfileFromDiskRejectsTornFile() async throws {
+        let store = StateStore()
+        try store.set(.profile, value: #"{"name":"ok","version":1}"#)
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("profile.json")
+        try Data("{".utf8).write(to: url)
+
+        XCTAssertThrowsError(try StateStore.readProfileFromDiskIfPresent()) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: .profile))
+        }
+        XCTAssertEqual(APSError.corruptStateExitCode, 65)
+    }
+
     func testTypedValueFromRawStringDoesNotNeedStore() throws {
         XCTAssertEqual(try CLIOutput.typedValue(for: .counter, from: "42"), .int(42))
         XCTAssertEqual(try CLIOutput.typedValue(for: .flag, from: "true"), .bool(true))
@@ -440,7 +506,7 @@ final class APSTests: XCTestCase {
         try store.set(.counter, value: "1")
         var seen: [String] = []
         let limit = 1
-        store.watchBlocking(
+        try store.watchBlocking(
             .counter,
             pollInterval: 0.05,
             shouldContinue: { seen.count < limit }
@@ -600,5 +666,10 @@ final class APSTests: XCTestCase {
         let persistence = APSError.persistenceFailed(key: .note)
         XCTAssertTrue(persistence.description.contains("note"))
         XCTAssertTrue(persistence.description.contains("persist"))
+
+        let corrupt = APSError.corruptState(key: .note)
+        XCTAssertTrue(corrupt.description.contains("note"))
+        XCTAssertTrue(corrupt.description.contains("torn") || corrupt.description.contains("Corrupt"))
+        XCTAssertEqual(APSError.corruptStateExitCode, 65)
     }
 }

@@ -51,6 +51,11 @@ extension Aps {
             try onMainThread {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
+                do {
+                    try StateStore.requireDecodableDiskState(for: key)
+                } catch let error as APSError {
+                    try reportAPSError(error)
+                }
                 if options.json {
                     let payload = CLIOutput.KeyValuePayload(
                         key: key.rawValue,
@@ -87,7 +92,7 @@ extension Aps {
                 do {
                     try store.set(key, value: value)
                 } catch let error as APSError {
-                    throw ValidationError(error.description)
+                    try reportAPSError(error)
                 }
                 if options.json {
                     let payload = CLIOutput.KeyValuePayload(
@@ -134,32 +139,47 @@ extension Aps {
                 let deadline = timeout.map { Date().addingTimeInterval($0) }
                 var emitted = 0
 
-                store.watchBlocking(
-                    key,
-                    pollInterval: TimeInterval(interval) / 1000.0,
-                    shouldContinue: {
-                        if let count, emitted >= count { return false }
-                        if let deadline, Date() >= deadline { return false }
-                        return true
-                    }
-                ) { value in
-                    emitted += 1
-                    if jsonl {
-                        // Parse the fresh `value` from watchBlocking. Do not re-query
-                        // the store: FileState cache can lag cross-process disk writes.
-                        let event = try? CLIOutput.watchEvent(
-                            key: key,
-                            rawValue: value,
-                            timestamp: store.now
-                        )
-                        if let event, let line = try? CLIOutput.encodeLine(event) {
-                            CLIOutput.writeLine(line)
+                do {
+                    try store.watchBlocking(
+                        key,
+                        pollInterval: TimeInterval(interval) / 1000.0,
+                        shouldContinue: {
+                            if let count, emitted >= count { return false }
+                            if let deadline, Date() >= deadline { return false }
+                            return true
+                        }
+                    ) { value in
+                        emitted += 1
+                        if jsonl {
+                            // Parse the fresh `value` from watchBlocking. Do not re-query
+                            // the store: FileState cache can lag cross-process disk writes.
+                            let event = try? CLIOutput.watchEvent(
+                                key: key,
+                                rawValue: value,
+                                timestamp: store.now
+                            )
+                            if let event, let line = try? CLIOutput.encodeLine(event) {
+                                CLIOutput.writeLine(line)
+                            } else {
+                                CLIOutput.writeLine(value)
+                            }
                         } else {
                             CLIOutput.writeLine(value)
                         }
-                    } else {
-                        CLIOutput.writeLine(value)
                     }
+                } catch let error as APSError {
+                    if jsonl, case .corruptState = error {
+                        let event = CLIOutput.WatchErrorEvent(
+                            key: key.rawValue,
+                            error: "corruptState",
+                            message: error.description,
+                            timestamp: store.now
+                        )
+                        if let line = try? CLIOutput.encodeLine(event) {
+                            CLIOutput.writeLine(line)
+                        }
+                    }
+                    try reportAPSError(error)
                 }
             }
         }
@@ -342,4 +362,16 @@ private func onMainThread<T: Sendable>(
     return try MainActor.assumeIsolated {
         try body()
     }
+}
+
+/// Maps `APSError` for CLI exit. `corruptState` prints to stderr and uses exit 65 (`EX_DATAERR`).
+private func reportAPSError(_ error: APSError) throws -> Never {
+    if case .corruptState = error {
+        let message = "Error: \(error.description)\n"
+        if let data = message.data(using: .utf8) {
+            FileHandle.standardError.write(data)
+        }
+        throw ExitCode(APSError.corruptStateExitCode)
+    }
+    throw ValidationError(error.description)
 }

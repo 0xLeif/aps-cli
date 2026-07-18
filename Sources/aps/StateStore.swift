@@ -247,14 +247,16 @@ public final class StateStore {
     ///   Observation alone would not (e.g. another process wrote the file).
     /// - For disk-backed keys, polling reads files directly so AppState's FileState cache
     ///   cannot hide cross-process writes.
+    /// - An existing-but-undecodable FileState file throws `APSError.corruptState` instead of
+    ///   falling back to AppState's initial/cached value.
     /// - `shouldContinue` lets tests (and CLI `--count` / `--timeout`) stop the loop cleanly.
     public func watchBlocking(
         _ key: DemoKey,
         pollInterval: TimeInterval = 0.25,
         shouldContinue: () -> Bool = { true },
         onChange: (String) -> Void
-    ) {
-        var last = freshValue(key)
+    ) throws {
+        var last = try freshValue(key)
         onChange(last)
 
         let slice = max(pollInterval / 5.0, 0.05)
@@ -270,7 +272,7 @@ public final class StateStore {
 
             while shouldContinue() {
                 RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
-                let current = freshValue(key)
+                let current = try freshValue(key)
                 if flag.isSet || current != last {
                     if current != last {
                         last = current
@@ -283,40 +285,86 @@ public final class StateStore {
     }
 
     /// Value used by watch polling. Disk-backed keys bypass AppState's FileState cache.
-    private func freshValue(_ key: DemoKey) -> String {
+    ///
+    /// Missing files fall back to `get`; existing undecodable files throw `corruptState`.
+    private func freshValue(_ key: DemoKey) throws -> String {
         switch key {
         case .note:
-            return (try? Self.readNoteFromDisk()) ?? get(key)
-        case .profile:
-            if let document = try? Self.readProfileFromDisk() {
-                return (try? encodeProfile(document)) ?? get(key)
+            if let onDisk = try Self.readNoteFromDiskIfPresent() {
+                return onDisk
             }
             return get(key)
-        case .counter, .message, .flag, .secret, .profileName:
+        case .profile:
+            if let document = try Self.readProfileFromDiskIfPresent() {
+                return try encodeProfile(document)
+            }
+            return get(key)
+        case .profileName:
+            if let document = try Self.readProfileFromDiskIfPresent() {
+                return document.name
+            }
+            return get(key)
+        case .counter, .message, .flag, .secret:
             return get(key)
         }
     }
 
     /// Read `note.json` without touching AppState's in-memory FileState cache.
     ///
-    /// Mirrors AppState's non-Base64 FileState encoding: UTF-8 JSON via `JSONEncoder`.
-    public static func readNoteFromDisk() throws -> String {
+    /// Returns `nil` when the file is absent. Throws `corruptState` when the file exists
+    /// but cannot be decoded (torn concurrent write). Throws `persistenceFailed` only when
+    /// the caller required a present value (see `readNoteFromDisk()`).
+    public static func readNoteFromDiskIfPresent() throws -> String? {
         let fileURL = Self.fileStateURL(filename: "note.json")
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return nil
+        }
         do {
             let data = try Data(contentsOf: fileURL)
             return try JSONDecoder().decode(String.self, from: data)
         } catch {
-            throw APSError.persistenceFailed(key: .note)
+            throw APSError.corruptState(key: .note)
         }
     }
 
-    public static func readProfileFromDisk() throws -> ProfileDocument {
+    /// Requires `note.json` to exist and decode; used after writes.
+    public static func readNoteFromDisk() throws -> String {
+        guard let value = try readNoteFromDiskIfPresent() else {
+            throw APSError.persistenceFailed(key: .note)
+        }
+        return value
+    }
+
+    public static func readProfileFromDiskIfPresent() throws -> ProfileDocument? {
         let fileURL = Self.fileStateURL(filename: "profile.json")
+        guard FileManager.default.fileExists(atPath: fileURL.path) else {
+            return nil
+        }
         do {
             let data = try Data(contentsOf: fileURL)
             return try JSONDecoder().decode(ProfileDocument.self, from: data)
         } catch {
+            throw APSError.corruptState(key: .profile)
+        }
+    }
+
+    /// Requires `profile.json` to exist and decode; used after writes.
+    public static func readProfileFromDisk() throws -> ProfileDocument {
+        guard let document = try readProfileFromDiskIfPresent() else {
             throw APSError.persistenceFailed(key: .profile)
+        }
+        return document
+    }
+
+    /// Ensures FileState-backed keys do not hide a torn on-disk file behind AppState initials.
+    public static func requireDecodableDiskState(for key: DemoKey) throws {
+        switch key {
+        case .note:
+            _ = try readNoteFromDiskIfPresent()
+        case .profile, .profileName:
+            _ = try readProfileFromDiskIfPresent()
+        case .counter, .message, .flag, .secret:
+            break
         }
     }
 
@@ -324,14 +372,9 @@ public final class StateStore {
     ///
     /// Slice writes mutate the cached parent document; without this refresh, a
     /// long-lived `StateStore` can preserve a stale `version` after another
-    /// process updated the file.
+    /// process updated the file. Corrupt on-disk JSON throws `corruptState`.
     private static func refreshProfileFileStateFromDisk() throws {
-        let fresh: ProfileDocument
-        do {
-            fresh = try readProfileFromDisk()
-        } catch {
-            fresh = ProfileDocument(name: "", version: 0)
-        }
+        let fresh = try readProfileFromDiskIfPresent() ?? ProfileDocument(name: "", version: 0)
         var parent = Application.fileState(\.profile)
         parent.value = fresh
     }

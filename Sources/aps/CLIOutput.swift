@@ -35,6 +35,23 @@ enum CLIOutput {
         let timestamp: Date
     }
 
+    /// Machine-mode watch failure (torn / undecodable FileState).
+    struct WatchErrorEvent: Encodable {
+        let type: String
+        let key: String
+        let error: String
+        let message: String
+        let timestamp: Date
+
+        init(key: String, error: String, message: String, timestamp: Date) {
+            self.type = "error"
+            self.key = key
+            self.error = error
+            self.message = message
+            self.timestamp = timestamp
+        }
+    }
+
     struct StatsPayload: Encodable {
         let mutationCount: Int
         let lastMutatedKey: String

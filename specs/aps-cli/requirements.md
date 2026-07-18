@@ -43,11 +43,12 @@ Acceptance Criteria
 
 ### REQ-aps-cli-005
 
-`APSError` SHALL cover `invalidValue`, `encodingFailed`, `decodingFailed`, `persistenceFailed`, and `keychainUnavailable`.
+`APSError` SHALL cover `invalidValue`, `encodingFailed`, `decodingFailed`, `persistenceFailed`, `keychainUnavailable`, and `corruptState`.
 
 Acceptance Criteria
 - Each case has an actionable `description`.
 - `set note` surfaces `persistenceFailed` when the on-disk value does not match after write.
+- `corruptState` is used when a FileState file exists but cannot be decoded.
 
 ### REQ-aps-cli-010
 
@@ -112,4 +113,13 @@ Acceptance Criteria
 - `aps set profileName X` updates the parent `profile` document name on disk.
 - `aps get profileName` returns the current parent name field.
 - `aps keys` lists `profileName` with storage `Slice`.
+
+### REQ-aps-cli-017
+
+When a FileState file for `note`, `profile`, or `profileName` exists but is undecodable, `aps get` / `aps watch` SHALL fail with `corruptState` and exit code 65; `watch --jsonl` SHALL emit one error event before exiting. Missing files still resolve to initials. README SHALL document single-writer / last-writer-wins semantics.
+
+Acceptance Criteria
+- Torn `note.json` / `profile.json` never surfaces as the AppState initial value on the direct disk path.
+- Exit code is 65 (`EX_DATAERR`) for `corruptState`.
+- README documents the multi-process FileState contract.
 

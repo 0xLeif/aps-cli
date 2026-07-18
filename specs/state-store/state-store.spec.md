@@ -36,8 +36,11 @@ non-UI use.
 | `resetStats` | Clears process-local DemoStats counters. |
 | `profileDocument` | Typed profile FileState accessor. |
 | `profileName` | Slice accessor for ProfileDocument.name. |
-| `readNoteFromDisk` | Direct `note.json` read bypassing cache. |
-| `readProfileFromDisk` | Direct `profile.json` read bypassing cache. |
+| `readNoteFromDisk` | Direct `note.json` read requiring a present decodable file. |
+| `readNoteFromDiskIfPresent` | Optional `note.json` read; throws `corruptState` if torn. |
+| `readProfileFromDisk` | Direct `profile.json` read requiring a present decodable file. |
+| `readProfileFromDiskIfPresent` | Optional `profile.json` read; throws `corruptState` if torn. |
+| `requireDecodableDiskState` | Loud-fail helper for CLI get/watch on FileState keys. |
 | `parseBool` | Bool token parser for flag values. |
 | `APSClock` | Injected clock dependency protocol. |
 | `now` | APSClock current instant. |
@@ -118,3 +121,4 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-18 | CHG-0013-dogfood-appstate-slice-via-profilename-for-issue-17: Dogfood AppState Slice via profileName for issue 17 |
 | 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove JSONCoding.decode |
 | 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15 |
+| 2026-07-18 | CHG-0016-loud-torn-filestate-reads-and-document-multi-writer-semantics-for-issue-38: Loud torn FileState reads + multi-writer docs |
