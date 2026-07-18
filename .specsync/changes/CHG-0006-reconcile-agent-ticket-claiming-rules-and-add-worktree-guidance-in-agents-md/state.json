@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0006-reconcile-agent-ticket-claiming-rules-and-add-worktree-guidance-in-agents-md",
+  "slug": "reconcile-agent-ticket-claiming-rules-and-add-worktree-guidance-in-agents-md",
+  "title": "Reconcile agent ticket claiming rules and add worktree guidance in AGENTS.md",
+  "description": "Reconcile agent ticket claiming rules and add worktree guidance in AGENTS.md",
+  "kind": "documentation",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "f1bb8014b4dc4ecb2cdd63fe2f700220efadcf80",
+  "created_at": 1784402891,
+  "updated_at": 1784403010,
+  "affected_specs": [],
+  "affected_paths": [
+    "AGENTS.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Docs-only convention reconciliation; no module contracts change",
+  "acceptance_criteria": [
+    "AGENTS.md carries one reconciled Multi-agent ticket claiming section (agent:<name> labels, claim/release lifecycle, label creation) plus a Worktrees for parallel agents subsection; trust contract gate passes on the PR."
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}
