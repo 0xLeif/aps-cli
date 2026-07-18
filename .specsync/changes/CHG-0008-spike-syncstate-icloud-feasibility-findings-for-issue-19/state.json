@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0008-spike-syncstate-icloud-feasibility-findings-for-issue-19",
+  "slug": "spike-syncstate-icloud-feasibility-findings-for-issue-19",
+  "title": "Spike: SyncState (iCloud) feasibility findings for issue 19",
+  "description": "Spike: SyncState (iCloud) feasibility findings for issue 19",
+  "kind": "documentation",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "ecc0e2f1eb30504cb9a98b596389e1cd2de00e21",
+  "created_at": 1784405580,
+  "updated_at": 1784405631,
+  "affected_specs": [],
+  "affected_paths": [
+    "docs/spikes/syncstate-feasibility.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Documentation-only spike findings; no module API changes.",
+  "acceptance_criteria": [
+    "Findings doc at docs/spikes/syncstate-feasibility.md with go/no-go recommendation for SyncState in a bare CLI."
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

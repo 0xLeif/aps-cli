@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784405587,
+      "digest": "b5c82d28f1c53ec2ac954f7d8d0882709dcbe58e0e94c495ff9442d1687c037a",
+      "note": "Approve SyncState spike findings documentation."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784405631,
+      "digest": "69534223835cb3a4a8ec741e98b24a023320e33c872e34f34220c26718572dd0",
+      "note": "Accept SyncState spike findings."
+    }
+  ],
+  "reopenings": []
+}

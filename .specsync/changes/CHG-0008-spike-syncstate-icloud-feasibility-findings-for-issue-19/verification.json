@@ -1,0 +1,41 @@
+{
+  "timestamp": 1784405625,
+  "commit": "ecc0e2f1eb30504cb9a98b596389e1cd2de00e21",
+  "contract_digest": "b5c82d28f1c53ec2ac954f7d8d0882709dcbe58e0e94c495ff9442d1687c037a",
+  "workspace_digest": "7ec8add955a67b6f79c9213fdfa45cddff2d68f7b3a0f4c5ea57c9560a0f8d21",
+  "acceptance_input_digest": "8f29a941462274a04f64754be7e276d4263174ae15311d9f3b8ff9a88d7aa256",
+  "acceptance_manifest": {
+    "schema_version": 1,
+    "entries": [
+      {
+        "path": ".specsync/change-sequence.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "cf6815bd4aff15dd98e5b68b1baf960876fc7b62b1439c9f84e3008f9475be83",
+        "entry_digest": "53425a8cbd12f59d00ac30e388d0ef8b439898d7578cc92f90500f74e91464f3",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "docs/spikes/syncstate-feasibility.md",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "3ee20c0f792877051f80f12a2afa1e26cf76345c3cf65a489112292d0484a900",
+        "entry_digest": "51023ff91d431468ce0fe5bb840f7baaa8a3e74c9d5698b47de188cda4b5f37d",
+        "owners": [
+          "@exact:delivery"
+        ]
+      }
+    ]
+  },
+  "passed": true,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": []
+}
