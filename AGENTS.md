@@ -19,6 +19,28 @@ fledge trust verify       # full trust gate when tools are installed
 ./Scripts/smoke.sh
 ```
 
+## Agent ticket claims (Cursor + Kimi)
+
+Multiple agents may fan out across GitHub issues. Claim with a label before
+starting work so two agents never own the same ticket.
+
+| Label | Agent |
+|-------|--------|
+| `agent:cursor` | Cursor cloud / coding agents |
+| `agent:kimi` | Kimi Code agent |
+
+Rules:
+
+1. Before picking up an issue, read its labels. Skip if `agent:cursor` or
+   `agent:kimi` is already present (unless you added it).
+2. Claim by adding **your** label only (`agent:cursor` for Cursor agents).
+   One agent label per ticket.
+3. Fan out subagents only on tickets you have claimed. Pass the issue number
+   and claim label into each subagent prompt.
+4. Remove your agent label when the implementing PR is open, or when you stop
+   work without a PR, so another agent can take it.
+5. Prefer unclaimed open issues. Do not strip another agent's claim label.
+
 <!-- CorvidLabs trust toolchain: BEGIN (managed, do not edit inside) -->
 ## CorvidLabs trust toolchain (standing rules)
 

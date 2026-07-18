@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 4,
-  "id": "CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate",
+  "sequence": 5,
+  "id": "CHG-0005-document-agent-ticket-claim-labels-for-cursor-and-kimi-fanout",
   "acknowledged_collisions": []
 }
