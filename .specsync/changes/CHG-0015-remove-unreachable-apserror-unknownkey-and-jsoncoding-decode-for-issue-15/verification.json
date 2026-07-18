@@ -1,130 +1,20 @@
 {
-  "timestamp": 1784410573,
+  "timestamp": 1784410548,
   "commit": "b48db03409e43e5cc6fbd488967c9b08d6827243",
-  "contract_digest": "73c000607b3050c54981b4c29532280dd08bf00b7a15c8ec1801e045fa5496c9",
-  "workspace_digest": "59e3a9086dc67c553cf8fc0f628d31fc6582ceab2cfd269541fd229e59ea549f",
-  "acceptance_input_digest": "20892dbe0c658b378986c08dc573b2b3fa948085d301ce4cc05a9f8b8033be15",
+  "contract_digest": "30740768dcecceea1a7c3b740c383f846f150c509523673ef373157ac3e4aae5",
+  "workspace_digest": "db295578c927197cbe0a54d8e929d7745e7f8b949ed9feb668277d90e7f13324",
+  "acceptance_input_digest": "9b1532626af892ff0e3d64fad59ddb1691a36afd05940926edbe01d9b528ec34",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
       {
-        "path": ".github/workflows/ci.yml",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "a902f7c6785bb487278bfb39c95d593a45a8695f5245a9e5b9909d810410e6a8",
-        "entry_digest": "00a1986a1f0e06e1cbd4d3c3e933b240c5cb457a554e86515ba3db8241f7a263",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": ".github/workflows/linux-smoke.yml",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "7a7f76bbc068b14e9945a3add8c1f1d812362d810db6af6c4c9b60959d54f5c3",
-        "entry_digest": "db8fe6d1745786e008c9b0f6d2631cbf6a9e094763f305cfe07bfbc4444b0535",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": ".github/workflows/trust.yml",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "e165929994150d856d05ad048d8e1032e09df989c78ea3f1390d4e885b50af56",
-        "entry_digest": "e405b6225fdb502cfae9b22a9c14e21be8d1715bbaf8d56cdfd178bb8e173cb9",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": ".specsync/.gitignore",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "a3129d6f93250ade8dbacfc73bc7eeae0cc47c2f7032142ca47cb4f1ffb2483e",
-        "entry_digest": "9badbf40b83d05f58bafda0fc2cafccfe726e4da7e6e67ef513e822989e13f04",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
         "path": ".specsync/change-sequence.json",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "3b200adf8860f60a6ebbb7bd22278d65d36c9fb8d9dd7529cf7eba7635f9bb59",
-        "entry_digest": "62a4ea5935aca0821d1aeeb2b5113dda9561feaf0385be503f4cef23bbf99c7b",
+        "payload_digest": "84d780b51267d44f88acaf91878c56e8c4b0694608d1a9c53018ce5ea7b1de47",
+        "entry_digest": "25c7131b7c1001ce1ff855b28384ce161faf4270fa2111e7abdac2450b244f79",
         "owners": [
           "@exact:delivery"
-        ]
-      },
-      {
-        "path": ".specsync/config.toml",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "54a83f6a4a252649bac390d2e936aa0815711fba86b6bfc8ea8fff2fffdfd29b",
-        "entry_digest": "e60f979233a7db75ce63f4ef42d6f1f7676ad1655a438b9baf78558aba60ec3e",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": ".specsync/registry.toml",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "c423be1a5cf87318f85dc252fe0acd1c1486c5224ddc2d8e19bea1ac9c69c820",
-        "entry_digest": "7e1f068900ced849b8d1028ca40165fbdc5280ae7f53452f0e57e2710d895848",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": ".specsync/sdd.json",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "2d5fb3058b1ee4ce584c3cda9410c193c4893e272ed459205e58bfde06afc7b0",
-        "entry_digest": "8c6b11fc5787eb04e7ee651eb15fbf98fc3ea22db37e65423e3d75f99c09df19",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": ".specsync/version",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "f9893302cd3158f3b5aea394dcd2a91574869e9e6ff69e9235b10a3bf8c983fb",
-        "entry_digest": "f980ba79f6c953bed30303c6b87d8e868ad6a7f4114bf0e745c9099255e665b0",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": "Scripts/smoke.sh",
-        "kind": "file",
-        "mode": 33261,
-        "payload_digest": "e56bf09bae732fa3557d50b6c9b811bae7d2010dc74a01cdccd32bcd793c7a85",
-        "entry_digest": "be5fbb70152c18606ae7f26546919ab5cd61aa0b79de1fecb72d2cab092c2688",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": "Sources/aps/Aps.swift",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "d41387167cb27edb9e448160642c67e3e9819ddcc8038b3b25768e40a5f14add",
-        "entry_digest": "b08d0765337a24358f50b9a61ac5faa4ba39b9da193b4845f7edb71af98fd721",
-        "owners": [
-          "aps-cli"
-        ]
-      },
-      {
-        "path": "Sources/aps/CLIOutput.swift",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "281d1cb75cf70f49afb03a272cefdb7786a7a04f057f6aa51df33a9b672c999b",
-        "entry_digest": "5373f2d9892d77adc64d10ac041d291256396d280dce6792d1ae79d6f37f752c",
-        "owners": [
-          "aps-cli"
         ]
       },
       {
@@ -135,16 +25,6 @@
         "entry_digest": "baff1088e1c04eeb481be267b76094b189baba0093526105e37a9a98676712cc",
         "owners": [
           "aps-cli"
-        ]
-      },
-      {
-        "path": "Sources/aps/DemoState.swift",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "62cd24efb557b5cef77e7aae804f933f4b53caf47195968764f05cc5a0a0d9b8",
-        "entry_digest": "fb710f893d343d67c1fd7a5a5cc50c5c49caf0aa182e5af17ee7c97ff98f8122",
-        "owners": [
-          "state-store"
         ]
       },
       {
@@ -288,13 +168,7 @@
     }
   ],
   "requirement_ids": [
-    "REQ-aps-cli-001",
-    "REQ-aps-cli-010",
-    "REQ-aps-cli-011",
-    "REQ-aps-cli-012",
-    "REQ-aps-cli-013",
-    "REQ-state-store-001",
-    "REQ-state-store-010",
-    "REQ-state-store-011"
+    "REQ-aps-cli-005",
+    "REQ-state-store-002"
   ]
 }

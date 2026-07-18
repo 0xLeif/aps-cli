@@ -16,7 +16,7 @@ Acceptance Criteria
 
 ### REQ-state-store-002
 
-`StateStore` SHALL inject real `APSClock` / `SystemAPSClock` (`now`) and `JSONCoding` (`encodePretty`, `decode`) dependencies for `dump` output.
+`StateStore` SHALL inject real `APSClock` / `SystemAPSClock` (`now`) and `JSONCoding` (`encodePretty`) dependencies for `dump` output.
 
 Acceptance Criteria
 - `dump` JSON includes every `DemoKey` and a timestamp.

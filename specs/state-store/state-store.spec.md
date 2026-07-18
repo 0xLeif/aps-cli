@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 15
+version: 16
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -42,9 +42,8 @@ non-UI use.
 | `APSClock` | Injected clock dependency protocol. |
 | `now` | APSClock current instant. |
 | `SystemAPSClock` | Date-backed clock. |
-| `JSONCoding` | Shared encode/decode helpers. |
+| `JSONCoding` | Shared encode helpers for dump output. |
 | `encodePretty` | Pretty JSON encode helper. |
-| `decode` | JSON decode helper. |
 | `DemoStats` | ObservableObject mutation-stats dependency. |
 | `mutationCount` | Number of recorded set/reset mutations. |
 | `lastMutatedKey` | Raw demo key of the latest mutation. |
@@ -91,8 +90,8 @@ Then keys include message with value "hi" and a timestamp field exists.
 
 - `set(.counter, value: "nope")` throws `APSError.invalidValue`.
 - `set(.flag, value: "maybe")` throws `APSError.invalidValue`.
-- JSONCoding encode/decode failures surface as `APSError.encodingFailed` /
-  `decodingFailed` when UTF-8 conversion fails.
+- JSONCoding encode failures surface as `APSError.encodingFailed` when UTF-8
+  conversion fails. Profile JSON parse failures surface as `APSError.invalidValue`.
 
 ## Dependencies
 
@@ -117,3 +116,5 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: Dogfood ObservedDependency DemoStats for issue 18 |
 | 2026-07-18 | CHG-0012-dogfood-securestate-secret-keychain-demo-key-for-issue-16: Dogfood SecureState secret Keychain demo key for issue 16 |
 | 2026-07-18 | CHG-0013-dogfood-appstate-slice-via-profilename-for-issue-17: Dogfood AppState Slice via profileName for issue 17 |
+| 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove JSONCoding.decode |
+| 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15 |

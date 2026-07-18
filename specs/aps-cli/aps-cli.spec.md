@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 15
+version: 16
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -40,7 +40,6 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `profile` | ProfileDocument key stored in AppState `FileState`. |
 | `secret` | String key stored in AppState `SecureState` (Keychain). |
 | `profileName` | String Slice over `ProfileDocument.name`. |
-| `unknownKey` | Unknown demo key token. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
@@ -121,3 +120,5 @@ Then the watcher prints `changed` within one poll interval.
 | 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: Dogfood ObservedDependency DemoStats for issue 18 |
 | 2026-07-18 | CHG-0012-dogfood-securestate-secret-keychain-demo-key-for-issue-16: Dogfood SecureState secret Keychain demo key for issue 16 |
 | 2026-07-18 | CHG-0013-dogfood-appstate-slice-via-profilename-for-issue-17: Dogfood AppState Slice via profileName for issue 17 |
+| 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove unreachable APSError.unknownKey |
+| 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15 |

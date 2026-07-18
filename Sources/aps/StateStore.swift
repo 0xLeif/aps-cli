@@ -111,7 +111,10 @@ public final class StateStore {
         case .profile:
             let document: ProfileDocument
             do {
-                document = try jsonCoding.decode(ProfileDocument.self, from: value)
+                guard let data = value.data(using: .utf8) else {
+                    throw APSError.decodingFailed
+                }
+                document = try JSONDecoder().decode(ProfileDocument.self, from: data)
             } catch {
                 throw APSError.invalidValue(key: key, value: value)
             }
