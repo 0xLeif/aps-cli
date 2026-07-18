@@ -1,0 +1,19 @@
+[plugin]
+name = "fledge-plugin-aps"
+version = "0.2.0"
+description = "Tiny Swift CLI that dogfoods AppState outside SwiftUI"
+author = "0xLeif"
+
+[[commands]]
+name = "aps"
+description = "Dogfood AppState: get/set/watch/dump typed demo state"
+binary = ".build/release/aps"
+
+[hooks]
+# Package.swift is auto-detected; this keeps a release binary for the command path.
+build = "swift build -c release"
+
+[capabilities]
+exec = false
+store = false
+metadata = false

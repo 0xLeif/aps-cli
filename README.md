@@ -77,6 +77,17 @@ Or through fledge:
 fledge lanes run verify
 ```
 
+### Fledge plugin shim
+
+This repo ships a root `plugin.toml` so fledge can install `aps` as a live-linked plugin (`fledge-plugin-aps` v0.2.0 tracks the CLI version). Publishing to the plugin hub stays deferred until the repo is public (v1.0).
+
+```bash
+# From a clone of aps-cli:
+fledge plugins install .          # live-link; rebuilds release binary via the build hook
+fledge aps keys --json            # same CLI, invoked through fledge
+fledge plugins validate .         # also runs in the verify lane (manifest drift fails CI)
+```
+
 Release build:
 
 ```bash
@@ -201,7 +212,7 @@ See [`GOAL.md`](GOAL.md) for **aps 0.2.0**: agent-ready AppState dogfood harness
 ## Non-goals (0.x)
 
 - No iCloud `SyncState` or SwiftData `ModelState` (see `docs/spikes/`)
-- No plugin system, daemon, or network API
+- No in-process plugin/daemon/network API inside `aps` itself (the repo may still be a fledge plugin shim; see above)
 - No dynamic schema language: fixed demo keys only
 
 ## Related
