@@ -125,6 +125,22 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(store.get(.profileName), "sliced")
     }
 
+    @MainActor
+    func testProfileNameSlicePreservesOnDiskVersionAfterExternalWrite() async throws {
+        let store = StateStore()
+        try store.set(.profile, value: #"{"name":"before","version":1}"#)
+
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("profile.json")
+        let external = ProfileDocument(name: "external", version: 99)
+        try JSONEncoder().encode(external).write(to: url)
+
+        try store.set(.profileName, value: "after")
+        let onDisk = try StateStore.readProfileFromDisk()
+        XCTAssertEqual(onDisk.name, "after")
+        XCTAssertEqual(onDisk.version, 99)
+    }
+
 #if canImport(Security)
     @MainActor
     func testSecretSecureStateRoundTrip() async throws {

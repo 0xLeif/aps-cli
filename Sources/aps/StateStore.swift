@@ -133,10 +133,14 @@ public final class StateStore {
             throw APSError.keychainUnavailable
 #endif
         case .profileName:
+            // Refresh FileState from disk before Slice write so a stale cached
+            // ProfileDocument cannot clobber a newer on-disk version.
+            try Self.refreshProfileFileStateFromDisk()
+            let expectedVersion = (try? Self.readProfileFromDisk())?.version ?? 0
             var slice = Application.slice(\.profile, \.name)
             slice.value = value
             let onDisk = try Self.readProfileFromDisk()
-            guard onDisk.name == value else {
+            guard onDisk.name == value, onDisk.version == expectedVersion else {
                 throw APSError.persistenceFailed(key: .profileName)
             }
         }
@@ -163,6 +167,7 @@ public final class StateStore {
             break
 #endif
         case .profileName:
+            try? Self.refreshProfileFileStateFromDisk()
             var slice = Application.slice(\.profile, \.name)
             slice.value = ""
         }
@@ -310,6 +315,22 @@ public final class StateStore {
         } catch {
             throw APSError.persistenceFailed(key: .profile)
         }
+    }
+
+    /// Loads `profile.json` into AppState's FileState cache when present.
+    ///
+    /// Slice writes mutate the cached parent document; without this refresh, a
+    /// long-lived `StateStore` can preserve a stale `version` after another
+    /// process updated the file.
+    private static func refreshProfileFileStateFromDisk() throws {
+        let fresh: ProfileDocument
+        do {
+            fresh = try readProfileFromDisk()
+        } catch {
+            fresh = ProfileDocument(name: "", version: 0)
+        }
+        var parent = Application.fileState(\.profile)
+        parent.value = fresh
     }
 
     private static func fileStateURL(filename: String) -> URL {
