@@ -1,0 +1,33 @@
+{
+  "originHash" : "26c8955179127e90c5b2750191b7ffa99d5d6a0c43b82a93fd3731334426e8e1",
+  "pins" : [
+    {
+      "identity" : "appstate",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/0xLeif/AppState",
+      "state" : {
+        "revision" : "5053feab3497605386613e4309bc0cf8c95dc5c4",
+        "version" : "3.0.1"
+      }
+    },
+    {
+      "identity" : "cache",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/0xLeif/Cache",
+      "state" : {
+        "revision" : "a959a473d81da9aeb17dac7c050f0a07775f2c18",
+        "version" : "2.1.3"
+      }
+    },
+    {
+      "identity" : "swift-argument-parser",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/apple/swift-argument-parser",
+      "state" : {
+        "revision" : "6a52f3251125d74daf04fcbd5e6f08a75d074382",
+        "version" : "1.8.2"
+      }
+    }
+  ],
+  "version" : 3
+}
