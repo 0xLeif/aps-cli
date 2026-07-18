@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784405692,
+      "digest": "f5bdef026be17db1140aa1db32091f9c3de3726932dc1fb23261a309e2ecd03b",
+      "note": "Approve ModelState spike findings documentation."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784405711,
+      "digest": "c274c0b5890dc27dbe23ce3b3d35f422734371e76aca44ee1d8d372617dc640f",
+      "note": "Accept ModelState spike findings."
+    }
+  ],
+  "reopenings": []
+}
