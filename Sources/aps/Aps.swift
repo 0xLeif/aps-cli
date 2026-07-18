@@ -15,6 +15,7 @@ struct Aps: ParsableCommand {
           note     String           FileState    (~/.aps/note.json)
           profile  ProfileDocument  FileState    (~/.aps/profile.json)
           secret   String           SecureState  (Keychain; macOS)
+          profileName  String       Slice        (profile.name via AppState Slice)
 
         State root: --state-dir > APS_HOME > ~/.aps
 
@@ -40,7 +41,7 @@ extension Aps {
             abstract: "Print the current value for a demo key."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note | profile | secret")
+        @Argument(help: "Demo key: counter | message | flag | note | profile | secret | profileName")
         var key: DemoKey
 
         @OptionGroup
@@ -70,10 +71,10 @@ extension Aps {
             abstract: "Set a demo key to a value."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note | profile | secret")
+        @Argument(help: "Demo key: counter | message | flag | note | profile | secret | profileName")
         var key: DemoKey
 
-        @Argument(help: "New value (Bool: true/false/1/0; Int for counter; JSON for profile; String for secret)")
+        @Argument(help: "New value (Bool: true/false/1/0; Int for counter; JSON for profile; String for secret/profileName)")
         var value: String
 
         @OptionGroup
@@ -108,7 +109,7 @@ extension Aps {
             abstract: "Print the value whenever it changes (Observation + polling)."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note | profile | secret")
+        @Argument(help: "Demo key: counter | message | flag | note | profile | secret | profileName")
         var key: DemoKey
 
         @Option(name: .long, help: "Poll interval in milliseconds (fallback for disk-backed keys).")

@@ -66,7 +66,14 @@ public final class StateStore {
 #else
             return ""
 #endif
+        case .profileName:
+            return Application.slice(\.profile, \.name).value
         }
+    }
+
+    /// `ProfileDocument.name` read through AppState `Slice` (same path as `get(.profileName)`).
+    public func profileName() -> String {
+        Application.slice(\.profile, \.name).value
     }
 
     public func profileDocument() throws -> ProfileDocument {
@@ -125,6 +132,13 @@ public final class StateStore {
 #else
             throw APSError.keychainUnavailable
 #endif
+        case .profileName:
+            var slice = Application.slice(\.profile, \.name)
+            slice.value = value
+            let onDisk = try Self.readProfileFromDisk()
+            guard onDisk.name == value else {
+                throw APSError.persistenceFailed(key: .profileName)
+            }
         }
         stats.recordMutation(key: key)
     }
@@ -148,6 +162,9 @@ public final class StateStore {
 #else
             break
 #endif
+        case .profileName:
+            var slice = Application.slice(\.profile, \.name)
+            slice.value = ""
         }
         stats.recordMutation(key: key)
     }
@@ -267,7 +284,7 @@ public final class StateStore {
                 return (try? encodeProfile(document)) ?? get(key)
             }
             return get(key)
-        case .counter, .message, .flag, .secret:
+        case .counter, .message, .flag, .secret, .profileName:
             return get(key)
         }
     }
@@ -324,6 +341,8 @@ public final class StateStore {
 #if canImport(Security)
             _ = Application.secureState(\.secret).value
 #endif
+        case .profileName:
+            _ = Application.slice(\.profile, \.name).value
         }
     }
 

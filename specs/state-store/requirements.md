@@ -78,3 +78,12 @@ Acceptance Criteria
 - `reset(.secret)` leaves get as "" and removes the Keychain item.
 - Without Security, `set(.secret, ...)` throws `APSError.keychainUnavailable`.
 
+
+
+### REQ-state-store-014
+
+`StateStore` SHALL expose `profileName` via `Application.slice(\.profile, \.name)` so writes land in the parent FileState `profile` value.
+
+Acceptance Criteria
+- After `set(.profileName, "x")`, `profileDocument().name` is `"x"` and `profile.json` reflects it.
+- `get(.profileName)` matches the parent name field.

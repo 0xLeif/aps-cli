@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 13
+version: 14
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -23,7 +23,7 @@ agents can get, set, watch, dump, list, and reset typed application state.
 
 | Export | Description |
 |--------|-------------|
-| `DemoKey` | Fixed schema enum including `profile` and `secret`. |
+| `DemoKey` | Fixed schema enum including `profile`, `secret`, and `profileName`. |
 | `ProfileDocument` | Codable `{name, version}` FileState document. |
 | `name` | ProfileDocument display name field. |
 | `version` | ProfileDocument integer version field. |
@@ -39,13 +39,14 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `note` | String key stored in AppState `FileState`. |
 | `profile` | ProfileDocument key stored in AppState `FileState`. |
 | `secret` | String key stored in AppState `SecureState` (Keychain). |
+| `profileName` | String Slice over `ProfileDocument.name`. |
 | `unknownKey` | Unknown demo key token. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
 | `persistenceFailed` | Disk/Keychain-backed key did not persist after write. |
 | `keychainUnavailable` | SecureState unavailable without Apple Security. |
-| `storage` | Human storage kind (`State` / `StoredState` / `FileState` / `SecureState`). |
+| `storage` | Human storage kind (`State` / `StoredState` / `FileState` / `SecureState` / `Slice`). |
 | `valueType` | Human value type (`Int` / `String` / `Bool` / `ProfileDocument`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
 | `detail` | One-line description for `keys`. |
@@ -116,5 +117,6 @@ Then the watcher prints `changed` within one poll interval.
 | 2026-07-18 | CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate: Ship aps 0.2.0 agent-ready JSON state-dir watch and profile FileState |
 | 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: ObservedDependency DemoStats dogfood |
 | 2026-07-18 | CHG-0012-dogfood-securestate-secret-keychain-demo-key: SecureState secret Keychain dogfood |
+| 2026-07-18 | CHG-0013-dogfood-appstate-slice-via-profilename: Slice profileName dogfood |
 | 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: Dogfood ObservedDependency DemoStats for issue 18 |
 | 2026-07-18 | CHG-0012-dogfood-securestate-secret-keychain-demo-key-for-issue-16: Dogfood SecureState secret Keychain demo key for issue 16 |

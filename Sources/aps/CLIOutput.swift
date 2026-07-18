@@ -114,7 +114,7 @@ enum CLIOutput {
                 throw APSError.invalidValue(key: key, value: raw)
             }
             return .int(intValue)
-        case .message, .note, .secret:
+        case .message, .note, .secret, .profileName:
             return .string(raw)
         case .flag:
             guard let boolValue = StateStore.parseBool(raw) else {

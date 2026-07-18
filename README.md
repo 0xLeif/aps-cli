@@ -33,6 +33,7 @@ State root resolution: `--state-dir` > `APS_HOME` > `~/.aps`.
 | `note` | `String` | `FileState` | Persisted (`$APS_HOME/note.json`) |
 | `profile` | `{name,version}` | `FileState` | Persisted structured Codable (`$APS_HOME/profile.json`) |
 | `secret` | `String` | `SecureState` | Persisted in Keychain (macOS); account `dev.leif.aps/secret` |
+| `profileName` | `String` | `Slice` | Projection of `profile.name` via AppState Slice |
 
 Dynamic / user-declared keys are intentionally out of scope for 0.x.
 

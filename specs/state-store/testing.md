@@ -8,3 +8,5 @@
 - watchStatsBlocking detects dependency mutation
 
 - SecureState `secret` round-trip / Keychain delete (Darwin) or keychainUnavailable (else).
+
+- Slice `profileName` writes land in parent `profile` FileState.

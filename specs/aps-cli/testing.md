@@ -6,3 +6,5 @@
 - Smoke: `Scripts/smoke.sh` for flag/note persistence, reset, and `aps stats`
 
 - SecureState `secret` round-trip / Keychain delete (Darwin) or keychainUnavailable (else).
+
+- Slice `profileName` writes land in parent `profile` FileState.

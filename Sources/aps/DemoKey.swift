@@ -9,6 +9,8 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
     case note
     case profile
     case secret
+    /// `ProfileDocument.name` projected through AppState `Slice` over `profile`.
+    case profileName
 
     public var storage: String {
         switch self {
@@ -16,13 +18,14 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
         case .flag: return "StoredState"
         case .note, .profile: return "FileState"
         case .secret: return "SecureState"
+        case .profileName: return "Slice"
         }
     }
 
     public var valueType: String {
         switch self {
         case .counter: return "Int"
-        case .message, .note, .secret: return "String"
+        case .message, .note, .secret, .profileName: return "String"
         case .flag: return "Bool"
         case .profile: return "ProfileDocument"
         }
@@ -47,6 +50,8 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
             return "Codable {name,version} via FileState (~/.aps/profile.json)"
         case .secret:
             return "String via SecureState / Keychain (\(APSKeychain.secretAccount))"
+        case .profileName:
+            return "profile.name via AppState Slice over FileState ProfileDocument"
         }
     }
 }
