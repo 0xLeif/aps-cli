@@ -1,0 +1,1 @@
+{"commit":"fbcb4636cc4a05c7c21da5342042ec9d541d90db","confidence":0.701818176,"humanApproved":false,"note":"Local verify + 18 tests + smoke; CI pending self-hosted macOS runners","reviewer":"agent:cursor","testsPassed":true,"timestamp":1784393416,"verdict":"proceed"}
