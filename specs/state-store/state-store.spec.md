@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 16
+version: 18
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -36,8 +36,9 @@ non-UI use.
 | `resetStats` | Clears process-local DemoStats counters. |
 | `profileDocument` | Typed profile FileState accessor. |
 | `profileName` | Slice accessor for ProfileDocument.name. |
-| `readNoteFromDisk` | Direct `note.json` read bypassing cache. |
-| `readProfileFromDisk` | Direct `profile.json` read bypassing cache. |
+| `readNoteFromDisk` | Direct `note.json` read bypassing cache; corrupt file throws `decodingFailed`. |
+| `readProfileFromDisk` | Direct `profile.json` read bypassing cache; corrupt file throws `decodingFailed`. |
+| `ensureReadable` | Loud corrupt-state check before `get` / `watch` output. |
 | `parseBool` | Bool token parser for flag values. |
 | `APSClock` | Injected clock dependency protocol. |
 | `now` | APSClock current instant. |
@@ -92,6 +93,11 @@ Then keys include message with value "hi" and a timestamp field exists.
 - `set(.flag, value: "maybe")` throws `APSError.invalidValue`.
 - JSONCoding encode failures surface as `APSError.encodingFailed` when UTF-8
   conversion fails. Profile JSON parse failures surface as `APSError.invalidValue`.
+- `readNoteFromDisk` / `readProfileFromDisk`: missing or unreadable file throws
+  `APSError.persistenceFailed`; an existing file that does not decode throws
+  `APSError.decodingFailed` (exit 65 per the CLI error contract).
+- `ensureReadable` ignores missing files (initial-value semantics) and throws
+  `APSError.decodingFailed` for corrupt `note.json` / `profile.json`.
 
 ## Dependencies
 
@@ -118,3 +124,5 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-18 | CHG-0013-dogfood-appstate-slice-via-profilename-for-issue-17: Dogfood AppState Slice via profileName for issue 17 |
 | 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove JSONCoding.decode |
 | 2026-07-18 | CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15: Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15 |
+| 2026-07-18 | CHG-0016-error-contract-exit-taxonomy-and-json-envelope-for-issue-31: ensureReadable and corrupt-state decodingFailed semantics for issue 31 |
+| 2026-07-18 | CHG-0016-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31: Error contract: exit-code taxonomy and JSON error envelope (issue 31) |

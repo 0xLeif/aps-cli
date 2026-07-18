@@ -119,6 +119,29 @@ swift run aps stats --json
 
 `watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process. For `note` and `profile`, polling reads the JSON files directly so AppState's FileState cache cannot hide cross-process writes.
 
+### Error contract
+
+Domain errors always print a human line to stderr and keep stdout empty, with a sysexits-aligned exit code:
+
+| Code | Meaning | When |
+|------|---------|------|
+| 0 | success | stdout contract satisfied |
+| 64 | EX_USAGE | caller-fixable input: bad key/flags, invalid value |
+| 65 | EX_DATAERR | corrupt persisted state (existing file does not decode) |
+| 69 | EX_UNAVAILABLE | `secret` on a platform without Apple Security |
+| 70 | EX_SOFTWARE | internal bug |
+| 73 | EX_CANTCREAT | write did not persist (unwritable state root) |
+
+64 means fix the invocation; 65+ means environment or data; 70 means an aps bug. Missing state files are not errors: they mean the initial value.
+
+With `--json` / `--jsonl`, or when `APS_ERROR_JSON=1`, stderr additionally gets one structured envelope:
+
+```json
+{"error":{"code":"invalid_value","hint":"Run `aps keys` to see expected types per key.","message":"Invalid value 'nope' for counter (Int)"}}
+```
+
+`code` is stable and safe to match on: `invalid_value`, `encoding_failed`, `decoding_failed`, `persistence_failed`, `keychain_unavailable`.
+
 ## Tests and smoke
 
 ```bash

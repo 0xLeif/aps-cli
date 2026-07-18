@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 15,
-  "id": "CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15",
+  "sequence": 16,
+  "id": "CHG-0016-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31",
   "acknowledged_collisions": []
 }

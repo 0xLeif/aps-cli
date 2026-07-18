@@ -51,16 +51,21 @@ extension Aps {
             try onMainThread {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
-                if options.json {
-                    let payload = CLIOutput.KeyValuePayload(
-                        key: key.rawValue,
-                        type: key.valueType,
-                        storage: key.storage,
-                        value: try CLIOutput.typedValue(for: key, store: store)
-                    )
-                    print(try CLIOutput.encodePretty(payload))
-                } else {
-                    print(store.get(key))
+                do {
+                    try store.ensureReadable(key)
+                    if options.json {
+                        let payload = CLIOutput.KeyValuePayload(
+                            key: key.rawValue,
+                            type: key.valueType,
+                            storage: key.storage,
+                            value: try CLIOutput.typedValue(for: key, store: store)
+                        )
+                        print(try CLIOutput.encodePretty(payload))
+                    } else {
+                        print(store.get(key))
+                    }
+                } catch let error as APSError {
+                    try CLIOutput.fail(error, json: options.json)
                 }
             }
         }
@@ -86,19 +91,19 @@ extension Aps {
                 let store = StateStore()
                 do {
                     try store.set(key, value: value)
+                    if options.json {
+                        let payload = CLIOutput.KeyValuePayload(
+                            key: key.rawValue,
+                            type: key.valueType,
+                            storage: key.storage,
+                            value: try CLIOutput.typedValue(for: key, store: store)
+                        )
+                        print(try CLIOutput.encodePretty(payload))
+                    } else {
+                        print(store.get(key))
+                    }
                 } catch let error as APSError {
-                    throw ValidationError(error.description)
-                }
-                if options.json {
-                    let payload = CLIOutput.KeyValuePayload(
-                        key: key.rawValue,
-                        type: key.valueType,
-                        storage: key.storage,
-                        value: try CLIOutput.typedValue(for: key, store: store)
-                    )
-                    print(try CLIOutput.encodePretty(payload))
-                } else {
-                    print(store.get(key))
+                    try CLIOutput.fail(error, json: options.json)
                 }
             }
         }
@@ -131,35 +136,40 @@ extension Aps {
             try onMainThread {
                 boot(stateDir: stateDir)
                 let store = StateStore()
-                let deadline = timeout.map { Date().addingTimeInterval($0) }
-                var emitted = 0
+                do {
+                    try store.ensureReadable(key)
+                    let deadline = timeout.map { Date().addingTimeInterval($0) }
+                    var emitted = 0
 
-                store.watchBlocking(
-                    key,
-                    pollInterval: TimeInterval(interval) / 1000.0,
-                    shouldContinue: {
-                        if let count, emitted >= count { return false }
-                        if let deadline, Date() >= deadline { return false }
-                        return true
-                    }
-                ) { value in
-                    emitted += 1
-                    if jsonl {
-                        // Parse the fresh `value` from watchBlocking. Do not re-query
-                        // the store: FileState cache can lag cross-process disk writes.
-                        let event = try? CLIOutput.watchEvent(
-                            key: key,
-                            rawValue: value,
-                            timestamp: store.now
-                        )
-                        if let event, let line = try? CLIOutput.encodeLine(event) {
-                            CLIOutput.writeLine(line)
+                    store.watchBlocking(
+                        key,
+                        pollInterval: TimeInterval(interval) / 1000.0,
+                        shouldContinue: {
+                            if let count, emitted >= count { return false }
+                            if let deadline, Date() >= deadline { return false }
+                            return true
+                        }
+                    ) { value in
+                        emitted += 1
+                        if jsonl {
+                            // Parse the fresh `value` from watchBlocking. Do not re-query
+                            // the store: FileState cache can lag cross-process disk writes.
+                            let event = try? CLIOutput.watchEvent(
+                                key: key,
+                                rawValue: value,
+                                timestamp: store.now
+                            )
+                            if let event, let line = try? CLIOutput.encodeLine(event) {
+                                CLIOutput.writeLine(line)
+                            } else {
+                                CLIOutput.writeLine(value)
+                            }
                         } else {
                             CLIOutput.writeLine(value)
                         }
-                    } else {
-                        CLIOutput.writeLine(value)
                     }
+                } catch let error as APSError {
+                    try CLIOutput.fail(error, json: jsonl)
                 }
             }
         }
@@ -178,7 +188,11 @@ extension Aps {
                 boot(stateDir: options.stateDir)
                 // dump is always JSON; --json is accepted for agent symmetry.
                 _ = options.json
-                print(try StateStore().dump())
+                do {
+                    print(try StateStore().dump())
+                } catch let error as APSError {
+                    try CLIOutput.fail(error, json: true)
+                }
             }
         }
     }
@@ -299,26 +313,30 @@ extension Aps {
             try onMainThread {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
-                if all {
-                    store.resetAll()
-                    if options.json {
-                        let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
-                        print(try CLIOutput.encodePretty(payload))
-                    } else {
-                        print("reset all keys")
+                do {
+                    if all {
+                        store.resetAll()
+                        if options.json {
+                            let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
+                            print(try CLIOutput.encodePretty(payload))
+                        } else {
+                            print("reset all keys")
+                        }
+                    } else if let key {
+                        store.reset(key)
+                        if options.json {
+                            let payload = CLIOutput.ResetPayload(
+                                reset: "key",
+                                key: key.rawValue,
+                                value: try CLIOutput.typedValue(for: key, store: store)
+                            )
+                            print(try CLIOutput.encodePretty(payload))
+                        } else {
+                            print(store.get(key))
+                        }
                     }
-                } else if let key {
-                    store.reset(key)
-                    if options.json {
-                        let payload = CLIOutput.ResetPayload(
-                            reset: "key",
-                            key: key.rawValue,
-                            value: try CLIOutput.typedValue(for: key, store: store)
-                        )
-                        print(try CLIOutput.encodePretty(payload))
-                    } else {
-                        print(store.get(key))
-                    }
+                } catch let error as APSError {
+                    try CLIOutput.fail(error, json: options.json)
                 }
             }
         }

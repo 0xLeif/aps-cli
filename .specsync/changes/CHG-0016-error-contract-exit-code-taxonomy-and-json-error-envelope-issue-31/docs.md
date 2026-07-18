@@ -1,0 +1,10 @@
+---
+change: CHG-0016-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31
+artifact: docs
+---
+
+# Docs
+
+README gains an "Error contract" section: exit-code table (0/64/65/69/70/73
+plus 66 reserved), the missing-means-initial rule, the JSON envelope shape
+with a real example, the stable code list, and `APS_ERROR_JSON=1`.

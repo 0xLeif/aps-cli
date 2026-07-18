@@ -104,7 +104,12 @@ public final class StateStore {
             state.value = value
             // AppState FileState swallows save errors after updating its cache.
             // Confirm the value is actually on disk before claiming success.
-            let onDisk = try Self.readNoteFromDisk()
+            let onDisk: String
+            do {
+                onDisk = try Self.readNoteFromDisk()
+            } catch {
+                throw APSError.persistenceFailed(key: .note)
+            }
             guard onDisk == value else {
                 throw APSError.persistenceFailed(key: .note)
             }
@@ -120,7 +125,12 @@ public final class StateStore {
             }
             var state = Application.fileState(\.profile)
             state.value = document
-            let onDisk = try Self.readProfileFromDisk()
+            let onDisk: ProfileDocument
+            do {
+                onDisk = try Self.readProfileFromDisk()
+            } catch {
+                throw APSError.persistenceFailed(key: .profile)
+            }
             guard onDisk == document else {
                 throw APSError.persistenceFailed(key: .profile)
             }
@@ -142,7 +152,12 @@ public final class StateStore {
             let expectedVersion = (try? Self.readProfileFromDisk())?.version ?? 0
             var slice = Application.slice(\.profile, \.name)
             slice.value = value
-            let onDisk = try Self.readProfileFromDisk()
+            let onDisk: ProfileDocument
+            do {
+                onDisk = try Self.readProfileFromDisk()
+            } catch {
+                throw APSError.persistenceFailed(key: .profileName)
+            }
             guard onDisk.name == value, onDisk.version == expectedVersion else {
                 throw APSError.persistenceFailed(key: .profileName)
             }
@@ -300,23 +315,60 @@ public final class StateStore {
     /// Read `note.json` without touching AppState's in-memory FileState cache.
     ///
     /// Mirrors AppState's non-Base64 FileState encoding: UTF-8 JSON via `JSONEncoder`.
+    /// Missing/unreadable file throws `persistenceFailed`; an existing file that
+    /// does not decode throws `decodingFailed` (data corruption, exit 65).
     public static func readNoteFromDisk() throws -> String {
         let fileURL = Self.fileStateURL(filename: "note.json")
+        let data: Data
         do {
-            let data = try Data(contentsOf: fileURL)
-            return try JSONDecoder().decode(String.self, from: data)
+            data = try Data(contentsOf: fileURL)
         } catch {
             throw APSError.persistenceFailed(key: .note)
         }
+        do {
+            return try JSONDecoder().decode(String.self, from: data)
+        } catch {
+            throw APSError.decodingFailed
+        }
     }
 
+    /// Read `profile.json` without touching AppState's in-memory FileState cache.
+    /// Missing/unreadable throws `persistenceFailed`; existing-but-undecodable
+    /// throws `decodingFailed`.
     public static func readProfileFromDisk() throws -> ProfileDocument {
         let fileURL = Self.fileStateURL(filename: "profile.json")
+        let data: Data
         do {
-            let data = try Data(contentsOf: fileURL)
-            return try JSONDecoder().decode(ProfileDocument.self, from: data)
+            data = try Data(contentsOf: fileURL)
         } catch {
             throw APSError.persistenceFailed(key: .profile)
+        }
+        do {
+            return try JSONDecoder().decode(ProfileDocument.self, from: data)
+        } catch {
+            throw APSError.decodingFailed
+        }
+    }
+
+    /// Loud corrupt-state check: a disk-backed file that exists but does not
+    /// decode is a data error (`decodingFailed`, exit 65), never silently the
+    /// initial value. Missing files are fine: they mean the initial value.
+    public func ensureReadable(_ key: DemoKey) throws {
+        let fileURL: URL
+        switch key {
+        case .note:
+            fileURL = Self.fileStateURL(filename: "note.json")
+        case .profile, .profileName:
+            fileURL = Self.fileStateURL(filename: "profile.json")
+        case .counter, .message, .flag, .secret:
+            return
+        }
+        guard FileManager.default.fileExists(atPath: fileURL.path) else { return }
+        switch key {
+        case .note:
+            _ = try Self.readNoteFromDisk()
+        default:
+            _ = try Self.readProfileFromDisk()
         }
     }
 

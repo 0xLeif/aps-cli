@@ -601,4 +601,80 @@ final class APSTests: XCTestCase {
         XCTAssertTrue(persistence.description.contains("note"))
         XCTAssertTrue(persistence.description.contains("persist"))
     }
+
+    func testAPSErrorContractCodesAndExitCodes() {
+        XCTAssertEqual(APSError.invalidValue(key: .counter, value: "x").code, "invalid_value")
+        XCTAssertEqual(APSError.encodingFailed.code, "encoding_failed")
+        XCTAssertEqual(APSError.decodingFailed.code, "decoding_failed")
+        XCTAssertEqual(APSError.persistenceFailed(key: .note).code, "persistence_failed")
+        XCTAssertEqual(APSError.keychainUnavailable.code, "keychain_unavailable")
+
+        XCTAssertEqual(APSError.invalidValue(key: .counter, value: "x").exitCode, 64)
+        XCTAssertEqual(APSError.decodingFailed.exitCode, 65)
+        XCTAssertEqual(APSError.keychainUnavailable.exitCode, 69)
+        XCTAssertEqual(APSError.encodingFailed.exitCode, 70)
+        XCTAssertEqual(APSError.persistenceFailed(key: .note).exitCode, 73)
+
+        for error in [APSError.invalidValue(key: .flag, value: "x"), .encodingFailed, .decodingFailed, .persistenceFailed(key: .flag), .keychainUnavailable] as [APSError] {
+            XCTAssertFalse(error.hint.isEmpty, "hint required for \(error.code)")
+        }
+    }
+
+    func testErrorEnvelopeEncodesStableShape() throws {
+        let envelope = CLIOutput.ErrorEnvelope(
+            error: .init(
+                code: APSError.decodingFailed.code,
+                message: APSError.decodingFailed.description,
+                hint: APSError.decodingFailed.hint
+            )
+        )
+        let line = try CLIOutput.encodeLine(envelope)
+        XCTAssertTrue(line.contains(#""code":"decoding_failed""#))
+        XCTAssertTrue(line.contains(#""message":"#))
+        XCTAssertTrue(line.contains(#""hint":"#))
+        XCTAssertTrue(line.hasPrefix(#"{"error":{"#))
+    }
+
+    func testStructuredErrorsEnabledModes() {
+        XCTAssertTrue(CLIOutput.structuredErrorsEnabled(json: true))
+        let env = ProcessInfo.processInfo.environment["APS_ERROR_JSON"]
+        XCTAssertEqual(CLIOutput.structuredErrorsEnabled(json: false), env == "1")
+    }
+
+    @MainActor
+    func testEnsureReadableMissingFileIsInitialSemantics() throws {
+        let store = StateStore()
+        // Fresh temp dir per setUp: no note.json yet, so no error.
+        try store.ensureReadable(.note)
+        try store.ensureReadable(.profile)
+        try store.ensureReadable(.counter)
+    }
+
+    @MainActor
+    func testEnsureReadableCorruptFileThrowsDecodingFailed() throws {
+        let store = StateStore()
+        try store.set(.note, value: "ok")
+
+        let path = FileManager.defaultFileStatePath
+        let url = URL(fileURLWithPath: path).appendingPathComponent("note.json")
+        try "garbage{{".write(to: url, atomically: false, encoding: .utf8)
+
+        XCTAssertThrowsError(try store.ensureReadable(.note)) { error in
+            XCTAssertEqual(error as? APSError, .decodingFailed)
+        }
+    }
+
+    @MainActor
+    func testEnsureReadableCorruptProfileThrowsDecodingFailed() throws {
+        let store = StateStore()
+        try store.set(.profile, value: #"{"name":"a","version":1}"#)
+
+        let path = FileManager.defaultFileStatePath
+        let url = URL(fileURLWithPath: path).appendingPathComponent("profile.json")
+        try "not json".write(to: url, atomically: false, encoding: .utf8)
+
+        XCTAssertThrowsError(try store.ensureReadable(.profile)) { error in
+            XCTAssertEqual(error as? APSError, .decodingFailed)
+        }
+    }
 }

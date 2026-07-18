@@ -17,12 +17,15 @@ Acceptance Criteria
 
 ### REQ-aps-cli-002
 
-`set` SHALL reject values that cannot parse to the key's type and exit non-zero via `APSError.invalidValue`.
+`set` SHALL reject values that cannot parse to the key's type and exit non-zero via `APSError.invalidValue`. All domain errors SHALL follow the error contract: human line on stderr, taxonomy exit code, and a JSON envelope when `--json` / `--jsonl` or `APS_ERROR_JSON=1`.
 
 Acceptance Criteria
 - Non-integer `counter` values fail with an invalid-value message.
 - Non-boolean `flag` values fail with an invalid-value message.
 - `APSError.description` names the key and expected type.
+- Exit codes: 64 usage, 65 corrupt persisted state, 69 unavailable, 70 internal, 73 write did not persist.
+- The envelope shape is `{"error":{"code","message","hint"}}` with stable snake_case codes; stdout stays empty on error.
+- Corrupt `note.json` / `profile.json` exits 65 instead of returning the initial value.
 
 ### REQ-aps-cli-003
 

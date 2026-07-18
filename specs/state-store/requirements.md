@@ -88,3 +88,12 @@ Acceptance Criteria
 - After set(.profileName, "x"), profileDocument().name is "x" and profile.json reflects it.
 - get(.profileName) matches the parent name field.
 
+
+### REQ-state-store-011
+
+`ensureReadable` SHALL distinguish missing from corrupt persisted state: missing files keep initial-value semantics, and existing-but-undecodable `note.json` / `profile.json` SHALL throw `APSError.decodingFailed` before `get` / `watch` output.
+
+Acceptance Criteria
+- Missing state file: no error, initial value.
+- Corrupt state file: `APSError.decodingFailed` (exit 65 per the CLI contract).
+- `readNoteFromDisk` / `readProfileFromDisk` throw `persistenceFailed` when missing/unreadable and `decodingFailed` when corrupt.

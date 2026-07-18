@@ -20,7 +20,84 @@
       "timestamp": 1784409608,
       "digest": "79c7e5ff9d9f9a63e78a3467516661fa2e1d5bac682ac5bf1ca25e69f8ea3f71",
       "note": "Docs coverage matrix accepted."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "0xLeif",
+      "timestamp": 1784413018,
+      "digest": "4d94602445c3c7e3f036457644f8921e79d057a21394afc32992899faaaee06b",
+      "note": null
     }
   ],
-  "reopenings": []
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0014-document-appstate-coverage-matrix-and-refresh-goal-for-0-2-dogfood-surfaces",
+      "actor": "0xLeif",
+      "reason": "README.md / DemoKey.swift changed by the issue-31 error contract PR after acceptance; rebinding evidence to current delivery inputs",
+      "timestamp": 1784412987,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784409608,
+        "digest": "79c7e5ff9d9f9a63e78a3467516661fa2e1d5bac682ac5bf1ca25e69f8ea3f71",
+        "note": "Docs coverage matrix accepted."
+      },
+      "prior_verification": {
+        "timestamp": 1784409601,
+        "commit": "e67ebd6084aa85beaf7f1ce219be5dde9cc30e0d",
+        "contract_digest": "a0e81300735aa82f646433bad125e6ac0043d3680d608e1ce6dbf42c7c730e6a",
+        "workspace_digest": "73b23f69f06702a7824f2aaa65bae3404b8f3763ad1c01e25bafca978ca51615",
+        "acceptance_input_digest": "e00e0d949cf2677b273b7fde220020008701f5dcc688bc78d7552696e89db537",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "af3c8353cd24a8a6592088883407b482cd73ea4324ccda5b230ccefcadb448f3",
+              "entry_digest": "cd3321bf077cb79382d5efc61d3bc66c5ab10ed2f5c3f236b3dcc1296c6ebc04",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "GOAL.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "20146bfa50165791ec6059f6245716170c43b23106e5123ec590a306a590a966",
+              "entry_digest": "68fbffe2a6cce1f402c5dcebbd733d2b1f3d5e3d259a0ee91dfc23bbc034fc56",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2a129a3eaa24075114119341fb52421be111261ed531d6000c8dcf034daedb21",
+              "entry_digest": "11e067e782f8972c52f6637c4acb1da62e0da144c58bc02208cc88a5d662c54f",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "e00e0d949cf2677b273b7fde220020008701f5dcc688bc78d7552696e89db537",
+      "current_acceptance_input_digest": "1d5ee85f4b045fc6282a986e860058bb9d761ce58b0d4e9216103f9b72707f04"
+    }
+  ]
 }
