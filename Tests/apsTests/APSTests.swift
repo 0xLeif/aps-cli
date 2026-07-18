@@ -6,6 +6,10 @@ import Foundation
 import XCTest
 @testable import aps
 
+#if os(Windows)
+import WinSDK
+#endif
+
 #if !os(Linux) && !os(Windows)
 /// Local consumer that dogfoods `@ObservedDependency` the same way AppState's own tests do.
 @MainActor
@@ -13,6 +17,27 @@ private struct ObservedStatsConsumer {
     @ObservedDependency(\.stats) var stats: DemoStats
 }
 #endif
+
+/// Portable process-env mutation for tests (`setenv` is POSIX-only).
+private func setProcessEnv(_ key: String, _ value: String?) {
+    #if os(Windows)
+    key.withCString { keyPointer in
+        if let value {
+            value.withCString { valuePointer in
+                _ = SetEnvironmentVariableA(keyPointer, valuePointer)
+            }
+        } else {
+            _ = SetEnvironmentVariableA(keyPointer, nil)
+        }
+    }
+    #else
+    if let value {
+        setenv(key, value, 1)
+    } else {
+        unsetenv(key)
+    }
+    #endif
+}
 
 final class APSTests: XCTestCase {
     override func setUp() async throws {
@@ -278,17 +303,13 @@ final class APSTests: XCTestCase {
     func testAPSPathsResolveOrder() async {
         let previous = ProcessInfo.processInfo.environment["APS_HOME"]
         defer {
-            if let previous {
-                setenv("APS_HOME", previous, 1)
-            } else {
-                unsetenv("APS_HOME")
-            }
+            setProcessEnv("APS_HOME", previous)
         }
 
-        setenv("APS_HOME", "/tmp/aps-from-env", 1)
+        setProcessEnv("APS_HOME", "/tmp/aps-from-env")
         XCTAssertEqual(APSPaths.resolve(stateDir: nil), "/tmp/aps-from-env")
         XCTAssertEqual(APSPaths.resolve(stateDir: "/tmp/aps-flag"), "/tmp/aps-flag")
-        unsetenv("APS_HOME")
+        setProcessEnv("APS_HOME", nil)
         // Path-component check: Windows uses `\` separators, not a `/.aps` suffix.
         let defaultHome = APSPaths.resolve(stateDir: nil)
         XCTAssertEqual(URL(fileURLWithPath: defaultHome).lastPathComponent, ".aps")

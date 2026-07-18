@@ -69,6 +69,13 @@
       "timestamp": 1784414729,
       "digest": "c35e947cd9f79328262a4b3cfd5fa77d930760c29193dd543d43631da4794c84",
       "note": "Re-accept after issue 36 Windows readiness inputs."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784418419,
+      "digest": "16548bdcc912e537e20d900fff488a4b5ac2b070eb88316bbd480cf99fc0e067",
+      "note": "Re-accept after issue 46 Windows swift test."
     }
   ],
   "reopenings": [
@@ -543,6 +550,65 @@
       },
       "stale_acceptance_input_digest": "dfdd760e1f4b64f2cfcb78c8581f9d3e0c14e7bfe6f712bbe48a34ffc5548de4",
       "current_acceptance_input_digest": "d6185a6b13d89319cb5a00f25abae38e8963aac782f81ce4693b2dd803291f30"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0007-hermetic-userdefaults-in-tests",
+      "actor": "agent:cursor",
+      "reason": "Stale after Windows swift test (#46).",
+      "timestamp": 1784418407,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784414729,
+        "digest": "c35e947cd9f79328262a4b3cfd5fa77d930760c29193dd543d43631da4794c84",
+        "note": "Re-accept after issue 36 Windows readiness inputs."
+      },
+      "prior_verification": {
+        "timestamp": 1784414715,
+        "commit": "1ab2ca92f4178ec015cf89efa500c9bf9830950e",
+        "contract_digest": "0c72a7f1bfaa780b21b7b2ac7904ab5352e8186a8293caf6f91354fddff40610",
+        "workspace_digest": "b2a6ed2a8fa1a13c8bfdedcdbfb2a9c65f89ff49c95af7b1a2942f9435f0c2da",
+        "acceptance_input_digest": "d6185a6b13d89319cb5a00f25abae38e8963aac782f81ce4693b2dd803291f30",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "892737ad12d482e123f7e036d8af1cb0fd3aabb465f8c9ac561ed79af04a33bc",
+              "entry_digest": "c84485e5707378b3f73e17a2c56611d32c600a7ab1da4b428e69d3c0c5eea9a7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "7f54ccb577bf2dc2a7a3095f56509d8dcd393a9a4c821eca79f3d8b1667d0f1d",
+              "entry_digest": "1ef7f2cab97993f15f5c5b562341b6dbaf5acf77e3a10791f7d8d98fc3375ec7",
+              "owners": [
+                "@exact:test"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "d6185a6b13d89319cb5a00f25abae38e8963aac782f81ce4693b2dd803291f30",
+      "current_acceptance_input_digest": "942c27d374fcd61e124b5fca51eddd95165ddb2a195ea84a2f45d8e2ebfab28b"
     }
   ]
 }

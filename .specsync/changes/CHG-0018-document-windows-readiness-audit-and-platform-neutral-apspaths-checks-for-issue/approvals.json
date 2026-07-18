@@ -41,6 +41,13 @@
       "timestamp": 1784417035,
       "digest": "1f99ea23c863498b235242b62ae17c04a87b57ed5c6d844625d51eb2e4aaa37d",
       "note": "Re-accept after Windows Swift pin note."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784418577,
+      "digest": "30c11d4811158b85496833a189c1d95aacd66bfa0c76162dbf184dc2347fb9e3",
+      "note": "Re-accept after issue 46 Windows swift test."
     }
   ],
   "reopenings": [
@@ -280,6 +287,85 @@
       },
       "stale_acceptance_input_digest": "0e1d954a0b312af13eb92c54b9b6cb75cda1e8fb9c9a73fc4460d96be7a94f80",
       "current_acceptance_input_digest": "5b1e9de4e70de9255093b0b6fddf31b58ab0f19f875fef76e994375a71679974"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0018-document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue",
+      "actor": "agent:cursor",
+      "reason": "Stale after Windows swift test (#46).",
+      "timestamp": 1784418563,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784417035,
+        "digest": "1f99ea23c863498b235242b62ae17c04a87b57ed5c6d844625d51eb2e4aaa37d",
+        "note": "Re-accept after Windows Swift pin note."
+      },
+      "prior_verification": {
+        "timestamp": 1784417027,
+        "commit": "ad7f3de3b595e78d6ed3634f953a35e92dc5047e",
+        "contract_digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
+        "workspace_digest": "7e886b00823d91cd7470f5290e417f63122e240ec6f6a7176735e17582b0be48",
+        "acceptance_input_digest": "5b1e9de4e70de9255093b0b6fddf31b58ab0f19f875fef76e994375a71679974",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "11399161f4280ad397292c3b65f562f8a9af0c75b95b4ce9880fd1a334bcad4e",
+              "entry_digest": "ef782e68ea14113009c52f9236a1d72ae6c5b5fa9c8525c54d0939d152a9f901",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "e8d82c113f1aafaf791372ac07069a852ffa7dfdbaebded0c31534caaf8d5e02",
+              "entry_digest": "6502a25f5577f22c02f99205d8ab5939043c156ad977f59e8ff1fbc7d6c265ef",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "7f54ccb577bf2dc2a7a3095f56509d8dcd393a9a4c821eca79f3d8b1667d0f1d",
+              "entry_digest": "1ef7f2cab97993f15f5c5b562341b6dbaf5acf77e3a10791f7d8d98fc3375ec7",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6400c44ad2d4e3595e4d9a5ca87023e72461cc92a9e834750fe9650a654a1987",
+              "entry_digest": "dd15ff727cb1cca126ca058caeaaca79cf2d582ab513d7c4d5dece7bf0c0f961",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "5b1e9de4e70de9255093b0b6fddf31b58ab0f19f875fef76e994375a71679974",
+      "current_acceptance_input_digest": "8b68fe57d89b59e415fc368f6883c99f43dfc5c6349d2d65d42bde629b5bec48"
     }
   ]
 }

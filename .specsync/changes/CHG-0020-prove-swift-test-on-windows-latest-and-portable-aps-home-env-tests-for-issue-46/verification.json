@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784418589,
+  "timestamp": 1784418284,
   "commit": "7571e11d1f4da488f9540b0175420f69501814e1",
-  "contract_digest": "bbe132cc0578bf3b207567f6f95971c09abbaa9370e1f2de062c2e1aa399b968",
-  "workspace_digest": "a92ec35a90d555fc8482bc53bbcb218fcf9ac90b625feedc2b957a9e306986d8",
-  "acceptance_input_digest": "20a4ab886811165cc9b4bacf23bf1fb6b724a4da07e8356f57875cf549c7b15d",
+  "contract_digest": "a9d3e3412c9b69e2bd160147953180c7dc3adf5d3994f6b202f90db4c35a0e16",
+  "workspace_digest": "0d3f4d68a068bb8e6c2f2690dcccf378ce3ec32cf3b794263e52741c0b67b843",
+  "acceptance_input_digest": "3a962e15943ed1b83378ebec845c648150273065c8ed90b75e86d7b62661bd0e",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -21,8 +21,8 @@
         "path": ".specsync/change-sequence.json",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "a230a7c919631ba55ed79156ba3f9128c807542175bfac8e90bd45f2377882fd",
-        "entry_digest": "8aeb0363bb12523c848b8766abcab9347cc847399c08465165bc89e7350dee46",
+        "payload_digest": "2dc0bbb2670decce2c56be944b4ea01f821d6bc02ed052747e7c0cb7fa9a13ad",
+        "entry_digest": "e43b3c9e05838ec174a3da92c18dc92d9b20f9efeea29c066a809d1ffba31bd2",
         "owners": [
           "@exact:delivery"
         ]
@@ -38,13 +38,13 @@
         ]
       },
       {
-        "path": "Scripts/smoke.ps1",
+        "path": "Tests/apsTests/APSTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "d476db9d571042578d8de33907014ecfa669f05054828886d0ceeb5f2e27c351",
-        "entry_digest": "164c2694507ba3d0e8133f86124b68ea64295cc1c41b5f6d11361333eb1c661b",
+        "payload_digest": "151a969af135fa44ea6d1dd67e300eefebafbd310c8ea77b941654a1f9e34775",
+        "entry_digest": "5a727932ebad79083897dc0e9b8fb8500901ee0b9a73cea2fe0fe5c930351f11",
         "owners": [
-          "@exact:delivery"
+          "@exact:test"
         ]
       },
       {

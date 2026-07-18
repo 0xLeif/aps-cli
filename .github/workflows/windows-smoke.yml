@@ -1,6 +1,6 @@
 name: Windows smoke
 
-# GitHub-hosted Windows build + PowerShell smoke for portable CLI coverage (#45).
+# GitHub-hosted Windows test + PowerShell smoke (#45, #46).
 # Complements macOS self-hosted CI and linux-smoke.yml.
 
 on:
@@ -34,9 +34,9 @@ jobs:
         shell: pwsh
         run: swift --version
 
-      - name: Build (debug)
+      - name: Test (debug)
         shell: pwsh
-        run: swift build -c debug
+        run: swift test
 
       - name: Smoke CLI
         shell: pwsh
