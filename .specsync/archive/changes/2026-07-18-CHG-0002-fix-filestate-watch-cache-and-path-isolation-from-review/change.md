@@ -1,6 +1,6 @@
 ---
 id: CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review
-state: accepted
+state: archived
 type: feature
 base_commit: c6d9326fd7f4c7925deb5ff4f27f984a073bf6b8
 ---

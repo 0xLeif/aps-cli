@@ -126,6 +126,10 @@ Scripts/smoke.sh
 .github/workflows/{ci,trust}.yml
 ```
 
+## Next goal
+
+See [`GOAL.md`](GOAL.md) for **aps v1.1**: agent-ready AppState dogfood harness.
+
 ## Non-goals (v1)
 
 - No iCloud `SyncState`, Keychain `SecureState`, or SwiftData `ModelState`

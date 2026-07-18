@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784398074,
+      "digest": "641111b8f92bdfff2ba1f3bcda40f5299d9dc8a65449cd2a4a49333fac21100f",
+      "note": "Approved post-merge archive of CHG-0002 and publishing GOAL.md for aps v1.1; no module contract changes."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784398078,
+      "digest": "504e84d897b0ef5bd628e7eafbe814c05b1ae7a5f15bb795e9aa112d4f0caf27",
+      "note": "Accepted v1 SpecSync archive and aps v1.1 GOAL.md publication."
+    }
+  ],
+  "reopenings": []
+}

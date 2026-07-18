@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 2,
-  "id": "CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review",
+  "sequence": 3,
+  "id": "CHG-0003-archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal",
   "acknowledged_collisions": []
 }
