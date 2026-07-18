@@ -42,6 +42,7 @@ Dynamic / user-declared keys are intentionally out of scope for v1.
 - Swift 6.0+
 - macOS 14+ (CI). Linux toolchains are supported best-effort, not gated in CI yet.
 - For the trust gate locally: [corvid-trust](https://github.com/CorvidLabs/trust) (`brew install CorvidLabs/tap/corvid-trust`)
+- SpecSync **5.1.1** (see `.specsync/version`). Trust CI mirrors that exact release; brew `spec-sync` latest should match.
 
 ## Build and run
 
@@ -105,7 +106,7 @@ Before making the repo public, switch off self-hosted runners for fork pull requ
 | `.trust.toml` | Unified Trust policy |
 | `.augur.toml` | Diff-risk thresholds |
 | `.attest.json` | Provenance policy |
-| `.specsync/` | SpecSync 5 config + SDD change tracking |
+| `.specsync/` | SpecSync 5.1.1 config + SDD change tracking (`.specsync/version`) |
 | `specs/` | Module contracts (`aps-cli`, `state-store`) |
 | `AGENTS.md` | Standing rules (managed block required by CI) |
 

@@ -1,7 +1,8 @@
 name: Trust
 
 # Private repo: CorvidLabs trust gate on macOS self-hosted runners.
-# SpecSync acceptance evidence rebound with the Trust-pinned 5.0.1 CLI.
+# SpecSync pin is 5.1.1 via Trust v1.0.1 + a runner-temp file:// mirror
+# (non-default SpecSync versions cannot use the remote GitHub download path).
 # Revisit before making the repository public: fork PRs must not run on
 # self-hosted hosts.
 
@@ -41,11 +42,34 @@ jobs:
             echo "range=${{ github.event.before }}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
           fi
 
+      # Trust rejects remote download overrides for non-default SpecSync versions.
+      # Stage the 5.1.1 release archives under RUNNER_TEMP for an authority-free
+      # file:// mirror (platform archive + adjacent .sha256).
+      - name: Prepare SpecSync 5.1.1 local mirror
+        id: specsync_mirror
+        run: |
+          set -euo pipefail
+          VERSION="5.1.1"
+          MIRROR="${RUNNER_TEMP}/specsync-${VERSION}-mirror"
+          mkdir -p "$MIRROR"
+          BASE="https://github.com/CorvidLabs/spec-sync/releases/download/v${VERSION}"
+          for asset in \
+            specsync-macos-aarch64.tar.gz \
+            specsync-macos-x86_64.tar.gz
+          do
+            curl -fsSL "${BASE}/${asset}" -o "${MIRROR}/${asset}"
+            curl -fsSL "${BASE}/${asset}.sha256" -o "${MIRROR}/${asset}.sha256"
+            (cd "$MIRROR" && shasum -a 256 -c "${asset}.sha256")
+          done
+          echo "path=${MIRROR}" >> "$GITHUB_OUTPUT"
+
       - name: CorvidLabs Trust gate
         id: trust
-        uses: CorvidLabs/trust@9d32b5786d2e9e4d39fc581c0091c721ee3d4226 # v1.0.0
+        uses: CorvidLabs/trust@c8f969a12209575877b5eca1ec557431621381e0 # v1.0.1
         with:
           range: ${{ steps.trust_range.outputs.range }}
+          specsync-version: "5.1.1"
+          specsync-download-base-url: file://${{ steps.specsync_mirror.outputs.path }}
 
       - name: Check managed agent rules
         run: |
