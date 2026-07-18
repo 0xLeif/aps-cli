@@ -47,8 +47,6 @@ Acceptance Criteria
 | `reset` | Clears DemoStats counters. |
 | `DemoStatsSnapshot` | Codable snapshot of DemoStats. |
 
-## ADDED
-
 ### REQUIREMENT REQ-state-store-015
 
 Direct disk reads (`readNoteFromDiskIfPresent` / `readProfileFromDiskIfPresent`) SHALL return nil when the file is absent and throw `APSError.corruptState` when the file exists but cannot be decoded.

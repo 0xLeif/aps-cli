@@ -45,8 +45,6 @@ Acceptance Criteria
 | `detail` | One-line description for `keys`. |
 | `description` | Actionable error text for humans and ValidationError bridging. |
 
-## ADDED
-
 ### REQUIREMENT REQ-aps-cli-017
 
 When a FileState file for `note`, `profile`, or `profileName` exists but is undecodable, `aps get` / `aps watch` SHALL fail with `corruptState` and exit code 65; `watch --jsonl` SHALL emit one error event before exiting. Missing files still resolve to initials. README SHALL document single-writer / last-writer-wins semantics.
