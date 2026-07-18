@@ -167,4 +167,11 @@ if grep -vq '^{' "$APS_HOME/watch.out"; then
   exit 1
 fi
 
+# aps schema emits the self-describing contract.
+"$bin" schema | grep -q '"schemaVersion" : 1'
+"$bin" schema | grep -q '"name" : "profile"'
+"$bin" schema | grep -q '"name" : "secret"'
+"$bin" schema | grep -q '"code" : "corrupt_state"'
+test "$("$bin" schema | grep '"cliVersion"' | sed 's/.*: "//;s/".*//')" = "$("$bin" --version)"
+
 echo "smoke ok"

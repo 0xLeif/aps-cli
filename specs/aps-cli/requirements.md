@@ -136,3 +136,12 @@ Acceptance Criteria
 - Wrong passphrase fails with `APSError.secretUnlockFailed`; corrupt envelope fails with `APSError.decodingFailed`.
 - Passphrase entry is env-var based; an optional TTY getpass prompt exists when `APS_SECRET_USE_PASSPHRASE=1`.
 
+### REQ-aps-cli-016
+
+`aps schema` SHALL emit one cacheable JSON document describing the CLI contract: cliVersion, integer schemaVersion (bumped on any contract change), state-root precedence, keys, commands, payload shapes, and the error table.
+
+Acceptance Criteria
+- Output is valid JSON with a top-level integer `schemaVersion`.
+- Keys cover every `DemoKey`; commands cover every subcommand; the error table lists every stable code with its exit code.
+- `cliVersion` equals `aps --version`.
+- The document is static contract only; live state stays in `dump`.

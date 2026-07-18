@@ -851,4 +851,55 @@ final class APSTests: XCTestCase {
         XCTAssertTrue(line.contains(#""reason":"timeout""#))
         XCTAssertTrue(line.contains(#""key":"counter""#))
     }
+
+    func testSchemaDocumentCoversAllKeysAndCommands() throws {
+        let document = Schema.document()
+
+        XCTAssertEqual(document.schemaVersion, 1)
+        XCTAssertEqual(document.cliVersion, "0.2.0")
+        XCTAssertEqual(document.keys.map(\.name), DemoKey.allCases.map(\.rawValue))
+        XCTAssertEqual(document.stateRoot.precedence, ["--state-dir", "APS_HOME", "~/.aps"])
+
+        let commandNames = document.commands.map(\.name)
+        for expected in ["get", "set", "watch", "dump", "keys", "reset", "stats", "schema"] {
+            XCTAssertTrue(commandNames.contains(expected), "missing command \(expected)")
+        }
+
+        let secret = document.keys.first { $0.name == "secret" }
+        XCTAssertEqual(secret?.keychainAccount, APSKeychain.secretAccount)
+        let note = document.keys.first { $0.name == "note" }
+        XCTAssertEqual(note?.path, "<state-root>/note.json")
+    }
+
+    func testSchemaErrorTableIsStable() {
+        let table = Schema.document().errors
+        XCTAssertEqual(table.count, 6)
+        let byCode = Dictionary(uniqueKeysWithValues: table.map { ($0.code, $0.exitCode) })
+        XCTAssertEqual(byCode["invalid_value"], 64)
+        XCTAssertEqual(byCode["decoding_failed"], 65)
+        XCTAssertEqual(byCode["corrupt_state"], 65)
+        XCTAssertEqual(byCode["keychain_unavailable"], 69)
+        XCTAssertEqual(byCode["encoding_failed"], 70)
+        XCTAssertEqual(byCode["persistence_failed"], 73)
+        for entry in table {
+            XCTAssertFalse(entry.hint.isEmpty, "hint required for \(entry.code)")
+            XCTAssertFalse(entry.meaning.isEmpty, "meaning required for \(entry.code)")
+        }
+    }
+
+    func testSchemaDocumentEncodesValidContractJSON() throws {
+        let json = try CLIOutput.encodePretty(Schema.document())
+        let data = try XCTUnwrap(json.data(using: .utf8))
+        let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+
+        XCTAssertEqual(object?["schemaVersion"] as? Int, 1)
+        let payloads = try XCTUnwrap(object?["payloads"] as? [String: Any])
+        for name in ["KeyValuePayload", "KeysPayload", "WatchEvent", "WatchErrorEvent", "ResetPayload", "StatsPayload", "ErrorEnvelope"] {
+            XCTAssertNotNil(payloads[name], "missing payload schema \(name)")
+        }
+        let event = try XCTUnwrap(payloads["WatchEvent"] as? [String: Any])
+        XCTAssertEqual(event["type"] as? String, "object")
+        XCTAssertNotNil(event["properties"])
+        XCTAssertNotNil(event["required"])
+    }
 }
