@@ -42,7 +42,8 @@ Dynamic / user-declared keys are intentionally out of scope for 0.x.
 - AppState `SecureState` stores the value under Keychain account `dev.leif.aps/secret` (feature `dev.leif.aps`, id `secret`).
 - `aps reset secret` (and `aps reset --all`) deletes that Keychain item; get then returns an empty string.
 - **macOS:** works when the process can access the login Keychain (interactive sessions and typical self-hosted macOS CI).
-- **Linux / headless without Security:** Apple's Security framework is unavailable. `aps keys` still lists `secret`, `get` returns empty, and `set secret` fails with a clear Keychain-unavailable error. Linux smoke skips secret round-trips.
+- **Linux / headless without Security:** Apple's Security framework is unavailable. `aps keys` still lists `secret`, `get` returns empty, and `set secret` fails with a clear Keychain-unavailable error.
+- **Default CI / smoke:** Keychain round-trips are skipped. Re-enable with `APS_SMOKE_SECURESTATE=1` (Darwin) when a login Keychain is available.
 - **Headless macOS CI:** if the Keychain is locked or inaccessible, set/get may fail with persistence errors. Unlock or use a runner with an available login Keychain.
 
 ### Dependencies
@@ -112,6 +113,8 @@ swift run aps watch note --count 2 --timeout 5 --jsonl
 
 swift run aps set profile '{"name":"agent","version":1}' --json
 swift run aps get profile --json
+swift run aps set profileName agent --json
+swift run aps stats --json
 ```
 
 `watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process. For `note` and `profile`, polling reads the JSON files directly so AppState's FileState cache cannot hide cross-process writes.
@@ -166,6 +169,22 @@ GOAL.md
 ## Next goal
 
 See [`GOAL.md`](GOAL.md) for **aps 0.2.0**: agent-ready AppState dogfood harness.
+
+
+## AppState surface coverage
+
+| AppState surface | Demo key / command | Status |
+|------------------|--------------------|--------|
+| `State` | `counter`, `message` | Dogfooded |
+| `StoredState` | `flag` | Dogfooded |
+| `FileState` | `note`, `profile` | Dogfooded |
+| `SecureState` | `secret` | Dogfooded (Keychain tests/smoke opt-in) |
+| `Slice` | `profileName` | Dogfooded |
+| `@AppDependency` | `clock`, `jsonCoding` | Dogfooded |
+| `@ObservedDependency` | `stats` / `aps stats` | Dogfooded |
+| `SyncState` | — | No-go ([spike](docs/spikes/syncstate-feasibility.md)) |
+| `ModelState` | — | No-go ([spike](docs/spikes/modelstate-feasibility.md)) |
+| OptionalSlice / DependencySlice | — | Not planned for 0.x |
 
 ## Non-goals (0.x)
 
