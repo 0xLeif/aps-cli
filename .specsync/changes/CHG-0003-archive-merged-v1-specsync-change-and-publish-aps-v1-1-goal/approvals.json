@@ -1,0 +1,153 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784398074,
+      "digest": "641111b8f92bdfff2ba1f3bcda40f5299d9dc8a65449cd2a4a49333fac21100f",
+      "note": "Approved post-merge archive of CHG-0002 and publishing GOAL.md for aps v1.1; no module contract changes."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784398078,
+      "digest": "504e84d897b0ef5bd628e7eafbe814c05b1ae7a5f15bb795e9aa112d4f0caf27",
+      "note": "Accepted v1 SpecSync archive and aps v1.1 GOAL.md publication."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784399199,
+      "digest": "641111b8f92bdfff2ba1f3bcda40f5299d9dc8a65449cd2a4a49333fac21100f",
+      "note": "Re-approve GOAL/README at 0.2.0 naming; no SpecSync definition artifact change."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784399215,
+      "digest": "db4d9c6e2319364dfd0742cb46c74f4d84e04269813a0f617a78824ba0a6af33",
+      "note": "Accepted GOAL/README refresh to pre-public 0.2.0 naming."
+    }
+  ],
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0003-archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal",
+      "actor": "leif algo",
+      "reason": "Rename milestone from mistaken v1.1 branding to pre-public 0.2.0; refresh GOAL and README for agent-ready checklist.",
+      "timestamp": 1784399199,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "leif algo",
+        "timestamp": 1784398078,
+        "digest": "504e84d897b0ef5bd628e7eafbe814c05b1ae7a5f15bb795e9aa112d4f0caf27",
+        "note": "Accepted v1 SpecSync archive and aps v1.1 GOAL.md publication."
+      },
+      "prior_verification": {
+        "timestamp": 1784398077,
+        "commit": "c02a551afc126ca5394c62baa557ceaf30fd5bc5",
+        "contract_digest": "641111b8f92bdfff2ba1f3bcda40f5299d9dc8a65449cd2a4a49333fac21100f",
+        "workspace_digest": "37f288e185f2d7984d92dffce833943e4de9f6f977241cb404462c1e2665b875",
+        "acceptance_input_digest": "3558d65246e2c24859cabb4ce98197bc29477f32bba6728c42914ea7f5805d22",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/.gitignore",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a3129d6f93250ade8dbacfc73bc7eeae0cc47c2f7032142ca47cb4f1ffb2483e",
+              "entry_digest": "9badbf40b83d05f58bafda0fc2cafccfe726e4da7e6e67ef513e822989e13f04",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ddf1f4cbb0fd983c8356a34b9b4f4ef77ca22764ac2ec36b223431402c043328",
+              "entry_digest": "7fd95f31d540d3d3e7128fbd03cb3207a3da428c98a81515a76b7dfc9b34d582",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/config.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "54a83f6a4a252649bac390d2e936aa0815711fba86b6bfc8ea8fff2fffdfd29b",
+              "entry_digest": "e60f979233a7db75ce63f4ef42d6f1f7676ad1655a438b9baf78558aba60ec3e",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/registry.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c423be1a5cf87318f85dc252fe0acd1c1486c5224ddc2d8e19bea1ac9c69c820",
+              "entry_digest": "7e1f068900ced849b8d1028ca40165fbdc5280ae7f53452f0e57e2710d895848",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/sdd.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2d5fb3058b1ee4ce584c3cda9410c193c4893e272ed459205e58bfde06afc7b0",
+              "entry_digest": "8c6b11fc5787eb04e7ee651eb15fbf98fc3ea22db37e65423e3d75f99c09df19",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/version",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f9893302cd3158f3b5aea394dcd2a91574869e9e6ff69e9235b10a3bf8c983fb",
+              "entry_digest": "f980ba79f6c953bed30303c6b87d8e868ad6a7f4114bf0e745c9099255e665b0",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "GOAL.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6ea65e7d0fbd1a336afd9bb619acc9a799bc87ef41453c639defc272d75fb5d",
+              "entry_digest": "7876707aaa1955e71f50e4733b299d4e9c03eee80c3bb23565b3bb484892306b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "87a857d8ceb5c5f8aebeee5a4cb0dad157105514bcc433ed1c81e3af87d6f820",
+              "entry_digest": "5a68a2ddbfc87bb391a3c5b61d0f63a09b1f2999e180841e1098597966f9e744",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "3558d65246e2c24859cabb4ce98197bc29477f32bba6728c42914ea7f5805d22",
+      "current_acceptance_input_digest": "80328d5ff7e9ef1c9eb3031447397375a429ba5b8fc3148ab6ef3a2d21f5fc68"
+    }
+  ]
+}

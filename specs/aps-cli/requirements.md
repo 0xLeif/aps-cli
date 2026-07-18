@@ -8,11 +8,11 @@ spec: aps-cli.spec.md
 
 ### REQ-aps-cli-001
 
-The CLI SHALL expose get, set, watch, dump, keys, and reset over the fixed `DemoKey` schema covering `counter`, `message`, `flag`, and `note`.
+The fixed demo schema SHALL include `profile` alongside `counter`, `message`, `flag`, and `note`.
 
 Acceptance Criteria
-- `aps --help` lists those subcommands.
-- `DemoKey` includes only those four cases and exposes `storage`, `valueType`, `helpSummary`, and `detail`.
+- `aps keys` lists `profile`.
+- `aps set profile '{"name":"a","version":1}'` round-trips through get/dump/reset.
 
 ### REQ-aps-cli-002
 
@@ -47,4 +47,36 @@ Acceptance Criteria
 Acceptance Criteria
 - Each case has an actionable `description`.
 - `set note` surfaces `persistenceFailed` when the on-disk value does not match after write.
+
+### REQ-aps-cli-010
+
+`get`, `set`, `dump`, `keys`, and `reset` SHALL support `--json` machine-readable output.
+
+Acceptance Criteria
+- JSON payloads are valid UTF-8 JSON objects.
+- Typed values preserve Int/Bool where applicable instead of always stringifying.
+
+### REQ-aps-cli-011
+
+Commands that touch FileState SHALL resolve the state directory as `--state-dir`, then `APS_HOME`, then `~/.aps`.
+
+Acceptance Criteria
+- `--state-dir` wins over `APS_HOME`.
+- When neither is set, FileState lands under `~/.aps`.
+
+### REQ-aps-cli-012
+
+`watch` SHALL support `--count`, `--timeout`, and `--jsonl`.
+
+Acceptance Criteria
+- `--count` stops after that many printed values including the initial value.
+- `--timeout` stops after the given seconds.
+- `--jsonl` emits one JSON object per line.
+
+### REQ-aps-cli-013
+
+The CLI `--version` string SHALL be `0.2.0` while the project is pre-public 0.x.
+
+Acceptance Criteria
+- `aps --version` prints `0.2.0`.
 

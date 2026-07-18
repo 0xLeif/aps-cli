@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate",
+  "slug": "ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate",
+  "title": "Ship aps 0.2.0 agent-ready JSON state-dir watch and profile FileState",
+  "description": "Ship aps 0.2.0 agent-ready JSON state-dir watch and profile FileState",
+  "kind": "feature",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "6f18ccb3015b4fc59021e690fefbf5947ade5c73",
+  "created_at": 1784399179,
+  "updated_at": 1784400056,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/",
+    "Tests/",
+    "Scripts/",
+    "specs/",
+    ".github/workflows/",
+    ".specsync/"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "CLI 0.2.0 supports --json, APS_HOME/--state-dir, watch --count/--timeout/--jsonl, profile structured FileState; Linux smoke workflow exists; GOAL/README use 0.x naming; 25 tests and smoke pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "requirements",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "design"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "yes"
+  }
+}

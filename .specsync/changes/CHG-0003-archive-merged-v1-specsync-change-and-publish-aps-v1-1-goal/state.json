@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0003-archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal",
+  "slug": "archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal",
+  "title": "Archive merged v1 SpecSync change and publish aps v1.1 goal",
+  "description": "Archive merged v1 SpecSync change and publish aps v1.1 goal",
+  "kind": "operations",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "c02a551afc126ca5394c62baa557ceaf30fd5bc5",
+  "created_at": 1784398063,
+  "updated_at": 1784399215,
+  "affected_specs": [],
+  "affected_paths": [
+    ".specsync/",
+    "GOAL.md",
+    "README.md"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Documents the v1.1 product goal and archives the merged v1 SpecSync change; no aps-cli/state-store contract changes.",
+  "acceptance_criteria": [
+    "GOAL.md publishes the v1.1 agent-ready harness plan; README links it; merged CHG-0002 is archived under SpecSync 5.1.1; specsync check and change check pass with no active stale evidence."
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

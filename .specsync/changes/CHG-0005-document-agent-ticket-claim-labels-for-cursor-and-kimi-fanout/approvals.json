@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784400369,
+      "digest": "e7773fa30314072a410ed7f4d4499c989eb33b606d5448e56cee12f6ab61579e",
+      "note": "Approved agent claim-label protocol for Cursor/Kimi fanout."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784400373,
+      "digest": "e7773fa30314072a410ed7f4d4499c989eb33b606d5448e56cee12f6ab61579e",
+      "note": "Re-approve after completing docs.md for agent claim labels."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784400377,
+      "digest": "0601946d0baefc48d2e13cc370b4d5c89b4b6946f9a183f9038d94bb5e01a4c9",
+      "note": "Accepted AGENTS.md agent claim labels for Cursor and Kimi."
+    }
+  ],
+  "reopenings": []
+}

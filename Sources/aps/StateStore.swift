@@ -19,6 +19,9 @@ public final class StateStore {
         Application.load(dependency: \.jsonCoding)
     }
 
+    /// Wall clock from the injected `APSClock` dependency.
+    public var now: Date { clock.now }
+
     public func get(_ key: DemoKey) -> String {
         switch key {
         case .counter:
@@ -29,7 +32,13 @@ public final class StateStore {
             return String(Application.state(\.flag).value)
         case .note:
             return Application.fileState(\.note).value
+        case .profile:
+            return (try? encodeProfile(Application.fileState(\.profile).value)) ?? "{\"name\":\"\",\"version\":0}"
         }
+    }
+
+    public func profileDocument() throws -> ProfileDocument {
+        Application.fileState(\.profile).value
     }
 
     public func set(_ key: DemoKey, value: String) throws {
@@ -60,6 +69,19 @@ public final class StateStore {
             guard onDisk == value else {
                 throw APSError.persistenceFailed(key: .note)
             }
+        case .profile:
+            let document: ProfileDocument
+            do {
+                document = try jsonCoding.decode(ProfileDocument.self, from: value)
+            } catch {
+                throw APSError.invalidValue(key: key, value: value)
+            }
+            var state = Application.fileState(\.profile)
+            state.value = document
+            let onDisk = try Self.readProfileFromDisk()
+            guard onDisk == document else {
+                throw APSError.persistenceFailed(key: .profile)
+            }
         }
     }
 
@@ -74,6 +96,8 @@ public final class StateStore {
             UserDefaults.standard.synchronize()
         case .note:
             Application.reset(fileState: \.note)
+        case .profile:
+            Application.reset(fileState: \.profile)
         }
     }
 
@@ -86,12 +110,12 @@ public final class StateStore {
     public func dump() throws -> String {
         let snapshot = DumpSnapshot(
             timestamp: clock.now,
-            keys: DemoKey.allCases.map { key in
+            keys: try DemoKey.allCases.map { key in
                 DumpEntry(
                     key: key.rawValue,
                     storage: key.storage,
                     type: key.valueType,
-                    value: get(key)
+                    value: try CLIOutput.typedValue(for: key, store: self)
                 )
             }
         )
@@ -103,9 +127,9 @@ public final class StateStore {
     /// - Observation covers in-process mutations (`State`).
     /// - Polling re-reads values so `FileState` / `StoredState` updates can surface when
     ///   Observation alone would not (e.g. another process wrote the file).
-    /// - For `note`, polling reads the file directly so AppState's FileState cache cannot
-    ///   hide cross-process writes.
-    /// - `shouldContinue` lets tests (and future tooling) stop the loop cleanly.
+    /// - For disk-backed keys, polling reads files directly so AppState's FileState cache
+    ///   cannot hide cross-process writes.
+    /// - `shouldContinue` lets tests (and CLI `--count` / `--timeout`) stop the loop cleanly.
     public func watchBlocking(
         _ key: DemoKey,
         pollInterval: TimeInterval = 0.25,
@@ -140,11 +164,16 @@ public final class StateStore {
         }
     }
 
-    /// Value used by watch polling. Disk-backed `note` bypasses AppState's FileState cache.
+    /// Value used by watch polling. Disk-backed keys bypass AppState's FileState cache.
     private func freshValue(_ key: DemoKey) -> String {
         switch key {
         case .note:
             return (try? Self.readNoteFromDisk()) ?? get(key)
+        case .profile:
+            if let document = try? Self.readProfileFromDisk() {
+                return (try? encodeProfile(document)) ?? get(key)
+            }
+            return get(key)
         case .counter, .message, .flag:
             return get(key)
         }
@@ -154,14 +183,36 @@ public final class StateStore {
     ///
     /// Mirrors AppState's non-Base64 FileState encoding: UTF-8 JSON via `JSONEncoder`.
     public static func readNoteFromDisk() throws -> String {
-        let path = FileManager.defaultFileStatePath
-        let fileURL = URL(fileURLWithPath: path).appendingPathComponent("note.json")
+        let fileURL = Self.fileStateURL(filename: "note.json")
         do {
             let data = try Data(contentsOf: fileURL)
             return try JSONDecoder().decode(String.self, from: data)
         } catch {
             throw APSError.persistenceFailed(key: .note)
         }
+    }
+
+    public static func readProfileFromDisk() throws -> ProfileDocument {
+        let fileURL = Self.fileStateURL(filename: "profile.json")
+        do {
+            let data = try Data(contentsOf: fileURL)
+            return try JSONDecoder().decode(ProfileDocument.self, from: data)
+        } catch {
+            throw APSError.persistenceFailed(key: .profile)
+        }
+    }
+
+    private static func fileStateURL(filename: String) -> URL {
+        URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent(filename)
+    }
+
+    private func encodeProfile(_ document: ProfileDocument) throws -> String {
+        let data = try JSONEncoder().encode(document)
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw APSError.encodingFailed
+        }
+        return string
     }
 
     private func readForObservation(_ key: DemoKey) {
@@ -174,6 +225,8 @@ public final class StateStore {
             _ = Application.state(\.flag).value
         case .note:
             _ = Application.fileState(\.note).value
+        case .profile:
+            _ = Application.fileState(\.profile).value
         }
     }
 
@@ -213,5 +266,5 @@ private struct DumpEntry: Encodable {
     let key: String
     let storage: String
     let type: String
-    let value: String
+    let value: CLIOutput.JSONValue
 }

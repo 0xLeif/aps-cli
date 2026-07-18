@@ -8,12 +8,11 @@ spec: state-store.spec.md
 
 ### REQ-state-store-001
 
-`StateStore` SHALL read and write demo keys through AppState Application extensions on the main actor via `init`, `get`, and `set`, without overwriting an injected `FileManager.defaultFileStatePath`.
+`StateStore` get/set/reset/dump/watch SHALL cover `profile` in addition to `counter`, `message`, `flag`, and `note`.
 
 Acceptance Criteria
-- `get`/`set` round-trip `counter`, `message`, `flag`, and `note`.
-- Mutating paths are MainActor-isolated.
-- `init` loads dependencies only; CLI `boot()` (or tests) configure FileState paths.
+- `dump` includes a `profile` entry with object value shape.
+- `watch` polling for `profile` reads `profile.json` directly.
 
 ### REQ-state-store-002
 
@@ -40,4 +39,21 @@ Acceptance Criteria
 - In-process `State` mutations are observed.
 - External writes to `note.json` are observed without updating AppState's cache.
 - `shouldContinue` false stops the loop without requiring Ctrl-C.
+
+### REQ-state-store-010
+
+`StateStore` SHALL expose `profile` as `FileState<ProfileDocument>` persisted at `profile.json`, with get/set using JSON encoding and disk read-back verification.
+
+Acceptance Criteria
+- Valid profile JSON persists and `profileDocument()` matches.
+- Invalid profile JSON throws `APSError.invalidValue`.
+- Failed disk persistence throws `APSError.persistenceFailed`.
+
+### REQ-state-store-011
+
+`APSPaths.resolve(stateDir:)` SHALL prefer `--state-dir`, then `APS_HOME`, then `~/.aps` when configuring FileState paths from CLI boot.
+
+Acceptance Criteria
+- Explicit stateDir wins over environment.
+- Missing both returns the default `~/.aps` path.
 
