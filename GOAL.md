@@ -24,6 +24,9 @@ Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo A
 - [x] README documents JSON mode, state root, watch bounds, and `profile`.
 - [x] CLI `--version` reports `0.2.0`.
 - [x] Demo key `secret` uses AppState `SecureState` (Keychain) with round-trip tests and documented CI behavior.
+- [x] Demo key `profileName` dogfoods AppState `Slice` over `profile.name`.
+- [x] `aps stats` dogfoods `@ObservedDependency` (`DemoStats`).
+- [x] SyncState and ModelState feasibility spikes document no-go for 0.x (`docs/spikes/`).
 
 ## Explicit out of scope for 0.x
 
@@ -33,7 +36,7 @@ Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo A
 
 ## In scope (added)
 
-- SecureState dogfood via the fixed `secret` demo key (Keychain-backed String). Available where Apple's Security framework exists (macOS). Linux/headless CI behavior is documented; Keychain round-trips are not required on Linux.
+- SecureState dogfood via the fixed `secret` demo key (Keychain-backed String). Available where Apple's Security framework exists (macOS). Keychain round-trip tests and smoke are opt-in (`APS_SMOKE_SECURESTATE=1`); default CI skips them to avoid Keychain prompts. Linux documents keychain-unavailable behavior.
 
 ## Tickets
 
@@ -51,6 +54,9 @@ Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo A
 | APS-10 | SpecSync archive hygiene |
 | APS-11 | README agent usage |
 | APS-12 | SecureState `secret` Keychain dogfood |
+| APS-13 | ObservedDependency `stats` / `DemoStats` |
+| APS-14 | Slice `profileName` over `profile.name` |
+| APS-15 | SyncState / ModelState feasibility spikes (no-go) |
 
 ## Definition of done
 

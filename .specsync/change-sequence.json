@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 13,
-  "id": "CHG-0013-dogfood-appstate-slice-via-profilename-for-issue-17",
+  "sequence": 14,
+  "id": "CHG-0014-document-appstate-coverage-matrix-and-refresh-goal-for-0-2-dogfood-surfaces",
   "acknowledged_collisions": []
 }
