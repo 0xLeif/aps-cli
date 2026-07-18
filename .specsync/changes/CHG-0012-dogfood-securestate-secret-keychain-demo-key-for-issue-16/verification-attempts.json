@@ -19,6 +19,25 @@
         "REQ-aps-cli-015",
         "REQ-state-store-013"
       ]
+    },
+    {
+      "timestamp": 1784407084,
+      "commit": "8f5a1624ad57d16fe43bd12256faa36f80d31644",
+      "contract_digest": "f931b6b50deee8ecac029eb31f0a16fbdd8e24dd7c2e272dc3c183a91806d91b",
+      "workspace_digest": "5ac00f7647356c08d2115b807cc2e47946b4e3c72637be8c8ba39142366fa4ea",
+      "passed": false,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-001",
+        "REQ-aps-cli-015",
+        "REQ-state-store-013"
+      ]
     }
   ]
 }
