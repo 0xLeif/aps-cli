@@ -44,6 +44,23 @@ Rules:
 7. If your `agent:<name>` label does not exist, create it with a description
    of the form "Ticket claimed by <name>".
 
+### Worktrees for parallel agents
+
+Local agents share this checkout, so parallel work needs isolation: one git
+worktree per claimed ticket, kept out of the main checkout.
+
+```sh
+git worktree add ../aps-cli-wt/issue-N -b <agent>/issue-N-<slug> origin/main
+```
+
+- Work only inside your worktree; leave the main checkout on `main`.
+- Each worktree carries its own `.build/`; that is the cost of isolation.
+- SpecSync SDD workspaces (`.specsync/changes/`) are per-worktree, so
+  in-flight tickets merge in order like any other change.
+- Remove the worktree and branch once the PR is up.
+- Cloud agents (Cursor background, Codex) already run isolated VMs; this
+  rule is for agents on a shared machine.
+
 <!-- CorvidLabs trust toolchain: BEGIN (managed, do not edit inside) -->
 ## CorvidLabs trust toolchain (standing rules)
 
