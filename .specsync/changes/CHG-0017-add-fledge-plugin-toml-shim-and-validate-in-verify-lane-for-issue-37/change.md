@@ -1,6 +1,6 @@
 ---
 id: CHG-0017-add-fledge-plugin-toml-shim-and-validate-in-verify-lane-for-issue-37
-state: implementing
+state: accepted
 type: documentation
 base_commit: d0e158325efb5006efcb4a2ed7ae1e9f4b43ef39
 ---
