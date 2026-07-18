@@ -2,4 +2,5 @@
 
 - Unit: DemoKey metadata, parseBool, invalid set values
 - Integration: StateStore round-trips via `@testable import aps`
-- Smoke: `Scripts/smoke.sh` for flag/note persistence and reset
+- Unit: ObservedDependency stats mutation + Combine observation
+- Smoke: `Scripts/smoke.sh` for flag/note persistence, reset, and `aps stats`

@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784406119,
+      "digest": "291d2bc3fb1dc888c7ac858fd6adc584e793354bdd169a60351cf0aefb1ea15e",
+      "note": "Approve ObservedDependency DemoStats dogfood."
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784406348,
+      "digest": "1defd9f7ba999c7d4156cd0b80b236b4a173d5ba0985832e9f89b8b2ed5155ca",
+      "note": "Re-approve after delta fix for ObservedDependency."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784406380,
+      "digest": "b992d9bcee5871ecf16c4dc76ee84f1725a10a5457db7d39a1a2d3e9888b5bfa",
+      "note": "Accept ObservedDependency DemoStats dogfood."
+    }
+  ],
+  "reopenings": []
+}

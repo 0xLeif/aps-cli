@@ -14,6 +14,7 @@ aps set <key> <value> [--json] [--state-dir PATH]
 aps watch <key> [--count N] [--timeout SEC] [--jsonl] [--interval MS] [--state-dir PATH]
 aps dump [--json] [--state-dir PATH]
 aps keys [--json]
+aps stats [--json] [--watch] [--count N] [--timeout SEC]
 aps reset <key> [--json] [--state-dir PATH]
 aps reset --all [--json] [--state-dir PATH]
 aps --help
@@ -36,10 +37,12 @@ Dynamic / user-declared keys are intentionally out of scope for 0.x.
 
 ### Dependencies
 
-`aps` injects real services with `@AppDependency` / `Application.dependency`:
+`aps` injects real services with `@AppDependency` / `Application.dependency`, plus one
+`@ObservedDependency` consumer for AppState's observable dependency surface:
 
-- **`clock`** : wall clock for dump timestamps
-- **`jsonCoding`** : shared JSON encoder helpers for `aps dump`
+- **`clock`** : wall clock for dump timestamps (`@AppDependency`)
+- **`jsonCoding`** : shared JSON encoder helpers for `aps dump` (`@AppDependency`)
+- **`stats`** : process-local mutation counters (`DemoStats` / `@ObservedDependency`); `aps stats` reads them and `aps stats --watch` surfaces Combine updates
 
 ## Requirements
 

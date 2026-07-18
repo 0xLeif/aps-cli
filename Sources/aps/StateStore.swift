@@ -1,8 +1,12 @@
 import AppState
+#if canImport(Combine)
+import Combine
+#endif
 import Foundation
 import Observation
 
-/// Reads and writes demo keys through AppState idioms (including `@AppDependency`).
+/// Reads and writes demo keys through AppState idioms (including `@AppDependency`
+/// and `@ObservedDependency` for observable services).
 ///
 /// Callers must be on the main thread: AppState asserts that in `notifyChange()`,
 /// and ArgumentParser's synchronous `@main` entry point provides that.
@@ -13,14 +17,33 @@ import Observation
 public final class StateStore {
     @AppDependency(\.clock) private var clock: any APSClock
     @AppDependency(\.jsonCoding) private var jsonCoding: JSONCoding
+    #if !os(Linux) && !os(Windows)
+    @ObservedDependency(\.stats) private var stats: DemoStats
+    #else
+    @AppDependency(\.stats) private var stats: DemoStats
+    #endif
 
     public init() {
         Application.load(dependency: \.clock)
         Application.load(dependency: \.jsonCoding)
+        Application.load(dependency: \.stats)
     }
 
     /// Wall clock from the injected `APSClock` dependency.
     public var now: Date { clock.now }
+
+    /// Current snapshot of the `@ObservedDependency` stats service.
+    public func statsSnapshot() -> DemoStatsSnapshot {
+        DemoStatsSnapshot(
+            mutationCount: stats.mutationCount,
+            lastMutatedKey: stats.lastMutatedKey
+        )
+    }
+
+    /// Clears process-local stats counters (test / reset helpers).
+    public func resetStats() {
+        stats.reset()
+    }
 
     public func get(_ key: DemoKey) -> String {
         switch key {
@@ -83,6 +106,7 @@ public final class StateStore {
                 throw APSError.persistenceFailed(key: .profile)
             }
         }
+        stats.recordMutation(key: key)
     }
 
     public func reset(_ key: DemoKey) {
@@ -99,6 +123,7 @@ public final class StateStore {
         case .profile:
             Application.reset(fileState: \.profile)
         }
+        stats.recordMutation(key: key)
     }
 
     public func resetAll() {
@@ -120,6 +145,48 @@ public final class StateStore {
             }
         )
         return try jsonCoding.encodePretty(snapshot)
+    }
+
+    /// Blocking watch over the `@ObservedDependency` stats service.
+    ///
+    /// Subscribes to Combine `objectWillChange` from `DemoStats` and polls the snapshot
+    /// so mutations recorded by `set` / `reset` surface to the CLI without SwiftUI.
+    public func watchStatsBlocking(
+        pollInterval: TimeInterval = 0.25,
+        shouldContinue: () -> Bool = { true },
+        onChange: (DemoStatsSnapshot) -> Void
+    ) {
+        var last = statsSnapshot()
+        onChange(last)
+
+        #if canImport(Combine)
+        let flag = ChangeFlag()
+        let cancellable = stats.objectWillChange.sink { _ in
+            flag.mark()
+        }
+        defer { _ = cancellable }
+        #endif
+
+        let slice = max(pollInterval / 5.0, 0.05)
+
+        while shouldContinue() {
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
+            let current = statsSnapshot()
+            if current != last {
+                last = current
+                onChange(current)
+                #if canImport(Combine)
+                flag.clear()
+                #endif
+            } else {
+                #if canImport(Combine)
+                if flag.isSet {
+                    // objectWillChange is pre-publish; re-check next slice for the new value.
+                    flag.clear()
+                }
+                #endif
+            }
+        }
     }
 
     /// Blocking watch for the synchronous CLI: Observation + RunLoop polling.
@@ -239,7 +306,7 @@ public final class StateStore {
     }
 }
 
-/// `@Sendable` flag for Observation `onChange` closures.
+/// `@Sendable` flag for Observation / Combine `onChange` closures.
 private final class ChangeFlag: @unchecked Sendable {
     private let lock = NSLock()
     private var value = false
@@ -247,6 +314,12 @@ private final class ChangeFlag: @unchecked Sendable {
     func mark() {
         lock.lock()
         value = true
+        lock.unlock()
+    }
+
+    func clear() {
+        lock.lock()
+        value = false
         lock.unlock()
     }
 

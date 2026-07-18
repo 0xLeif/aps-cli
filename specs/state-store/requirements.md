@@ -57,3 +57,13 @@ Acceptance Criteria
 - Explicit stateDir wins over environment.
 - Missing both returns the default `~/.aps` path.
 
+### REQ-state-store-012
+
+`StateStore` SHALL inject a real `DemoStats` `ObservableObject` dependency consumed via `@ObservedDependency` on Apple platforms, record mutations on successful `set` / `reset`, and expose `statsSnapshot` / `watchStatsBlocking`.
+
+Acceptance Criteria
+- After `set(.counter, "1")`, `statsSnapshot().mutationCount` is 1 and `lastMutatedKey` is `counter`.
+- `@ObservedDependency(\.stats)` resolves the same instance that records mutations.
+- `watchStatsBlocking` emits the current snapshot first, then a distinct snapshot after a mutation.
+- A unit test shows Combine observation (`$mutationCount`) fires on dependency mutation.
+

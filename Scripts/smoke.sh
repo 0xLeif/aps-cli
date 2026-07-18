@@ -61,6 +61,10 @@ test -z "$("$bin" get note)"
 # Bounded watch should exit.
 "$bin" watch counter --count 1 --timeout 2 >/dev/null
 
+# ObservedDependency stats command (process-local; fresh process starts at 0).
+"$bin" stats --json | grep -q '"mutationCount" : 0'
+"$bin" stats --watch --count 1 --timeout 2 >/dev/null
+
 # Invalid values should fail clearly.
 if "$bin" set counter nope >/dev/null 2>&1; then
   echo "expected invalid counter to fail" >&2

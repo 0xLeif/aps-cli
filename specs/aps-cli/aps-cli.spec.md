@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 9
+version: 11
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -44,8 +44,6 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
 | `detail` | One-line description for `keys`. |
 | `description` | Actionable error text for humans and ValidationError bridging. |
-
-Command tree (informational): `Aps` is the `@main` root with get, set, watch, dump, keys, and reset. Shared `StateOptions` expose `--json` and `--state-dir`.
 
 ## Invariants
 
@@ -110,3 +108,5 @@ Then the watcher prints `changed` within one poll interval.
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
 | 2026-07-18 | CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate: Ship aps 0.2.0 agent-ready JSON state-dir watch and profile FileState |
+| 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: ObservedDependency DemoStats dogfood |
+| 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: Dogfood ObservedDependency DemoStats for issue 18 |

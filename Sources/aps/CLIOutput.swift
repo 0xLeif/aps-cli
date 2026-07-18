@@ -35,6 +35,18 @@ enum CLIOutput {
         let timestamp: Date
     }
 
+    struct StatsPayload: Encodable {
+        let mutationCount: Int
+        let lastMutatedKey: String
+        let storage: String
+
+        init(snapshot: DemoStatsSnapshot) {
+            self.mutationCount = snapshot.mutationCount
+            self.lastMutatedKey = snapshot.lastMutatedKey
+            self.storage = "ObservedDependency"
+        }
+    }
+
     /// Typed JSON leaf used so dump/get preserve Int/Bool instead of stringifying.
     enum JSONValue: Encodable, Equatable {
         case string(String)
