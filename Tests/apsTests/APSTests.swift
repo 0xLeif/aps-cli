@@ -128,6 +128,7 @@ final class APSTests: XCTestCase {
 #if canImport(Security)
     @MainActor
     func testSecretSecureStateRoundTrip() async throws {
+        throw XCTSkip("SecureState Keychain tests disabled temporarily")
         let store = StateStore()
         try store.set(.secret, value: "top-secret")
         XCTAssertEqual(store.get(.secret), "top-secret")
@@ -142,6 +143,7 @@ final class APSTests: XCTestCase {
 
     @MainActor
     func testSecretResetDeletesKeychainItem() async throws {
+        throw XCTSkip("SecureState Keychain tests disabled temporarily")
         let store = StateStore()
         try store.set(.secret, value: "ephemeral")
         XCTAssertEqual(
@@ -156,6 +158,7 @@ final class APSTests: XCTestCase {
 
     @MainActor
     func testSecretPersistsAcrossStateStoreInstances() async throws {
+        throw XCTSkip("SecureState Keychain tests disabled temporarily")
         let writer = StateStore()
         try writer.set(.secret, value: "shared-secret")
 

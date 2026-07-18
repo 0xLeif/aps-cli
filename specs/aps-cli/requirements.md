@@ -112,3 +112,4 @@ Acceptance Criteria
 - `aps set profileName X` updates the parent `profile` document name on disk.
 - `aps get profileName` returns the current parent name field.
 - `aps keys` lists `profileName` with storage `Slice`.
+

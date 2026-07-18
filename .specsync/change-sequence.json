@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 12,
-  "id": "CHG-0012-dogfood-securestate-secret-keychain-demo-key-for-issue-16",
+  "sequence": 13,
+  "id": "CHG-0013-dogfood-appstate-slice-via-profilename-for-issue-17",
   "acknowledged_collisions": []
 }

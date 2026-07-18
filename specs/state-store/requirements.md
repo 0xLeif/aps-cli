@@ -82,8 +82,9 @@ Acceptance Criteria
 
 ### REQ-state-store-014
 
-`StateStore` SHALL expose `profileName` via `Application.slice(\.profile, \.name)` so writes land in the parent FileState `profile` value.
+`StateStore` SHALL expose `profileName` via Application.slice over profile.name so writes land in the parent FileState profile value.
 
 Acceptance Criteria
-- After `set(.profileName, "x")`, `profileDocument().name` is `"x"` and `profile.json` reflects it.
-- `get(.profileName)` matches the parent name field.
+- After set(.profileName, "x"), profileDocument().name is "x" and profile.json reflects it.
+- get(.profileName) matches the parent name field.
+

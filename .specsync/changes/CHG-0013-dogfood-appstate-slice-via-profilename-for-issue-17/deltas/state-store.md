@@ -1,6 +1,6 @@
 # state-store Slice profileName dogfood
 
-## ADDED
+## MODIFIED
 
 ### REQUIREMENT REQ-state-store-014
 

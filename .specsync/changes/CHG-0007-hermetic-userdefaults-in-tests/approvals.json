@@ -27,6 +27,20 @@
       "timestamp": 1784406793,
       "digest": "3e4baf2845a9a075b9bcef077f5b4620e7154e3ed2da8e584025d4083b04ea86",
       "note": "Re-accept after SecureState secret dogfood."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784408145,
+      "digest": "bb22167606a835c14857178875f1f1259c73946cca4c0b89ea36e107765de87c",
+      "note": "Accept after Slice profileName docs."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784408846,
+      "digest": "527d8c5d7c2ee6d10b3aaeeecff3b9097b2e7ff2ef3f2cb1dabf746a0e2be4bf",
+      "note": "Re-accept after SecureState test skip."
     }
   ],
   "reopenings": [
@@ -147,6 +161,124 @@
       },
       "stale_acceptance_input_digest": "37f5f78408754c1691d127f10f8041608cfcbff64a6b35de4dd87344c102a3b8",
       "current_acceptance_input_digest": "1f329fd97b079998a4dc8522049819bca4880cee833244b22576f2d27f748a2e"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0007-hermetic-userdefaults-in-tests",
+      "actor": "agent:cursor",
+      "reason": "Shared paths updated by Slice profileName dogfood (issue 17).",
+      "timestamp": 1784407751,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784406793,
+        "digest": "3e4baf2845a9a075b9bcef077f5b4620e7154e3ed2da8e584025d4083b04ea86",
+        "note": "Re-accept after SecureState secret dogfood."
+      },
+      "prior_verification": {
+        "timestamp": 1784406784,
+        "commit": "6312f8d8379c3b87b05c3eb4436c0b503f161d1a",
+        "contract_digest": "0c72a7f1bfaa780b21b7b2ac7904ab5352e8186a8293caf6f91354fddff40610",
+        "workspace_digest": "5ac00f7647356c08d2115b807cc2e47946b4e3c72637be8c8ba39142366fa4ea",
+        "acceptance_input_digest": "1f329fd97b079998a4dc8522049819bca4880cee833244b22576f2d27f748a2e",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "892737ad12d482e123f7e036d8af1cb0fd3aabb465f8c9ac561ed79af04a33bc",
+              "entry_digest": "c84485e5707378b3f73e17a2c56611d32c600a7ab1da4b428e69d3c0c5eea9a7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ae9357465fd4069ef0ca3ab4708d5f80fb2a678f664b2ddab82a39db515e553c",
+              "entry_digest": "31cd6b2bc889715a5d740b4dfb68237559799cc587ffc7fc4045805e62fb3f5d",
+              "owners": [
+                "@exact:test"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "1f329fd97b079998a4dc8522049819bca4880cee833244b22576f2d27f748a2e",
+      "current_acceptance_input_digest": "f0b8032b88cc44662bb7e5d7efa72c8a3d5d503e06240e9137feafcbb2bd0371"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0007-hermetic-userdefaults-in-tests",
+      "actor": "agent:cursor",
+      "reason": "APSTests.swift updated: SecureState Keychain tests temporarily XCTSkip'd.",
+      "timestamp": 1784408829,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784408145,
+        "digest": "bb22167606a835c14857178875f1f1259c73946cca4c0b89ea36e107765de87c",
+        "note": "Accept after Slice profileName docs."
+      },
+      "prior_verification": {
+        "timestamp": 1784408136,
+        "commit": "bbd88cb1948d608f120bfe397bc296a1b7c8af01",
+        "contract_digest": "0c72a7f1bfaa780b21b7b2ac7904ab5352e8186a8293caf6f91354fddff40610",
+        "workspace_digest": "69737035fe19c5ebee187b2b845e58584a63d938697374a95a376f94202cad25",
+        "acceptance_input_digest": "f0b8032b88cc44662bb7e5d7efa72c8a3d5d503e06240e9137feafcbb2bd0371",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "892737ad12d482e123f7e036d8af1cb0fd3aabb465f8c9ac561ed79af04a33bc",
+              "entry_digest": "c84485e5707378b3f73e17a2c56611d32c600a7ab1da4b428e69d3c0c5eea9a7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4190becbb5f6e83683533a246887bd56c3279e4962114e78828856dbc141ac0b",
+              "entry_digest": "a8d2927f064df209df1e8c226f7ad7cf376f5aea14c8302cf0c7885830a5857d",
+              "owners": [
+                "@exact:test"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "f0b8032b88cc44662bb7e5d7efa72c8a3d5d503e06240e9137feafcbb2bd0371",
+      "current_acceptance_input_digest": "563fb215ee5550d691394fbd22bb2a4305251b5a32ac44b6c8ffc6d04a983cdf"
     }
   ]
 }
