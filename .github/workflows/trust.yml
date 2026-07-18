@@ -1,0 +1,34 @@
+name: Trust
+
+# Private repo: CorvidLabs trust gate on macOS self-hosted runners.
+# Revisit before making the repository public: fork PRs must not run on
+# self-hosted hosts.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  trust:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v4.1.6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch attest notes
+        run: git fetch origin "+refs/notes/attest:refs/notes/attest" 2>/dev/null || true
+
+      - name: CorvidLabs Trust gate
+        id: trust
+        uses: CorvidLabs/trust@9d32b5786d2e9e4d39fc581c0091c721ee3d4226 # v1.0.0
+
+      - name: Check managed agent rules
+        run: |
+          grep -q "CorvidLabs trust toolchain: BEGIN" AGENTS.md
+          grep -q "CorvidLabs trust toolchain: END" AGENTS.md

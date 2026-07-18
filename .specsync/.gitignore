@@ -1,0 +1,5 @@
+cache/
+change.lock
+hashes.json
+*.local
+# Local SpecSync caches / working files

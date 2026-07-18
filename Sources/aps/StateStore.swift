@@ -4,7 +4,7 @@ import Observation
 
 /// Reads and writes demo keys through AppState idioms (including `@AppDependency`).
 ///
-/// Callers must be on the main thread — AppState asserts that in `notifyChange()`,
+/// Callers must be on the main thread: AppState asserts that in `notifyChange()`,
 /// and ArgumentParser's synchronous `@main` entry point provides that.
 @MainActor
 public final class StateStore {

@@ -12,7 +12,7 @@ public struct SystemAPSClock: APSClock {
     public var now: Date { Date() }
 }
 
-/// Real JSON helpers used by dump / formatting — not a stub.
+/// Real JSON helpers used by dump / formatting: not a stub.
 public struct JSONCoding: Sendable {
     public init() {}
 

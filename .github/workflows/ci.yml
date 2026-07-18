@@ -1,0 +1,35 @@
+name: CI
+
+# Private repo: run on macOS self-hosted runners (not GitHub-hosted).
+# Revisit before making the repository public: fork PRs must not run on
+# self-hosted hosts.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-smoke:
+    runs-on: [self-hosted, macOS]
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Swift version
+        run: swift --version
+      - name: Build (release)
+        run: swift build -c release
+      - name: Test
+        run: swift test
+      - name: Smoke CLI
+        env:
+          APS_BIN: .build/release/aps
+        run: ./Scripts/smoke.sh

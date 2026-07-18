@@ -1,7 +1,7 @@
 import AppState
 import Foundation
 
-/// Demo keys registered on `Application` — a tiny fixed schema for the CLI.
+/// Demo keys registered on `Application`: a tiny fixed schema for the CLI.
 ///
 /// Future idea: dynamic / user-declared keys without rebuilding.
 extension Application {

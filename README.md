@@ -2,7 +2,9 @@
 
 A tiny Swift CLI that [dogfoods](https://github.com/0xLeif/AppState) **AppState** outside SwiftUI: declare typed app state, get/set/watch/dump it, and show dependency injection.
 
-Cross-platform where AppState allows — **macOS** and **Linux** first.
+Cross-platform where AppState allows: **macOS** and **Linux** first.
+
+This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.xyz/integrate/) (fledge, spec-sync, augur, attest). See `AGENTS.md`.
 
 ## Commands
 
@@ -32,21 +34,28 @@ Dynamic / user-declared keys are intentionally out of scope for v1.
 
 `aps` injects real services with `@AppDependency` / `Application.dependency`:
 
-- **`clock`** — wall clock for dump timestamps
-- **`jsonCoding`** — shared JSON encoder helpers for `aps dump`
+- **`clock`** : wall clock for dump timestamps
+- **`jsonCoding`** : shared JSON encoder helpers for `aps dump`
 
 ## Requirements
 
 - Swift 6.0+
 - macOS 14+ or Linux (Swift.org toolchain)
+- For the trust gate locally: [corvid-trust](https://github.com/CorvidLabs/trust) (`brew install CorvidLabs/tap/corvid-trust`)
 
-## Build & run
+## Build and run
 
 ```bash
 git clone https://github.com/0xLeif/aps-cli.git
 cd aps-cli
 swift build
 swift run aps --help
+```
+
+Or through fledge:
+
+```bash
+fledge lanes run verify
 ```
 
 Release build:
@@ -59,59 +68,71 @@ swift build -c release
 ### Examples
 
 ```bash
-# Discover the fixed schema
 swift run aps keys
-
-# In-memory State
 swift run aps set counter 3
-swift run aps get counter
-swift run aps set message "hello from aps"
-
-# Persisted StoredState / FileState
 swift run aps set flag true
 swift run aps set note "saved across launches"
-swift run aps get note
-
-# Inspect everything (uses injected JSONCoding + clock)
 swift run aps dump
-
-# Watch for changes (Ctrl+C to stop)
 swift run aps watch note --interval 200
-
-# Reset
-swift run aps reset counter
 swift run aps reset --all
 ```
 
-`watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface — including updates written by another `aps` process.
+`watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process.
 
-## Tests
+## Tests and smoke
 
 ```bash
 swift test
+./Scripts/smoke.sh
 ```
 
-CI builds and smokes the CLI on Linux and macOS (see `.github/workflows`). Locally:
+## CI (private repo)
+
+While this repository is **private**, every workflow runs on **macOS self-hosted** runners:
+
+| Workflow | Runner | Role |
+|----------|--------|------|
+| `.github/workflows/ci.yml` | `[self-hosted, macOS]` | build / test / smoke |
+| `.github/workflows/trust.yml` | `[self-hosted, macOS]` | CorvidLabs Trust gate (fledge + spec-sync + augur + attest) |
+
+Before making the repo public, switch off self-hosted runners for fork pull requests.
+
+## Trust toolchain
+
+| File | Purpose |
+|------|---------|
+| `fledge.toml` | Tasks + `verify` lane |
+| `.trust.toml` | Unified Trust policy |
+| `.augur.toml` | Diff-risk thresholds |
+| `.attest.json` | Provenance policy |
+| `.specsync/` | SpecSync 5 config + SDD change tracking |
+| `specs/` | Module contracts (`aps-cli`, `state-store`) |
+| `AGENTS.md` | Standing rules (managed block required by CI) |
 
 ```bash
-./Scripts/smoke.sh
+fledge trust doctor
+fledge trust verify
 ```
 
 ## Layout
 
 ```text
 Package.swift
-Sources/aps/          # executable + AppState demo surface
-Tests/apsTests/       # parsing, round-trips, watch, reset
-.github/workflows/    # Linux + macOS CI
+Sources/aps/
+Tests/apsTests/
+specs/
+Scripts/smoke.sh
+.github/workflows/{ci,trust}.yml
 ```
 
 ## Non-goals (v1)
 
 - No iCloud `SyncState`, Keychain `SecureState`, or SwiftData `ModelState`
 - No plugin system, daemon, or network API
-- No dynamic schema language — fixed demo keys only
+- No dynamic schema language: fixed demo keys only
 
 ## Related
 
-- [AppState](https://github.com/0xLeif/AppState) — the library this CLI exercises
+- [AppState](https://github.com/0xLeif/AppState)
+- [CorvidLabs Trust](https://github.com/CorvidLabs/trust)
+- [Integrate guide](https://corvidlabs.xyz/integrate/)

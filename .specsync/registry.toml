@@ -1,0 +1,6 @@
+[registry]
+name = "aps"
+
+[specs]
+aps-cli = "specs/aps-cli/aps-cli.spec.md"
+state-store = "specs/state-store/state-store.spec.md"

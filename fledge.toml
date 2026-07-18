@@ -1,0 +1,14 @@
+# fledge.toml: aps CLI lifecycle tasks
+# Docs: https://github.com/CorvidLabs/fledge
+
+[tasks]
+build = "swift build"
+test = "swift test"
+release-build = "swift build -c release"
+smoke = "./Scripts/smoke.sh"
+spec = "specsync check"
+check = "fledge run build && fledge run test && fledge run smoke"
+
+[lanes.verify]
+description = "Build, test, and smoke aps (the single quality gate)"
+steps = ["build", "test", "smoke"]

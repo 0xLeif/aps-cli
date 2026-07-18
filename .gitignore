@@ -9,3 +9,6 @@ DerivedData/
 .netrc
 *.swp
 *~
+
+# CorvidLabs trust toolchain
+augur.json
