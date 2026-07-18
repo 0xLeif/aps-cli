@@ -1,6 +1,6 @@
 # State Store SecureState secret dogfood
 
-## ADDED
+## MODIFIED
 
 ### REQUIREMENT REQ-state-store-013
 

@@ -13,6 +13,7 @@ The fixed demo schema SHALL include `profile` and `secret` alongside `counter`, 
 Acceptance Criteria
 - `aps keys` lists `profile` and `secret`.
 - `aps set profile '{"name":"a","version":1}'` round-trips through get/dump/reset.
+- `aps set secret ...` round-trips on macOS through get/dump/reset.
 
 ### REQ-aps-cli-002
 
@@ -100,3 +101,4 @@ Acceptance Criteria
 - `aps reset secret` deletes the Keychain item on macOS.
 - README documents macOS Keychain access, Linux unavailability, and headless CI caveats.
 - `set secret` on platforms without Security surfaces `keychainUnavailable`.
+

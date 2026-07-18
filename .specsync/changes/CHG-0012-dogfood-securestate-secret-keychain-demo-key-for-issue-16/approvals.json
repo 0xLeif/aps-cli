@@ -20,6 +20,20 @@
       "timestamp": 1784407183,
       "digest": "85e6e4977d59bf2a77046990bf23888ad3476bae934473868e0b15d76cfb0576",
       "note": "Re-approve with requirement evidence table."
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784407362,
+      "digest": "914c204b1d836d6b3de14e4908e2813862014a023e5d4244f1758d9486b3cd80",
+      "note": "Complete SecureState CHG-0012 acceptance after squash merge."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784407386,
+      "digest": "9e71b35efc866f0298eef557cd58e6ff5f0dac79578308fe446ef494c4614268",
+      "note": "Accept SecureState secret dogfood on main."
     }
   ],
   "reopenings": []

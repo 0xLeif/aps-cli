@@ -10,6 +10,6 @@
 
 ## Suites
 
-- `swift test` (Darwin SecureState tests; Linux keychainUnavailable)
-- `./Scripts/smoke.sh` (secret round-trip on Darwin only)
+- `swift test`
+- `./Scripts/smoke.sh`
 - `fledge lanes run verify`
