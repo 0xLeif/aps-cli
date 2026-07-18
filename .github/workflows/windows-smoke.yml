@@ -23,10 +23,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Swift 6.0.x hits a known ucrt/_Builtin_intrinsics cycle on Windows SDK 10.0.26100.
+      # Pin a post-fix toolchain (6.3.1+) for windows-latest only; macOS/Linux stay on 6.0.
       - name: Install Swift
         uses: SwiftyLab/setup-swift@latest
         with:
-          swift-version: "6.0"
+          swift-version: "6.3.1"
 
       - name: Swift version
         shell: pwsh

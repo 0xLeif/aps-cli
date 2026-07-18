@@ -41,7 +41,7 @@ Auditor: agent:cursor
 
 | Area | Status / gap |
 |------|----------------|
-| CI | PowerShell smoke on `windows-latest` (`windows-smoke.yml`, [#45](https://github.com/0xLeif/aps-cli/issues/45)); full tri-OS matrix still [#40](https://github.com/0xLeif/aps-cli/issues/40) |
+| CI | PowerShell smoke on `windows-latest` (`windows-smoke.yml`, Swift 6.3.1+, [#45](https://github.com/0xLeif/aps-cli/issues/45)); full tri-OS matrix still [#40](https://github.com/0xLeif/aps-cli/issues/40) |
 | AppState Package platforms | Declares Apple platforms only; Linux builds in practice; full `swift test` on Windows still [#46](https://github.com/0xLeif/aps-cli/issues/46) |
 | Combine / ObservedDependency | Same gates as Linux (`!os(Windows)`) |
 | SecureState | No Security; same as Linux until encrypted-file store ([#35](https://github.com/0xLeif/aps-cli/issues/35)) |

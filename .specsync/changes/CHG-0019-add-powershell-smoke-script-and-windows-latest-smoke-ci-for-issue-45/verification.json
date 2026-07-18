@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784416027,
-  "commit": "292a85156979acfa441b79a7abe29279095052e2",
+  "timestamp": 1784417009,
+  "commit": "ad7f3de3b595e78d6ed3634f953a35e92dc5047e",
   "contract_digest": "bbe132cc0578bf3b207567f6f95971c09abbaa9370e1f2de062c2e1aa399b968",
-  "workspace_digest": "403c126fc22e0fedfbebd67ed0180ecd0a55457e5d8a4d47090b6936e4c0c7e4",
-  "acceptance_input_digest": "ae1650f947a1ae60c94bf6b37a77a5e73f72131a327de1141f73b605422527d9",
+  "workspace_digest": "7e886b00823d91cd7470f5290e417f63122e240ec6f6a7176735e17582b0be48",
+  "acceptance_input_digest": "e293b6478c102d04fe6202202de3eadf37740700c76a71a790873378a04c63b1",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -11,8 +11,8 @@
         "path": ".github/workflows/windows-smoke.yml",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "56f78f5e8e0b007164fb3b9386c999ace9796f02c2eb474b6fce0c861ddf128c",
-        "entry_digest": "fa3719db695fb74ad08bbb6676a2f3fed60bb71240b61911cb747ab942357862",
+        "payload_digest": "cae7670558aa27a8592c9d10b735e357c2bef094225173969310671ad7b18242",
+        "entry_digest": "0c3bd779030ada2ed7dc762e5ee8815c4b25b37864e74d2458087b5c18b67ca9",
         "owners": [
           "@exact:delivery"
         ]
@@ -51,8 +51,8 @@
         "path": "docs/windows-readiness.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "6f6b107d5878a92c107acba48a1a4b02ed1c089a234d821afb322120f952b8fb",
-        "entry_digest": "4f9639fd3958817aebe637c99c4ac267bfa38fb800998571a626133ff18ffb7c",
+        "payload_digest": "6400c44ad2d4e3595e4d9a5ca87023e72461cc92a9e834750fe9650a654a1987",
+        "entry_digest": "dd15ff727cb1cca126ca058caeaaca79cf2d582ab513d7c4d5dece7bf0c0f961",
         "owners": [
           "@exact:delivery"
         ]

@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784416184,
-  "commit": "292a85156979acfa441b79a7abe29279095052e2",
+  "timestamp": 1784417027,
+  "commit": "ad7f3de3b595e78d6ed3634f953a35e92dc5047e",
   "contract_digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
-  "workspace_digest": "403c126fc22e0fedfbebd67ed0180ecd0a55457e5d8a4d47090b6936e4c0c7e4",
-  "acceptance_input_digest": "0e1d954a0b312af13eb92c54b9b6cb75cda1e8fb9c9a73fc4460d96be7a94f80",
+  "workspace_digest": "7e886b00823d91cd7470f5290e417f63122e240ec6f6a7176735e17582b0be48",
+  "acceptance_input_digest": "5b1e9de4e70de9255093b0b6fddf31b58ab0f19f875fef76e994375a71679974",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -41,8 +41,8 @@
         "path": "docs/windows-readiness.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "6f6b107d5878a92c107acba48a1a4b02ed1c089a234d821afb322120f952b8fb",
-        "entry_digest": "4f9639fd3958817aebe637c99c4ac267bfa38fb800998571a626133ff18ffb7c",
+        "payload_digest": "6400c44ad2d4e3595e4d9a5ca87023e72461cc92a9e834750fe9650a654a1987",
+        "entry_digest": "dd15ff727cb1cca126ca058caeaaca79cf2d582ab513d7c4d5dece7bf0c0f961",
         "owners": [
           "@exact:delivery"
         ]
