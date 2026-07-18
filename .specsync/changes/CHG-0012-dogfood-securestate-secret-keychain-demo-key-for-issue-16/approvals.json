@@ -13,6 +13,13 @@
       "timestamp": 1784407027,
       "digest": "f931b6b50deee8ecac029eb31f0a16fbdd8e24dd7c2e272dc3c183a91806d91b",
       "note": "Re-approve after committing SecureState implementation."
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784407183,
+      "digest": "85e6e4977d59bf2a77046990bf23888ad3476bae934473868e0b15d76cfb0576",
+      "note": "Re-approve with requirement evidence table."
     }
   ],
   "reopenings": []
