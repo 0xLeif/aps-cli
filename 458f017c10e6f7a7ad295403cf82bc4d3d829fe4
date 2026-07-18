@@ -1,0 +1,1 @@
+{"commit":"458f017c10e6f7a7ad295403cf82bc4d3d829fe4","confidence":1,"humanApproved":false,"note":"Upgrade SpecSync/Trust to 5.1.1; remove incomplete 5.0.1 archive; local brew and CI aligned","reviewer":"agent:cursor","testsPassed":true,"timestamp":1784397260,"verdict":"proceed"}
