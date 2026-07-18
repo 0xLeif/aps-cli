@@ -5,10 +5,10 @@
   "title": "Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15",
   "description": "Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15",
   "kind": "refactor",
-  "state": "approved",
+  "state": "implementing",
   "base_commit": "cb05f64c650260c5f3960b192d3be70c0e450627",
   "created_at": 1784410136,
-  "updated_at": 1784410172,
+  "updated_at": 1784410418,
   "affected_specs": [
     "aps-cli",
     "state-store"
