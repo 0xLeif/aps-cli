@@ -5,4 +5,4 @@ artifact: design
 
 # Design
 
-<!-- TODO: complete this artifact or remove it from selected_artifacts before approval. -->
+Docs-only audit plus an internal `APSPaths.isDefaultAPSHomePath` helper so default-home tests do not assume Unix `/` separators. Windows CI stays deferred to #40.

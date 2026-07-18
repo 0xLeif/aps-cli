@@ -1,4 +1,12 @@
 {
-  "approvals": [],
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784414093,
+      "digest": "4f5beecd8e6a1e0053a43af645bd69b018d4e0db66856b5c2b0f9bfa0c1f3719",
+      "note": "Windows readiness audit for issue 36."
+    }
+  ],
   "reopenings": []
 }

@@ -5,4 +5,7 @@ artifact: tasks
 
 # Tasks
 
-<!-- TODO: complete this artifact or remove it from selected_artifacts before approval. -->
+- [x] Audit Combine/Security/path hardcoding
+- [x] Confirm swift-crypto Windows support for #35
+- [x] Write docs/windows-readiness.md + README link
+- [x] Cheap APSPaths test fix; file #45/#46

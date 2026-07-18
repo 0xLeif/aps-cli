@@ -1,6 +1,6 @@
 ---
 id: CHG-0018-document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue
-state: draft
+state: implementing
 type: documentation
 base_commit: 8cf886df7ac87eac4234fc3fb8c13f46362e08d6
 ---
