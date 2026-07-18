@@ -1,3 +1,6 @@
+#if canImport(Combine)
+import Combine
+#endif
 import Foundation
 
 /// Clock abstraction injected through AppState.
@@ -32,5 +35,68 @@ public struct JSONCoding: Sendable {
             throw APSError.decodingFailed
         }
         return try JSONDecoder().decode(type, from: data)
+    }
+}
+
+/// Process-local mutation counters dogfooded through `@ObservedDependency`.
+///
+/// Conforms to `ObservableObject` so AppState's observable dependency surface can
+/// publish changes that CLI watch (and tests) subscribe to via Combine.
+#if canImport(Combine)
+@MainActor
+public final class DemoStats: ObservableObject, Sendable {
+    @Published public private(set) var mutationCount: Int
+    @Published public private(set) var lastMutatedKey: String
+
+    public init() {
+        self.mutationCount = 0
+        self.lastMutatedKey = ""
+    }
+
+    /// Records a successful demo-key mutation (set or reset).
+    public func recordMutation(key: DemoKey) {
+        mutationCount += 1
+        lastMutatedKey = key.rawValue
+    }
+
+    /// Clears counters back to their initial values.
+    public func reset() {
+        mutationCount = 0
+        lastMutatedKey = ""
+    }
+}
+#else
+@MainActor
+public final class DemoStats: Sendable {
+    public private(set) var mutationCount: Int
+    public private(set) var lastMutatedKey: String
+
+    public init() {
+        self.mutationCount = 0
+        self.lastMutatedKey = ""
+    }
+
+    /// Records a successful demo-key mutation (set or reset).
+    public func recordMutation(key: DemoKey) {
+        mutationCount += 1
+        lastMutatedKey = key.rawValue
+    }
+
+    /// Clears counters back to their initial values.
+    public func reset() {
+        mutationCount = 0
+        lastMutatedKey = ""
+    }
+}
+#endif
+
+/// Immutable view of `DemoStats` for CLI output and watch events.
+public struct DemoStatsSnapshot: Equatable, Sendable, Encodable {
+    public let mutationCount: Int
+    public let lastMutatedKey: String
+
+    public init(mutationCount: Int, lastMutatedKey: String) {
+        self.mutationCount = mutationCount
+        self.lastMutatedKey = lastMutatedKey
     }
 }

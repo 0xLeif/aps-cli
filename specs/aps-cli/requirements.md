@@ -80,3 +80,12 @@ The CLI `--version` string SHALL be `0.2.0` while the project is pre-public 0.x.
 Acceptance Criteria
 - `aps --version` prints `0.2.0`.
 
+### REQ-aps-cli-014
+
+`aps stats` SHALL expose the process-local `DemoStats` ObservedDependency, including optional `--watch` with `--count` / `--timeout`.
+
+Acceptance Criteria
+- After `aps set counter 3` in the same process, `aps stats` reports last key `counter`.
+- `aps stats --json` includes `mutationCount` and `lastMutatedKey`.
+- `aps stats --watch --count 1` exits after printing the initial snapshot.
+

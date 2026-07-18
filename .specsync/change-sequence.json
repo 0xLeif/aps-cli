@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 10,
-  "id": "CHG-0010-ci-eliminate-the-double-build-for-issue-14",
+  "sequence": 11,
+  "id": "CHG-0011-dogfood-observeddependency-demostats-for-issue-18",
   "acknowledged_collisions": []
 }

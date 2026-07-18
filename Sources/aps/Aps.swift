@@ -26,6 +26,7 @@ struct Aps: ParsableCommand {
             Watch.self,
             Dump.self,
             Keys.self,
+            Stats.self,
             Reset.self
         ],
         defaultSubcommand: nil
@@ -206,6 +207,67 @@ extension Aps {
                 for key in DemoKey.allCases {
                     print("\(key.helpSummary)\t\(key.detail)")
                 }
+            }
+        }
+    }
+
+    struct Stats: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            abstract: "Print process-local mutation stats from the ObservedDependency demo service."
+        )
+
+        @Flag(name: .long, help: "Watch for stats mutations (Combine objectWillChange + polling).")
+        var watch: Bool = false
+
+        @Option(name: .long, help: "Stop after printing this many values (includes the initial value).")
+        var count: Int?
+
+        @Option(name: .long, help: "Stop after this many seconds.")
+        var timeout: Double?
+
+        @Option(name: .long, help: "Poll interval in milliseconds when watching.")
+        var interval: UInt64 = 250
+
+        @Flag(name: .long, help: "Emit machine-readable JSON.")
+        var json: Bool = false
+
+        func run() throws {
+            try onMainThread {
+                boot()
+                let store = StateStore()
+
+                if watch {
+                    let deadline = timeout.map { Date().addingTimeInterval($0) }
+                    var emitted = 0
+
+                    store.watchStatsBlocking(
+                        pollInterval: TimeInterval(interval) / 1000.0,
+                        shouldContinue: {
+                            if let count, emitted >= count { return false }
+                            if let deadline, Date() >= deadline { return false }
+                            return true
+                        }
+                    ) { snapshot in
+                        emitted += 1
+                        Self.printSnapshot(snapshot, json: json, pretty: false)
+                    }
+                } else {
+                    Self.printSnapshot(store.statsSnapshot(), json: json, pretty: true)
+                }
+            }
+        }
+
+        private static func printSnapshot(_ snapshot: DemoStatsSnapshot, json: Bool, pretty: Bool) {
+            if json {
+                let payload = CLIOutput.StatsPayload(snapshot: snapshot)
+                if pretty, let text = try? CLIOutput.encodePretty(payload) {
+                    print(text)
+                } else if let line = try? CLIOutput.encodeLine(payload) {
+                    CLIOutput.writeLine(line)
+                }
+            } else {
+                let key = snapshot.lastMutatedKey.isEmpty ? "(none)" : snapshot.lastMutatedKey
+                CLIOutput.writeLine("\(snapshot.mutationCount)\t\(key)")
             }
         }
     }

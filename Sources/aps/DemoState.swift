@@ -49,6 +49,12 @@ extension Application {
     var jsonCoding: Dependency<JSONCoding> {
         dependency(JSONCoding())
     }
+
+    /// Process-local mutation stats consumed via `@ObservedDependency`.
+    @MainActor
+    var stats: Dependency<DemoStats> {
+        dependency(DemoStats())
+    }
 }
 
 /// Stable paths for CLI-persisted `FileState` data.

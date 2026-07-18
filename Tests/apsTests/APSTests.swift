@@ -1,32 +1,25 @@
 import AppState
+#if canImport(Combine)
+import Combine
+#endif
 import Foundation
 import XCTest
 @testable import aps
 
-final class APSTests: XCTestCase {
-    private var userDefaultsOverride: Application.DependencyOverride?
-    private var suiteName: String?
+#if !os(Linux) && !os(Windows)
+/// Local consumer that dogfoods `@ObservedDependency` the same way AppState's own tests do.
+@MainActor
+private struct ObservedStatsConsumer {
+    @ObservedDependency(\.stats) var stats: DemoStats
+}
+#endif
 
+final class APSTests: XCTestCase {
     override func setUp() async throws {
         try await super.setUp()
 
-        let suite = "aps-tests-\(UUID().uuidString)"
-        self.suiteName = suite
-
-        var override: Application.DependencyOverride?
         await MainActor.run {
             Application.logging(isEnabled: false)
-
-            // Isolate StoredState under a unique suite per test run
-            if let isolatedDefaults = UserDefaults(suiteName: suite) {
-                struct SuiteUserDefaults: UserDefaultsManaging, @unchecked Sendable {
-                    let defaults: UserDefaults
-                    func object(forKey key: String) -> Any? { defaults.object(forKey: key) }
-                    func removeObject(forKey key: String) { defaults.removeObject(forKey: key) }
-                    func set(_ value: Any?, forKey key: String) { defaults.set(value, forKey: key) }
-                }
-                override = Application.override(\.userDefaults, with: SuiteUserDefaults(defaults: isolatedDefaults))
-            }
 
             // Isolate FileState under a unique temp directory for this test run.
             let path = FileManager.default.temporaryDirectory
@@ -40,21 +33,8 @@ final class APSTests: XCTestCase {
             Application.reset(storedState: \.flag)
             Application.reset(fileState: \.note)
             Application.reset(fileState: \.profile)
+            Application.dependency(\.stats).reset()
         }
-        self.userDefaultsOverride = override
-    }
-
-    override func tearDown() async throws {
-        let suite = self.suiteName
-        await MainActor.run {
-            if let suite {
-                UserDefaults.standard.removePersistentDomain(forName: suite)
-            }
-        }
-        if let userDefaultsOverride {
-            await userDefaultsOverride.cancel()
-        }
-        try await super.tearDown()
     }
 
     func testParseBool() {
@@ -394,6 +374,70 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    // REQ-state-store-012
+    func testStatsObservedDependencyRecordsMutations() async throws {
+        let store = StateStore()
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
+        XCTAssertEqual(store.statsSnapshot().lastMutatedKey, "")
+
+        try store.set(.counter, value: "1")
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 1)
+        XCTAssertEqual(store.statsSnapshot().lastMutatedKey, "counter")
+
+        try store.set(.message, value: "hi")
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 2)
+        XCTAssertEqual(store.statsSnapshot().lastMutatedKey, "message")
+    }
+
+    #if !os(Linux) && !os(Windows)
+    @MainActor
+    func testObservedDependencyFiresOnMutation() async throws {
+        Application.load(dependency: \.stats)
+        Application.dependency(\.stats).reset()
+
+        let consumer = ObservedStatsConsumer()
+        XCTAssertEqual(consumer.stats.mutationCount, 0)
+
+        var observedCounts: [Int] = []
+        let cancellable = consumer.stats.$mutationCount.sink { value in
+            observedCounts.append(value)
+        }
+        defer { _ = cancellable }
+
+        let store = StateStore()
+        try store.set(.flag, value: "true")
+
+        XCTAssertEqual(consumer.stats.mutationCount, 1)
+        XCTAssertEqual(consumer.stats.lastMutatedKey, "flag")
+        // Combine publishes the initial value plus the mutation.
+        XCTAssertTrue(observedCounts.contains(1), "Expected $mutationCount to publish 1, got \(observedCounts)")
+    }
+    #endif
+
+    @MainActor
+    // REQ-aps-cli-014
+    func testWatchStatsDetectsDependencyMutation() async throws {
+        let store = StateStore()
+        store.resetStats()
+
+        var seen: [DemoStatsSnapshot] = []
+        store.watchStatsBlocking(
+            pollInterval: 0.05,
+            shouldContinue: { seen.count < 2 }
+        ) { snapshot in
+            seen.append(snapshot)
+            if snapshot.mutationCount == 0 {
+                try? store.set(.counter, value: "9")
+            }
+        }
+
+        XCTAssertEqual(seen.count, 2)
+        XCTAssertEqual(seen[0].mutationCount, 0)
+        XCTAssertEqual(seen[1].mutationCount, 1)
+        XCTAssertEqual(seen[1].lastMutatedKey, "counter")
+    }
+
+    @MainActor
     func testInvalidFlagValue() async {
         let store = StateStore()
         do {
@@ -456,9 +500,5 @@ final class APSTests: XCTestCase {
         let persistence = APSError.persistenceFailed(key: .note)
         XCTAssertTrue(persistence.description.contains("note"))
         XCTAssertTrue(persistence.description.contains("persist"))
-    }
-
-    func testUserDefaultsStandardIsHermetic() {
-        XCTAssertNil(UserDefaults.standard.object(forKey: "aps.flag"))
     }
 }

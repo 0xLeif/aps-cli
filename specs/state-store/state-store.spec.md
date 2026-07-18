@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 9
+version: 11
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -24,13 +24,16 @@ non-UI use.
 | Export | Description |
 |--------|-------------|
 | `StateStore` | MainActor facade over demo AppState keys. |
-| `init` | Loads clock/jsonCoding dependencies without forcing `~/.aps`. |
+| `init` | Loads clock/jsonCoding/stats dependencies without forcing `~/.aps`. |
 | `get` | Returns the current string rendering for a demo key. |
-| `set` | Parses and writes a demo key value. |
-| `reset` | Restores one demo key to its initial value. |
+| `set` | Parses and writes a demo key value; records a stats mutation. |
+| `reset` | Restores one demo key to its initial value; records a stats mutation. |
 | `resetAll` | Restores every demo key. |
 | `dump` | Pretty JSON snapshot with typed values. |
-| `watchBlocking` | Observation + polling watch loop. |
+| `watchBlocking` | Observation + polling watch loop for demo keys. |
+| `watchStatsBlocking` | Combine + polling watch loop for ObservedDependency stats. |
+| `statsSnapshot` | Immutable view of DemoStats counters. |
+| `resetStats` | Clears process-local DemoStats counters. |
 | `profileDocument` | Typed profile FileState accessor. |
 | `readNoteFromDisk` | Direct `note.json` read bypassing cache. |
 | `readProfileFromDisk` | Direct `profile.json` read bypassing cache. |
@@ -41,6 +44,12 @@ non-UI use.
 | `JSONCoding` | Shared encode/decode helpers. |
 | `encodePretty` | Pretty JSON encode helper. |
 | `decode` | JSON decode helper. |
+| `DemoStats` | ObservableObject mutation-stats dependency. |
+| `mutationCount` | Number of recorded set/reset mutations. |
+| `lastMutatedKey` | Raw demo key of the latest mutation. |
+| `recordMutation` | Increments counters for a demo key. |
+| `reset` | Clears DemoStats counters. |
+| `DemoStatsSnapshot` | Codable snapshot of DemoStats. |
 
 ## Invariants
 
@@ -101,3 +110,5 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
 | 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
 | 2026-07-18 | CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate: Ship aps 0.2.0 agent-ready JSON state-dir watch and profile FileState |
+| 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: ObservedDependency DemoStats dogfood |
+| 2026-07-18 | CHG-0011-dogfood-observeddependency-demostats-for-issue-18: Dogfood ObservedDependency DemoStats for issue 18 |
