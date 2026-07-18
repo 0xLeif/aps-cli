@@ -76,7 +76,8 @@ extension Application {
 /// Resolution order for `configure(stateDir:)`:
 /// 1. Explicit `--state-dir`
 /// 2. `APS_HOME` environment variable
-/// 3. `~/.aps`
+/// 3. `<home>/.aps` via `FileManager.homeDirectoryForCurrentUser`
+///    (Unix `~/.aps`, Windows `%USERPROFILE%\.aps`; never hardcodes `~/Library`)
 ///
 /// Called from CLI `boot()` only. Tests inject their own
 /// `FileManager.defaultFileStatePath` before constructing `StateStore`.
@@ -85,6 +86,11 @@ enum APSPaths {
     static var defaultFileStateDirectory: String {
         let home = FileManager.default.homeDirectoryForCurrentUser
         return home.appendingPathComponent(".aps", isDirectory: true).path
+    }
+
+    /// True when `path` ends with a `.aps` path component (platform-neutral separators).
+    internal static func isDefaultAPSHomePath(_ path: String) -> Bool {
+        URL(fileURLWithPath: path).lastPathComponent == ".aps"
     }
 
     @MainActor
