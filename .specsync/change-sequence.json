@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 19,
-  "id": "CHG-0019-add-powershell-smoke-script-and-windows-latest-smoke-ci-for-issue-45",
+  "sequence": 20,
+  "id": "CHG-0020-prove-swift-test-on-windows-latest-and-portable-aps-home-env-tests-for-issue-46",
   "acknowledged_collisions": []
 }

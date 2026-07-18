@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 18
+version: 19
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -127,3 +127,4 @@ Then the watcher prints `changed` within one poll interval.
 | 2026-07-18 | CHG-0016-loud-torn-filestate-reads-and-document-multi-writer-semantics-for-issue-38: Loud torn FileState reads + multi-writer docs |
 | 2026-07-18 | CHG-0016-loud-torn-filestate-reads-and-document-multi-writer-semantics-for-issue-38: Loud torn FileState reads and document multi-writer semantics for issue 38 |
 | 2026-07-18 | CHG-0019-add-powershell-smoke-script-and-windows-latest-smoke-ci-for-issue-45: Add PowerShell smoke script and windows-latest smoke CI for issue 45 |
+| 2026-07-18 | CHG-0020-prove-swift-test-on-windows-latest-and-portable-aps-home-env-tests-for-issue-46: Prove swift test on windows-latest and portable APS_HOME env tests for issue 46 |

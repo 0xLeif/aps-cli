@@ -85,6 +85,23 @@
       "requirement_ids": [
         "REQ-aps-cli-018"
       ]
+    },
+    {
+      "timestamp": 1784418589,
+      "commit": "7571e11d1f4da488f9540b0175420f69501814e1",
+      "contract_digest": "bbe132cc0578bf3b207567f6f95971c09abbaa9370e1f2de062c2e1aa399b968",
+      "workspace_digest": "a92ec35a90d555fc8482bc53bbcb218fcf9ac90b625feedc2b957a9e306986d8",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-018"
+      ]
     }
   ]
 }

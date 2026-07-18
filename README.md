@@ -157,7 +157,7 @@ pwsh ./Scripts/smoke.ps1
 |----------|--------|------|
 | `.github/workflows/ci.yml` | `[self-hosted, macOS]` | build / test / smoke |
 | `.github/workflows/linux-smoke.yml` | `ubuntu-latest` | Linux build + smoke |
-| `.github/workflows/windows-smoke.yml` | `windows-latest` | Windows build + PowerShell smoke |
+| `.github/workflows/windows-smoke.yml` | `windows-latest` | Windows `swift test` + PowerShell smoke |
 | `.github/workflows/trust.yml` | `[self-hosted, macOS]` | CorvidLabs Trust gate |
 
 While the repository is **private**, macOS workflows use self-hosted runners. Before making the repo public, switch off self-hosted runners for fork pull requests.

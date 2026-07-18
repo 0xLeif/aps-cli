@@ -4,6 +4,7 @@
 - Integration: StateStore round-trips via `@testable import aps`
 - Unit: ObservedDependency stats mutation + Combine observation
 - Smoke: `Scripts/smoke.sh` (Unix) and `Scripts/smoke.ps1` (Windows / PowerShell) for flag/note persistence, reset, and `aps stats`
+- Windows CI: `swift test` + `Scripts/smoke.ps1` on `windows-latest` (`windows-smoke.yml`)
 
 - SecureState `secret` round-trip / Keychain delete (Darwin) or keychainUnavailable (else).
 
