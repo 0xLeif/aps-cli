@@ -13,6 +13,13 @@
       "timestamp": 1784409585,
       "digest": "a0e81300735aa82f646433bad125e6ac0043d3680d608e1ce6dbf42c7c730e6a",
       "note": "Docs-only coverage matrix and GOAL refresh."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784409608,
+      "digest": "79c7e5ff9d9f9a63e78a3467516661fa2e1d5bac682ac5bf1ca25e69f8ea3f71",
+      "note": "Docs coverage matrix accepted."
     }
   ],
   "reopenings": []

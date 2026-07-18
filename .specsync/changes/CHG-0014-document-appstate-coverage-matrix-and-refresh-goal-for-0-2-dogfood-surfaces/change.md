@@ -1,6 +1,6 @@
 ---
 id: CHG-0014-document-appstate-coverage-matrix-and-refresh-goal-for-0-2-dogfood-surfaces
-state: implementing
+state: accepted
 type: documentation
 base_commit: 20b6f8b24442e18257379fd238018b67615f536b
 ---
