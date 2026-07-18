@@ -417,10 +417,6 @@ final class APSTests: XCTestCase {
         XCTAssertTrue(invalid.description.contains("counter"))
         XCTAssertTrue(invalid.description.contains("Int"))
 
-        let unknown = APSError.unknownKey("wat")
-        XCTAssertTrue(unknown.description.contains("wat"))
-        XCTAssertTrue(unknown.description.contains("counter"))
-
         let persistence = APSError.persistenceFailed(key: .note)
         XCTAssertTrue(persistence.description.contains("note"))
         XCTAssertTrue(persistence.description.contains("persist"))

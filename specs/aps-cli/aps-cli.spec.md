@@ -34,7 +34,6 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `flag` | Bool key stored in AppState `StoredState`. |
 | `note` | String key stored in AppState `FileState`. |
 | `profile` | ProfileDocument key stored in AppState `FileState`. |
-| `unknownKey` | Unknown demo key token. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |

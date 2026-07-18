@@ -59,7 +59,6 @@ public struct ProfileDocument: Codable, Equatable, Sendable {
 }
 
 public enum APSError: Error, CustomStringConvertible, Equatable {
-    case unknownKey(String)
     case invalidValue(key: DemoKey, value: String)
     case encodingFailed
     case decodingFailed
@@ -67,8 +66,6 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
 
     public var description: String {
         switch self {
-        case .unknownKey(let key):
-            return "Unknown key '\(key)'. Known keys: \(DemoKey.allCases.map(\.rawValue).joined(separator: ", "))"
         case .invalidValue(let key, let value):
             return "Invalid value '\(value)' for \(key.rawValue) (\(key.valueType))"
         case .encodingFailed:

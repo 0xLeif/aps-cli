@@ -42,7 +42,7 @@ Acceptance Criteria
 
 ### REQ-aps-cli-005
 
-`APSError` SHALL cover `unknownKey`, `invalidValue`, `encodingFailed`, `decodingFailed`, and `persistenceFailed`.
+`APSError` SHALL cover `invalidValue`, `encodingFailed`, `decodingFailed`, and `persistenceFailed`.
 
 Acceptance Criteria
 - Each case has an actionable `description`.

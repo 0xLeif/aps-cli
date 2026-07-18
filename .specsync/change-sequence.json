@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 6,
-  "id": "CHG-0006-reconcile-agent-ticket-claiming-rules-and-add-worktree-guidance-in-agents-md",
+  "sequence": 8,
+  "id": "CHG-0008-remove-unreachable-code-apserror-unknownkey-and-jsoncoding-decode",
   "acknowledged_collisions": []
 }

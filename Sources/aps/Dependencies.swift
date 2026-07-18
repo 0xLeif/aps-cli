@@ -26,11 +26,4 @@ public struct JSONCoding: Sendable {
         }
         return string
     }
-
-    public func decode<T: Decodable>(_ type: T.Type, from string: String) throws -> T {
-        guard let data = string.data(using: .utf8) else {
-            throw APSError.decodingFailed
-        }
-        return try JSONDecoder().decode(type, from: data)
-    }
 }

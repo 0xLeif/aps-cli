@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0008-remove-unreachable-code-apserror-unknownkey-and-jsoncoding-decode",
+  "slug": "remove-unreachable-code-apserror-unknownkey-and-jsoncoding-decode",
+  "title": "Remove unreachable code (APSError.unknownKey and JSONCoding.decode)",
+  "description": "Remove unreachable code (APSError.unknownKey and JSONCoding.decode)",
+  "kind": "refactor",
+  "state": "implementing",
+  "base_commit": "50eddbbb5c6bf829995523f0a9cd8f75f82f7cc6",
+  "created_at": 1784405343,
+  "updated_at": 1784405466,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/DemoKey.swift",
+    "Sources/aps/Dependencies.swift",
+    "Sources/aps/StateStore.swift",
+    "Tests/apsTests/APSTests.swift",
+    "specs/aps-cli/requirements.md",
+    "specs/aps-cli/aps-cli.spec.md",
+    "specs/state-store/state-store.spec.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "APSError.unknownKey and JSONCoding.decode are removed from code and specs; tests pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing",
+    "design",
+    "tasks",
+    "requirements",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "yes"
+  }
+}

@@ -40,7 +40,6 @@ non-UI use.
 | `SystemAPSClock` | Date-backed clock. |
 | `JSONCoding` | Shared encode/decode helpers. |
 | `encodePretty` | Pretty JSON encode helper. |
-| `decode` | JSON decode helper. |
 
 ## Invariants
 
