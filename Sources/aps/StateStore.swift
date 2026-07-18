@@ -6,13 +6,15 @@ import Observation
 ///
 /// Callers must be on the main thread: AppState asserts that in `notifyChange()`,
 /// and ArgumentParser's synchronous `@main` entry point provides that.
+///
+/// FileState path configuration belongs to CLI `boot()` (or the test harness).
+/// `StateStore` does not call `APSPaths.configure()`, so injected test paths stay put.
 @MainActor
 public final class StateStore {
     @AppDependency(\.clock) private var clock: any APSClock
     @AppDependency(\.jsonCoding) private var jsonCoding: JSONCoding
 
     public init() {
-        APSPaths.configure()
         Application.load(dependency: \.clock)
         Application.load(dependency: \.jsonCoding)
     }
@@ -52,6 +54,12 @@ public final class StateStore {
         case .note:
             var state = Application.fileState(\.note)
             state.value = value
+            // AppState FileState swallows save errors after updating its cache.
+            // Confirm the value is actually on disk before claiming success.
+            let onDisk = try Self.readNoteFromDisk()
+            guard onDisk == value else {
+                throw APSError.persistenceFailed(key: .note)
+            }
         }
     }
 
@@ -95,6 +103,8 @@ public final class StateStore {
     /// - Observation covers in-process mutations (`State`).
     /// - Polling re-reads values so `FileState` / `StoredState` updates can surface when
     ///   Observation alone would not (e.g. another process wrote the file).
+    /// - For `note`, polling reads the file directly so AppState's FileState cache cannot
+    ///   hide cross-process writes.
     /// - `shouldContinue` lets tests (and future tooling) stop the loop cleanly.
     public func watchBlocking(
         _ key: DemoKey,
@@ -102,7 +112,7 @@ public final class StateStore {
         shouldContinue: () -> Bool = { true },
         onChange: (String) -> Void
     ) {
-        var last = get(key)
+        var last = freshValue(key)
         onChange(last)
 
         let slice = max(pollInterval / 5.0, 0.05)
@@ -118,7 +128,7 @@ public final class StateStore {
 
             while shouldContinue() {
                 RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
-                let current = get(key)
+                let current = freshValue(key)
                 if flag.isSet || current != last {
                     if current != last {
                         last = current
@@ -127,6 +137,30 @@ public final class StateStore {
                     break
                 }
             }
+        }
+    }
+
+    /// Value used by watch polling. Disk-backed `note` bypasses AppState's FileState cache.
+    private func freshValue(_ key: DemoKey) -> String {
+        switch key {
+        case .note:
+            return (try? Self.readNoteFromDisk()) ?? get(key)
+        case .counter, .message, .flag:
+            return get(key)
+        }
+    }
+
+    /// Read `note.json` without touching AppState's in-memory FileState cache.
+    ///
+    /// Mirrors AppState's non-Base64 FileState encoding: UTF-8 JSON via `JSONEncoder`.
+    public static func readNoteFromDisk() throws -> String {
+        let path = FileManager.defaultFileStatePath
+        let fileURL = URL(fileURLWithPath: path).appendingPathComponent("note.json")
+        do {
+            let data = try Data(contentsOf: fileURL)
+            return try JSONDecoder().decode(String.self, from: data)
+        } catch {
+            throw APSError.persistenceFailed(key: .note)
         }
     }
 

@@ -174,6 +174,49 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    func testWatchDetectsExternalFileStateWrite() async throws {
+        // Simulate another process: write note.json without updating AppState's cache.
+        let store = StateStore()
+        try store.set(.note, value: "before")
+        let path = FileManager.defaultFileStatePath
+
+        var seen: [String] = []
+        store.watchBlocking(
+            .note,
+            pollInterval: 0.05,
+            shouldContinue: { seen.count < 2 }
+        ) { value in
+            seen.append(value)
+            if value == "before" {
+                // Same on-disk format AppState uses for non-Base64 FileState.
+                let data = try? JSONEncoder().encode("changed")
+                let url = URL(fileURLWithPath: path).appendingPathComponent("note.json")
+                try? data?.write(to: url)
+            }
+        }
+
+        XCTAssertEqual(seen, ["before", "changed"])
+    }
+
+    @MainActor
+    func testNoteUsesInjectedFileStatePath() async throws {
+        let path = FileManager.defaultFileStatePath
+        XCTAssertTrue(path.contains("aps-tests-"), "setUp must inject a temp FileState path")
+
+        let store = StateStore()
+        try store.set(.note, value: "isolated")
+
+        let fileURL = URL(fileURLWithPath: path).appendingPathComponent("note.json")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
+
+        let homeNote = FileManager.default.homeDirectoryForCurrentUser
+            .appendingPathComponent(".aps/note.json")
+        // Do not require ~/.aps to be absent globally; just ensure this write landed in temp.
+        XCTAssertNotEqual(fileURL.path, homeNote.path)
+        XCTAssertEqual(try StateStore.readNoteFromDisk(), "isolated")
+    }
+
+    @MainActor
     func testClockDependencyIsInjectable() async throws {
         let clock = Application.dependency(\.clock)
         let before = clock.now
@@ -239,5 +282,9 @@ final class APSTests: XCTestCase {
         let unknown = APSError.unknownKey("wat")
         XCTAssertTrue(unknown.description.contains("wat"))
         XCTAssertTrue(unknown.description.contains("counter"))
+
+        let persistence = APSError.persistenceFailed(key: .note)
+        XCTAssertTrue(persistence.description.contains("note"))
+        XCTAssertTrue(persistence.description.contains("persist"))
     }
 }

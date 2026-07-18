@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 4
+version: 8
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -27,19 +27,20 @@ non-UI use.
 | `APSClock` | Clock protocol for dump timestamps. |
 | `SystemAPSClock` | Production `APSClock` backed by `Date()`. |
 | `JSONCoding` | Shared pretty JSON helpers. |
-| `init` | Configures FileState path and loads clock/jsonCoding dependencies. |
+| `init` | Loads clock/jsonCoding dependencies without forcing `~/.aps`. |
 | `get` | Return the string form of a demo key. |
-| `set` | Parse and write; throw `APSError.invalidValue` on bad input. |
+| `set` | Parse and write; throw `APSError.invalidValue` or `persistenceFailed` on failure. |
 | `reset` | Restore one key to its AppState initial value. |
 | `resetAll` | Restore every demo key. |
 | `dump` | Pretty JSON snapshot using `@AppDependency` clock + jsonCoding. |
-| `watchBlocking` | Observation + RunLoop poll loop with `shouldContinue`. |
+| `watchBlocking` | Observation + RunLoop poll loop; `note` polls via direct disk read. |
 | `parseBool` | Accept true/false/1/0/yes/no/on/off (case-insensitive). |
 | `now` | Current `Date` from an `APSClock`. |
 | `encodePretty` | Encode an `Encodable` value as pretty UTF-8 JSON text. |
 | `decode` | Decode a `Decodable` value from UTF-8 JSON text. |
+| `readNoteFromDisk` | Read `note.json` without touching AppState's FileState cache. |
 
-Application demo surface (informational): `Application.counter` / `message` / `flag` / `note` / `clock` / `jsonCoding`, with `APSPaths.configure()` pointing FileState at `~/.aps`.
+Application demo surface (informational): `Application.counter` / `message` / `flag` / `note` / `clock` / `jsonCoding`. `APSPaths.configure()` is invoked from CLI `boot()`, not `StateStore.init`.
 
 ## Invariants
 
@@ -95,3 +96,7 @@ Then keys include message with value "hi" and a timestamp field exists.
 - 2: Explicit export inventory for SpecSync active-contract checks.
 | 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
 | 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
+| 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
+| 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
+| 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
+| 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |

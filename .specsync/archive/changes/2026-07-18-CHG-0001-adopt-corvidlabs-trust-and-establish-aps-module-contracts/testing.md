@@ -12,15 +12,15 @@ artifact: testing
 | REQ-aps-cli-001 | `testDemoKeyMetadata`, `testDemoKeyHelpSummaryFormat`, `Scripts/smoke.sh` keys |
 | REQ-aps-cli-002 | `testInvalidCounterValue`, `testInvalidFlagValue`, `testAPSErrorDescriptionsAreActionable` |
 | REQ-aps-cli-003 | `testProcessLocalStateKeysDoNotClaimCrossProcessPersistence`, `testFlagPersistsAcrossStateStoreInstances`, smoke flag/note |
-| REQ-aps-cli-004 | `testWatchDetectsInProcessStateChange`, `testWatchDetectsFileStateChange` |
+| REQ-aps-cli-004 | `testWatchDetectsInProcessStateChange`, `testWatchDetectsFileStateChange`, `testWatchDetectsExternalFileStateWrite` |
 | REQ-aps-cli-005 | `testAPSErrorDescriptionsAreActionable`, `testInvalidCounterValue` |
 | REQ-state-store-001 | `testCounterRoundTrip`, `testMessageAndFlagRoundTrip`, `testNoteFileStateRoundTrip` |
 | REQ-state-store-002 | `testDumpIncludesKeysAndUsesDependency`, `testJSONCodingDependency`, `testClockDependencyIsInjectable` |
 | REQ-state-store-003 | `testFlagPersistsAcrossStateStoreInstances`, `testResetRestoresInitialValues`, `testResetAll` |
-| REQ-state-store-004 | `testWatchDetectsInProcessStateChange`, `testWatchDetectsFileStateChange`, `testParseBool` |
+| REQ-state-store-004 | `testWatchDetectsInProcessStateChange`, `testWatchDetectsExternalFileStateWrite`, `testParseBool` |
 
 ## Gate evidence
 
-- `swift test` (18 tests)
+- `swift test` (20 tests)
 - `./Scripts/smoke.sh`
 - `fledge lanes run verify`

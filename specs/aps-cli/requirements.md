@@ -33,17 +33,18 @@ Acceptance Criteria
 
 ### REQ-aps-cli-004
 
-`watch` SHALL print the current value first and flush subsequent distinct values promptly.
+`watch` SHALL print the current value first and flush subsequent distinct values promptly, including cross-process `FileState` writes to `note`.
 
 Acceptance Criteria
 - The first emitted line is the current value.
 - Non-TTY stdout still surfaces each change without waiting for process exit.
+- An external write to `note.json` is observed within one poll interval without relying on AppState's FileState cache.
 
 ### REQ-aps-cli-005
 
-`APSError` SHALL cover `unknownKey`, `invalidValue`, `encodingFailed`, and `decodingFailed`.
+`APSError` SHALL cover `unknownKey`, `invalidValue`, `encodingFailed`, `decodingFailed`, and `persistenceFailed`.
 
 Acceptance Criteria
-- Each case is reachable from CLI or StateStore coding paths.
-- `description` is suitable for ValidationError bridging.
+- Each case has an actionable `description`.
+- `set note` surfaces `persistenceFailed` when the on-disk value does not match after write.
 

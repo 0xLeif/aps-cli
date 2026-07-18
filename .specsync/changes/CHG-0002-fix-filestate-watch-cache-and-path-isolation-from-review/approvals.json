@@ -1,0 +1,46 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784396091,
+      "digest": "75056184138803c84d85114b485bbbc424c280e52b024d9840dc23f56ace7142",
+      "note": "Approve FileState watch cache and path isolation fixes from PR review."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784396094,
+      "digest": "13f79887f3aa6c765de95da8a27321fefdc3132474a4f8d91216673760c1a0b9",
+      "note": "Accept review fixes for watch note cross-process and path isolation."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784396148,
+      "digest": "75056184138803c84d85114b485bbbc424c280e52b024d9840dc23f56ace7142",
+      "note": "Re-approve CHG-0002 after evidence refresh."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784396151,
+      "digest": "2b6e60409c76df712a85a03938ec3d5108f9653a5c7b66ed0a65b8d98951819d",
+      "note": "Refresh CHG-0002 evidence under SpecSync 5.0.1."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784396248,
+      "digest": "6d4175cb4100733aee98f1debbdd8aa5736bfc235a4e21bc742b76b66195c817",
+      "note": "Approve expanded full-PR path coverage with FileState review fixes."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784396251,
+      "digest": "d7d13c1e90666f773314a1536e8699b7010e5dab2d59bb16f6d6572da779e75f",
+      "note": "Accept review fixes as sole active SpecSync change."
+    }
+  ]
+}

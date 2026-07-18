@@ -5,10 +5,10 @@
   "title": "Adopt CorvidLabs trust and establish aps module contracts",
   "description": "Adopt CorvidLabs trust and establish aps module contracts",
   "kind": "migration",
-  "state": "accepted",
+  "state": "archived",
   "base_commit": "f4bd6f9adbc83a4ebaa8760a08f1f699566638f9",
   "created_at": 1784393134,
-  "updated_at": 1784394935,
+  "updated_at": 1784396144,
   "affected_specs": [
     "aps-cli",
     "state-store"

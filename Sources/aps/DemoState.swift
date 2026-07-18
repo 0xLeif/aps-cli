@@ -42,6 +42,9 @@ extension Application {
 }
 
 /// Stable paths for CLI-persisted `FileState` data.
+///
+/// Called from CLI `boot()` only. Tests inject their own
+/// `FileManager.defaultFileStatePath` before constructing `StateStore`.
 enum APSPaths {
     @MainActor
     static var fileStateDirectory: String {

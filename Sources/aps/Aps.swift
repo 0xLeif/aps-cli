@@ -159,6 +159,7 @@ extension Aps {
 @MainActor
 private func boot() {
     Application.logging(isEnabled: false)
+    APSPaths.configure()
 }
 
 /// Synchronous `@main` starts on the real main thread; treat that as MainActor for AppState.

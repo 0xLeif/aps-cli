@@ -97,6 +97,27 @@
       "timestamp": 1784394935,
       "digest": "ab2e8e65c3b94ebfde36bcafe2bab2d40be3020b702c363ef38dbb218c355f1e",
       "note": "Accept with SpecSync 5.0.1 digests matching Trust CI."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784396118,
+      "digest": "6c81bf7ec50ac551292c3a5ade4785a61736c5b608ff255d0e14e8a24c3f619f",
+      "note": "Re-approve unchanged CHG-0001 definition for evidence refresh."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784396140,
+      "digest": "aaee4b8c2c21511270edf4281c2222eeccf2561cf9e6d6462ea0aac6aa26f379",
+      "note": "Align CHG-0001 deltas with CHG-0002 FileState watch fixes for effective-contract verify."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784396144,
+      "digest": "769752daa1b9594322e9303509eae744ffdcefdff2ff4d8eabc84b897477a59f",
+      "note": "Accept refreshed CHG-0001 evidence with current FileState contracts."
     }
   ]
 }

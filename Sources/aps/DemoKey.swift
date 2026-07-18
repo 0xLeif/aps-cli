@@ -48,6 +48,7 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
     case invalidValue(key: DemoKey, value: String)
     case encodingFailed
     case decodingFailed
+    case persistenceFailed(key: DemoKey)
 
     public var description: String {
         switch self {
@@ -59,6 +60,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "Failed to encode value as UTF-8 JSON"
         case .decodingFailed:
             return "Failed to decode value from UTF-8 JSON"
+        case .persistenceFailed(let key):
+            return "Failed to persist \(key.rawValue) to disk"
         }
     }
 }

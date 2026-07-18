@@ -2,7 +2,7 @@
 
 A tiny Swift CLI that [dogfoods](https://github.com/0xLeif/AppState) **AppState** outside SwiftUI: declare typed app state, get/set/watch/dump it, and show dependency injection.
 
-Cross-platform where AppState allows: **macOS** and **Linux** first.
+Targets **macOS** (CI) and aims to stay Linux-friendly where AppState allows.
 
 This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.xyz/integrate/) (fledge, spec-sync, augur, attest). See `AGENTS.md`.
 
@@ -40,7 +40,7 @@ Dynamic / user-declared keys are intentionally out of scope for v1.
 ## Requirements
 
 - Swift 6.0+
-- macOS 14+ or Linux (Swift.org toolchain)
+- macOS 14+ (CI). Linux toolchains are supported best-effort, not gated in CI yet.
 - For the trust gate locally: [corvid-trust](https://github.com/CorvidLabs/trust) (`brew install CorvidLabs/tap/corvid-trust`)
 
 ## Build and run
@@ -77,7 +77,7 @@ swift run aps watch note --interval 200
 swift run aps reset --all
 ```
 
-`watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process.
+`watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process. For `note`, polling reads `note.json` directly so AppState's FileState cache cannot hide cross-process writes.
 
 ## Tests and smoke
 

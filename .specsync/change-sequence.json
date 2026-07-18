@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 1,
-  "id": "CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts",
+  "sequence": 2,
+  "id": "CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review",
   "acknowledged_collisions": []
 }

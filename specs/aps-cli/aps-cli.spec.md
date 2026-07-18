@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 4
+version: 8
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -32,13 +32,14 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
+| `persistenceFailed` | Disk-backed key did not persist after write. |
 | `storage` | Human storage kind (`State` / `StoredState` / `FileState`). |
 | `valueType` | Human value type (`Int` / `String` / `Bool`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
 | `detail` | One-line description for `keys`. |
 | `description` | Actionable error text for humans and ValidationError bridging. |
 
-Command tree (informational): `Aps` is the `@main` root (`ParsableCommand`) with get, set, watch, dump, keys, and reset / reset --all.
+Command tree (informational): `Aps` is the `@main` root (`ParsableCommand`) with get, set, watch, dump, keys, and reset / reset --all. CLI `boot()` calls `APSPaths.configure()`.
 
 ## Invariants
 
@@ -84,6 +85,7 @@ Then the watcher prints `changed` within one poll interval.
 - Non-boolean `flag` value: `APSError.invalidValue` -> ValidationError.
 - `reset` with neither a key nor `--all`: ValidationError.
 - `reset` with both a key and `--all`: ValidationError.
+- Failed `note` disk persistence: `APSError.persistenceFailed` -> ValidationError.
 
 ## Dependencies
 
@@ -97,3 +99,7 @@ Then the watcher prints `changed` within one poll interval.
 - 2: Explicit export inventory for SpecSync active-contract checks (`DemoKey`, `APSError`).
 | 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
 | 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
+| 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
+| 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |
+| 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
+| 2026-07-18 | CHG-0002-fix-filestate-watch-cache-and-path-isolation-from-review: Fix FileState watch cache and path isolation from review |
