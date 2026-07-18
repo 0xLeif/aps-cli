@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 6,
-  "id": "CHG-0006-reconcile-agent-ticket-claiming-rules-and-add-worktree-guidance-in-agents-md",
+  "sequence": 7,
+  "id": "CHG-0007-hermetic-userdefaults-in-tests",
   "acknowledged_collisions": []
 }

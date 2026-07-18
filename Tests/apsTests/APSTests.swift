@@ -4,11 +4,29 @@ import XCTest
 @testable import aps
 
 final class APSTests: XCTestCase {
+    private var userDefaultsOverride: Application.DependencyOverride?
+    private var suiteName: String?
+
     override func setUp() async throws {
         try await super.setUp()
 
+        let suite = "aps-tests-\(UUID().uuidString)"
+        self.suiteName = suite
+
+        var override: Application.DependencyOverride?
         await MainActor.run {
             Application.logging(isEnabled: false)
+
+            // Isolate StoredState under a unique suite per test run
+            if let isolatedDefaults = UserDefaults(suiteName: suite) {
+                struct SuiteUserDefaults: UserDefaultsManaging, @unchecked Sendable {
+                    let defaults: UserDefaults
+                    func object(forKey key: String) -> Any? { defaults.object(forKey: key) }
+                    func removeObject(forKey key: String) { defaults.removeObject(forKey: key) }
+                    func set(_ value: Any?, forKey key: String) { defaults.set(value, forKey: key) }
+                }
+                override = Application.override(\.userDefaults, with: SuiteUserDefaults(defaults: isolatedDefaults))
+            }
 
             // Isolate FileState under a unique temp directory for this test run.
             let path = FileManager.default.temporaryDirectory
@@ -23,6 +41,20 @@ final class APSTests: XCTestCase {
             Application.reset(fileState: \.note)
             Application.reset(fileState: \.profile)
         }
+        self.userDefaultsOverride = override
+    }
+
+    override func tearDown() async throws {
+        let suite = self.suiteName
+        await MainActor.run {
+            if let suite {
+                UserDefaults.standard.removePersistentDomain(forName: suite)
+            }
+        }
+        if let userDefaultsOverride {
+            await userDefaultsOverride.cancel()
+        }
+        try await super.tearDown()
     }
 
     func testParseBool() {
@@ -424,5 +456,9 @@ final class APSTests: XCTestCase {
         let persistence = APSError.persistenceFailed(key: .note)
         XCTAssertTrue(persistence.description.contains("note"))
         XCTAssertTrue(persistence.description.contains("persist"))
+    }
+
+    func testUserDefaultsStandardIsHermetic() {
+        XCTAssertNil(UserDefaults.standard.object(forKey: "aps.flag"))
     }
 }
