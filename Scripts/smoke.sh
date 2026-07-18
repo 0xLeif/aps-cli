@@ -91,4 +91,30 @@ if "$bin" set counter nope >/dev/null 2>&1; then
   exit 1
 fi
 
+# Error contract: taxonomy exit codes, stdout purity, JSON envelope.
+out="$("$bin" set counter nope 2>/dev/null)" && { echo "expected invalid counter to fail" >&2; exit 1; }
+test $? -eq 64 || { echo "expected exit 64 for invalid value" >&2; exit 1; }
+test -z "$out" || { echo "stdout must stay empty on error" >&2; exit 1; }
+err="$("$bin" set counter nope --json 2>&1 >/dev/null || true)"
+echo "$err" | grep -q '"code":"invalid_value"'
+
+# Corrupt persisted state exits 65 with a corrupt_state envelope.
+echo 'garbage{{' > "$APS_HOME/note.json"
+out="$("$bin" get note 2>/dev/null)" && { echo "expected corrupt note to fail" >&2; exit 1; }
+test $? -eq 65 || { echo "expected exit 65 for corrupt state" >&2; exit 1; }
+test -z "$out" || { echo "stdout must stay empty on corrupt state" >&2; exit 1; }
+err="$("$bin" get note --json 2>&1 >/dev/null || true)"
+echo "$err" | grep -q '"code":"corrupt_state"'
+"$bin" reset note >/dev/null
+
+# Unwritable state root exits 73 on write.
+BADROOT="$(mktemp "${TMPDIR:-/tmp}/aps-smoke-file.XXXXXX")"
+out="$("$bin" set note x --state-dir "$BADROOT" 2>/dev/null)" && { echo "expected unwritable root to fail" >&2; exit 1; }
+test $? -eq 73 || { echo "expected exit 73 for unwritable state root" >&2; exit 1; }
+rm -f "$BADROOT"
+
+# APS_ERROR_JSON=1 opts into structured errors without --json.
+err="$(APS_ERROR_JSON=1 "$bin" set flag maybe 2>&1 >/dev/null || true)"
+echo "$err" | grep -q '"code":"invalid_value"'
+
 echo "smoke ok"

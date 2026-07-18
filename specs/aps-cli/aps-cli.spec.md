@@ -51,14 +51,18 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `valueType` | Human value type (`Int` / `String` / `Bool` / `ProfileDocument`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
 | `detail` | One-line description for `keys`. |
-| `description` | Actionable error text for humans and ValidationError bridging. |
+| `description` | Actionable error text for humans. |
+| `code` | Stable machine error code for the JSON envelope. |
+| `exitCode` | sysexits-aligned process exit code. |
+| `hint` | Actionable next step in the error envelope. |
 
 ## Invariants
 
 1. The CLI entry point runs on the real main thread so AppState
    `notifyChange()` assertions hold on Linux and macOS.
 2. stdout for `get` / `set` / `watch` / `reset <key>` is only the value line(s);
-   help and errors use ArgumentParser defaults.
+   stdout stays empty on error; help uses ArgumentParser defaults and domain
+   errors use the Error Cases contract (human line plus optional JSON envelope).
 3. `State` keys are process-local; a new process must not be expected to retain
    `counter` or `message`.
 4. `watch` must flush each printed value immediately when stdout is not a TTY.
@@ -92,12 +96,29 @@ Then the watcher prints `changed` within one poll interval.
 
 ## Error Cases
 
-- Unknown `DemoKey` token: ArgumentParser rejects before `run()`.
-- Non-integer `counter` value: `APSError.invalidValue` -> ValidationError.
-- Non-boolean `flag` value: `APSError.invalidValue` -> ValidationError.
-- `reset` with neither a key nor `--all`: ValidationError.
-- `reset` with both a key and `--all`: ValidationError.
-- Failed `note` disk persistence: `APSError.persistenceFailed` -> ValidationError.
+Domain errors fail through a single contract (`CLIOutput.fail`): a human line
+on stderr, an optional JSON envelope, and a taxonomy exit code.
+
+Exit codes (sysexits-aligned):
+
+| Code | Meaning | aps mapping |
+|------|---------|-------------|
+| 0 | success | stdout contract satisfied |
+| 64 | EX_USAGE | caller-fixable: bad key/flags, `invalidValue`, reset arg conflicts |
+| 65 | EX_DATAERR | corrupt persisted state (`corruptState`) or undecodable data (`decodingFailed`) |
+| 69 | EX_UNAVAILABLE | `keychainUnavailable` on platforms without Apple Security |
+| 70 | EX_SOFTWARE | internal bug: `encodingFailed` |
+| 73 | EX_CANTCREAT | write did not persist: `persistenceFailed` |
+| 66 | EX_NOINPUT | reserved for future explicit-file operations |
+
+- Missing state files are not errors: they mean the initial value.
+- A disk-backed file that exists but does not decode fails loudly (65) via
+  `StateStore.requireDecodableDiskState` before `get` / `watch` output.
+- With `--json` / `--jsonl`, or when `APS_ERROR_JSON=1`, stderr additionally
+  gets one `{"error":{"code","message","hint"}}` envelope; stdout stays empty
+  on error in every mode.
+- Unknown `DemoKey` token and flag shape errors: ArgumentParser rejects
+  before `run()` with its own 64.
 
 ## Dependencies
 
@@ -128,3 +149,4 @@ Then the watcher prints `changed` within one poll interval.
 | 2026-07-18 | CHG-0016-loud-torn-filestate-reads-and-document-multi-writer-semantics-for-issue-38: Loud torn FileState reads and document multi-writer semantics for issue 38 |
 | 2026-07-18 | CHG-0019-add-powershell-smoke-script-and-windows-latest-smoke-ci-for-issue-45: Add PowerShell smoke script and windows-latest smoke CI for issue 45 |
 | 2026-07-18 | CHG-0020-prove-swift-test-on-windows-latest-and-portable-aps-home-env-tests-for-issue-46: Prove swift test on windows-latest and portable APS_HOME env tests for issue 46 |
+| 2026-07-18 | CHG-0021-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31-rebuilt-on: Error contract: exit-code taxonomy and JSON error envelope (issue 31, rebuilt on corruptState main) |

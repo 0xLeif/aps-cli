@@ -112,4 +112,46 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "Corrupt or torn \(key.rawValue) state file (undecodable). Concurrent writers may have torn the file; reset the key or repair the file."
         }
     }
+
+    /// Stable machine code for the JSON error envelope. Never removed or renamed.
+    public var code: String {
+        switch self {
+        case .invalidValue: return "invalid_value"
+        case .encodingFailed: return "encoding_failed"
+        case .decodingFailed: return "decoding_failed"
+        case .persistenceFailed: return "persistence_failed"
+        case .keychainUnavailable: return "keychain_unavailable"
+        case .corruptState: return "corrupt_state"
+        }
+    }
+
+    /// sysexits-aligned exit code. 64 means the caller can fix the invocation;
+    /// 65+ means environment or data, 70 means an aps bug.
+    public var exitCode: Int32 {
+        switch self {
+        case .invalidValue: return 64 // EX_USAGE
+        case .decodingFailed, .corruptState: return APSError.corruptStateExitCode // EX_DATAERR
+        case .keychainUnavailable: return 69 // EX_UNAVAILABLE
+        case .encodingFailed: return 70 // EX_SOFTWARE
+        case .persistenceFailed: return 73 // EX_CANTCREAT
+        }
+    }
+
+    /// Actionable next step for humans and agents.
+    public var hint: String {
+        switch self {
+        case .invalidValue:
+            return "Run `aps keys` to see expected types per key."
+        case .encodingFailed:
+            return "The value could not be JSON-encoded; please report this if it reproduces."
+        case .decodingFailed:
+            return "A value or file is not valid JSON for its key; check the input or the state root (--state-dir / APS_HOME)."
+        case .persistenceFailed:
+            return "Check that the state root exists and is writable (--state-dir / APS_HOME)."
+        case .keychainUnavailable:
+            return "The secret key currently requires macOS Keychain; an encrypted-file store is planned (issue #35)."
+        case .corruptState(let key):
+            return "Reset the key (`aps reset \(key.rawValue)`) or repair the file under the state root."
+        }
+    }
 }

@@ -54,7 +54,7 @@ extension Aps {
                 do {
                     try StateStore.requireDecodableDiskState(for: key)
                 } catch let error as APSError {
-                    try reportAPSError(error)
+                    try CLIOutput.fail(error, json: options.json)
                 }
                 if options.json {
                     let payload = CLIOutput.KeyValuePayload(
@@ -92,7 +92,7 @@ extension Aps {
                 do {
                     try store.set(key, value: value)
                 } catch let error as APSError {
-                    try reportAPSError(error)
+                    try CLIOutput.fail(error, json: options.json)
                 }
                 if options.json {
                     let payload = CLIOutput.KeyValuePayload(
@@ -179,7 +179,7 @@ extension Aps {
                             CLIOutput.writeLine(line)
                         }
                     }
-                    try reportAPSError(error)
+                    try CLIOutput.fail(error, json: jsonl)
                 }
             }
         }
@@ -198,7 +198,11 @@ extension Aps {
                 boot(stateDir: options.stateDir)
                 // dump is always JSON; --json is accepted for agent symmetry.
                 _ = options.json
-                print(try StateStore().dump())
+                do {
+                    print(try StateStore().dump())
+                } catch let error as APSError {
+                    try CLIOutput.fail(error, json: true)
+                }
             }
         }
     }
@@ -319,26 +323,30 @@ extension Aps {
             try onMainThread {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
-                if all {
-                    store.resetAll()
-                    if options.json {
-                        let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
-                        print(try CLIOutput.encodePretty(payload))
-                    } else {
-                        print("reset all keys")
+                do {
+                    if all {
+                        store.resetAll()
+                        if options.json {
+                            let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
+                            print(try CLIOutput.encodePretty(payload))
+                        } else {
+                            print("reset all keys")
+                        }
+                    } else if let key {
+                        store.reset(key)
+                        if options.json {
+                            let payload = CLIOutput.ResetPayload(
+                                reset: "key",
+                                key: key.rawValue,
+                                value: try CLIOutput.typedValue(for: key, store: store)
+                            )
+                            print(try CLIOutput.encodePretty(payload))
+                        } else {
+                            print(store.get(key))
+                        }
                     }
-                } else if let key {
-                    store.reset(key)
-                    if options.json {
-                        let payload = CLIOutput.ResetPayload(
-                            reset: "key",
-                            key: key.rawValue,
-                            value: try CLIOutput.typedValue(for: key, store: store)
-                        )
-                        print(try CLIOutput.encodePretty(payload))
-                    } else {
-                        print(store.get(key))
-                    }
+                } catch let error as APSError {
+                    try CLIOutput.fail(error, json: options.json)
                 }
             }
         }
@@ -362,16 +370,4 @@ private func onMainThread<T: Sendable>(
     return try MainActor.assumeIsolated {
         try body()
     }
-}
-
-/// Maps `APSError` for CLI exit. `corruptState` prints to stderr and uses exit 65 (`EX_DATAERR`).
-private func reportAPSError(_ error: APSError) throws -> Never {
-    if case .corruptState = error {
-        let message = "Error: \(error.description)\n"
-        if let data = message.data(using: .utf8) {
-            FileHandle.standardError.write(data)
-        }
-        throw ExitCode(APSError.corruptStateExitCode)
-    }
-    throw ValidationError(error.description)
 }

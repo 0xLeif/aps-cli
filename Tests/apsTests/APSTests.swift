@@ -695,4 +695,62 @@ final class APSTests: XCTestCase {
         XCTAssertTrue(corrupt.description.contains("torn") || corrupt.description.contains("Corrupt"))
         XCTAssertEqual(APSError.corruptStateExitCode, 65)
     }
+
+    func testAPSErrorContractCodesAndExitCodes() {
+        XCTAssertEqual(APSError.invalidValue(key: .counter, value: "x").code, "invalid_value")
+        XCTAssertEqual(APSError.encodingFailed.code, "encoding_failed")
+        XCTAssertEqual(APSError.decodingFailed.code, "decoding_failed")
+        XCTAssertEqual(APSError.persistenceFailed(key: .note).code, "persistence_failed")
+        XCTAssertEqual(APSError.keychainUnavailable.code, "keychain_unavailable")
+        XCTAssertEqual(APSError.corruptState(key: .note).code, "corrupt_state")
+
+        XCTAssertEqual(APSError.invalidValue(key: .counter, value: "x").exitCode, 64)
+        XCTAssertEqual(APSError.decodingFailed.exitCode, 65)
+        XCTAssertEqual(APSError.corruptState(key: .note).exitCode, 65)
+        XCTAssertEqual(APSError.keychainUnavailable.exitCode, 69)
+        XCTAssertEqual(APSError.encodingFailed.exitCode, 70)
+        XCTAssertEqual(APSError.persistenceFailed(key: .note).exitCode, 73)
+
+        for error in [APSError.invalidValue(key: .flag, value: "x"), .encodingFailed, .decodingFailed, .persistenceFailed(key: .flag), .keychainUnavailable, .corruptState(key: .profile)] as [APSError] {
+            XCTAssertFalse(error.hint.isEmpty, "hint required for \(error.code)")
+        }
+    }
+
+    func testErrorEnvelopeEncodesStableShape() throws {
+        let envelope = CLIOutput.ErrorEnvelope(
+            error: .init(
+                code: APSError.corruptState(key: .note).code,
+                message: APSError.corruptState(key: .note).description,
+                hint: APSError.corruptState(key: .note).hint
+            )
+        )
+        let line = try CLIOutput.encodeLine(envelope)
+        XCTAssertTrue(line.contains(#""code":"corrupt_state""#))
+        XCTAssertTrue(line.contains(#""message":"#))
+        XCTAssertTrue(line.contains(#""hint":"#))
+        XCTAssertTrue(line.hasPrefix(#"{"error":{"#))
+    }
+
+    func testStructuredErrorsEnabledModes() {
+        XCTAssertTrue(CLIOutput.structuredErrorsEnabled(json: true))
+        let env = ProcessInfo.processInfo.environment["APS_ERROR_JSON"]
+        XCTAssertEqual(CLIOutput.structuredErrorsEnabled(json: false), env == "1")
+    }
+
+    @MainActor
+    func testRequireDecodableDiskStateCorruptThrows() throws {
+        let store = StateStore()
+        try store.set(.note, value: "ok")
+
+        let path = FileManager.defaultFileStatePath
+        let url = URL(fileURLWithPath: path).appendingPathComponent("note.json")
+        try "garbage{{".write(to: url, atomically: false, encoding: .utf8)
+
+        XCTAssertThrowsError(try StateStore.requireDecodableDiskState(for: .note)) { error in
+            guard case .corruptState = (error as? APSError) else {
+                return XCTFail("expected corruptState, got \(error)")
+            }
+            XCTAssertEqual((error as? APSError)?.exitCode, 65)
+        }
+    }
 }

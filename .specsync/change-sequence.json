@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 20,
-  "id": "CHG-0020-prove-swift-test-on-windows-latest-and-portable-aps-home-env-tests-for-issue-46",
+  "sequence": 21,
+  "id": "CHG-0021-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31-rebuilt-on",
   "acknowledged_collisions": []
 }

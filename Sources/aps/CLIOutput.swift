@@ -99,13 +99,58 @@ enum CLIOutput {
 
     static func encodeLine<T: Encodable>(_ value: T) throws -> String {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = [.sortedKeys]
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         encoder.dateEncodingStrategy = .iso8601
         let data = try encoder.encode(value)
         guard let string = String(data: data, encoding: .utf8) else {
             throw APSError.encodingFailed
         }
         return string
+    }
+
+    // MARK: - Error contract
+
+    /// Structured error envelope emitted on stderr in machine modes.
+    /// Stable shape: codes are snake_case APSError cases, never removed.
+    struct ErrorEnvelope: Encodable {
+        struct Body: Encodable {
+            let code: String
+            let message: String
+            let hint: String
+        }
+        let error: Body
+    }
+
+    /// True when structured errors should accompany the human line: machine
+    /// mode was requested, or APS_ERROR_JSON=1 opts in unconditionally.
+    static func structuredErrorsEnabled(json: Bool) -> Bool {
+        json || ProcessInfo.processInfo.environment["APS_ERROR_JSON"] == "1"
+    }
+
+    static func writeError(_ line: String) {
+        if let data = (line + "\n").data(using: .utf8) {
+            FileHandle.standardError.write(data)
+        }
+    }
+
+    /// Single failure path for domain errors: human line on stderr, optional
+    /// JSON envelope, then the taxonomy exit code. Usage/shape errors from
+    /// ArgumentParser itself still exit 64 on their own.
+    static func fail(_ error: APSError, json: Bool) throws -> Never {
+        writeError("Error: \(error.description)")
+        if structuredErrorsEnabled(json: json),
+           let envelope = try? encodeLine(
+               ErrorEnvelope(
+                   error: .init(
+                       code: error.code,
+                       message: error.description,
+                       hint: error.hint
+                   )
+               )
+           ) {
+            writeError(envelope)
+        }
+        throw ExitCode(error.exitCode)
     }
 
     static func writeLine(_ line: String) {
