@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784414641,
-  "commit": "1ab2ca92f4178ec015cf89efa500c9bf9830950e",
+  "timestamp": 1784417027,
+  "commit": "ad7f3de3b595e78d6ed3634f953a35e92dc5047e",
   "contract_digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
-  "workspace_digest": "b2a6ed2a8fa1a13c8bfdedcdbfb2a9c65f89ff49c95af7b1a2942f9435f0c2da",
-  "acceptance_input_digest": "e15b2e47b2ac628499b4728e9c7f64969b26fbcf16af1f9a9c472619c621cc26",
+  "workspace_digest": "7e886b00823d91cd7470f5290e417f63122e240ec6f6a7176735e17582b0be48",
+  "acceptance_input_digest": "5b1e9de4e70de9255093b0b6fddf31b58ab0f19f875fef76e994375a71679974",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -21,8 +21,8 @@
         "path": "README.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "df85bde7666f091f895d2850626cc5abc15e97c09b3d388ff84949aa78c390e0",
-        "entry_digest": "cbfac30491758a0221b34418b47faa371d03c738c839a8581825568e95b61af4",
+        "payload_digest": "e8d82c113f1aafaf791372ac07069a852ffa7dfdbaebded0c31534caaf8d5e02",
+        "entry_digest": "6502a25f5577f22c02f99205d8ab5939043c156ad977f59e8ff1fbc7d6c265ef",
         "owners": [
           "@exact:delivery"
         ]
@@ -41,8 +41,8 @@
         "path": "docs/windows-readiness.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "51ac06907c7a8604021a3f45254fad8f3bd4a3b081a4b011e4c6ae822470cab7",
-        "entry_digest": "102eacd41203cfaa1852cec8c3a4827dc278a8b50619a2918331ac585789e00f",
+        "payload_digest": "6400c44ad2d4e3595e4d9a5ca87023e72461cc92a9e834750fe9650a654a1987",
+        "entry_digest": "dd15ff727cb1cca126ca058caeaaca79cf2d582ab513d7c4d5dece7bf0c0f961",
         "owners": [
           "@exact:delivery"
         ]

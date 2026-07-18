@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784414693,
-  "commit": "1ab2ca92f4178ec015cf89efa500c9bf9830950e",
+  "timestamp": 1784417800,
+  "commit": "de1f034541efeb659e9f1a4cf991a13a7dbd50f4",
   "contract_digest": "73c000607b3050c54981b4c29532280dd08bf00b7a15c8ec1801e045fa5496c9",
-  "workspace_digest": "b2a6ed2a8fa1a13c8bfdedcdbfb2a9c65f89ff49c95af7b1a2942f9435f0c2da",
-  "acceptance_input_digest": "f9691b8256306e439db1b6e6e2341cc6d2d0fca52331e19f05c24d6ab95ed1f6",
+  "workspace_digest": "2e9220ee06af7bfcc62ff3091c18ca2cc5ef2e2c46733ba2d92c96e1266f0e21",
+  "acceptance_input_digest": "f6c724b1ef148f6fdbcf95debef6faa782f98f375c7fcb39b7c842f42e978133",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -33,6 +33,16 @@
         "mode": 33188,
         "payload_digest": "e165929994150d856d05ad048d8e1032e09df989c78ea3f1390d4e885b50af56",
         "entry_digest": "e405b6225fdb502cfae9b22a9c14e21be8d1715bbaf8d56cdfd178bb8e173cb9",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/workflows/windows-smoke.yml",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "cae7670558aa27a8592c9d10b735e357c2bef094225173969310671ad7b18242",
+        "entry_digest": "0c3bd779030ada2ed7dc762e5ee8815c4b25b37864e74d2458087b5c18b67ca9",
         "owners": [
           "@exact:delivery"
         ]
@@ -93,6 +103,16 @@
         "mode": 33188,
         "payload_digest": "f9893302cd3158f3b5aea394dcd2a91574869e9e6ff69e9235b10a3bf8c983fb",
         "entry_digest": "f980ba79f6c953bed30303c6b87d8e868ad6a7f4114bf0e745c9099255e665b0",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "Scripts/smoke.ps1",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "d476db9d571042578d8de33907014ecfa669f05054828886d0ceeb5f2e27c351",
+        "entry_digest": "164c2694507ba3d0e8133f86124b68ea64295cc1c41b5f6d11361333eb1c661b",
         "owners": [
           "@exact:delivery"
         ]
@@ -181,8 +201,8 @@
         "path": "specs/aps-cli/aps-cli.spec.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "f5f87243396342867f7a5ba51716cb7ee4779194530d2801a7213c097368d0b3",
-        "entry_digest": "f8e1afaa3a0228b8e7d19af494e9eadd57b1680b09e5165116b60b949117a27a",
+        "payload_digest": "ae2e755f1a6427b6550ff647b8f80d77f2aaa318dd8ae1be3c99881d309f9e2a",
+        "entry_digest": "375d24ecd29e6d4b503f58826583e3845f0e241f355e30ac256b148bd0144d27",
         "owners": [
           "aps-cli"
         ]
@@ -201,8 +221,8 @@
         "path": "specs/aps-cli/requirements.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "1984f012fe271c6d806bb00aa8781ffca99cc1439204804360d496336b742feb",
-        "entry_digest": "efc651d20d18cfb48a66fee7a0ec2a59ed02e4185585be30396aefe95b374b0d",
+        "payload_digest": "a00285ff33aeafcec26431469867c0b1c914191984715df18642380f13efa95c",
+        "entry_digest": "0020ef30ed0a8cfba0bae0d2f5f85f9b9dad1c1cf6a818ae923af0f54251b895",
         "owners": [
           "aps-cli"
         ]
@@ -221,8 +241,8 @@
         "path": "specs/aps-cli/testing.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "f299b5b0fe35a9e1c65fc5d13b05e2cac7ac130dc86e94ab436b6818db9cb30a",
-        "entry_digest": "b23e62877a76ebeb4476e82c42cdde4a5e423eb62dadc9d13760104ac4e4903e",
+        "payload_digest": "6ca4b32e69bba929ff9ae501a1c9aa59c718b38684f30ac531c32f0c7bdda41f",
+        "entry_digest": "af220ce2106bf7e2b440edbe00a54946915102949d11a34ee56d0e3336bc3911",
         "owners": [
           "aps-cli"
         ]

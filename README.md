@@ -2,7 +2,7 @@
 
 A tiny Swift CLI that [dogfoods](https://github.com/0xLeif/AppState) **AppState** outside SwiftUI: declare typed app state, get/set/watch/dump it, and show dependency injection.
 
-Current release line: **0.2.0** (pre-public 0.x). Targets **macOS** (primary CI) and **Linux** (smoke CI) where AppState allows.
+Current release line: **0.2.0** (pre-public 0.x). Targets **macOS** (primary CI), **Linux** (smoke CI), and **Windows** (PowerShell smoke CI) where AppState allows.
 
 This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.xyz/integrate/) (fledge, spec-sync, augur, attest). See `AGENTS.md`.
 
@@ -58,7 +58,7 @@ Dynamic / user-declared keys are intentionally out of scope for 0.x.
 ## Requirements
 
 - Swift 6.0+
-- macOS 14+ (primary CI). Linux smoke runs on `ubuntu-latest`.
+- macOS 14+ (primary CI). Linux smoke runs on `ubuntu-latest`. Windows smoke runs on `windows-latest` via `Scripts/smoke.ps1`.
 - For the trust gate locally: [corvid-trust](https://github.com/CorvidLabs/trust) (`brew install CorvidLabs/tap/corvid-trust`)
 - SpecSync **5.1.1** (see `.specsync/version`). Trust CI mirrors that exact release; brew `spec-sync` latest should match.
 
@@ -147,6 +147,8 @@ AppState itself is unchanged; this is an `aps` dogfood/CLI contract only. Repair
 ```bash
 swift test
 ./Scripts/smoke.sh
+# Windows / PowerShell 7+ (same behavioral coverage as smoke.sh):
+pwsh ./Scripts/smoke.ps1
 ```
 
 ## CI
@@ -155,6 +157,7 @@ swift test
 |----------|--------|------|
 | `.github/workflows/ci.yml` | `[self-hosted, macOS]` | build / test / smoke |
 | `.github/workflows/linux-smoke.yml` | `ubuntu-latest` | Linux build + smoke |
+| `.github/workflows/windows-smoke.yml` | `windows-latest` | Windows build + PowerShell smoke |
 | `.github/workflows/trust.yml` | `[self-hosted, macOS]` | CorvidLabs Trust gate |
 
 While the repository is **private**, macOS workflows use self-hosted runners. Before making the repo public, switch off self-hosted runners for fork pull requests.
@@ -185,8 +188,9 @@ Sources/aps/
 Tests/apsTests/
 specs/
 Scripts/smoke.sh
+Scripts/smoke.ps1
 GOAL.md
-.github/workflows/{ci,linux-smoke,trust}.yml
+.github/workflows/{ci,linux-smoke,windows-smoke,trust}.yml
 ```
 
 ## Next goal

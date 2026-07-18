@@ -1,0 +1,471 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784415236,
+      "digest": "5d03ec744a297924b866ae5f637de45434e8998b06a8fb49426eee8b747d892e",
+      "note": "PowerShell smoke + windows-latest CI for issue 45."
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784415357,
+      "digest": "bbe132cc0578bf3b207567f6f95971c09abbaa9370e1f2de062c2e1aa399b968",
+      "note": "Refresh definition after testing evidence table."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784415376,
+      "digest": "e420a91c349e8314639e76db2489da9ecbf8baec6371097297f63fbd9a970a3b",
+      "note": "Accept PowerShell smoke and windows-latest CI for issue 45."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784416037,
+      "digest": "ffed5179281d2e407e7ad407fab67a483c565a6edadd4a017f6a72e3027de2fe",
+      "note": "Re-accept after history repair and README clarification."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784417016,
+      "digest": "3825220a8115797cc9d1bc1aaa6c641dfbe0eb44b2c37fa79537337c543300cb",
+      "note": "Accept Windows Swift 6.3.1 pin for smoke CI."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784417729,
+      "digest": "a989ab0a9a6bc634717e5ba4a4c1f44981ef2dedb8af25918f4b4d567fac6e05",
+      "note": "Accept smoke.ps1 exit 0 fix for Windows GHA."
+    }
+  ],
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0019-add-powershell-smoke-script-and-windows-latest-smoke-ci-for-issue-45",
+      "actor": "agent:cursor",
+      "reason": "README smoke docs clarification after rebase onto main.",
+      "timestamp": 1784416017,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784415376,
+        "digest": "e420a91c349e8314639e76db2489da9ecbf8baec6371097297f63fbd9a970a3b",
+        "note": "Accept PowerShell smoke and windows-latest CI for issue 45."
+      },
+      "prior_verification": {
+        "timestamp": 1784415362,
+        "commit": "b5f1950bf4d99a22ead7f6f1ce24089710ed4701",
+        "contract_digest": "bbe132cc0578bf3b207567f6f95971c09abbaa9370e1f2de062c2e1aa399b968",
+        "workspace_digest": "c615cd088282104883da84bebbdc810c599c5b0cd8016c299b803c8643b6b740",
+        "acceptance_input_digest": "a8c11d6db4be33a64bd864132c4b52bfedd05a6795055e895682a73fdeef070f",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".github/workflows/windows-smoke.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "56f78f5e8e0b007164fb3b9386c999ace9796f02c2eb474b6fce0c861ddf128c",
+              "entry_digest": "fa3719db695fb74ad08bbb6676a2f3fed60bb71240b61911cb747ab942357862",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a230a7c919631ba55ed79156ba3f9128c807542175bfac8e90bd45f2377882fd",
+              "entry_digest": "8aeb0363bb12523c848b8766abcab9347cc847399c08465165bc89e7350dee46",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d15a7c83ec10c1425b855dc455ae87826f99603f6b4dc428a2318dc2bf039039",
+              "entry_digest": "546e6abe506368434e6b0f304835ec0336f56fe1fe503ac7b9e8a84a66274bd3",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Scripts/smoke.ps1",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b0591d715b03fdeae19dce9ba101b366dc9bf151eaa8548924a3688ca5271487",
+              "entry_digest": "bcd1853b297d88d0f89fa7f148242fe0f502cfa9cabb7a19044aad60204b0d37",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6f6b107d5878a92c107acba48a1a4b02ed1c089a234d821afb322120f952b8fb",
+              "entry_digest": "4f9639fd3958817aebe637c99c4ac267bfa38fb800998571a626133ff18ffb7c",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ae2e755f1a6427b6550ff647b8f80d77f2aaa318dd8ae1be3c99881d309f9e2a",
+              "entry_digest": "375d24ecd29e6d4b503f58826583e3845f0e241f355e30ac256b148bd0144d27",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "7304a6233da2051242aeac63a51197aaf6f92d936692fe8655801eff842a2fd0",
+              "entry_digest": "e78ad0996c0135c37d41afa37c5fda13901bb63e14f00c3208896f7b104a72e8",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a00285ff33aeafcec26431469867c0b1c914191984715df18642380f13efa95c",
+              "entry_digest": "0020ef30ed0a8cfba0bae0d2f5f85f9b9dad1c1cf6a818ae923af0f54251b895",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ca6cafd22fb3c803eed3dc94cb980d8f535d51e0fd289b46bae82b7f255377de",
+              "entry_digest": "c349b8f073cefe7e387f8fabdd4dada3830be59b4b6d22a4ce79b2c29399c70e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6ca4b32e69bba929ff9ae501a1c9aa59c718b38684f30ac531c32f0c7bdda41f",
+              "entry_digest": "af220ce2106bf7e2b440edbe00a54946915102949d11a34ee56d0e3336bc3911",
+              "owners": [
+                "aps-cli"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-018"
+        ]
+      },
+      "stale_acceptance_input_digest": "a8c11d6db4be33a64bd864132c4b52bfedd05a6795055e895682a73fdeef070f",
+      "current_acceptance_input_digest": "ae1650f947a1ae60c94bf6b37a77a5e73f72131a327de1141f73b605422527d9"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0019-add-powershell-smoke-script-and-windows-latest-smoke-ci-for-issue-45",
+      "actor": "agent:cursor",
+      "reason": "Pin Windows CI Swift to 6.3.1 to avoid ucrt module cycle on SDK 10.0.26100.",
+      "timestamp": 1784417000,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784416037,
+        "digest": "ffed5179281d2e407e7ad407fab67a483c565a6edadd4a017f6a72e3027de2fe",
+        "note": "Re-accept after history repair and README clarification."
+      },
+      "prior_verification": {
+        "timestamp": 1784416027,
+        "commit": "292a85156979acfa441b79a7abe29279095052e2",
+        "contract_digest": "bbe132cc0578bf3b207567f6f95971c09abbaa9370e1f2de062c2e1aa399b968",
+        "workspace_digest": "403c126fc22e0fedfbebd67ed0180ecd0a55457e5d8a4d47090b6936e4c0c7e4",
+        "acceptance_input_digest": "ae1650f947a1ae60c94bf6b37a77a5e73f72131a327de1141f73b605422527d9",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".github/workflows/windows-smoke.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "56f78f5e8e0b007164fb3b9386c999ace9796f02c2eb474b6fce0c861ddf128c",
+              "entry_digest": "fa3719db695fb74ad08bbb6676a2f3fed60bb71240b61911cb747ab942357862",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a230a7c919631ba55ed79156ba3f9128c807542175bfac8e90bd45f2377882fd",
+              "entry_digest": "8aeb0363bb12523c848b8766abcab9347cc847399c08465165bc89e7350dee46",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "e8d82c113f1aafaf791372ac07069a852ffa7dfdbaebded0c31534caaf8d5e02",
+              "entry_digest": "6502a25f5577f22c02f99205d8ab5939043c156ad977f59e8ff1fbc7d6c265ef",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Scripts/smoke.ps1",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b0591d715b03fdeae19dce9ba101b366dc9bf151eaa8548924a3688ca5271487",
+              "entry_digest": "bcd1853b297d88d0f89fa7f148242fe0f502cfa9cabb7a19044aad60204b0d37",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6f6b107d5878a92c107acba48a1a4b02ed1c089a234d821afb322120f952b8fb",
+              "entry_digest": "4f9639fd3958817aebe637c99c4ac267bfa38fb800998571a626133ff18ffb7c",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ae2e755f1a6427b6550ff647b8f80d77f2aaa318dd8ae1be3c99881d309f9e2a",
+              "entry_digest": "375d24ecd29e6d4b503f58826583e3845f0e241f355e30ac256b148bd0144d27",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "7304a6233da2051242aeac63a51197aaf6f92d936692fe8655801eff842a2fd0",
+              "entry_digest": "e78ad0996c0135c37d41afa37c5fda13901bb63e14f00c3208896f7b104a72e8",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a00285ff33aeafcec26431469867c0b1c914191984715df18642380f13efa95c",
+              "entry_digest": "0020ef30ed0a8cfba0bae0d2f5f85f9b9dad1c1cf6a818ae923af0f54251b895",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ca6cafd22fb3c803eed3dc94cb980d8f535d51e0fd289b46bae82b7f255377de",
+              "entry_digest": "c349b8f073cefe7e387f8fabdd4dada3830be59b4b6d22a4ce79b2c29399c70e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6ca4b32e69bba929ff9ae501a1c9aa59c718b38684f30ac531c32f0c7bdda41f",
+              "entry_digest": "af220ce2106bf7e2b440edbe00a54946915102949d11a34ee56d0e3336bc3911",
+              "owners": [
+                "aps-cli"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-018"
+        ]
+      },
+      "stale_acceptance_input_digest": "ae1650f947a1ae60c94bf6b37a77a5e73f72131a327de1141f73b605422527d9",
+      "current_acceptance_input_digest": "e293b6478c102d04fe6202202de3eadf37740700c76a71a790873378a04c63b1"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0019-add-powershell-smoke-script-and-windows-latest-smoke-ci-for-issue-45",
+      "actor": "agent:cursor",
+      "reason": "Clear LASTEXITCODE so Windows smoke exits 0 after expected failure checks.",
+      "timestamp": 1784417704,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784417016,
+        "digest": "3825220a8115797cc9d1bc1aaa6c641dfbe0eb44b2c37fa79537337c543300cb",
+        "note": "Accept Windows Swift 6.3.1 pin for smoke CI."
+      },
+      "prior_verification": {
+        "timestamp": 1784417009,
+        "commit": "ad7f3de3b595e78d6ed3634f953a35e92dc5047e",
+        "contract_digest": "bbe132cc0578bf3b207567f6f95971c09abbaa9370e1f2de062c2e1aa399b968",
+        "workspace_digest": "7e886b00823d91cd7470f5290e417f63122e240ec6f6a7176735e17582b0be48",
+        "acceptance_input_digest": "e293b6478c102d04fe6202202de3eadf37740700c76a71a790873378a04c63b1",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".github/workflows/windows-smoke.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "cae7670558aa27a8592c9d10b735e357c2bef094225173969310671ad7b18242",
+              "entry_digest": "0c3bd779030ada2ed7dc762e5ee8815c4b25b37864e74d2458087b5c18b67ca9",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a230a7c919631ba55ed79156ba3f9128c807542175bfac8e90bd45f2377882fd",
+              "entry_digest": "8aeb0363bb12523c848b8766abcab9347cc847399c08465165bc89e7350dee46",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "e8d82c113f1aafaf791372ac07069a852ffa7dfdbaebded0c31534caaf8d5e02",
+              "entry_digest": "6502a25f5577f22c02f99205d8ab5939043c156ad977f59e8ff1fbc7d6c265ef",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Scripts/smoke.ps1",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b0591d715b03fdeae19dce9ba101b366dc9bf151eaa8548924a3688ca5271487",
+              "entry_digest": "bcd1853b297d88d0f89fa7f148242fe0f502cfa9cabb7a19044aad60204b0d37",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6400c44ad2d4e3595e4d9a5ca87023e72461cc92a9e834750fe9650a654a1987",
+              "entry_digest": "dd15ff727cb1cca126ca058caeaaca79cf2d582ab513d7c4d5dece7bf0c0f961",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ae2e755f1a6427b6550ff647b8f80d77f2aaa318dd8ae1be3c99881d309f9e2a",
+              "entry_digest": "375d24ecd29e6d4b503f58826583e3845f0e241f355e30ac256b148bd0144d27",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "7304a6233da2051242aeac63a51197aaf6f92d936692fe8655801eff842a2fd0",
+              "entry_digest": "e78ad0996c0135c37d41afa37c5fda13901bb63e14f00c3208896f7b104a72e8",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a00285ff33aeafcec26431469867c0b1c914191984715df18642380f13efa95c",
+              "entry_digest": "0020ef30ed0a8cfba0bae0d2f5f85f9b9dad1c1cf6a818ae923af0f54251b895",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ca6cafd22fb3c803eed3dc94cb980d8f535d51e0fd289b46bae82b7f255377de",
+              "entry_digest": "c349b8f073cefe7e387f8fabdd4dada3830be59b4b6d22a4ce79b2c29399c70e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6ca4b32e69bba929ff9ae501a1c9aa59c718b38684f30ac531c32f0c7bdda41f",
+              "entry_digest": "af220ce2106bf7e2b440edbe00a54946915102949d11a34ee56d0e3336bc3911",
+              "owners": [
+                "aps-cli"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-018"
+        ]
+      },
+      "stale_acceptance_input_digest": "e293b6478c102d04fe6202202de3eadf37740700c76a71a790873378a04c63b1",
+      "current_acceptance_input_digest": "537fd12050e89f76d0dedb72a67e64e2cd1cc49a4f93fa6a7c0961926b876ece"
+    }
+  ]
+}
