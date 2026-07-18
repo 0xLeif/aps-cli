@@ -24,9 +24,27 @@ jobs:
       - name: Fetch attest notes
         run: git fetch origin "+refs/notes/attest:refs/notes/attest" 2>/dev/null || true
 
+      # actions/checkout embeds a token in origin; Trust then treats the worktree
+      # as external and refuses event-derived ranges. Pass the canonical range
+      # explicitly while keeping credentials for private-repo note fetches.
+      - name: Resolve Trust comparison range
+        id: trust_range
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "range=${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}" >> "$GITHUB_OUTPUT"
+          elif [ -z "${{ github.event.before }}" ] || [ "${{ github.event.before }}" = "0000000000000000000000000000000000000000" ]; then
+            empty="$(git hash-object -t tree /dev/null)"
+            echo "range=${empty}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "range=${{ github.event.before }}..${{ github.sha }}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: CorvidLabs Trust gate
         id: trust
         uses: CorvidLabs/trust@9d32b5786d2e9e4d39fc581c0091c721ee3d4226 # v1.0.0
+        with:
+          range: ${{ steps.trust_range.outputs.range }}
 
       - name: Check managed agent rules
         run: |
