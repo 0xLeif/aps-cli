@@ -1,0 +1,43 @@
+name: Windows smoke
+
+# GitHub-hosted Windows build + PowerShell smoke for portable CLI coverage (#45).
+# Complements macOS self-hosted CI and linux-smoke.yml.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: windows-smoke-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+permissions:
+  contents: read
+
+jobs:
+  windows-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Swift
+        uses: SwiftyLab/setup-swift@latest
+        with:
+          swift-version: "6.0"
+
+      - name: Swift version
+        shell: pwsh
+        run: swift --version
+
+      - name: Build (debug)
+        shell: pwsh
+        run: swift build -c debug
+
+      - name: Smoke CLI
+        shell: pwsh
+        env:
+          APS_BIN: .build/debug/aps.exe
+        run: ./Scripts/smoke.ps1

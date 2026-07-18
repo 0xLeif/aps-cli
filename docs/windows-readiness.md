@@ -37,17 +37,17 @@ Auditor: agent:cursor
 | UserDefaults | `synchronize()` after flag writes (Linux flush) |
 | Smoke | Same bash script |
 
-### Windows (not CI-gated until 1.0)
+### Windows (smoke CI via #45; full matrix at 1.0)
 
 | Area | Status / gap |
 |------|----------------|
-| CI | **Missing** until [#40](https://github.com/0xLeif/aps-cli/issues/40) |
-| AppState Package platforms | Declares Apple platforms only; Linux builds in practice; **Windows build unproven** ([#46](https://github.com/0xLeif/aps-cli/issues/46)) |
+| CI | PowerShell smoke on `windows-latest` (`windows-smoke.yml`, [#45](https://github.com/0xLeif/aps-cli/issues/45)); full tri-OS matrix still [#40](https://github.com/0xLeif/aps-cli/issues/40) |
+| AppState Package platforms | Declares Apple platforms only; Linux builds in practice; full `swift test` on Windows still [#46](https://github.com/0xLeif/aps-cli/issues/46) |
 | Combine / ObservedDependency | Same gates as Linux (`!os(Windows)`) |
 | SecureState | No Security; same as Linux until encrypted-file store ([#35](https://github.com/0xLeif/aps-cli/issues/35)) |
 | Default state root | Should be `%USERPROFILE%\.aps` via `homeDirectoryForCurrentUser` (not hardcoded) |
-| Smoke | Bash script not portable ([#45](https://github.com/0xLeif/aps-cli/issues/45)) |
-| Env tests | `setenv` / `unsetenv` in tests are POSIX; may need Windows gating when CI exists |
+| Smoke | `Scripts/smoke.ps1` (mirrors `Scripts/smoke.sh`) |
+| Env tests | `setenv` / `unsetenv` in tests are POSIX; may need Windows gating when unit tests run on Windows ([#46](https://github.com/0xLeif/aps-cli/issues/46)) |
 | Path separators | Help text shows `~/.aps` (Unix style); runtime uses `URL` / `FileManager` (OK) |
 
 ## Future CI matrix (public / 1.0)
@@ -88,8 +88,8 @@ Suggested jobs:
 | [#35](https://github.com/0xLeif/aps-cli/issues/35) | Encrypted-file secret store via swift-crypto (replaces Keychain on non-Apple) |
 | [#31](https://github.com/0xLeif/aps-cli/issues/31) | Exit-code taxonomy (owned by kimi; rebase after this train) |
 
-## Explicit non-goals of this ticket
+## Explicit non-goals of this audit ticket (#36)
 
-- Adding a `windows-latest` workflow now (paid/private minutes; deferred by locked decision).
+- Full public/1.0 tri-OS matrix (still [#40](https://github.com/0xLeif/aps-cli/issues/40)); #45 adds smoke-only `windows-latest`.
 - Implementing #35 encrypted secrets.
 - Changing AppState upstream.

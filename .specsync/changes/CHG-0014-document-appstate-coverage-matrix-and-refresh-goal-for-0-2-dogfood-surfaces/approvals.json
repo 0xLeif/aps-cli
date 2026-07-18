@@ -41,6 +41,20 @@
       "timestamp": 1784414818,
       "digest": "7bac90a26e77584a194dd37c1a2721363cddf97f9669e114f880ed110091d845",
       "note": "Re-accept after issue 36 Windows readiness inputs."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784415635,
+      "digest": "74766d266fdb412eb3651f4a1c8d52baee77ca08d4602b45e1679bdc7d5c8dce",
+      "note": "Re-accept after issue 45 Windows PowerShell smoke."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784416135,
+      "digest": "1150b5ebebc93d7cff6ed43edb12142778cf373bcd595c9ad76c55a0217a366b",
+      "note": "Re-accept after issue 45 README smoke docs."
     }
   ],
   "reopenings": [
@@ -250,6 +264,144 @@
       },
       "stale_acceptance_input_digest": "720d23fe247964d57c5e2fe4cab2a1d9923fff20ec7d968faaeccc26d9439dce",
       "current_acceptance_input_digest": "4694ad92719d987975cde91ec40459e4088e0ad0d440860a3d42e99aceb3d081"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0014-document-appstate-coverage-matrix-and-refresh-goal-for-0-2-dogfood-surfaces",
+      "actor": "agent:cursor",
+      "reason": "Stale after Windows PowerShell smoke (#45) docs/paths.",
+      "timestamp": 1784415283,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784414818,
+        "digest": "7bac90a26e77584a194dd37c1a2721363cddf97f9669e114f880ed110091d845",
+        "note": "Re-accept after issue 36 Windows readiness inputs."
+      },
+      "prior_verification": {
+        "timestamp": 1784414808,
+        "commit": "1ab2ca92f4178ec015cf89efa500c9bf9830950e",
+        "contract_digest": "a0e81300735aa82f646433bad125e6ac0043d3680d608e1ce6dbf42c7c730e6a",
+        "workspace_digest": "b2a6ed2a8fa1a13c8bfdedcdbfb2a9c65f89ff49c95af7b1a2942f9435f0c2da",
+        "acceptance_input_digest": "4694ad92719d987975cde91ec40459e4088e0ad0d440860a3d42e99aceb3d081",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "af3c8353cd24a8a6592088883407b482cd73ea4324ccda5b230ccefcadb448f3",
+              "entry_digest": "cd3321bf077cb79382d5efc61d3bc66c5ab10ed2f5c3f236b3dcc1296c6ebc04",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "GOAL.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "20146bfa50165791ec6059f6245716170c43b23106e5123ec590a306a590a966",
+              "entry_digest": "68fbffe2a6cce1f402c5dcebbd733d2b1f3d5e3d259a0ee91dfc23bbc034fc56",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "df85bde7666f091f895d2850626cc5abc15e97c09b3d388ff84949aa78c390e0",
+              "entry_digest": "cbfac30491758a0221b34418b47faa371d03c738c839a8581825568e95b61af4",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "4694ad92719d987975cde91ec40459e4088e0ad0d440860a3d42e99aceb3d081",
+      "current_acceptance_input_digest": "38ba1efaef77357dc927c7d54e0a159bcd4f0e4adfff358d8e15637a714b2d67"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0014-document-appstate-coverage-matrix-and-refresh-goal-for-0-2-dogfood-surfaces",
+      "actor": "agent:cursor",
+      "reason": "Stale README after issue 45 PowerShell smoke docs.",
+      "timestamp": 1784416120,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784415635,
+        "digest": "74766d266fdb412eb3651f4a1c8d52baee77ca08d4602b45e1679bdc7d5c8dce",
+        "note": "Re-accept after issue 45 Windows PowerShell smoke."
+      },
+      "prior_verification": {
+        "timestamp": 1784415622,
+        "commit": "b5f1950bf4d99a22ead7f6f1ce24089710ed4701",
+        "contract_digest": "a0e81300735aa82f646433bad125e6ac0043d3680d608e1ce6dbf42c7c730e6a",
+        "workspace_digest": "1a836bb4a8138035948e814c3981112669873caf5d6ef042e960afe06882cf6a",
+        "acceptance_input_digest": "38ba1efaef77357dc927c7d54e0a159bcd4f0e4adfff358d8e15637a714b2d67",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "af3c8353cd24a8a6592088883407b482cd73ea4324ccda5b230ccefcadb448f3",
+              "entry_digest": "cd3321bf077cb79382d5efc61d3bc66c5ab10ed2f5c3f236b3dcc1296c6ebc04",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "GOAL.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "20146bfa50165791ec6059f6245716170c43b23106e5123ec590a306a590a966",
+              "entry_digest": "68fbffe2a6cce1f402c5dcebbd733d2b1f3d5e3d259a0ee91dfc23bbc034fc56",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d15a7c83ec10c1425b855dc455ae87826f99603f6b4dc428a2318dc2bf039039",
+              "entry_digest": "546e6abe506368434e6b0f304835ec0336f56fe1fe503ac7b9e8a84a66274bd3",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "38ba1efaef77357dc927c7d54e0a159bcd4f0e4adfff358d8e15637a714b2d67",
+      "current_acceptance_input_digest": "0972f11adbf3a3d0fd94e83c236cbd2ac1b1791c233a8e9bfdb614a8161adf93"
     }
   ]
 }
