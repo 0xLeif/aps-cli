@@ -1,6 +1,6 @@
 ---
 id: CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15
-state: implementing
+state: accepted
 type: refactor
 base_commit: cb05f64c650260c5f3960b192d3be70c0e450627
 ---

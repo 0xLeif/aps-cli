@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784409698,
-  "commit": "e67ebd6084aa85beaf7f1ce219be5dde9cc30e0d",
+  "timestamp": 1784410624,
+  "commit": "b48db03409e43e5cc6fbd488967c9b08d6827243",
   "contract_digest": "1defd9f7ba999c7d4156cd0b80b236b4a173d5ba0985832e9f89b8b2ed5155ca",
-  "workspace_digest": "73b23f69f06702a7824f2aaa65bae3404b8f3763ad1c01e25bafca978ca51615",
-  "acceptance_input_digest": "d321a3314dd3fac1597cae9f6146c8a54c839d482e02e0ef29d1e11ae89976c6",
+  "workspace_digest": "59e3a9086dc67c553cf8fc0f628d31fc6582ceab2cfd269541fd229e59ea549f",
+  "acceptance_input_digest": "66ac0ef1a20f2f67019d50297a433a2913b3b33ace41b5af84477f794bc31fa6",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -71,8 +71,8 @@
         "path": "Sources/aps/Dependencies.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "c03c26c27083514c297c231842295d687eb4bcaa3f6f3b0227d38fa2d59ceb81",
-        "entry_digest": "f6a43d2af1f63877afd6f98003f5b3984c6aa5516f21cc04bb23751861e93b5d",
+        "payload_digest": "14fced21000b935ed106a6a039bf574ed6cb9d8ba1598dc82001fbcd418a57a4",
+        "entry_digest": "0218077403628c671d6e778f6465e46e958a2c8f589d707f42a775f7da5cc799",
         "owners": [
           "state-store"
         ]
@@ -81,8 +81,8 @@
         "path": "Sources/aps/StateStore.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "fd0a96d18dedebbabe9121adfbb0fd90d24ec910806acb81307c0f50dfe92819",
-        "entry_digest": "624a8473cf4b7a1fe567fea105bb5728cd759a671b5a422ed4bb5960f8b3f44f",
+        "payload_digest": "08784dcb0adaf95e5238ad91c48cb5ece3dbf32a881203ee922422e127999fd7",
+        "entry_digest": "af5ccf11d9d32ba22e6aeba691e34a7804c70b387273084ffeab4eff137165ff",
         "owners": [
           "state-store"
         ]
@@ -91,8 +91,8 @@
         "path": "Tests/apsTests/APSTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "1f4f1a18eeb062dc94e78daefbcc4dd19a1d183a150956b8cb1ea0239b470b73",
-        "entry_digest": "59671fb818d1202d2b29c47fa90e90b6de8c140988ab0eead3f9adfd676bcff5",
+        "payload_digest": "aedc514d235cd22ab52b3dfc84c2b7db524d5f142a33636b0ed0a914885db119",
+        "entry_digest": "e2573b24dd5260ada29843c147236aaf95c34eaef99f7a41b57cbb2de4e8e91e",
         "owners": [
           "@exact:test"
         ]
@@ -101,8 +101,8 @@
         "path": "specs/aps-cli/aps-cli.spec.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "2a2f87bce8854e0e7cd905c1fcde9f2068287c4497f148b57af58a69f8b87c79",
-        "entry_digest": "ff7877cd28fcbc731f3413ee06e984e00d6af171ce5184d63e8f188032258631",
+        "payload_digest": "25caae644bb805e03d820406e83b8919dfe2a4c7595e7e2038a50fee841e41a8",
+        "entry_digest": "03130d509f9a380a91ae679c516dbb1de655979ff44abc49473f77278f88f841",
         "owners": [
           "aps-cli"
         ]
@@ -121,8 +121,8 @@
         "path": "specs/aps-cli/requirements.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "5dd9ee9e28d6201fd1382596ccd4ce8ef4552ee557915f6cf72b0f9af75ef101",
-        "entry_digest": "7b99173aa845a7bcc63cb221cbe5febc6873746bd762d223fbbb1ed328add26a",
+        "payload_digest": "895175bc65752ec06e6c09c9fff940a1c90cbab26962ab16a0144b56b89d1ab3",
+        "entry_digest": "bb095b03817bb5ecefa8e48bc03a838a45b2a4ed41eb9e7f2311ac2711ac91d8",
         "owners": [
           "aps-cli"
         ]
@@ -161,8 +161,8 @@
         "path": "specs/state-store/requirements.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "48c929456f0da3db95a56674866c0cdd4183156c2b3151fd4b70b9f00adf2993",
-        "entry_digest": "5f137d2d2e8694d0d8d5bbebc5dbe07a1c1c343b362301387a836aacfb19e6a0",
+        "payload_digest": "af70549c9a989a19fcea57c018468acc4efccf7afaf93147c042f8ea818a79c2",
+        "entry_digest": "697641a26af004e1b5a813830a300f95955720b71b06e7832be4057c0a3cad00",
         "owners": [
           "state-store"
         ]
@@ -171,8 +171,8 @@
         "path": "specs/state-store/state-store.spec.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "e01d69d22bcc620a5bb04d7fb032c43f58bf2035e63eaf9c07d3100d284725f4",
-        "entry_digest": "6cf65abe2084f1995a3e45d1530f04e300d66afa386c1db48778e3c89f26acdc",
+        "payload_digest": "1fe618d7665983821eeff63239e16ceef57fc52d1647e14084254792dc0cbe7d",
+        "entry_digest": "f0388b2de7b948fba051afc436c5c4d55f664db8c3c31a8347e794f6967a09ee",
         "owners": [
           "state-store"
         ]

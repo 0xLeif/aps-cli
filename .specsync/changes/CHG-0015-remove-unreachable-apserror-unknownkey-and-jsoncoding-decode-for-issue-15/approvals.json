@@ -6,6 +6,20 @@
       "timestamp": 1784410172,
       "digest": "df8c0ecdb9e65f1afdbaac2330f5f278eff3e872044f061aa49fe0e283b47133",
       "note": "Remove unreachable unknownKey and JSONCoding.decode."
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784410534,
+      "digest": "30740768dcecceea1a7c3b740c383f846f150c509523673ef373157ac3e4aae5",
+      "note": "Re-approve after Public API delta fix."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784410559,
+      "digest": "5754f11c6cad5575a3f450e75a926db5366e9555cf8c1e9b8b7d803f24136d8a",
+      "note": "Accepted unreachable-code removal for issue 15."
     }
   ],
   "reopenings": []
