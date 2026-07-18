@@ -5,4 +5,4 @@ artifact: design
 
 # Design
 
-Docs-only audit plus an internal `APSPaths.isDefaultAPSHomePath` helper so default-home tests do not assume Unix `/` separators. Windows CI stays deferred to #40.
+Docs-only audit plus a platform-neutral default-home assertion in APSTests (path lastPathComponent, not a Unix `/.aps` suffix). Windows CI stays deferred to #40.

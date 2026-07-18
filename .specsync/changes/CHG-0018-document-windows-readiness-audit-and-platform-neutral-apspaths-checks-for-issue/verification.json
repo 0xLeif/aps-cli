@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784414868,
+  "timestamp": 1784414641,
   "commit": "1ab2ca92f4178ec015cf89efa500c9bf9830950e",
-  "contract_digest": "e0780c4cee616dc7dec7b0f63be84c43a6d0d997bce778d0d3306cd40df00291",
+  "contract_digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
   "workspace_digest": "b2a6ed2a8fa1a13c8bfdedcdbfb2a9c65f89ff49c95af7b1a2942f9435f0c2da",
-  "acceptance_input_digest": "8703284d4dcd7c6ced01d043baed90908d1662039e3661a689a4e37717dbc5e1",
+  "acceptance_input_digest": "e15b2e47b2ac628499b4728e9c7f64969b26fbcf16af1f9a9c472619c621cc26",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -11,8 +11,8 @@
         "path": ".specsync/change-sequence.json",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "d983ebbc9e685c5df057ac076d6e018e6a0a1ed357ebb8e87f346a867df21032",
-        "entry_digest": "a4ed2749015f1495334c0c1fe23e42da5b00897ce9f3eac75163dc0acc403973",
+        "payload_digest": "11399161f4280ad397292c3b65f562f8a9af0c75b95b4ce9880fd1a334bcad4e",
+        "entry_digest": "ef782e68ea14113009c52f9236a1d72ae6c5b5fa9c8525c54d0939d152a9f901",
         "owners": [
           "@exact:delivery"
         ]
@@ -28,21 +28,21 @@
         ]
       },
       {
-        "path": "fledge.toml",
+        "path": "Tests/apsTests/APSTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "9725ff60ff21c473dfdbc0e2ff37c57b111dd5c73e516392c0620a6c4ed8ce08",
-        "entry_digest": "be2dd708aad79baa292992dcf01d539c05bd0250ddda3df2741a969a6689b174",
+        "payload_digest": "7f54ccb577bf2dc2a7a3095f56509d8dcd393a9a4c821eca79f3d8b1667d0f1d",
+        "entry_digest": "1ef7f2cab97993f15f5c5b562341b6dbaf5acf77e3a10791f7d8d98fc3375ec7",
         "owners": [
-          "@exact:delivery"
+          "@exact:test"
         ]
       },
       {
-        "path": "plugin.toml",
+        "path": "docs/windows-readiness.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "68b9f2ea7911e91a5c9eeb00e22a905ffa587fb11cd82519da32e087518100db",
-        "entry_digest": "eb19ef93d20438eaa1f2b86d1879921dc2d1082fcdf1d4531bab1f9a3944ca35",
+        "payload_digest": "51ac06907c7a8604021a3f45254fad8f3bd4a3b081a4b011e4c6ae822470cab7",
+        "entry_digest": "102eacd41203cfaa1852cec8c3a4827dc278a8b50619a2918331ac585789e00f",
         "owners": [
           "@exact:delivery"
         ]
