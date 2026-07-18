@@ -1,6 +1,6 @@
 ---
 id: CHG-0012-dogfood-securestate-secret-keychain-demo-key-for-issue-16
-state: implementing
+state: accepted
 type: feature
 base_commit: 6312f8d8379c3b87b05c3eb4436c0b503f161d1a
 ---

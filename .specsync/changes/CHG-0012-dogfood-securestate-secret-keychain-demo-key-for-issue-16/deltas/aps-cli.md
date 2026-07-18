@@ -1,6 +1,6 @@
 # APS CLI SecureState secret dogfood
 
-## ADDED
+## MODIFIED
 
 ### REQUIREMENT REQ-aps-cli-015
 
@@ -11,8 +11,6 @@ Acceptance Criteria
 - `aps reset secret` deletes the Keychain item on macOS.
 - README documents macOS Keychain access, Linux unavailability, and headless CI caveats.
 - `set secret` on platforms without Security surfaces `keychainUnavailable`.
-
-## MODIFIED
 
 ### REQUIREMENT REQ-aps-cli-001
 
