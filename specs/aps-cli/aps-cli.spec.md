@@ -1,7 +1,7 @@
 ---
 module: aps-cli
-version: 1
-status: draft
+version: 3
+status: active
 files:
   - Sources/aps/Aps.swift
   - Sources/aps/DemoKey.swift
@@ -20,35 +20,25 @@ agents can get, set, watch, dump, list, and reset typed application state.
 
 ## Public API
 
-### Command tree
+| Export | Description |
+|--------|-------------|
+| `DemoKey` | Fixed schema enum (`CaseIterable`, `ExpressibleByArgument`, `Sendable`). |
+| `APSError` | Typed CLI/domain errors. |
+| `counter` | Int key stored in AppState `State`. |
+| `message` | String key stored in AppState `State`. |
+| `flag` | Bool key stored in AppState `StoredState`. |
+| `note` | String key stored in AppState `FileState`. |
+| `unknownKey` | Unknown demo key token. |
+| `invalidValue` | Value could not parse for the key type. |
+| `encodingFailed` | UTF-8 JSON encode failure. |
+| `decodingFailed` | UTF-8 JSON decode failure. |
+| `storage` | Human storage kind (`State` / `StoredState` / `FileState`). |
+| `valueType` | Human value type (`Int` / `String` / `Bool`). |
+| `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
+| `detail` | One-line description for `keys`. |
+| `description` | Actionable error text for humans and ValidationError bridging. |
 
-`Aps` is the `@main` root (`ParsableCommand`).
-
-| Command | Role |
-|---------|------|
-| `get <key>` | Print the current string form of a demo key. |
-| `set <key> <value>` | Parse and write a value, then print the stored form. |
-| `watch <key>` | Print the current value, then print again on each change. |
-| `dump` | Print all demo keys as pretty JSON (uses injected coding + clock). |
-| `keys` | List demo keys with type, storage kind, and a short description. |
-| `reset <key>` | Restore one key to its initial value and print it. |
-| `reset --all` | Restore every demo key. |
-
-### Demo keys (`DemoKey`)
-
-| Key | Type | Storage |
-|-----|------|---------|
-| `counter` | `Int` | `State` (process-local) |
-| `message` | `String` | `State` (process-local) |
-| `flag` | `Bool` | `StoredState` (UserDefaults) |
-| `note` | `String` | `FileState` (`~/.aps/note.json`) |
-
-`DemoKey` is `CaseIterable`, `ExpressibleByArgument`, and `Sendable`.
-
-### Errors
-
-`APSError` covers unknown keys, invalid values, and coding failures. CLI `set`
-surfaces invalid values as ArgumentParser `ValidationError` messages.
+Command tree (informational): `Aps` is the `@main` root (`ParsableCommand`) with get, set, watch, dump, keys, and reset / reset --all.
 
 ## Invariants
 
@@ -104,3 +94,5 @@ Then the watcher prints `changed` within one poll interval.
 ## Change Log
 
 - 1: Initial CLI contract for get/set/watch/dump/keys/reset over the fixed demo schema.
+- 2: Explicit export inventory for SpecSync active-contract checks (`DemoKey`, `APSError`).
+| 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |

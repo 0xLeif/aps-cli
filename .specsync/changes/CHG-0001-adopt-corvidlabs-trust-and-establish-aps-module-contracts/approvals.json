@@ -1,0 +1,47 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784393175,
+      "digest": "3155ae53d2f499b09d1c15b5bfde985844e4e0c4269a452b53e6330920594fb0",
+      "note": "Approved trust adoption with aps-cli/state-store semantic contracts."
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784393218,
+      "digest": "1117f027d5039903b7f17872c7749aaca939df950c2cb801db99adc668e56415",
+      "note": "Re-approved after export-safe deltas and requirement evidence."
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784393224,
+      "digest": "1117f027d5039903b7f17872c7749aaca939df950c2cb801db99adc668e56415",
+      "note": "Approved with full Public API section in deltas."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784393345,
+      "digest": "6006090dbf5b7d599955e51ef4fd75cf35e4b36fb1f513efb311aa8439dc7cba",
+      "note": "Continue without waiting for self-hosted runners; approve refreshed export-documented deltas."
+    },
+    {
+      "gate": "definition",
+      "actor": "leif algo",
+      "timestamp": 1784393364,
+      "digest": "003a14da3aa73cf99683a59b58513e52661985fbcf4f754cc48e8cc39631952c",
+      "note": "Re-approve after switching existing REQs to MODIFIED; ADDED only REQ-aps-cli-005."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif algo",
+      "timestamp": 1784393368,
+      "digest": "6d19a3078f062938ee3e14692d1ed6694ceb70bdc794146a86108cc8c1de509b",
+      "note": "Accept after local verify green; CI awaits macOS self-hosted runners."
+    }
+  ],
+  "reopenings": []
+}

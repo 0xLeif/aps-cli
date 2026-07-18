@@ -6,9 +6,11 @@ build = "swift build"
 test = "swift test"
 release-build = "swift build -c release"
 smoke = "./Scripts/smoke.sh"
+# Keep specsync out of lanes.verify: Trust/SpecSync run it as a top-level gate
+# so verification commands cannot recurse into specsync check.
 spec = "specsync check"
-check = "fledge run build && fledge run test && fledge run smoke"
+check = "fledge run build && fledge run test && fledge run smoke && fledge run spec"
 
 [lanes.verify]
-description = "Build, test, and smoke aps (the single quality gate)"
+description = "Native quality gate (build, test, smoke)"
 steps = ["build", "test", "smoke"]

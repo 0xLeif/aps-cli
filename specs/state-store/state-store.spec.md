@@ -1,7 +1,7 @@
 ---
 module: state-store
-version: 1
-status: draft
+version: 3
+status: active
 files:
   - Sources/aps/StateStore.swift
   - Sources/aps/DemoState.swift
@@ -21,34 +21,25 @@ non-UI use.
 
 ## Public API
 
-### Application demo surface (`DemoState.swift`)
+| Export | Description |
+|--------|-------------|
+| `StateStore` | MainActor AppState facade used by the CLI. |
+| `APSClock` | Clock protocol for dump timestamps. |
+| `SystemAPSClock` | Production `APSClock` backed by `Date()`. |
+| `JSONCoding` | Shared pretty JSON helpers. |
+| `init` | Configures FileState path and loads clock/jsonCoding dependencies. |
+| `get` | Return the string form of a demo key. |
+| `set` | Parse and write; throw `APSError.invalidValue` on bad input. |
+| `reset` | Restore one key to its AppState initial value. |
+| `resetAll` | Restore every demo key. |
+| `dump` | Pretty JSON snapshot using `@AppDependency` clock + jsonCoding. |
+| `watchBlocking` | Observation + RunLoop poll loop with `shouldContinue`. |
+| `parseBool` | Accept true/false/1/0/yes/no/on/off (case-insensitive). |
+| `now` | Current `Date` from an `APSClock`. |
+| `encodePretty` | Encode an `Encodable` value as pretty UTF-8 JSON text. |
+| `decode` | Decode a `Decodable` value from UTF-8 JSON text. |
 
-| Member | Kind | Initial |
-|--------|------|---------|
-| `Application.counter` | `State<Int>` | `0` |
-| `Application.message` | `State<String>` | `""` |
-| `Application.flag` | `StoredState<Bool>` | `false` |
-| `Application.note` | `FileState<String>` | `""` |
-| `Application.clock` | `Dependency<any APSClock>` | `SystemAPSClock()` |
-| `Application.jsonCoding` | `Dependency<JSONCoding>` | `JSONCoding()` |
-
-`APSPaths.configure()` points `FileManager.defaultFileStatePath` at `~/.aps`.
-
-### StateStore
-
-| Method | Role |
-|--------|------|
-| `get(_:)` | Return the string form of a demo key. |
-| `set(_:value:)` | Parse and write; throw `APSError.invalidValue` on bad input. |
-| `reset(_:)` / `resetAll()` | Restore AppState initials (and flush UserDefaults for `flag`). |
-| `dump()` | Pretty JSON snapshot using `@AppDependency` clock + jsonCoding. |
-| `watchBlocking(_:pollInterval:shouldContinue:onChange:)` | Observation + RunLoop poll loop. |
-| `parseBool(_:)` | Accept true/false/1/0/yes/no/on/off (case-insensitive). |
-
-### Dependencies (`Dependencies.swift`)
-
-- `APSClock` / `SystemAPSClock`: wall-clock for dump timestamps
-- `JSONCoding`: shared pretty JSON encode/decode helpers
+Application demo surface (informational): `Application.counter` / `message` / `flag` / `note` / `clock` / `jsonCoding`, with `APSPaths.configure()` pointing FileState at `~/.aps`.
 
 ## Invariants
 
@@ -101,3 +92,5 @@ Then keys include message with value "hi" and a timestamp field exists.
 ## Change Log
 
 - 1: Initial StateStore / Application demo-state contract for the aps CLI.
+- 2: Explicit export inventory for SpecSync active-contract checks.
+| 2026-07-18 | CHG-0001-adopt-corvidlabs-trust-and-establish-aps-module-contracts: Adopt CorvidLabs trust and establish aps module contracts |

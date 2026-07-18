@@ -179,4 +179,65 @@ final class APSTests: XCTestCase {
         let before = clock.now
         XCTAssertLessThanOrEqual(before.timeIntervalSinceNow, 0)
     }
+
+    @MainActor
+    func testInvalidFlagValue() async {
+        let store = StateStore()
+        do {
+            try store.set(.flag, value: "maybe")
+            XCTFail("Expected invalid value error")
+        } catch let error as APSError {
+            XCTAssertEqual(error, .invalidValue(key: .flag, value: "maybe"))
+        } catch {
+            XCTFail("Unexpected error: \(error)")
+        }
+    }
+
+    @MainActor
+    func testFlagPersistsAcrossStateStoreInstances() async throws {
+        let writer = StateStore()
+        try writer.set(.flag, value: "true")
+        XCTAssertEqual(writer.get(.flag), "true")
+
+        let reader = StateStore()
+        XCTAssertEqual(reader.get(.flag), "true")
+
+        reader.reset(.flag)
+        XCTAssertEqual(StateStore().get(.flag), "false")
+    }
+
+    @MainActor
+    func testProcessLocalStateKeysDoNotClaimCrossProcessPersistence() async throws {
+        // Document the contract: State keys are process-local. A fresh Application
+        // reset (as in setUp) restores initials; this test locks that expectation.
+        let store = StateStore()
+        try store.set(.counter, value: "99")
+        try store.set(.message, value: "ephemeral")
+        XCTAssertEqual(store.get(.counter), "99")
+        XCTAssertEqual(store.get(.message), "ephemeral")
+
+        Application.reset(\.counter)
+        Application.reset(\.message)
+        XCTAssertEqual(store.get(.counter), "0")
+        XCTAssertEqual(store.get(.message), "")
+    }
+
+    func testDemoKeyHelpSummaryFormat() {
+        for key in DemoKey.allCases {
+            let parts = key.helpSummary.split(separator: "\t")
+            XCTAssertEqual(parts.count, 3, "Expected key/type/storage columns for \(key)")
+            XCTAssertEqual(String(parts[0]), key.rawValue)
+            XCTAssertFalse(key.detail.isEmpty)
+        }
+    }
+
+    func testAPSErrorDescriptionsAreActionable() {
+        let invalid = APSError.invalidValue(key: .counter, value: "nope")
+        XCTAssertTrue(invalid.description.contains("counter"))
+        XCTAssertTrue(invalid.description.contains("Int"))
+
+        let unknown = APSError.unknownKey("wat")
+        XCTAssertTrue(unknown.description.contains("wat"))
+        XCTAssertTrue(unknown.description.contains("counter"))
+    }
 }
