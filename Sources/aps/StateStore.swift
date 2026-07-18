@@ -19,6 +19,9 @@ public final class StateStore {
         Application.load(dependency: \.jsonCoding)
     }
 
+    /// Wall clock from the injected `APSClock` dependency.
+    public var now: Date { clock.now }
+
     public func get(_ key: DemoKey) -> String {
         switch key {
         case .counter:

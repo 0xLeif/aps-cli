@@ -276,6 +276,49 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    func testWatchJSONLEventUsesFreshDiskValue() async throws {
+        // Mirrors the CLI --jsonl path: build events from the onChange string,
+        // not from store.get (which can hit a stale FileState cache).
+        let store = StateStore()
+        try store.set(.profile, value: #"{"name":"before","version":3}"#)
+        let path = FileManager.defaultFileStatePath
+
+        var events: [CLIOutput.WatchEvent] = []
+        store.watchBlocking(
+            .profile,
+            pollInterval: 0.05,
+            shouldContinue: { events.count < 2 }
+        ) { value in
+            let event = try! CLIOutput.watchEvent(
+                key: .profile,
+                rawValue: value,
+                timestamp: store.now
+            )
+            events.append(event)
+            if events.count == 1 {
+                let changed = ProfileDocument(name: "leif", version: 4)
+                let data = try? JSONEncoder().encode(changed)
+                let url = URL(fileURLWithPath: path).appendingPathComponent("profile.json")
+                try? data?.write(to: url)
+            }
+        }
+
+        XCTAssertEqual(events.count, 2)
+        XCTAssertEqual(events[0].value, .object(ProfileDocument(name: "before", version: 3)))
+        XCTAssertEqual(events[1].value, .object(ProfileDocument(name: "leif", version: 4)))
+    }
+
+    func testTypedValueFromRawStringDoesNotNeedStore() throws {
+        XCTAssertEqual(try CLIOutput.typedValue(for: .counter, from: "42"), .int(42))
+        XCTAssertEqual(try CLIOutput.typedValue(for: .flag, from: "true"), .bool(true))
+        XCTAssertEqual(try CLIOutput.typedValue(for: .note, from: "hi"), .string("hi"))
+        XCTAssertEqual(
+            try CLIOutput.typedValue(for: .profile, from: #"{"name":"a","version":2}"#),
+            .object(ProfileDocument(name: "a", version: 2))
+        )
+    }
+
+    @MainActor
     func testWatchCountBoundStopsLoop() async throws {
         let store = StateStore()
         try store.set(.counter, value: "1")

@@ -142,16 +142,17 @@ extension Aps {
                 ) { value in
                     emitted += 1
                     if jsonl {
-                        let event = CLIOutput.WatchEvent(
-                            key: key.rawValue,
-                            type: key.valueType,
-                            storage: key.storage,
-                            value: (try? CLIOutput.typedValue(for: key, store: store))
-                                ?? .string(value),
-                            timestamp: Date()
+                        // Parse the fresh `value` from watchBlocking. Do not re-query
+                        // the store: FileState cache can lag cross-process disk writes.
+                        let event = try? CLIOutput.watchEvent(
+                            key: key,
+                            rawValue: value,
+                            timestamp: store.now
                         )
-                        if let line = try? CLIOutput.encodeLine(event) {
+                        if let event, let line = try? CLIOutput.encodeLine(event) {
                             CLIOutput.writeLine(line)
+                        } else {
+                            CLIOutput.writeLine(value)
                         }
                     } else {
                         CLIOutput.writeLine(value)

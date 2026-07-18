@@ -87,16 +87,52 @@ enum CLIOutput {
 
     @MainActor
     static func typedValue(for key: DemoKey, store: StateStore) throws -> JSONValue {
+        try typedValue(for: key, from: store.get(key))
+    }
+
+    /// Build a typed value from a fresh rendered string (e.g. watch `onChange`).
+    ///
+    /// Prefer this over re-querying `StateStore` for disk-backed keys: AppState's
+    /// FileState cache can lag cross-process writes that `watchBlocking` already
+    /// surfaced via direct disk reads.
+    static func typedValue(for key: DemoKey, from raw: String) throws -> JSONValue {
         switch key {
         case .counter:
-            return .int(Int(store.get(key)) ?? 0)
+            guard let intValue = Int(raw) else {
+                throw APSError.invalidValue(key: key, value: raw)
+            }
+            return .int(intValue)
         case .message, .note:
-            return .string(store.get(key))
+            return .string(raw)
         case .flag:
-            return .bool(store.get(key) == "true")
+            guard let boolValue = StateStore.parseBool(raw) else {
+                throw APSError.invalidValue(key: key, value: raw)
+            }
+            return .bool(boolValue)
         case .profile:
-            return .object(try store.profileDocument())
+            guard let data = raw.data(using: .utf8) else {
+                throw APSError.decodingFailed
+            }
+            do {
+                return .object(try JSONDecoder().decode(ProfileDocument.self, from: data))
+            } catch {
+                throw APSError.invalidValue(key: key, value: raw)
+            }
         }
+    }
+
+    static func watchEvent(
+        key: DemoKey,
+        rawValue: String,
+        timestamp: Date
+    ) throws -> WatchEvent {
+        WatchEvent(
+            key: key.rawValue,
+            type: key.valueType,
+            storage: key.storage,
+            value: try typedValue(for: key, from: rawValue),
+            timestamp: timestamp
+        )
     }
 }
 
