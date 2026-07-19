@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0023-watch-signal-handling-and-termination-semantics-issue-34",
+  "slug": "watch-signal-handling-and-termination-semantics-issue-34",
+  "title": "Watch signal handling and termination semantics (issue 34)",
+  "description": "watch signal handling and termination semantics (issue 34)",
+  "kind": "feature",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "c4ecd60b2a46bca4780f1b4af79a1d495d646287",
+  "created_at": 1784424255,
+  "updated_at": 1784440646,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    "Sources/aps/WatchTermination.swift",
+    "Sources/aps/Aps.swift",
+    "Sources/aps/CLIOutput.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Scripts/smoke.sh",
+    "specs/aps-cli",
+    "README.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "watch stops cleanly for count (exit 0), timeout (exit 124), SIGINT (exit 130), and SIGTERM (exit 143); the stop reason appears as a terminal {type:end,reason:...} event in --jsonl mode or a stderr line in human mode; the jsonl stream never contains non-JSON lines; an unbounded watch prints a one-time stderr hint; smoke covers all exit paths including kill -INT; specs updated."
+  ],
+  "selected_artifacts": [
+    "context",
+    "requirements",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "design"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "yes"
+  }
+}

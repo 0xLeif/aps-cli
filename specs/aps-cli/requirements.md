@@ -70,12 +70,15 @@ Acceptance Criteria
 
 ### REQ-aps-cli-012
 
-`watch` SHALL support `--count`, `--timeout`, and `--jsonl`.
+`watch` SHALL support `--count`, `--timeout`, and `--jsonl`, and SHALL handle SIGINT/SIGTERM with observable termination semantics.
 
 Acceptance Criteria
-- `--count` stops after that many printed values including the initial value.
-- `--timeout` stops after the given seconds.
-- `--jsonl` emits one JSON object per line.
+- `--count` stops after that many printed values including the initial value (exit 0).
+- `--timeout` stops after the given seconds (exit 124).
+- SIGINT/SIGTERM stop the loop cleanly (exit 130 / 143).
+- The stop reason appears as a terminal `{"type":"end","reason":...}` event in `--jsonl` mode or a stderr line in human mode.
+- The `--jsonl` stream never contains non-JSON lines.
+- An unbounded watch prints a one-time stderr hint suggesting `--count` / `--timeout`.
 
 ### REQ-aps-cli-013
 

@@ -142,14 +142,32 @@ extension Aps {
                 let jsonl = jsonl || json
                 let deadline = timeout.map { Date().addingTimeInterval($0) }
                 var emitted = 0
+                var stopReason: StopReason?
+
+                let signalBox = SignalBox()
+                let signalSources = installWatchSignalHandlers(signalBox)
+
+                if count == nil && timeout == nil {
+                    CLIOutput.writeError("watch: unbounded stream; press Ctrl-C to stop, or use --count/--timeout for bounded runs")
+                }
 
                 do {
                     try store.watchBlocking(
                         key,
                         pollInterval: TimeInterval(interval) / 1000.0,
                         shouldContinue: {
-                            if let count, emitted >= count { return false }
-                            if let deadline, Date() >= deadline { return false }
+                            if let count, emitted >= count {
+                                stopReason = .count
+                                return false
+                            }
+                            if let deadline, Date() >= deadline {
+                                stopReason = .timeout
+                                return false
+                            }
+                            if let sig = signalBox.first {
+                                stopReason = .signal(sig)
+                                return false
+                            }
                             return true
                         }
                     ) { value in
@@ -157,15 +175,22 @@ extension Aps {
                         if jsonl {
                             // Parse the fresh `value` from watchBlocking. Do not re-query
                             // the store: FileState cache can lag cross-process disk writes.
-                            let event = try? CLIOutput.watchEvent(
+                            if let event = try? CLIOutput.watchEvent(
                                 key: key,
                                 rawValue: value,
                                 timestamp: store.now
-                            )
-                            if let event, let line = try? CLIOutput.encodeLine(event) {
+                            ), let line = try? CLIOutput.encodeLine(event) {
                                 CLIOutput.writeLine(line)
-                            } else {
-                                CLIOutput.writeLine(value)
+                            } else if let line = try? CLIOutput.encodeLine(
+                                CLIOutput.WatchErrorEvent(
+                                    key: key.rawValue,
+                                    error: "encoding_failed",
+                                    message: "value could not be encoded as a watch event",
+                                    timestamp: store.now
+                                )
+                            ) {
+                                // The jsonl stream never carries non-JSON lines.
+                                CLIOutput.writeLine(line)
                             }
                         } else {
                             CLIOutput.writeLine(value)
@@ -185,6 +210,29 @@ extension Aps {
                     }
                     try CLIOutput.fail(error, json: jsonl)
                 }
+
+                if let stopReason {
+                    if jsonl {
+                        let event = CLIOutput.WatchEndEvent(
+                            key: key.rawValue,
+                            reason: stopReason.token,
+                            timestamp: store.now
+                        )
+                        if let line = try? CLIOutput.encodeLine(event) {
+                            CLIOutput.writeLine(line)
+                        }
+                    } else {
+                        CLIOutput.writeError("watch \(key.rawValue): stopped (\(stopReason.summary))")
+                    }
+                    if stopReason.exitCode != 0 {
+                        throw ExitCode(stopReason.exitCode)
+                    }
+                }
+
+                // Actual use after the loop: guarantees the dispatch sources
+                // outlive the watch (debug kept them incidentally; release
+                // optimized them away and silently lost every signal).
+                signalSources.forEach { $0.cancel() }
             }
         }
     }
