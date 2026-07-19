@@ -53,15 +53,50 @@ jobs:
           MIRROR="${RUNNER_TEMP}/specsync-${VERSION}-mirror"
           mkdir -p "$MIRROR"
           BASE="https://github.com/CorvidLabs/spec-sync/releases/download/v${VERSION}"
+          curl_retry() {
+            curl --retry 5 --retry-all-errors --retry-delay 2 -fsSL "$@"
+          }
           for asset in \
             specsync-macos-aarch64.tar.gz \
             specsync-macos-x86_64.tar.gz
           do
-            curl -fsSL "${BASE}/${asset}" -o "${MIRROR}/${asset}"
-            curl -fsSL "${BASE}/${asset}.sha256" -o "${MIRROR}/${asset}.sha256"
+            curl_retry "${BASE}/${asset}" -o "${MIRROR}/${asset}"
+            curl_retry "${BASE}/${asset}.sha256" -o "${MIRROR}/${asset}.sha256"
             (cd "$MIRROR" && shasum -a 256 -c "${asset}.sha256")
           done
           echo "path=${MIRROR}" >> "$GITHUB_OUTPUT"
+
+      # Trust v1.0.1 downloads Fledge into ${RUNNER_TEMP}/corvid-trust-fledge and
+      # skips when the binary already exists. Preseed with retries so a flaky
+      # GitHub Releases transfer cannot fail the whole gate (curl exit 18).
+      - name: Preseed Fledge 1.7.0 for Trust
+        run: |
+          set -euo pipefail
+          INSTALL_ROOT="${RUNNER_TEMP}/corvid-trust-fledge"
+          case "$(uname -m)" in
+            arm64) asset="fledge-macos-aarch64"
+                   sha="21d0916d52ef14e6d33e3967417773369e047a0311e66bbb1eecc8f69332a040" ;;
+            x86_64) asset="fledge-macos-x86_64"
+                    sha="9b93babd60f87dc67c1df1902b35ab71c06912a267821c05688e6cd842c71072" ;;
+            *) echo "::error::unsupported arch $(uname -m)"; exit 1 ;;
+          esac
+          mkdir -p "$INSTALL_ROOT/bin"
+          if [ -x "$INSTALL_ROOT/bin/fledge" ]; then
+            actual="$(shasum -a 256 "$INSTALL_ROOT/bin/fledge" | awk '{print $1}')"
+            if [ "$actual" = "$sha" ]; then
+              echo "Fledge already present at $INSTALL_ROOT/bin/fledge"
+              exit 0
+            fi
+          fi
+          curl --retry 5 --retry-all-errors --retry-delay 2 -fsSL \
+            "https://github.com/CorvidLabs/fledge/releases/download/v1.7.0/$asset" \
+            -o "$INSTALL_ROOT/bin/fledge"
+          actual="$(shasum -a 256 "$INSTALL_ROOT/bin/fledge" | awk '{print $1}')"
+          if [ "$actual" != "$sha" ]; then
+            echo "::error::Fledge 1.7.0 checksum mismatch (expected $sha, got $actual)"
+            exit 1
+          fi
+          chmod +x "$INSTALL_ROOT/bin/fledge"
 
       - name: CorvidLabs Trust gate
         id: trust

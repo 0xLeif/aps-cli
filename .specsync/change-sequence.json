@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 26,
-  "id": "CHG-0026-rfc-dynamic-schema-user-defined-keys-design-doc-for-issue-39",
+  "sequence": 27,
+  "id": "CHG-0027-preseed-fledge-with-curl-retries-in-trust-workflow-for-issue-39-ci-flake",
   "acknowledged_collisions": []
 }

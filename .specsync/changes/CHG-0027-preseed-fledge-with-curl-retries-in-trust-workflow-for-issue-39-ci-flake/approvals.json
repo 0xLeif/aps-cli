@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784480208,
+      "digest": "525533071d7554cf238da14038dad0e65debff51e9f0889cd22fe189051d2afa",
+      "note": "Trust Fledge preseed for PR #56 CI flake."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784480236,
+      "digest": "d2a37a99c52cb3124eb89696ff4c7ba5eae0c83efd117d3b1cb29d06a68e522e",
+      "note": "Accepted Trust Fledge preseed for issue 39 CI."
+    }
+  ],
+  "reopenings": []
+}
