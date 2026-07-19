@@ -797,4 +797,33 @@ final class APSTests: XCTestCase {
         XCTAssertFalse(json.contains("\n"))
         XCTAssertTrue(json.contains("\"ok\":true"))
     }
+
+    func testStopReasonTokensAndExitCodes() {
+        XCTAssertEqual(StopReason.count.token, "count")
+        XCTAssertEqual(StopReason.timeout.token, "timeout")
+        XCTAssertEqual(StopReason.signal(SIGINT).token, "sigint")
+        XCTAssertEqual(StopReason.signal(SIGTERM).token, "sigterm")
+        XCTAssertEqual(StopReason.signal(20).token, "signal")
+
+        XCTAssertEqual(StopReason.count.exitCode, 0)
+        XCTAssertEqual(StopReason.timeout.exitCode, 124)
+        XCTAssertEqual(StopReason.signal(SIGINT).exitCode, 130)
+        XCTAssertEqual(StopReason.signal(SIGTERM).exitCode, 143)
+
+        XCTAssertEqual(StopReason.count.summary, "count reached")
+        XCTAssertEqual(StopReason.signal(SIGINT).summary, "interrupted (SIGINT)")
+        XCTAssertEqual(StopReason.signal(SIGTERM).summary, "terminated (SIGTERM)")
+    }
+
+    func testWatchEndEventEncodesTerminalMarker() throws {
+        let event = CLIOutput.WatchEndEvent(
+            key: "counter",
+            reason: StopReason.timeout.token,
+            timestamp: Date(timeIntervalSince1970: 0)
+        )
+        let line = try CLIOutput.encodeLine(event)
+        XCTAssertTrue(line.contains(#""type":"end""#))
+        XCTAssertTrue(line.contains(#""reason":"timeout""#))
+        XCTAssertTrue(line.contains(#""key":"counter""#))
+    }
 }

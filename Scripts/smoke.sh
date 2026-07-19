@@ -130,4 +130,23 @@ test "$("$bin" keys --quiet | wc -l | tr -d ' ')" = "7"
 "$bin" dump | grep -q '"key":"flag"'
 "$bin" watch counter --count 1 --timeout 2 --json >/dev/null
 
+# Watch termination semantics: exit codes and stream markers.
+"$bin" watch counter --count 1 --jsonl >/dev/null
+"$bin" watch counter --count 1 --jsonl | grep -q '"reason":"count"'
+out="$("$bin" watch counter --timeout 1 --jsonl >/dev/null 2>&1)" && { echo "expected timeout exit" >&2; exit 1; }
+test $? -eq 124 || { echo "expected exit 124 for timeout" >&2; exit 1; }
+out="$("$bin" watch counter --timeout 1 --jsonl 2>/dev/null || true)"
+echo "$out" | grep -q '"reason":"timeout"'
+"$bin" watch counter --jsonl > "$APS_HOME/watch.out" 2>/dev/null &
+WPID=$!
+sleep 1
+kill -INT $WPID
+wait $WPID || RC=$?
+test "${RC:-0}" -eq 130 || { echo "expected exit 130 for SIGINT, got ${RC:-0}" >&2; exit 1; }
+grep -q '"reason":"sigint"' "$APS_HOME/watch.out"
+if grep -vq '^{' "$APS_HOME/watch.out"; then
+  echo "jsonl stream must contain only JSON lines" >&2
+  exit 1
+fi
+
 echo "smoke ok"

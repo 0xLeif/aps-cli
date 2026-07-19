@@ -52,6 +52,21 @@ enum CLIOutput {
         }
     }
 
+    /// Terminal machine-mode watch event: the loop stopped, with the reason.
+    struct WatchEndEvent: Encodable {
+        let type: String
+        let key: String
+        let reason: String
+        let timestamp: Date
+
+        init(key: String, reason: String, timestamp: Date) {
+            self.type = "end"
+            self.key = key
+            self.reason = reason
+            self.timestamp = timestamp
+        }
+    }
+
     struct StatsPayload: Encodable {
         let mutationCount: Int
         let lastMutatedKey: String
@@ -173,6 +188,12 @@ enum CLIOutput {
     static func writeLine(_ line: String) {
         if let data = (line + "\n").data(using: .utf8) {
             FileHandle.standardOutput.write(data)
+        }
+    }
+
+    static func writeError(_ line: String) {
+        if let data = (line + "\n").data(using: .utf8) {
+            FileHandle.standardError.write(data)
         }
     }
 

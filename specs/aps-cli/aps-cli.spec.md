@@ -1,12 +1,13 @@
 ---
 module: aps-cli
-version: 21
+version: 22
 status: active
 files:
   - Sources/aps/Aps.swift
   - Sources/aps/CLIOutput.swift
   - Sources/aps/DemoKey.swift
   - Sources/aps/TTY.swift
+  - Sources/aps/WatchTermination.swift
 db_tables: []
 depends_on:
   - state-store
@@ -75,6 +76,13 @@ names only. Machine shapes are additive-only contracts; human text may evolve.
    `counter` or `message`.
 4. `watch` must flush each printed value immediately when stdout is not a TTY.
 5. `keys` and `--help` do not mutate application state.
+
+6. `watch` termination is observable in both channels: a terminal
+   `{"type":"end","reason":"count|timeout|sigint|sigterm"}` event in `--jsonl`
+   mode or a stderr line in human mode, with exit codes 0 (count), 124
+   (timeout), 128+signal (130 SIGINT, 143 SIGTERM). The `--jsonl` stream never
+   contains non-JSON lines. An unbounded watch prints a one-time stderr hint
+   suggesting `--count` / `--timeout`.
 
 ## Behavioral Examples
 
@@ -160,3 +168,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-18 | CHG-0021-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31-rebuilt-on: Error contract: exit-code taxonomy and JSON error envelope (issue 31, rebuilt on corruptState main) |
 | 2026-07-19 | CHG-0021-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31-rebuilt-on: Error contract: exit-code taxonomy and JSON error envelope (issue 31, rebuilt on corruptState main) |
 | 2026-07-19 | CHG-0022-tty-aware-output-under-the-git-porcelain-rule-issue-33: TTY-aware output under the git porcelain rule (issue 33) |
+| 2026-07-19 | CHG-0023-watch-signal-handling-and-termination-semantics-issue-34: Watch signal handling and termination semantics (issue 34) |

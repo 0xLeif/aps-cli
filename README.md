@@ -139,6 +139,8 @@ swift run aps stats --json
 - `watch --json` is an alias for `--jsonl`; `keys --quiet` prints key names only (handy for `xargs aps reset`).
 - Shell completions: `aps --generate-completion-script bash|zsh|fish` (install into your shell's completion directory).
 
+`watch` termination is observable in both channels. Exit codes: **0** when `--count` is satisfied, **124** on `--timeout` (GNU convention), **130** on SIGINT, **143** on SIGTERM. In `--jsonl` mode the stream ends with a terminal `{"type":"end","reason":"count|timeout|sigint|sigterm",...}` event and never contains non-JSON lines; in human mode a one-line summary goes to stderr. An unbounded watch prints a one-time stderr hint suggesting `--count` / `--timeout`.
+
 ### Multi-process FileState semantics
 
 `aps` expects **one writer per key** at a time. Concurrent `aps set` on the same FileState key (`note` / `profile`) is last-writer-wins and is not locked: AppState writes files non-atomically, so two writers can tear a JSON file.
