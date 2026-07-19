@@ -191,12 +191,6 @@ enum CLIOutput {
         }
     }
 
-    static func writeError(_ line: String) {
-        if let data = (line + "\n").data(using: .utf8) {
-            FileHandle.standardError.write(data)
-        }
-    }
-
     @MainActor
     static func typedValue(for key: DemoKey, store: StateStore) throws -> JSONValue {
         try typedValue(for: key, from: store.get(key))
