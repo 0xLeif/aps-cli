@@ -20,12 +20,26 @@
       "timestamp": 1784421258,
       "digest": "42f2707b8da5339826601e49dcc1fc9e5ac9406f34cf96b99530932deb028a15",
       "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784477284,
+      "digest": "a677b33a8195cb8e63fa1ee33fad2f38b830f17f894919c800ae09cad604b8c8",
+      "note": "Rebind definition digest after SpecSync 5.1.1 digest drift (issue #39 sweep)."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784477327,
+      "digest": "f32eb59662a8aa28f4325ae5db47ac613c527f0fe14f77a528fb2745f8a62a18",
+      "note": "Re-accept after definition digest rebind (#39 SpecSync sweep)."
     }
   ],
   "reopenings": [
     {
       "schema_version": 1,
-      "change_id": "CHG-0018-aps-schema-self-describing-contract-endpoint-issue-32",
+      "change_id": "CHG-0025-aps-schema-self-describing-contract-endpoint-issue-32",
       "actor": "0xLeif",
       "reason": "Rebase of the schema endpoint branch onto current main changed delivery inputs; rebinding evidence",
       "timestamp": 1784421240,
@@ -41,7 +55,7 @@
       "prior_verification": {
         "timestamp": 1784416945,
         "commit": "8cf886df7ac87eac4234fc3fb8c13f46362e08d6",
-        "contract_digest": "8f27d753afdf6417ec9e2a7d6c3675f5ab1543c782f9666d6217a17243c55207",
+        "contract_digest": "a677b33a8195cb8e63fa1ee33fad2f38b830f17f894919c800ae09cad604b8c8",
         "workspace_digest": "16fc131d9ca04eb1b0862f3869be796c9178ea858c48ee34cacd3d0d280d0969",
         "acceptance_input_digest": "7d14a0fda636cb3766518e356d4d5172573dea4180d8179d2bac7876eca333be",
         "acceptance_manifest": {

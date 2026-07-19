@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 25,
-  "id": "CHG-0025-aps-schema-self-describing-contract-endpoint-issue-32",
+  "sequence": 27,
+  "id": "CHG-0027-preseed-fledge-with-curl-retries-in-trust-workflow-for-issue-39-ci-flake",
   "acknowledged_collisions": []
 }

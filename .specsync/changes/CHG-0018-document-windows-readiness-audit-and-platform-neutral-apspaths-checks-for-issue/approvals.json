@@ -62,6 +62,13 @@
       "timestamp": 1784421723,
       "digest": "734505abc69406b33b49bd42795299de10db6e8294235b0583701dcc29eec4ea",
       "note": "Re-accept after #50 Linux test fix."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784476316,
+      "digest": "d0f3253242f900ddae1bd0e93c97207a8b05a16abb815551dc09e2a96f24e7b1",
+      "note": "Re-accept after #39 SpecSync stale sweep."
     }
   ],
   "reopenings": [
@@ -538,6 +545,85 @@
       },
       "stale_acceptance_input_digest": "214733c68239e2ef685a0f629aeb5b594882221dfe413c5be0da3dafd3805ae3",
       "current_acceptance_input_digest": "4464c965715be10163bdfd544bb893d03511011f766a8ea783112c827c293be2"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0018-document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue",
+      "actor": "agent:cursor",
+      "reason": "Stale README after dynamic-schema RFC (#39).",
+      "timestamp": 1784475488,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784421723,
+        "digest": "734505abc69406b33b49bd42795299de10db6e8294235b0583701dcc29eec4ea",
+        "note": "Re-accept after #50 Linux test fix."
+      },
+      "prior_verification": {
+        "timestamp": 1784421715,
+        "commit": "5e6433c3943e1f48d23d23d7517cdd326da5d2bd",
+        "contract_digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
+        "workspace_digest": "80b657c3e205c7cfa474b2d39eaa72103e8585b0c2138ef224d15ad24926f8d3",
+        "acceptance_input_digest": "4464c965715be10163bdfd544bb893d03511011f766a8ea783112c827c293be2",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "11399161f4280ad397292c3b65f562f8a9af0c75b95b4ce9880fd1a334bcad4e",
+              "entry_digest": "ef782e68ea14113009c52f9236a1d72ae6c5b5fa9c8525c54d0939d152a9f901",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f1308885314eb98dee9ded8d43319dc507054e9651636f325b35ccd33954da86",
+              "entry_digest": "ad89330589c0539409ff3a743f533d24af1eba418319f70d35041626b61ce709",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "075c7e91ee2bef3a339e3316c13262fc2ba9993e5a103a698057ea61fbc969ae",
+              "entry_digest": "e1c5bcab674739bf30299509bacf6192509efa71a2987fa51daa22be0c58c64d",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "1a7cc90974a6850fb64e14e72ef257600725d9e8a08eccd0778dd846a84d1d2c",
+              "entry_digest": "93803319a54163553d0d2945ec07d94b6a62cfe97cd2cf60b4f1e8a0f1f6a78f",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "4464c965715be10163bdfd544bb893d03511011f766a8ea783112c827c293be2",
+      "current_acceptance_input_digest": "5980cee89626bef1ac114a0fa67ee7fb37d907a692e2f74d99c76ebde193444c"
     }
   ]
 }

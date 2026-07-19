@@ -55,6 +55,13 @@
       "timestamp": 1784420123,
       "digest": "7f3e6510211e0c0c3def876e4f70ad17c4e8243f505ffdf2bda9cfe180b486e8",
       "note": null
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784476276,
+      "digest": "8e11ce010e4a02d443aa32628ead2883cff9c56ee7353ccf315465b9a465893d",
+      "note": "Re-accept after #39 SpecSync stale sweep."
     }
   ],
   "reopenings": [
@@ -762,6 +769,147 @@
       },
       "stale_acceptance_input_digest": "20a4ab886811165cc9b4bacf23bf1fb6b724a4da07e8356f57875cf549c7b15d",
       "current_acceptance_input_digest": "f94053c6491f646b68da2741e8e913b179ab16793ae27e70ff20322ee1c1c78a"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0019-add-powershell-smoke-script-and-windows-latest-smoke-ci-for-issue-45",
+      "actor": "agent:cursor",
+      "reason": "Stale README after dynamic-schema RFC (#39).",
+      "timestamp": 1784475703,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "0xLeif",
+        "timestamp": 1784420123,
+        "digest": "7f3e6510211e0c0c3def876e4f70ad17c4e8243f505ffdf2bda9cfe180b486e8",
+        "note": null
+      },
+      "prior_verification": {
+        "timestamp": 1784420095,
+        "commit": "be4abfb477552bc0a07f10d51d33308608587b3d",
+        "contract_digest": "bbe132cc0578bf3b207567f6f95971c09abbaa9370e1f2de062c2e1aa399b968",
+        "workspace_digest": "513d04709c5bd3d1346e15db2473f03c23de3257b855f568fc3ff21c4b95ed52",
+        "acceptance_input_digest": "f94053c6491f646b68da2741e8e913b179ab16793ae27e70ff20322ee1c1c78a",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".github/workflows/windows-smoke.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "42c3f4aff3a36ed9e478aae454a3029198fa28a1abd671147f5e18e7bd69f9aa",
+              "entry_digest": "05e1c4951acb0c353f8b41e406511ede182d070133974e3a2789d5cd8f87908a",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a230a7c919631ba55ed79156ba3f9128c807542175bfac8e90bd45f2377882fd",
+              "entry_digest": "8aeb0363bb12523c848b8766abcab9347cc847399c08465165bc89e7350dee46",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f1308885314eb98dee9ded8d43319dc507054e9651636f325b35ccd33954da86",
+              "entry_digest": "ad89330589c0539409ff3a743f533d24af1eba418319f70d35041626b61ce709",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Scripts/smoke.ps1",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d476db9d571042578d8de33907014ecfa669f05054828886d0ceeb5f2e27c351",
+              "entry_digest": "164c2694507ba3d0e8133f86124b68ea64295cc1c41b5f6d11361333eb1c661b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "1a7cc90974a6850fb64e14e72ef257600725d9e8a08eccd0778dd846a84d1d2c",
+              "entry_digest": "93803319a54163553d0d2945ec07d94b6a62cfe97cd2cf60b4f1e8a0f1f6a78f",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b42b8dbc5a12ce56001531cec0dacfe602bc0805263ff87c8714f03071e0ef2f",
+              "entry_digest": "8289f19bf4212940741aaff6cdc48cea492fb414df77b83cb7ff56d254640ec5",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "7304a6233da2051242aeac63a51197aaf6f92d936692fe8655801eff842a2fd0",
+              "entry_digest": "e78ad0996c0135c37d41afa37c5fda13901bb63e14f00c3208896f7b104a72e8",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "334d1fe7a47f7c641d2f00133f6574c5ec8ca64a3ee8aef7f69d3b9aae24b052",
+              "entry_digest": "78ce3da5917c764bde86b0293f87306347972a31b8aade70c119b101639cf305",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ca6cafd22fb3c803eed3dc94cb980d8f535d51e0fd289b46bae82b7f255377de",
+              "entry_digest": "c349b8f073cefe7e387f8fabdd4dada3830be59b4b6d22a4ce79b2c29399c70e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ee5ae7f63536e2089a2b51887ed62b8392561052cdaa37c29707e7a10e2136bd",
+              "entry_digest": "daf1e496e836c46da31eb6ac679b352d7bf615536595be310953eb0ae9a36fd4",
+              "owners": [
+                "aps-cli"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-018"
+        ]
+      },
+      "stale_acceptance_input_digest": "f94053c6491f646b68da2741e8e913b179ab16793ae27e70ff20322ee1c1c78a",
+      "current_acceptance_input_digest": "8f038eb7f2d1b4124cb3e1d91a36ba72e68dbeb56960312edbe03592b833f939"
     }
   ]
 }

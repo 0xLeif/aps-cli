@@ -41,6 +41,20 @@
       "timestamp": 1784440646,
       "digest": "1fcdfd92d32fe9fe4d9086236a402588573cf244cb4275852e392b064e86d493",
       "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784477278,
+      "digest": "25fe6805ba0a024591c22a9ded8174901a7e6e296635188032781610464ad7fe",
+      "note": "Rebind definition digest after SpecSync 5.1.1 digest drift (issue #39 sweep)."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784477386,
+      "digest": "60fe36dd98d52c6d89b2ffed07e6e889000570a13596e9e96e031bdc0d8aeff1",
+      "note": "Re-accept after definition digest rebind (#39 SpecSync sweep)."
     }
   ],
   "reopenings": [
@@ -559,7 +573,7 @@
     },
     {
       "schema_version": 1,
-      "change_id": "CHG-0021-watch-signal-handling-and-termination-semantics-issue-34",
+      "change_id": "CHG-0023-watch-signal-handling-and-termination-semantics-issue-34",
       "actor": "0xLeif",
       "reason": "Signal source lifetime fix and SIGINT smoke restore; rebinding evidence",
       "timestamp": 1784440622,
@@ -575,7 +589,7 @@
       "prior_verification": {
         "timestamp": 1784438798,
         "commit": "d39cd25e05dd197f80ae835b5baba39a6917db2f",
-        "contract_digest": "4b649d7aa4143782bcc58f83e17934f8dedfb0b944feb90b3fdaf9e4793b6e8a",
+        "contract_digest": "25fe6805ba0a024591c22a9ded8174901a7e6e296635188032781610464ad7fe",
         "workspace_digest": "8fcaebc50225b5f1bce4d95e06ff1192587cf1ce767813f3b550adbd09495178",
         "acceptance_input_digest": "00061dbf1a476d0ce19ea1b4fc404dc9c110f1e9e45171bf83ac5bf40a8f7e68",
         "acceptance_manifest": {

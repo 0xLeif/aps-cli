@@ -20,12 +20,26 @@
       "timestamp": 1784429522,
       "digest": "276e2b56b0d4afd150f1b3b9377753f5d2bfb2ba6017922d252c9ac264fd93e5",
       "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784477275,
+      "digest": "3580b84bef1658cb48056b237d81bf1ea333b65da8f2662517483f5b5f68d452",
+      "note": "Rebind definition digest after SpecSync 5.1.1 digest drift (issue #39 sweep)."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784477412,
+      "digest": "ad286bd6f3684a367aedcdd31dbacf1913a847d9336e8fcd9c0612ced2e929a7",
+      "note": "Re-accept after definition digest rebind (#39 SpecSync sweep)."
     }
   ],
   "reopenings": [
     {
       "schema_version": 1,
-      "change_id": "CHG-0021-tty-aware-output-under-the-git-porcelain-rule-issue-33",
+      "change_id": "CHG-0022-tty-aware-output-under-the-git-porcelain-rule-issue-33",
       "actor": "0xLeif",
       "reason": "TTY.swift Windows gate fix; rebinding evidence",
       "timestamp": 1784429502,
@@ -41,7 +55,7 @@
       "prior_verification": {
         "timestamp": 1784422888,
         "commit": "c4ecd60b2a46bca4780f1b4af79a1d495d646287",
-        "contract_digest": "bc65bd79c314567ae1552bc3e3e33b38bdfe280db7987e702ac123388b3e0e59",
+        "contract_digest": "3580b84bef1658cb48056b237d81bf1ea333b65da8f2662517483f5b5f68d452",
         "workspace_digest": "8009885f006b6accb7ae1ca879bb51e79d5ebe39290dcfb55f1418e2eae03995",
         "acceptance_input_digest": "d9f2e380fb092c289727ec18fcbcc51e790996f5001a9c982c12a6da77a27f90",
         "acceptance_manifest": {
