@@ -26,7 +26,7 @@ jobs:
       - name: Install Swift
         uses: swift-actions/setup-swift@v2
         with:
-          swift-version: "6.0"  # 6.1/6.2 Linux toolchains have an Observation linker bug; swift-asn1 is capped in Package.swift to stay 6.0-compatible
+          swift-version: "6.3"  # threading link fix lands here; swift-asn1 is capped in Package.swift anyway
 
       - name: Swift version
         run: swift --version
