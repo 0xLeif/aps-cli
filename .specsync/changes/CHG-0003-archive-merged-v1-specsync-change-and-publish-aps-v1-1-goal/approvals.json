@@ -97,6 +97,13 @@
       "timestamp": 1784418378,
       "digest": "91ea967a37363ccda4c54550c0a266210f7f1cbcafcbc9d1cec067d82b39dfdc",
       "note": "Re-accept after issue 46 Windows swift test."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "0xLeif",
+      "timestamp": 1784419762,
+      "digest": "fadc9465f3191172f40ce73fe7364ffa27f4f3e618e2e0a0a2a876726f4072a4",
+      "note": null
     }
   ],
   "reopenings": [
@@ -1408,6 +1415,125 @@
       },
       "stale_acceptance_input_digest": "b7871363149444d9f55154fd55ae1798f9277ddbe742f5c800c0c1283fd8315d",
       "current_acceptance_input_digest": "0b33390f2dd715ddc7a4cd6746582b38cbd6a934bd5cb1a536681eacc342cb07"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0003-archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal",
+      "actor": "0xLeif",
+      "reason": "Rebase of the error contract branch onto current main changed delivery inputs; rebinding evidence",
+      "timestamp": 1784419746,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784418378,
+        "digest": "91ea967a37363ccda4c54550c0a266210f7f1cbcafcbc9d1cec067d82b39dfdc",
+        "note": "Re-accept after issue 46 Windows swift test."
+      },
+      "prior_verification": {
+        "timestamp": 1784418370,
+        "commit": "7571e11d1f4da488f9540b0175420f69501814e1",
+        "contract_digest": "641111b8f92bdfff2ba1f3bcda40f5299d9dc8a65449cd2a4a49333fac21100f",
+        "workspace_digest": "a92ec35a90d555fc8482bc53bbcb218fcf9ac90b625feedc2b957a9e306986d8",
+        "acceptance_input_digest": "0b33390f2dd715ddc7a4cd6746582b38cbd6a934bd5cb1a536681eacc342cb07",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/.gitignore",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a3129d6f93250ade8dbacfc73bc7eeae0cc47c2f7032142ca47cb4f1ffb2483e",
+              "entry_digest": "9badbf40b83d05f58bafda0fc2cafccfe726e4da7e6e67ef513e822989e13f04",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ddf1f4cbb0fd983c8356a34b9b4f4ef77ca22764ac2ec36b223431402c043328",
+              "entry_digest": "7fd95f31d540d3d3e7128fbd03cb3207a3da428c98a81515a76b7dfc9b34d582",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/config.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "54a83f6a4a252649bac390d2e936aa0815711fba86b6bfc8ea8fff2fffdfd29b",
+              "entry_digest": "e60f979233a7db75ce63f4ef42d6f1f7676ad1655a438b9baf78558aba60ec3e",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/registry.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c423be1a5cf87318f85dc252fe0acd1c1486c5224ddc2d8e19bea1ac9c69c820",
+              "entry_digest": "7e1f068900ced849b8d1028ca40165fbdc5280ae7f53452f0e57e2710d895848",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/sdd.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2d5fb3058b1ee4ce584c3cda9410c193c4893e272ed459205e58bfde06afc7b0",
+              "entry_digest": "8c6b11fc5787eb04e7ee651eb15fbf98fc3ea22db37e65423e3d75f99c09df19",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/version",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f9893302cd3158f3b5aea394dcd2a91574869e9e6ff69e9235b10a3bf8c983fb",
+              "entry_digest": "f980ba79f6c953bed30303c6b87d8e868ad6a7f4114bf0e745c9099255e665b0",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "GOAL.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "20146bfa50165791ec6059f6245716170c43b23106e5123ec590a306a590a966",
+              "entry_digest": "68fbffe2a6cce1f402c5dcebbd733d2b1f3d5e3d259a0ee91dfc23bbc034fc56",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4d181cad23f1118a6394e333df9df9fe6b6f7fa73136910b712079dff0fb3dc3",
+              "entry_digest": "0fbe022d3283a8e94d81b10a3c4d2111a9c3307ccc4cef2e5ab765010708f08a",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "0b33390f2dd715ddc7a4cd6746582b38cbd6a934bd5cb1a536681eacc342cb07",
+      "current_acceptance_input_digest": "9431c62c0f2aebc5b04026bce0b883448ce3ec9907ac5a75bbe2094e65844b6a"
     }
   ]
 }

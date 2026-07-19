@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 19
+version: 20
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -150,3 +150,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-18 | CHG-0019-add-powershell-smoke-script-and-windows-latest-smoke-ci-for-issue-45: Add PowerShell smoke script and windows-latest smoke CI for issue 45 |
 | 2026-07-18 | CHG-0020-prove-swift-test-on-windows-latest-and-portable-aps-home-env-tests-for-issue-46: Prove swift test on windows-latest and portable APS_HOME env tests for issue 46 |
 | 2026-07-18 | CHG-0021-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31-rebuilt-on: Error contract: exit-code taxonomy and JSON error envelope (issue 31, rebuilt on corruptState main) |
+| 2026-07-19 | CHG-0021-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31-rebuilt-on: Error contract: exit-code taxonomy and JSON error envelope (issue 31, rebuilt on corruptState main) |

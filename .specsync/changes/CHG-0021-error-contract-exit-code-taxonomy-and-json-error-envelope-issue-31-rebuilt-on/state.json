@@ -7,9 +7,9 @@
   "kind": "feature",
   "state": "accepted",
   "canonical_applied": true,
-  "base_commit": "8cf886df7ac87eac4234fc3fb8c13f46362e08d6",
-  "created_at": 1784415698,
-  "updated_at": 1784415731,
+  "base_commit": "be4abfb477552bc0a07f10d51d33308608587b3d",
+  "created_at": 1784419626,
+  "updated_at": 1784419665,
   "affected_specs": [
     "aps-cli"
   ],

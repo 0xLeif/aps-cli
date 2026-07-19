@@ -41,6 +41,13 @@
       "timestamp": 1784418556,
       "digest": "7072b1389ab59e3a184076d84cca8482d81ca342f7fa87181e1cba5d20cd5d54",
       "note": "Re-accept after issue 46 Windows swift test."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "0xLeif",
+      "timestamp": 1784419996,
+      "digest": "d8c560452c014357823260d382cf157f9ec8b9ef7d508fa23d141b9a9bd40368",
+      "note": null
     }
   ],
   "reopenings": [
@@ -359,6 +366,85 @@
       },
       "stale_acceptance_input_digest": "b517859af017d5aaf427829cc0f21b707aadc17dcc1bf91ab10d2520d6053ab5",
       "current_acceptance_input_digest": "cec6a44e22e0a922755000847d06bb192681f53024796c4f7bb845b10f6dd643"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0017-add-fledge-plugin-toml-shim-and-validate-in-verify-lane-for-issue-37",
+      "actor": "0xLeif",
+      "reason": "Rebase of the error contract branch onto current main changed delivery inputs; rebinding evidence",
+      "timestamp": 1784419981,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784418556,
+        "digest": "7072b1389ab59e3a184076d84cca8482d81ca342f7fa87181e1cba5d20cd5d54",
+        "note": "Re-accept after issue 46 Windows swift test."
+      },
+      "prior_verification": {
+        "timestamp": 1784418548,
+        "commit": "7571e11d1f4da488f9540b0175420f69501814e1",
+        "contract_digest": "e0780c4cee616dc7dec7b0f63be84c43a6d0d997bce778d0d3306cd40df00291",
+        "workspace_digest": "a92ec35a90d555fc8482bc53bbcb218fcf9ac90b625feedc2b957a9e306986d8",
+        "acceptance_input_digest": "cec6a44e22e0a922755000847d06bb192681f53024796c4f7bb845b10f6dd643",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d983ebbc9e685c5df057ac076d6e018e6a0a1ed357ebb8e87f346a867df21032",
+              "entry_digest": "a4ed2749015f1495334c0c1fe23e42da5b00897ce9f3eac75163dc0acc403973",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4d181cad23f1118a6394e333df9df9fe6b6f7fa73136910b712079dff0fb3dc3",
+              "entry_digest": "0fbe022d3283a8e94d81b10a3c4d2111a9c3307ccc4cef2e5ab765010708f08a",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "fledge.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9725ff60ff21c473dfdbc0e2ff37c57b111dd5c73e516392c0620a6c4ed8ce08",
+              "entry_digest": "be2dd708aad79baa292992dcf01d539c05bd0250ddda3df2741a969a6689b174",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "plugin.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "68b9f2ea7911e91a5c9eeb00e22a905ffa587fb11cd82519da32e087518100db",
+              "entry_digest": "eb19ef93d20438eaa1f2b86d1879921dc2d1082fcdf1d4531bab1f9a3944ca35",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "cec6a44e22e0a922755000847d06bb192681f53024796c4f7bb845b10f6dd643",
+      "current_acceptance_input_digest": "ef2c08548ecca238f57640caf3ccb8b9e50ad8706ad1b333189ab2416b7ed77a"
     }
   ]
 }

@@ -76,6 +76,13 @@
       "timestamp": 1784418419,
       "digest": "16548bdcc912e537e20d900fff488a4b5ac2b070eb88316bbd480cf99fc0e067",
       "note": "Re-accept after issue 46 Windows swift test."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "0xLeif",
+      "timestamp": 1784419817,
+      "digest": "a7d0b2bedd0a5cc80d5c535ff1a7d2c1549dd9d6ca2b0d3d4c971569f6c6e282",
+      "note": null
     }
   ],
   "reopenings": [
@@ -609,6 +616,65 @@
       },
       "stale_acceptance_input_digest": "d6185a6b13d89319cb5a00f25abae38e8963aac782f81ce4693b2dd803291f30",
       "current_acceptance_input_digest": "942c27d374fcd61e124b5fca51eddd95165ddb2a195ea84a2f45d8e2ebfab28b"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0007-hermetic-userdefaults-in-tests",
+      "actor": "0xLeif",
+      "reason": "Rebase of the error contract branch onto current main changed delivery inputs; rebinding evidence",
+      "timestamp": 1784419794,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784418419,
+        "digest": "16548bdcc912e537e20d900fff488a4b5ac2b070eb88316bbd480cf99fc0e067",
+        "note": "Re-accept after issue 46 Windows swift test."
+      },
+      "prior_verification": {
+        "timestamp": 1784418412,
+        "commit": "7571e11d1f4da488f9540b0175420f69501814e1",
+        "contract_digest": "0c72a7f1bfaa780b21b7b2ac7904ab5352e8186a8293caf6f91354fddff40610",
+        "workspace_digest": "a92ec35a90d555fc8482bc53bbcb218fcf9ac90b625feedc2b957a9e306986d8",
+        "acceptance_input_digest": "942c27d374fcd61e124b5fca51eddd95165ddb2a195ea84a2f45d8e2ebfab28b",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "892737ad12d482e123f7e036d8af1cb0fd3aabb465f8c9ac561ed79af04a33bc",
+              "entry_digest": "c84485e5707378b3f73e17a2c56611d32c600a7ab1da4b428e69d3c0c5eea9a7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "151a969af135fa44ea6d1dd67e300eefebafbd310c8ea77b941654a1f9e34775",
+              "entry_digest": "5a727932ebad79083897dc0e9b8fb8500901ee0b9a73cea2fe0fe5c930351f11",
+              "owners": [
+                "@exact:test"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "942c27d374fcd61e124b5fca51eddd95165ddb2a195ea84a2f45d8e2ebfab28b",
+      "current_acceptance_input_digest": "2c4b73f9867fc043c1bb4d4f2b2c1f8c0fac44cc9199a5f0a5353f94864f8c50"
     }
   ]
 }

@@ -2,7 +2,7 @@
 id: CHG-0021-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31-rebuilt-on
 state: accepted
 type: feature
-base_commit: 8cf886df7ac87eac4234fc3fb8c13f46362e08d6
+base_commit: be4abfb477552bc0a07f10d51d33308608587b3d
 ---
 
 # Error contract: exit-code taxonomy and JSON error envelope (issue 31, rebuilt on corruptState main)

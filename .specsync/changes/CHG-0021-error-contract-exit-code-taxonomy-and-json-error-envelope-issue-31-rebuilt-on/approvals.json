@@ -3,15 +3,15 @@
     {
       "gate": "definition",
       "actor": "0xLeif",
-      "timestamp": 1784415716,
-      "digest": "ecbe6220e5438a506b18a610387c0e828176ef9c8716d97b792f5cc9ad891434",
+      "timestamp": 1784419646,
+      "digest": "1fc8345bf39a1fdf79af2d12ed2ee6dde3cf4409a70b8702fb7a2c8c5bf3eeac",
       "note": null
     },
     {
       "gate": "acceptance",
       "actor": "0xLeif",
-      "timestamp": 1784415731,
-      "digest": "cc2c7fc9932eeb89363ac40d0433c6d5a1051f3d48fab933f4951efcd25e5be4",
+      "timestamp": 1784419665,
+      "digest": "ed8df35f783c4bde0a61bd70587de49c912ade63c8765b7d79df619c6b6d7145",
       "note": null
     }
   ],
