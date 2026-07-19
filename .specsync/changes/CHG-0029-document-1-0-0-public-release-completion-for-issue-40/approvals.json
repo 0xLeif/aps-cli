@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784498755,
+      "digest": "5b1613bd6bcea040d198e5f28fd9738c197ec2c86c218af814c3d701c54a994a",
+      "note": "Approve GOAL 1.0.0 release completion."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784498780,
+      "digest": "6bb1c33552ad33cbf2eef4fbbab95d0d100a8db82583f58b629c96eb594907e2",
+      "note": "Accept GOAL 1.0.0 release completion."
+    }
+  ],
+  "reopenings": []
+}
