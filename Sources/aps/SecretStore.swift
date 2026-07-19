@@ -166,11 +166,13 @@ public struct SecretStore: Sendable {
             }
             return Self.keyFromPassphrase(passphrase)
         }
+        #if !os(Windows)
         if ProcessInfo.processInfo.environment["APS_SECRET_USE_PASSPHRASE"] == "1",
            isatty(FileHandle.standardError.fileDescriptor) == 1,
            let passphrase = Self.promptPassphrase() {
             return Self.keyFromPassphrase(passphrase)
         }
+        #endif
         return try loadOrCreateKeyFile()
     }
 

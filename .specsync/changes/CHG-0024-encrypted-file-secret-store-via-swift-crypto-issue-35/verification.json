@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784437454,
-  "commit": "9e4e9a9816f38f9d3c25080ae0f9cd7cde733d3f",
+  "timestamp": 1784439636,
+  "commit": "80068c8bbfcff3fc429485601c82a5e5b6894f66",
   "contract_digest": "827ed26145641b8b0d33b4e64e3404a86c75fa2f53393feaeead8250d493964d",
-  "workspace_digest": "4d6dccf1abc426bbba43bf26de0966607c2c33caee231ababd563794a5abbde9",
-  "acceptance_input_digest": "0943a98659b1fe805b295f94387780791f1dbd6e79d4296a72ca1ec8fe1580f6",
+  "workspace_digest": "f187d3481fcb19b1cb722e10459b3f6f15cc8240ca1bb0f9953201bdd00b2b7f",
+  "acceptance_input_digest": "33ae13c6d9d779995339e9b09a72e77f66e805760020544294b3489381fc9606",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -91,8 +91,8 @@
         "path": "Sources/aps/SecretStore.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "f5247a42cdf94aae7893a24f81fc4608809f9d5f4fd9afb37f4b1e8d99bd7d6a",
-        "entry_digest": "2f7b32a90e4c70b1b9062201ffc935a66cb1fdfa060b5810d5b32995f916c429",
+        "payload_digest": "b8f3c34943d9593f5b019e70b48e7b9e3b4f0207cb5d1192df9ce5dc39edfdc2",
+        "entry_digest": "ca0b68bfa0dddd0a3dfde55b1725332efc72c0d58ff3ca5cea19de81626a83ad",
         "owners": [
           "aps-cli"
         ]
