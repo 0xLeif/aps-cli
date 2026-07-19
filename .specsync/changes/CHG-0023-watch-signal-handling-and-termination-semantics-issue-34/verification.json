@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784437798,
-  "commit": "612ca8753cbc8b063d7549e74f653f159889523c",
+  "timestamp": 1784438798,
+  "commit": "d39cd25e05dd197f80ae835b5baba39a6917db2f",
   "contract_digest": "4b649d7aa4143782bcc58f83e17934f8dedfb0b944feb90b3fdaf9e4793b6e8a",
-  "workspace_digest": "a8206c48006dbd00569ebf8117ea5c3a07ab2eb80348cdf7e37a26baa06226e2",
-  "acceptance_input_digest": "0ce28119d82d404a3f9ef802ec7a6a1999d2d30089aca6d9715bbce544228a1f",
+  "workspace_digest": "8fcaebc50225b5f1bce4d95e06ff1192587cf1ce767813f3b550adbd09495178",
+  "acceptance_input_digest": "00061dbf1a476d0ce19ea1b4fc404dc9c110f1e9e45171bf83ac5bf40a8f7e68",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -61,8 +61,8 @@
         "path": "Sources/aps/WatchTermination.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "18c5ac3f1d4a8b1396965517ced078d77883eec23dfff174c963a646c15db8d3",
-        "entry_digest": "fc23880b9b9a827ea48dd1189fda8e8b53a20651e4feb8a53976b5d89ee41eb2",
+        "payload_digest": "d68fcc1d7c8f5268d2d46003459c356e0b68aa16dd8412177b11eb4d744acf9f",
+        "entry_digest": "4190521ffcec836800af83d92de4569d88b056ba264992b8e2346786228bd01e",
         "owners": [
           "aps-cli"
         ]

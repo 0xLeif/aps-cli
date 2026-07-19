@@ -28,10 +28,16 @@ final class SignalBox: @unchecked Sendable {
 /// `shouldContinue`. Sources must be retained for the watch's lifetime.
 @discardableResult
 func installWatchSignalHandlers(_ box: SignalBox) -> [DispatchSourceSignal] {
-    [SIGINT, SIGTERM].map { sig in
-        // Block (not SIG_IGN): an ignored disposition also suppresses kqueue
-        // signal delivery on some platforms, which is how the macOS CI runner
-        // silently lost SIGINT while local shells did not.
+    [SIGINT, SIGTERM].compactMap { sig in
+        #if os(Windows)
+        // POSIX signals do not exist on Windows; console control handlers are
+        // a future addition there. Return no sources; bounds still work.
+        return nil
+        #else
+        // Reset any inherited ignore disposition (CI agents ignore SIGINT for
+        // job children, which also suppresses kqueue delivery), then BLOCK the
+        // signal so the dispatch source is the only consumer.
+        signal(sig, SIG_DFL)
         var set = sigset_t()
         sigemptyset(&set)
         sigaddset(&set, sig)
@@ -42,6 +48,7 @@ func installWatchSignalHandlers(_ box: SignalBox) -> [DispatchSourceSignal] {
         }
         source.resume()
         return source
+        #endif
     }
 }
 
