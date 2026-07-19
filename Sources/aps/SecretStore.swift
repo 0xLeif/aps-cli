@@ -1,0 +1,220 @@
+import AppState
+import Crypto
+import Foundation
+
+/// Encrypted-file secret store (issue #35): replaces the Keychain-backed
+/// `secret` with an age-style envelope under the state root. Ephemeral
+/// X25519 ECDH + HKDF + ChaCha20-Poly1305 (AlgoChat construction, directly
+/// on swift-crypto). Prompt-free for humans and agents; tri-OS.
+///
+/// Unlock model (interview decision):
+/// - `APS_SECRET_PASSPHRASE` set: the recipient key is derived from the
+///   passphrase via HKDF-SHA256 (no key file involved).
+/// - `APS_SECRET_USE_PASSPHRASE=1` on a TTY: one interactive prompt (our
+///   getpass prompt, not macOS Keychain's), same derivation.
+/// - Otherwise a key file at `<state-root>/secret.key` (base64 raw X25519
+///   private key, mode 0600) is created on first use, like an SSH key.
+public struct SecretStore: Sendable {
+
+    /// On-disk envelope: one JSON object with base64 fields.
+    struct Envelope: Codable {
+        let ephemeralPublicKey: String
+        let nonce: String
+        let ciphertext: String
+        let tag: String
+    }
+
+    private let directory: String
+
+    /// Store rooted at the configured FileState path.
+    @MainActor
+    public init() {
+        self.directory = FileManager.defaultFileStatePath
+    }
+
+    /// Store rooted at an explicit directory (tests, tooling).
+    public init(directory: String) {
+        self.directory = directory
+    }
+
+    private var storeURL: URL {
+        URL(fileURLWithPath: directory).appendingPathComponent("secret.enc")
+    }
+
+    private var keyFileURL: URL {
+        URL(fileURLWithPath: directory).appendingPathComponent("secret.key")
+    }
+
+    // MARK: - Public API
+
+    /// True when a secret is stored (missing file means the initial value).
+    public var hasSecret: Bool {
+        FileManager.default.fileExists(atPath: storeURL.path)
+    }
+
+    /// Decrypt and return the stored secret.
+    /// Missing file throws `APSError.persistenceFailed`; an existing file that
+    /// does not parse throws `APSError.decodingFailed`; a valid envelope that
+    /// does not open throws `APSError.secretUnlockFailed` (wrong key).
+    public func get() throws -> String {
+        let data: Data
+        do {
+            data = try Data(contentsOf: storeURL)
+        } catch {
+            throw APSError.persistenceFailed(key: .secret)
+        }
+        let envelope: Envelope
+        do {
+            envelope = try JSONDecoder().decode(Envelope.self, from: data)
+        } catch {
+            throw APSError.decodingFailed
+        }
+        return try open(envelope)
+    }
+
+    /// Encrypt and store the value, then verify by decrypting the file back.
+    public func set(_ value: String) throws {
+        try FileManager.default.createDirectory(
+            atPath: directory,
+            withIntermediateDirectories: true
+        )
+        let envelope = try seal(value)
+        let data = try JSONEncoder().encode(envelope)
+        do {
+            try data.write(to: storeURL)
+        } catch {
+            throw APSError.persistenceFailed(key: .secret)
+        }
+        // Read-back verification (same discipline as FileState writes).
+        guard try get() == value else {
+            throw APSError.persistenceFailed(key: .secret)
+        }
+    }
+
+    /// Reset to the initial value: the store file is deleted.
+    public func reset() {
+        try? FileManager.default.removeItem(at: storeURL)
+    }
+
+    // MARK: - Envelope cryptography
+
+    private func seal(_ value: String) throws -> Envelope {
+        let recipientPublic = try recipientKey().publicKey
+        let ephemeral = Curve25519.KeyAgreement.PrivateKey()
+        let symmetric = try deriveSymmetricKey(privateKey: ephemeral, publicKey: recipientPublic)
+        let nonce = ChaChaPoly.Nonce()
+        let sealedBox = try ChaChaPoly.seal(
+            Data(value.utf8),
+            using: symmetric,
+            nonce: nonce
+        )
+        return Envelope(
+            ephemeralPublicKey: ephemeral.publicKey.rawRepresentation.base64EncodedString(),
+            nonce: nonce.withUnsafeBytes { Data($0) }.base64EncodedString(),
+            ciphertext: sealedBox.ciphertext.base64EncodedString(),
+            tag: sealedBox.tag.base64EncodedString()
+        )
+    }
+
+    private func open(_ envelope: Envelope) throws -> String {
+        guard
+            let ephemeralPublicData = Data(base64Encoded: envelope.ephemeralPublicKey),
+            let nonceData = Data(base64Encoded: envelope.nonce),
+            let ciphertext = Data(base64Encoded: envelope.ciphertext),
+            let tag = Data(base64Encoded: envelope.tag),
+            let ephemeralPublic = try? Curve25519.KeyAgreement.PublicKey(rawRepresentation: ephemeralPublicData),
+            let nonce = try? ChaChaPoly.Nonce(data: nonceData),
+            let box = try? ChaChaPoly.SealedBox(nonce: nonce, ciphertext: ciphertext, tag: tag)
+        else {
+            throw APSError.decodingFailed
+        }
+        let symmetric = try deriveSymmetricKey(
+            privateKey: recipientKey(),
+            publicKey: ephemeralPublic
+        )
+        let plaintext: Data
+        do {
+            plaintext = try ChaChaPoly.open(box, using: symmetric)
+        } catch {
+            throw APSError.secretUnlockFailed
+        }
+        guard let value = String(data: plaintext, encoding: .utf8) else {
+            throw APSError.decodingFailed
+        }
+        return value
+    }
+
+    private func deriveSymmetricKey(
+        privateKey: Curve25519.KeyAgreement.PrivateKey,
+        publicKey: Curve25519.KeyAgreement.PublicKey
+    ) throws -> SymmetricKey {
+        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: publicKey)
+        return sharedSecret.hkdfDerivedSymmetricKey(
+            using: SHA256.self,
+            salt: Data("aps-secret-store-v1".utf8),
+            sharedInfo: Data("envelope".utf8),
+            outputByteCount: 32
+        )
+    }
+
+    // MARK: - Recipient key
+
+    private func recipientKey() throws -> Curve25519.KeyAgreement.PrivateKey {
+        if let passphrase = ProcessInfo.processInfo.environment["APS_SECRET_PASSPHRASE"] {
+            guard !passphrase.isEmpty else {
+                throw APSError.secretUnlockFailed
+            }
+            return Self.keyFromPassphrase(passphrase)
+        }
+        if ProcessInfo.processInfo.environment["APS_SECRET_USE_PASSPHRASE"] == "1",
+           isatty(FileHandle.standardError.fileDescriptor) == 1,
+           let passphrase = Self.promptPassphrase() {
+            return Self.keyFromPassphrase(passphrase)
+        }
+        return try loadOrCreateKeyFile()
+    }
+
+    static func keyFromPassphrase(_ passphrase: String) -> Curve25519.KeyAgreement.PrivateKey {
+        let derived = HKDF<SHA256>.deriveKey(
+            inputKeyMaterial: SymmetricKey(data: Data(passphrase.utf8)),
+            salt: Data("aps-secret-store-v1".utf8),
+            info: Data("x25519-key".utf8),
+            outputByteCount: 32
+        )
+        return try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: derived.withUnsafeBytes { Data($0) })
+    }
+
+    private static func promptPassphrase() -> String? {
+        #if os(Windows)
+        return nil
+        #else
+        FileHandle.standardError.write(Data("aps secret passphrase: ".utf8))
+        guard let raw = getpass("") else { return nil }
+        let passphrase = String(cString: raw)
+        return passphrase.isEmpty ? nil : passphrase
+        #endif
+    }
+
+    private func loadOrCreateKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {
+        if let data = try? Data(contentsOf: keyFileURL),
+           let raw = Data(base64Encoded: data),
+           let key = try? Curve25519.KeyAgreement.PrivateKey(rawRepresentation: raw) {
+            return key
+        }
+        let key = Curve25519.KeyAgreement.PrivateKey()
+        try FileManager.default.createDirectory(
+            atPath: directory,
+            withIntermediateDirectories: true
+        )
+        do {
+            try key.rawRepresentation.base64EncodedData().write(to: keyFileURL)
+            try FileManager.default.setAttributes(
+                [.posixPermissions: 0o600],
+                ofItemAtPath: keyFileURL.path
+            )
+        } catch {
+            throw APSError.persistenceFailed(key: .secret)
+        }
+        return key
+    }
+}

@@ -36,7 +36,7 @@ Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo A
 
 ## In scope (added)
 
-- SecureState dogfood via the fixed `secret` demo key (Keychain-backed String). Available where Apple's Security framework exists (macOS). Keychain round-trip tests and smoke are opt-in (`APS_SMOKE_SECURESTATE=1`); default CI skips them to avoid Keychain prompts. Linux documents keychain-unavailable behavior.
+- `secret` is backed by an encrypted-file store (ephemeral X25519 + HKDF + ChaCha20-Poly1305 via swift-crypto; issue #35), replacing the Keychain-backed SecureState demo which prompted on every access. Works tri-OS with zero prompts (key file default; `APS_SECRET_PASSPHRASE` opt-in).
 
 ## Tickets
 

@@ -100,13 +100,7 @@ Acceptance Criteria
 
 ### REQ-aps-cli-015
 
-`secret` SHALL use a well-named Keychain identity and document headless/CI availability.
-
-Acceptance Criteria
-- Keychain account is `dev.leif.aps/secret` (`APSKeychain.secretAccount`).
-- `aps reset secret` deletes the Keychain item on macOS.
-- README documents macOS Keychain access, Linux unavailability, and headless CI caveats.
-- `set secret` on platforms without Security surfaces `keychainUnavailable`.
+Superseded by REQ-aps-cli-020 (encrypted-file secret store; issue #35).
 
 
 
@@ -148,4 +142,14 @@ Acceptance Criteria
 - `dump` / `--json` payloads are single-line compact JSON off-TTY and pretty on TTY.
 - `watch --json` behaves as `--jsonl`; `keys --quiet` prints key names only.
 - Shell completion scripts (bash/zsh/fish) are documented in README.
+
+### REQ-aps-cli-020
+
+The `secret` key SHALL be backed by an encrypted-file secret store under the state root (ephemeral X25519 + HKDF + ChaCha20-Poly1305 via swift-crypto), with zero interactive prompts in key-file mode and passphrase mode via `APS_SECRET_PASSPHRASE`.
+
+Acceptance Criteria
+- `secret` round-trips set/get/reset with ciphertext at rest in `secret.enc`; the key file is mode 0600.
+- No Security.framework/Keychain imports; works on macOS and Linux.
+- Wrong passphrase fails with `APSError.secretUnlockFailed`; corrupt envelope fails with `APSError.decodingFailed`.
+- Passphrase entry is env-var based; an optional TTY getpass prompt exists when `APS_SECRET_USE_PASSPHRASE=1`.
 

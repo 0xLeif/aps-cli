@@ -39,22 +39,23 @@ test "$("$bin" get note)" = "smoke-note"
 "$bin" get profile --json | grep -q '"name":"smoke"'
 "$bin" get profile --json | grep -q '"version":2'
 
-# SecureState / Keychain smoke temporarily disabled (Keychain prompts / hangs).
-# Re-enable with: APS_SMOKE_SECURESTATE=1
-if [[ "${APS_SMOKE_SECURESTATE:-}" == "1" ]]; then
-  if [[ "$(uname -s)" == "Darwin" ]]; then
-    "$bin" set secret "smoke-secret" >/dev/null
-    test "$("$bin" get secret)" = "smoke-secret"
-    "$bin" get secret --json | grep -q '"storage":"SecureState"'
-    "$bin" reset secret >/dev/null
-    test -z "$("$bin" get secret)"
-  else
-    if "$bin" set secret "smoke-secret" >/dev/null 2>&1; then
-      echo "expected secret set to fail without Keychain" >&2
-      exit 1
-    fi
-  fi
+# Encrypted-file secret store: key-file mode round-trip, perms, reset.
+"$bin" set secret "smoke-secret" >/dev/null
+test "$("$bin" get secret)" = "smoke-secret"
+"$bin" get secret --json | grep -q '"storage":"EncryptedFile"'
+test "$(stat -f "%Lp" "$APS_HOME/secret.key" 2>/dev/null || stat -c "%a" "$APS_HOME/secret.key")" = "600"
+"$bin" reset secret >/dev/null
+test -z "$("$bin" get secret)"
+test ! -f "$APS_HOME/secret.enc"
+
+# Passphrase mode: right phrase works, wrong phrase fails with a loud error.
+APS_SECRET_PASSPHRASE=smoke-pass "$bin" set secret "phrase-secret" >/dev/null
+test "$(APS_SECRET_PASSPHRASE=smoke-pass "$bin" get secret)" = "phrase-secret"
+if APS_SECRET_PASSPHRASE=wrong-pass "$bin" get secret >/dev/null 2>&1; then
+  echo "expected wrong passphrase to fail" >&2
+  exit 1
 fi
+"$bin" reset secret >/dev/null
 
 # --state-dir overrides APS_HOME
 OTHER="$(mktemp -d "${TMPDIR:-/tmp}/aps-smoke-other.XXXXXX")"

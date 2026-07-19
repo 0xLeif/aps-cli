@@ -14,7 +14,7 @@ struct Aps: ParsableCommand {
           flag     Bool             StoredState  (UserDefaults)
           note     String           FileState    (~/.aps/note.json)
           profile  ProfileDocument  FileState    (~/.aps/profile.json)
-          secret   String           SecureState  (Keychain; macOS)
+          secret   String           EncryptedFile (~/.aps/secret.enc)
           profileName  String       Slice        (profile.name via AppState Slice)
 
         State root: --state-dir > APS_HOME > ~/.aps

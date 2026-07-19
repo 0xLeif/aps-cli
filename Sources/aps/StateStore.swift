@@ -61,11 +61,8 @@ public final class StateStore {
         case .profile:
             return (try? encodeProfile(Application.fileState(\.profile).value)) ?? "{\"name\":\"\",\"version\":0}"
         case .secret:
-#if canImport(Security)
-            return Application.secureState(\.secret).value ?? ""
-#else
-            return ""
-#endif
+            // Encrypted-file store; a missing store file means the initial value.
+            return (try? SecretStore().get()) ?? ""
         case .profileName:
             return Application.slice(\.profile, \.name).value
         }
@@ -125,16 +122,9 @@ public final class StateStore {
                 throw APSError.persistenceFailed(key: .profile)
             }
         case .secret:
-#if canImport(Security)
-            var state = Application.secureState(\.secret)
-            state.value = value
-            let stored = Application.dependency(\.keychain).get(APSKeychain.secretAccount)
-            guard stored == value else {
-                throw APSError.persistenceFailed(key: .secret)
-            }
-#else
-            throw APSError.keychainUnavailable
-#endif
+            // Encrypted-file store (issue #35): age-style envelope under the
+            // state root; no Keychain, no prompts. Write then read-back verify.
+            try SecretStore().set(value)
         case .profileName:
             // Refresh FileState from disk before Slice write so a stale cached
             // ProfileDocument cannot clobber a newer on-disk version.
@@ -164,11 +154,7 @@ public final class StateStore {
         case .profile:
             Application.reset(fileState: \.profile)
         case .secret:
-#if canImport(Security)
-            Application.reset(secureState: \.secret)
-#else
-            break
-#endif
+            SecretStore().reset()
         case .profileName:
             try? Self.refreshProfileFileStateFromDisk()
             var slice = Application.slice(\.profile, \.name)
@@ -304,7 +290,13 @@ public final class StateStore {
                 return document.name
             }
             return get(key)
-        case .counter, .message, .flag, .secret:
+        case .secret:
+            // Encrypted store is file-backed: read it directly so cross-process
+            // writes surface (there is no in-memory cache to consult anyway).
+            // A missing store file means the initial value.
+            let store = SecretStore()
+            return store.hasSecret ? try store.get() : ""
+        case .counter, .message, .flag:
             return get(key)
         }
     }
@@ -363,7 +355,14 @@ public final class StateStore {
             _ = try readNoteFromDiskIfPresent()
         case .profile, .profileName:
             _ = try readProfileFromDiskIfPresent()
-        case .counter, .message, .flag, .secret:
+        case .secret:
+            // Loud failures for the encrypted store: corrupt envelope
+            // (decodingFailed) and wrong passphrase/key (secretUnlockFailed).
+            let store = SecretStore()
+            if store.hasSecret {
+                _ = try store.get()
+            }
+        case .counter, .message, .flag:
             break
         }
     }
@@ -405,9 +404,7 @@ public final class StateStore {
         case .profile:
             _ = Application.fileState(\.profile).value
         case .secret:
-#if canImport(Security)
-            _ = Application.secureState(\.secret).value
-#endif
+            break // encrypted store has no Observation surface; polling covers it
         case .profileName:
             _ = Application.slice(\.profile, \.name).value
         }

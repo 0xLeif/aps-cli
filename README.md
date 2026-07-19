@@ -32,19 +32,21 @@ State root resolution: `--state-dir` > `APS_HOME` > `~/.aps`.
 | `flag` | `Bool` | `StoredState` | Persisted (`UserDefaults`; CLI calls `synchronize()` so Linux flushes) |
 | `note` | `String` | `FileState` | Persisted (`$APS_HOME/note.json`) |
 | `profile` | `{name,version}` | `FileState` | Persisted structured Codable (`$APS_HOME/profile.json`) |
-| `secret` | `String` | `SecureState` | Persisted in Keychain (macOS); account `dev.leif.aps/secret` |
+| `secret` | `String` | `EncryptedFile` | Persisted encrypted under the state root (`secret.enc`) |
 | `profileName` | `String` | `Slice` | Projection of `profile.name` via AppState Slice |
 
 Dynamic / user-declared keys are intentionally out of scope for 0.x.
 
-### SecureState / Keychain (`secret`)
+### Encrypted-file secret store (`secret`)
 
-- AppState `SecureState` stores the value under Keychain account `dev.leif.aps/secret` (feature `dev.leif.aps`, id `secret`).
-- `aps reset secret` (and `aps reset --all`) deletes that Keychain item; get then returns an empty string.
-- **macOS:** works when the process can access the login Keychain (interactive sessions and typical self-hosted macOS CI).
-- **Linux / headless without Security:** Apple's Security framework is unavailable. `aps keys` still lists `secret`, `get` returns empty, and `set secret` fails with a clear Keychain-unavailable error.
-- **Default CI / smoke:** Keychain round-trips are skipped. Re-enable with `APS_SMOKE_SECURESTATE=1` (Darwin) when a login Keychain is available.
-- **Headless macOS CI:** if the Keychain is locked or inaccessible, set/get may fail with persistence errors. Unlock or use a runner with an available login Keychain.
+`secret` is backed by an age-style encrypted envelope under the state root (issue #35), not the Keychain: ephemeral X25519 ECDH + HKDF + ChaCha20-Poly1305 via [swift-crypto](https://github.com/apple/swift-crypto), the same construction as [AlgoChat](https://github.com/CorvidLabs/swift-algochat)'s message encryptor.
+
+- **`secret.enc`** holds the encrypted envelope (ephemeral public key, nonce, ciphertext, tag, base64 JSON). Nothing plaintext at rest.
+- **Key file mode (default):** a recipient key is generated on first use at `<state-root>/secret.key` (base64 X25519, mode 0600), like an SSH key. Zero prompts, works headless and in CI, on every OS.
+- **Passphrase mode:** set `APS_SECRET_PASSPHRASE` to derive the key from a passphrase via HKDF-SHA256 (no key file). Wrong passphrases fail loudly with `secretUnlockFailed`.
+- **Interactive opt-in:** with `APS_SECRET_USE_PASSPHRASE=1` on a TTY, aps prompts once itself (its own getpass prompt, not macOS Keychain's).
+- `aps reset secret` deletes `secret.enc`; the key file is kept for future writes.
+- The previous AppState `SecureState` / Keychain backend was replaced: ad-hoc signed CLI binaries can never earn durable Keychain trust, so every access prompted for a password. AppState itself is unchanged; SecureState remains dogfooded in [AppStateExamples](https://github.com/0xLeif/AppStateExamples).
 
 ### Dependencies
 
@@ -239,7 +241,7 @@ See [`GOAL.md`](GOAL.md) for **aps 0.2.0**: agent-ready AppState dogfood harness
 | `State` | `counter`, `message` | Dogfooded |
 | `StoredState` | `flag` | Dogfooded |
 | `FileState` | `note`, `profile` | Dogfooded |
-| `SecureState` | `secret` | Dogfooded (Keychain tests/smoke opt-in) |
+| `SecureState` | (none) | Not dogfooded here; moved to AppStateExamples after the Keychain prompt issue (issue #35) |
 | `Slice` | `profileName` | Dogfooded |
 | `@AppDependency` | `clock`, `jsonCoding` | Dogfooded |
 | `@ObservedDependency` | `stats` / `aps stats` | Dogfooded |

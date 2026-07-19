@@ -11,7 +11,7 @@ Auditor: agent:cursor
 |-------|--------|
 | No SwiftUI imports | Pass: none in `Sources/` or `Tests/` |
 | Combine / `@ObservedDependency` gated | Pass: `#if canImport(Combine)` and `#if !os(Linux) && !os(Windows)` (see PR #25) |
-| No ungated Security.framework | Pass: SecureState / keychain only under `#if canImport(Security)` |
+| No ungated Security.framework | Pass: no Security.framework imports remain; `secret` uses the swift-crypto encrypted store (issue #35) |
 | No hardcoded `~/Library` paths | Pass: none |
 | `~/.aps` only as default | Pass: `APSPaths` uses `FileManager.homeDirectoryForCurrentUser` + `.aps`; override via `--state-dir` / `APS_HOME` |
 | swift-crypto for Windows (#35) | Pass (docs): [apple/swift-crypto](https://github.com/apple/swift-crypto) supports Linux and **ARM64 Windows** via SPM (`Crypto` product). Prefer `from: "4.0.0"` (Swift 6) when #35 lands |
@@ -23,7 +23,7 @@ Auditor: agent:cursor
 | Area | Status |
 |------|--------|
 | CI | Self-hosted `[self-hosted, macOS]` (`ci.yml`, `trust.yml`) |
-| SecureState / Keychain | Available (`canImport(Security)`); Keychain tests/smoke opt-in |
+| Encrypted secret store | Available; swift-crypto runs everywhere |
 | ObservedDependency / Combine | Full path |
 | Smoke | `Scripts/smoke.sh` |
 
@@ -32,7 +32,7 @@ Auditor: agent:cursor
 | Area | Status |
 |------|--------|
 | CI | GitHub-hosted `ubuntu-latest` (`linux-smoke.yml`) |
-| SecureState | Unavailable; `keychainUnavailable` on set |
+| Encrypted secret store | Available; swift-crypto runs on Windows (audit: confirm in CI) |
 | ObservedDependency | Falls back to `@AppDependency` + polling for `aps stats --watch` |
 | UserDefaults | `synchronize()` after flag writes (Linux flush) |
 | Smoke | Same bash script |

@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 22
+version: 23
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -8,6 +8,7 @@ files:
   - Sources/aps/DemoKey.swift
   - Sources/aps/TTY.swift
   - Sources/aps/WatchTermination.swift
+  - Sources/aps/SecretStore.swift
 db_tables: []
 depends_on:
   - state-store
@@ -30,26 +31,27 @@ agents can get, set, watch, dump, list, and reset typed application state.
 | `name` | ProfileDocument display name field. |
 | `version` | ProfileDocument integer version field. |
 | `init` | ProfileDocument memberwise initializer. |
-| `APSKeychain` | Well-known Keychain service/account for `secret`. |
-| `service` | Reverse-DNS Keychain feature namespace (`dev.leif.aps`). |
-| `account` | Keychain account id (`secret`). |
-| `secretAccount` | Full account key (`dev.leif.aps/secret`). |
 | `APSError` | Typed CLI/domain errors. |
 | `counter` | Int key stored in AppState `State`. |
 | `message` | String key stored in AppState `State`. |
 | `flag` | Bool key stored in AppState `StoredState`. |
 | `note` | String key stored in AppState `FileState`. |
 | `profile` | ProfileDocument key stored in AppState `FileState`. |
-| `secret` | String key stored in AppState `SecureState` (Keychain). |
+| `secret` | String key stored in the encrypted-file secret store (`secret.enc`). |
+| `SecretStore` | Encrypted-file store: `get` / `set` / `reset` over `secret.enc`. |
+| `hasSecret` | True when a store file exists (missing means initial value). |
+| `get` | Decrypt the stored secret; loud corrupt/unlock failures. |
+| `set` | Encrypt, persist, and read-back verify. |
+| `reset` | Delete `secret.enc`, restoring the initial value. |
 | `profileName` | String Slice over `ProfileDocument.name`. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
-| `persistenceFailed` | Disk/Keychain-backed key did not persist after write. |
-| `keychainUnavailable` | SecureState unavailable without Apple Security. |
+| `persistenceFailed` | Disk-backed key did not persist after write. |
+| `secretUnlockFailed` | Secret store would not open (wrong passphrase or key). |
 | `corruptState` | FileState file exists but is undecodable (torn write). |
 | `corruptStateExitCode` | Exit code 65 (`EX_DATAERR`) for `corruptState`. |
-| `storage` | Human storage kind (`State` / `StoredState` / `FileState` / `SecureState` / `Slice`). |
+| `storage` | Human storage kind (`State` / `StoredState` / `FileState` / `EncryptedFile` / `Slice`). |
 | `valueType` | Human value type (`Int` / `String` / `Bool` / `ProfileDocument`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
 | `detail` | One-line description for `keys`. |
@@ -169,3 +171,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-19 | CHG-0021-error-contract-exit-code-taxonomy-and-json-error-envelope-issue-31-rebuilt-on: Error contract: exit-code taxonomy and JSON error envelope (issue 31, rebuilt on corruptState main) |
 | 2026-07-19 | CHG-0022-tty-aware-output-under-the-git-porcelain-rule-issue-33: TTY-aware output under the git porcelain rule (issue 33) |
 | 2026-07-19 | CHG-0023-watch-signal-handling-and-termination-semantics-issue-34: Watch signal handling and termination semantics (issue 34) |
+| 2026-07-19 | CHG-0024-encrypted-file-secret-store-via-swift-crypto-issue-35: Encrypted-file secret store via swift-crypto (issue 35) |

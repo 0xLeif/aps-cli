@@ -72,12 +72,8 @@ Acceptance Criteria
 
 ### REQ-state-store-013
 
-`StateStore` SHALL expose `secret` as Keychain-backed `SecureState` with account `dev.leif.aps/secret`, verify Keychain read-back after set, and delete the item on reset.
+Superseded by REQ-aps-cli-020 (encrypted-file secret store via `SecretStore`; issue #35).
 
-Acceptance Criteria
-- Round-trip get/set works on macOS.
-- `reset(.secret)` leaves get as "" and removes the Keychain item.
-- Without Security, `set(.secret, ...)` throws `APSError.keychainUnavailable`.
 
 
 

@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 19
+version: 22
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -126,3 +126,4 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-18 | CHG-0016-loud-torn-filestate-reads-and-document-multi-writer-semantics-for-issue-38: Loud torn FileState reads and document multi-writer semantics for issue 38 |
 | 2026-07-18 | CHG-0022-tty-aware-output-git-porcelain-rule-for-issue-33: TTY-aware output under the git porcelain rule for issue 33 |
 | 2026-07-19 | CHG-0021-tty-aware-output-under-the-git-porcelain-rule-issue-33: TTY-aware output under the git porcelain rule (issue 33) |
+| 2026-07-19 | CHG-0024-encrypted-file-secret-store-via-swift-crypto-issue-35: Encrypted-file secret store via swift-crypto (issue 35) |

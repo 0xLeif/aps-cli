@@ -17,7 +17,7 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
         case .counter, .message: return "State"
         case .flag: return "StoredState"
         case .note, .profile: return "FileState"
-        case .secret: return "SecureState"
+        case .secret: return "EncryptedFile"
         case .profileName: return "Slice"
         }
     }
@@ -49,7 +49,7 @@ public enum DemoKey: String, CaseIterable, ExpressibleByArgument, Sendable {
         case .profile:
             return "Codable {name,version} via FileState (~/.aps/profile.json)"
         case .secret:
-            return "String via SecureState / Keychain (\(APSKeychain.secretAccount))"
+            return "String via encrypted file store (<state-root>/secret.enc)"
         case .profileName:
             return "profile.name via AppState Slice over FileState ProfileDocument"
         }
@@ -67,29 +67,12 @@ public struct ProfileDocument: Codable, Equatable, Sendable {
     }
 }
 
-/// Well-known Keychain identity for the `secret` SecureState demo key.
-///
-/// AppState stores SecureState under `Scope.key` (`feature/id`) as the Keychain
-/// account (`kSecAttrAccount`). The feature string is the service-style namespace.
-public enum APSKeychain: Sendable {
-    /// Reverse-DNS style service / feature namespace.
-    public static let service = "dev.leif.aps"
-
-    /// Account id within the service namespace.
-    public static let account = "secret"
-
-    /// Full Keychain account key used by AppState (`service/account`).
-    public static var secretAccount: String {
-        "\(service)/\(account)"
-    }
-}
-
 public enum APSError: Error, CustomStringConvertible, Equatable {
     case invalidValue(key: DemoKey, value: String)
     case encodingFailed
     case decodingFailed
     case persistenceFailed(key: DemoKey)
-    case keychainUnavailable
+    case secretUnlockFailed
     /// On-disk FileState exists but cannot be decoded (torn concurrent write).
     case corruptState(key: DemoKey)
 
@@ -106,8 +89,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "Failed to decode value from UTF-8 JSON"
         case .persistenceFailed(let key):
             return "Failed to persist \(key.rawValue)"
-        case .keychainUnavailable:
-            return "SecureState (Keychain) is unavailable on this platform. The secret key requires macOS Keychain."
+        case .secretUnlockFailed:
+            return "Failed to unlock the secret store (wrong passphrase or key)"
         case .corruptState(let key):
             return "Corrupt or torn \(key.rawValue) state file (undecodable). Concurrent writers may have torn the file; reset the key or repair the file."
         }
@@ -120,7 +103,7 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
         case .encodingFailed: return "encoding_failed"
         case .decodingFailed: return "decoding_failed"
         case .persistenceFailed: return "persistence_failed"
-        case .keychainUnavailable: return "keychain_unavailable"
+        case .secretUnlockFailed: return "secret_unlock_failed"
         case .corruptState: return "corrupt_state"
         }
     }
@@ -131,7 +114,7 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
         switch self {
         case .invalidValue: return 64 // EX_USAGE
         case .decodingFailed, .corruptState: return APSError.corruptStateExitCode // EX_DATAERR
-        case .keychainUnavailable: return 69 // EX_UNAVAILABLE
+        case .secretUnlockFailed: return 69 // EX_UNAVAILABLE
         case .encodingFailed: return 70 // EX_SOFTWARE
         case .persistenceFailed: return 73 // EX_CANTCREAT
         }
@@ -148,8 +131,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "A value or file is not valid JSON for its key; check the input or the state root (--state-dir / APS_HOME)."
         case .persistenceFailed:
             return "Check that the state root exists and is writable (--state-dir / APS_HOME)."
-        case .keychainUnavailable:
-            return "The secret key currently requires macOS Keychain; an encrypted-file store is planned (issue #35)."
+        case .secretUnlockFailed:
+            return "Check APS_SECRET_PASSPHRASE or the secret.key file under the state root."
         case .corruptState(let key):
             return "Reset the key (`aps reset \(key.rawValue)`) or repair the file under the state root."
         }

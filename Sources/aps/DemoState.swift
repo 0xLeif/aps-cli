@@ -40,19 +40,6 @@ extension Application {
         )
     }
 
-#if canImport(Security)
-    /// Sensitive string via Keychain-backed `SecureState`.
-    ///
-    /// Keychain account: `APSKeychain.secretAccount` (`dev.leif.aps/secret`).
-    /// Initial value is `nil` so `reset` deletes the Keychain item.
-    var secret: SecureState {
-        secureState(
-            initial: nil,
-            feature: APSKeychain.service,
-            id: APSKeychain.account
-        )
-    }
-#endif
 
     /// Wall-clock used when stamping watch/dump output.
     var clock: Dependency<any APSClock> {
