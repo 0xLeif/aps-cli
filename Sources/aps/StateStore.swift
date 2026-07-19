@@ -250,11 +250,13 @@ public final class StateStore {
         while shouldContinue() {
             let flag = ChangeFlag()
 
+            #if canImport(ObjectiveC)
             withObservationTracking {
                 self.readForObservation(key)
             } onChange: {
                 flag.mark()
             }
+            #endif
 
             while shouldContinue() {
                 RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
