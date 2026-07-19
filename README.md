@@ -226,6 +226,7 @@ Package.swift
 Sources/aps/
 Tests/apsTests/
 specs/
+docs/design/
 Scripts/smoke.sh
 Scripts/smoke.ps1
 GOAL.md
@@ -234,7 +235,7 @@ GOAL.md
 
 ## Next goal
 
-See [`GOAL.md`](GOAL.md) for **aps 0.2.0**: agent-ready AppState dogfood harness.
+0.x dogfood harness is largely complete (see [`GOAL.md`](GOAL.md)). Next milestone is **v1.0.0**: dynamic schema ([RFC](docs/design/dynamic-schema.md)) and go-public ([#40](https://github.com/0xLeif/aps-cli/issues/40)).
 
 
 ## AppState surface coverage
@@ -256,12 +257,16 @@ See [`GOAL.md`](GOAL.md) for **aps 0.2.0**: agent-ready AppState dogfood harness
 
 - No iCloud `SyncState` or SwiftData `ModelState` (see `docs/spikes/`)
 - No in-process plugin/daemon/network API inside `aps` itself (the repo may still be a fledge plugin shim; see above)
-- No dynamic schema language: fixed demo keys only
-- No Windows CI until the public/1.0 flip (see [`docs/windows-readiness.md`](docs/windows-readiness.md))
+- No runtime user-defined keys in 0.x (fixed demo keys only; 1.0 design is [`docs/design/dynamic-schema.md`](docs/design/dynamic-schema.md))
 
 ## Windows / tri-OS readiness
 
-Audit findings, per-OS gaps, and the planned `macos-latest` / `ubuntu-latest` / `windows-latest` matrix live in [`docs/windows-readiness.md`](docs/windows-readiness.md). Follow-ups: [#45](https://github.com/0xLeif/aps-cli/issues/45) (portable smoke), [#46](https://github.com/0xLeif/aps-cli/issues/46) (prove Windows build), [#40](https://github.com/0xLeif/aps-cli/issues/40) (go-public matrix).
+Audit findings and per-OS gaps live in [`docs/windows-readiness.md`](docs/windows-readiness.md). Linux and Windows smoke CI already run on GitHub-hosted runners; the full public tri-OS matrix and self-hosted decommission are [#40](https://github.com/0xLeif/aps-cli/issues/40).
+
+## 1.0 design
+
+- Dynamic / user-defined keys: [`docs/design/dynamic-schema.md`](docs/design/dynamic-schema.md) (issue [#39](https://github.com/0xLeif/aps-cli/issues/39))
+- Go-public checklist: [#40](https://github.com/0xLeif/aps-cli/issues/40)
 
 ## Related
 

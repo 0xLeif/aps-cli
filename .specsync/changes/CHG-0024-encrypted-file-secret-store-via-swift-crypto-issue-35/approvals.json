@@ -41,6 +41,20 @@
       "timestamp": 1784441578,
       "digest": "fab7f4acb31514fd165dce94877b4cdf710b6022e6ec6980f451d5cb9a6a9d16",
       "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784477281,
+      "digest": "f3db42bd106c426fb57b3be890aad6a764c1065d1c8cf09f61066ec0a2a54dc8",
+      "note": "Rebind definition digest after SpecSync 5.1.1 digest drift (issue #39 sweep)."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784477358,
+      "digest": "6af82a5d6b8a4cae10fa09682af97398afe2b7f8953e118be84b7962e39c396d",
+      "note": "Re-accept after definition digest rebind (#39 SpecSync sweep)."
     }
   ],
   "reopenings": [
@@ -862,7 +876,7 @@
     },
     {
       "schema_version": 1,
-      "change_id": "CHG-0021-encrypted-file-secret-store-via-swift-crypto-issue-35",
+      "change_id": "CHG-0024-encrypted-file-secret-store-via-swift-crypto-issue-35",
       "actor": "0xLeif",
       "reason": "Gate POSIX-only perms test for Windows; rebinding evidence",
       "timestamp": 1784441560,
@@ -878,7 +892,7 @@
       "prior_verification": {
         "timestamp": 1784439636,
         "commit": "80068c8bbfcff3fc429485601c82a5e5b6894f66",
-        "contract_digest": "827ed26145641b8b0d33b4e64e3404a86c75fa2f53393feaeead8250d493964d",
+        "contract_digest": "f3db42bd106c426fb57b3be890aad6a764c1065d1c8cf09f61066ec0a2a54dc8",
         "workspace_digest": "f187d3481fcb19b1cb722e10459b3f6f15cc8240ca1bb0f9953201bdd00b2b7f",
         "acceptance_input_digest": "33ae13c6d9d779995339e9b09a72e77f66e805760020544294b3489381fc9606",
         "acceptance_manifest": {

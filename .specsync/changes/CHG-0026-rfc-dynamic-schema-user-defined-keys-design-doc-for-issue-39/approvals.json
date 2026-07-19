@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:cursor",
+      "timestamp": 1784475239,
+      "digest": "d9fe7f1d60d16b01b3a3d75caaa9e90a0c43e052f97f796b057bd3644c0629cf",
+      "note": "RFC dynamic schema for issue 39; docs only."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784475316,
+      "digest": "0ce19e097df36c7dcae20ce0466491dbc83c7066d8b0dfc490dd9cee3d9df8f0",
+      "note": "RFC dynamic schema design for issue 39."
+    }
+  ],
+  "reopenings": []
+}
