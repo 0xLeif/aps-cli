@@ -17,14 +17,12 @@ Acceptance Criteria
 
 ### REQ-aps-cli-002
 
-`set` SHALL reject values that cannot parse to the key's type and exit non-zero via `APSError.invalidValue`. All domain errors SHALL follow the error contract: human line on stderr, taxonomy exit code, and a JSON envelope when `--json` / `--jsonl` or `APS_ERROR_JSON=1`.
+`set` SHALL reject values that cannot parse to the key's type and exit non-zero via `APSError.invalidValue`.
 
 Acceptance Criteria
 - Non-integer `counter` values fail with an invalid-value message.
 - Non-boolean `flag` values fail with an invalid-value message.
 - `APSError.description` names the key and expected type.
-- Exit codes: 64 usage, 65 corrupt or undecodable persisted state, 69 unavailable, 70 internal, 73 write did not persist.
-- The envelope shape is `{"error":{"code","message","hint"}}` with stable snake_case codes (`invalid_value`, `encoding_failed`, `decoding_failed`, `persistence_failed`, `keychain_unavailable`, `corrupt_state`); stdout stays empty on error.
 
 ### REQ-aps-cli-003
 
@@ -70,15 +68,12 @@ Acceptance Criteria
 
 ### REQ-aps-cli-012
 
-`watch` SHALL support `--count`, `--timeout`, and `--jsonl`, and SHALL handle SIGINT/SIGTERM with observable termination semantics.
+`watch` SHALL support `--count`, `--timeout`, and `--jsonl`.
 
 Acceptance Criteria
-- `--count` stops after that many printed values including the initial value (exit 0).
-- `--timeout` stops after the given seconds (exit 124).
-- SIGINT/SIGTERM stop the loop cleanly (exit 130 / 143).
-- The stop reason appears as a terminal `{"type":"end","reason":...}` event in `--jsonl` mode or a stderr line in human mode.
-- The `--jsonl` stream never contains non-JSON lines.
-- An unbounded watch prints a one-time stderr hint suggesting `--count` / `--timeout`.
+- `--count` stops after that many printed values including the initial value.
+- `--timeout` stops after the given seconds.
+- `--jsonl` emits one JSON object per line.
 
 ### REQ-aps-cli-013
 
@@ -100,15 +95,7 @@ Acceptance Criteria
 
 ### REQ-aps-cli-015
 
-`secret` SHALL use a well-named Keychain identity and document headless/CI availability.
-
-Acceptance Criteria
-- Keychain account is `dev.leif.aps/secret` (`APSKeychain.secretAccount`).
-- `aps reset secret` deletes the Keychain item on macOS.
-- README documents macOS Keychain access, Linux unavailability, and headless CI caveats.
-- `set secret` on platforms without Security surfaces `keychainUnavailable`.
-
-
+Superseded by REQ-aps-cli-020 (encrypted-file secret store; issue #35). The Keychain-backed SecureState demo was removed because ad-hoc CLI signatures cannot earn durable Keychain trust.
 
 ### REQ-aps-cli-016
 
@@ -139,13 +126,13 @@ Acceptance Criteria
 - `specs/aps-cli/testing.md` and README document the Windows test + smoke path.
 
 
-### REQ-aps-cli-019
+### REQ-aps-cli-020
 
-Human output SHALL be TTY-aware under the git porcelain rule: pretty for interactive humans, byte-stable plain text when piped. JSON SHALL be pretty on TTY and compact when piped.
+The `secret` key SHALL be backed by an encrypted-file secret store under the state root (ephemeral X25519 + HKDF + ChaCha20-Poly1305 via swift-crypto), with zero interactive prompts in key-file mode and passphrase mode via `APS_SECRET_PASSPHRASE`.
 
 Acceptance Criteria
-- Piped `keys` output is the TSV form with no ANSI escapes; TTY gets an aligned table with bold headers and semantic color honoring NO_COLOR.
-- `dump` / `--json` payloads are single-line compact JSON off-TTY and pretty on TTY.
-- `watch --json` behaves as `--jsonl`; `keys --quiet` prints key names only.
-- Shell completion scripts (bash/zsh/fish) are documented in README.
+- `secret` round-trips set/get/reset with ciphertext at rest in `secret.enc`; the key file is mode 0600.
+- No Security.framework/Keychain imports; works on macOS and Linux.
+- Wrong passphrase fails with `APSError.secretUnlockFailed`; corrupt envelope fails with `APSError.decodingFailed`.
+- Passphrase entry is env-var based; an optional TTY getpass prompt exists when `APS_SECRET_USE_PASSPHRASE=1`.
 

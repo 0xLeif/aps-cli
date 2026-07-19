@@ -108,21 +108,14 @@ $profileJson = Invoke-ApsOk get profile --json
 Assert-Match $profileJson '"name":"smoke"' 'profile name'
 Assert-Match $profileJson '"version":2' 'profile version'
 
-# SecureState / Keychain smoke temporarily disabled (Keychain prompts / hangs).
-# Re-enable with: APS_SMOKE_SECURESTATE=1
-if ($env:APS_SMOKE_SECURESTATE -eq '1') {
-    if ($IsMacOS) {
-        $null = Invoke-ApsOk set secret smoke-secret
-        Assert-Equal 'smoke-secret' (Invoke-ApsOk get secret) 'get secret'
-        Assert-Match (Invoke-ApsOk get secret --json) '"storage":"SecureState"' 'secret storage'
-        $null = Invoke-ApsOk reset secret
-        $after = Invoke-ApsOk get secret
-        if (-not [string]::IsNullOrEmpty($after)) {
-            throw "expected empty secret after reset, got '$after'"
-        }
-    } else {
-        Invoke-ApsExpectFail set secret smoke-secret
-    }
+# Encrypted-file secret store (issue #35): key-file mode round-trip + reset.
+$null = Invoke-ApsOk set secret smoke-secret
+Assert-Equal 'smoke-secret' (Invoke-ApsOk get secret) 'get secret'
+Assert-Match (Invoke-ApsOk get secret --json) '"storage":"EncryptedFile"' 'secret storage'
+$null = Invoke-ApsOk reset secret
+$after = Invoke-ApsOk get secret
+if (-not [string]::IsNullOrEmpty($after)) {
+    throw "expected empty secret after reset, got '$after'"
 }
 
 # --state-dir overrides APS_HOME

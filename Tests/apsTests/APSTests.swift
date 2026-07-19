@@ -76,7 +76,7 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(DemoKey.flag.storage, "StoredState")
         XCTAssertEqual(DemoKey.note.storage, "FileState")
         XCTAssertEqual(DemoKey.profile.storage, "FileState")
-        XCTAssertEqual(DemoKey.secret.storage, "SecureState")
+        XCTAssertEqual(DemoKey.secret.storage, "EncryptedFile")
         XCTAssertEqual(DemoKey.profileName.storage, "Slice")
         XCTAssertEqual(DemoKey.counter.valueType, "Int")
         XCTAssertEqual(DemoKey.profile.valueType, "ProfileDocument")
@@ -85,9 +85,8 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(DemoKey.allCases.count, 7)
         XCTAssertTrue(DemoKey.note.detail.contains("FileState"))
         XCTAssertTrue(DemoKey.profile.detail.contains("profile.json"))
-        XCTAssertTrue(DemoKey.secret.detail.contains("Keychain"))
+        XCTAssertTrue(DemoKey.secret.detail.contains("encrypted file"))
         XCTAssertTrue(DemoKey.profileName.detail.contains("Slice"))
-        XCTAssertEqual(APSKeychain.secretAccount, "dev.leif.aps/secret")
     }
 
     @MainActor
@@ -166,40 +165,65 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(onDisk.version, 99)
     }
 
-#if canImport(Security)
     @MainActor
-    func testSecretSecureStateRoundTrip() async throws {
-        throw XCTSkip("SecureState Keychain tests disabled temporarily")
+    func testSecretEncryptedStoreRoundTrip() async throws {
         let store = StateStore()
         try store.set(.secret, value: "top-secret")
         XCTAssertEqual(store.get(.secret), "top-secret")
 
-        let keychain = Application.dependency(\.keychain)
-        XCTAssertEqual(keychain.get(APSKeychain.secretAccount), "top-secret")
-
         try store.set(.secret, value: "rotated")
         XCTAssertEqual(store.get(.secret), "rotated")
-        XCTAssertEqual(keychain.get(APSKeychain.secretAccount), "rotated")
+
+        let path = FileManager.defaultFileStatePath
+        XCTAssertTrue(FileManager.default.fileExists(
+            atPath: URL(fileURLWithPath: path).appendingPathComponent("secret.enc").path
+        ))
     }
 
     @MainActor
-    func testSecretResetDeletesKeychainItem() async throws {
-        throw XCTSkip("SecureState Keychain tests disabled temporarily")
+    func testSecretResetDeletesStoreFile() async throws {
         let store = StateStore()
         try store.set(.secret, value: "ephemeral")
-        XCTAssertEqual(
-            Application.dependency(\.keychain).get(APSKeychain.secretAccount),
-            "ephemeral"
-        )
+        let path = FileManager.defaultFileStatePath
+        let fileURL = URL(fileURLWithPath: path).appendingPathComponent("secret.enc")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
 
         store.reset(.secret)
         XCTAssertEqual(store.get(.secret), "")
-        XCTAssertNil(Application.dependency(\.keychain).get(APSKeychain.secretAccount))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
+    }
+
+    #if !os(Windows)
+    @MainActor
+    func testSecretKeyFilePermissionsAre0600() async throws {
+        let path = FileManager.defaultFileStatePath
+        // Ensure a fresh key file is generated (passphrase mode would skip it).
+        unsetenv("APS_SECRET_PASSPHRASE")
+        unsetenv("APS_SECRET_USE_PASSPHRASE")
+        let store = StateStore()
+        try store.set(.secret, value: "file-key-secret")
+
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        let attributes = try FileManager.default.attributesOfItem(atPath: keyURL.path)
+        XCTAssertEqual(attributes[.posixPermissions] as? Int, 0o600)
+    }
+    #endif
+
+    @MainActor
+    func testSecretStoreCorruptEnvelopeThrowsDecodingFailed() async throws {
+        let store = StateStore()
+        try store.set(.secret, value: "ok")
+        let path = FileManager.defaultFileStatePath
+        let fileURL = URL(fileURLWithPath: path).appendingPathComponent("secret.enc")
+        try "garbage{{".write(to: fileURL, atomically: false, encoding: .utf8)
+
+        XCTAssertThrowsError(try StateStore.requireDecodableDiskState(for: .secret)) { error in
+            XCTAssertEqual(error as? APSError, .decodingFailed)
+        }
     }
 
     @MainActor
     func testSecretPersistsAcrossStateStoreInstances() async throws {
-        throw XCTSkip("SecureState Keychain tests disabled temporarily")
         let writer = StateStore()
         try writer.set(.secret, value: "shared-secret")
 
@@ -208,21 +232,22 @@ final class APSTests: XCTestCase {
 
         reader.reset(.secret)
         XCTAssertEqual(StateStore().get(.secret), "")
-        XCTAssertNil(Application.dependency(\.keychain).get(APSKeychain.secretAccount))
     }
-#else
+
+#if !os(Windows)
     @MainActor
-    func testSecretSetFailsWithoutKeychain() async {
+    func testSecretPassphraseRoundTripAndWrongKey() async throws {
+        setenv("APS_SECRET_PASSPHRASE", "correct-horse", 1)
+        defer { unsetenv("APS_SECRET_PASSPHRASE") }
+
         let store = StateStore()
-        do {
-            try store.set(.secret, value: "nope")
-            XCTFail("Expected keychainUnavailable on platforms without Security")
-        } catch let error as APSError {
-            XCTAssertEqual(error, .keychainUnavailable)
-        } catch {
-            XCTFail("Unexpected error: \(error)")
+        try store.set(.secret, value: "battery-staple")
+        XCTAssertEqual(store.get(.secret), "battery-staple")
+
+        setenv("APS_SECRET_PASSPHRASE", "wrong", 1)
+        XCTAssertThrowsError(try StateStore.requireDecodableDiskState(for: .secret)) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
         }
-        XCTAssertEqual(store.get(.secret), "")
     }
 #endif
 
@@ -701,17 +726,17 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(APSError.encodingFailed.code, "encoding_failed")
         XCTAssertEqual(APSError.decodingFailed.code, "decoding_failed")
         XCTAssertEqual(APSError.persistenceFailed(key: .note).code, "persistence_failed")
-        XCTAssertEqual(APSError.keychainUnavailable.code, "keychain_unavailable")
+        XCTAssertEqual(APSError.secretUnlockFailed.code, "secret_unlock_failed")
         XCTAssertEqual(APSError.corruptState(key: .note).code, "corrupt_state")
 
         XCTAssertEqual(APSError.invalidValue(key: .counter, value: "x").exitCode, 64)
         XCTAssertEqual(APSError.decodingFailed.exitCode, 65)
         XCTAssertEqual(APSError.corruptState(key: .note).exitCode, 65)
-        XCTAssertEqual(APSError.keychainUnavailable.exitCode, 69)
+        XCTAssertEqual(APSError.secretUnlockFailed.exitCode, 69)
         XCTAssertEqual(APSError.encodingFailed.exitCode, 70)
         XCTAssertEqual(APSError.persistenceFailed(key: .note).exitCode, 73)
 
-        for error in [APSError.invalidValue(key: .flag, value: "x"), .encodingFailed, .decodingFailed, .persistenceFailed(key: .flag), .keychainUnavailable, .corruptState(key: .profile)] as [APSError] {
+        for error in [APSError.invalidValue(key: .flag, value: "x"), .encodingFailed, .decodingFailed, .persistenceFailed(key: .flag), .secretUnlockFailed, .corruptState(key: .profile)] as [APSError] {
             XCTAssertFalse(error.hint.isEmpty, "hint required for \(error.code)")
         }
     }

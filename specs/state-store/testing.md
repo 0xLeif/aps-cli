@@ -7,7 +7,7 @@
 - DemoStats ObservedDependency records mutations and Combine publishes on change
 - watchStatsBlocking detects dependency mutation
 
-- SecureState `secret` round-trip / Keychain delete (Darwin) or keychainUnavailable (else).
+- Encrypted-file `secret` round-trip / wrong-passphrase `secretUnlockFailed` / corrupt envelope `decodingFailed`.
 
 - Slice `profileName` writes land in parent `profile` FileState.
 - `read*FromDiskIfPresent` returns nil when absent and throws `corruptState` when torn.

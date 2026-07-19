@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0024-encrypted-file-secret-store-via-swift-crypto-issue-35",
+  "slug": "encrypted-file-secret-store-via-swift-crypto-issue-35",
+  "title": "Encrypted-file secret store via swift-crypto (issue 35)",
+  "description": "Encrypted-file secret store via swift-crypto (issue 35)",
+  "kind": "feature",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "c4ecd60b2a46bca4780f1b4af79a1d495d646287",
+  "created_at": 1784427325,
+  "updated_at": 1784441578,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Package.swift",
+    "Package.resolved",
+    "Sources/aps/SecretStore.swift",
+    "Sources/aps/DemoKey.swift",
+    "Sources/aps/DemoState.swift",
+    "Sources/aps/StateStore.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Scripts/smoke.sh",
+    "specs",
+    "README.md",
+    "GOAL.md",
+    "docs/windows-readiness.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "secret round-trips set/get/reset through an encrypted-file store under the state root (ephemeral X25519 + HKDF + ChaCha20-Poly1305 via swift-crypto, ciphertext at rest, key file mode 0600); zero interactive prompts in key-file mode; passphrase mode via APS_SECRET_PASSPHRASE with loud secretUnlockFailed on wrong key; corrupt envelope fails decodingFailed; no Security.framework imports remain; keychainUnavailable case removed; cross-process watch reads the store directly; tests and smoke cover all of it on macOS and Linux."
+  ],
+  "selected_artifacts": [
+    "context",
+    "requirements",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "design",
+    "research"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}
