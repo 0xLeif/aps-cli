@@ -83,6 +83,13 @@
       "timestamp": 1784419817,
       "digest": "a7d0b2bedd0a5cc80d5c535ff1a7d2c1549dd9d6ca2b0d3d4c971569f6c6e282",
       "note": null
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784421604,
+      "digest": "58cfb63fe2bd66d1db319eda2063a1045b23cac76100ec870646e3d680fc0a02",
+      "note": "Re-accept after #50 Linux test fix."
     }
   ],
   "reopenings": [
@@ -675,6 +682,65 @@
       },
       "stale_acceptance_input_digest": "942c27d374fcd61e124b5fca51eddd95165ddb2a195ea84a2f45d8e2ebfab28b",
       "current_acceptance_input_digest": "2c4b73f9867fc043c1bb4d4f2b2c1f8c0fac44cc9199a5f0a5353f94864f8c50"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0007-hermetic-userdefaults-in-tests",
+      "actor": "agent:cursor",
+      "reason": "Stale after Linux MainActor async test fix on #50.",
+      "timestamp": 1784421592,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "0xLeif",
+        "timestamp": 1784419817,
+        "digest": "a7d0b2bedd0a5cc80d5c535ff1a7d2c1549dd9d6ca2b0d3d4c971569f6c6e282",
+        "note": null
+      },
+      "prior_verification": {
+        "timestamp": 1784419804,
+        "commit": "be4abfb477552bc0a07f10d51d33308608587b3d",
+        "contract_digest": "0c72a7f1bfaa780b21b7b2ac7904ab5352e8186a8293caf6f91354fddff40610",
+        "workspace_digest": "513d04709c5bd3d1346e15db2473f03c23de3257b855f568fc3ff21c4b95ed52",
+        "acceptance_input_digest": "2c4b73f9867fc043c1bb4d4f2b2c1f8c0fac44cc9199a5f0a5353f94864f8c50",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "892737ad12d482e123f7e036d8af1cb0fd3aabb465f8c9ac561ed79af04a33bc",
+              "entry_digest": "c84485e5707378b3f73e17a2c56611d32c600a7ab1da4b428e69d3c0c5eea9a7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "cbfb5ec5589bcea9055e36907a9945bd6977303ab6c3e7ba30afd84501e8c106",
+              "entry_digest": "a90137998b78cf33dbfdc44313cb60c3449aeba22f2aeccef344dd00d378c2fa",
+              "owners": [
+                "@exact:test"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "2c4b73f9867fc043c1bb4d4f2b2c1f8c0fac44cc9199a5f0a5353f94864f8c50",
+      "current_acceptance_input_digest": "1acea629a12847a0c085861bdfb4161a991bdf1013b227a1c5877ca440105070"
     }
   ]
 }

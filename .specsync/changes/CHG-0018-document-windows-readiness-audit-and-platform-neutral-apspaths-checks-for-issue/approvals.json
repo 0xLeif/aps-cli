@@ -55,6 +55,13 @@
       "timestamp": 1784420055,
       "digest": "7f57ad56e71f129716ab218f92d82f5a53475634a09a2e412184fe1e64be9592",
       "note": null
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784421723,
+      "digest": "734505abc69406b33b49bd42795299de10db6e8294235b0583701dcc29eec4ea",
+      "note": "Re-accept after #50 Linux test fix."
     }
   ],
   "reopenings": [
@@ -452,6 +459,85 @@
       },
       "stale_acceptance_input_digest": "8b68fe57d89b59e415fc368f6883c99f43dfc5c6349d2d65d42bde629b5bec48",
       "current_acceptance_input_digest": "214733c68239e2ef685a0f629aeb5b594882221dfe413c5be0da3dafd3805ae3"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0018-document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue",
+      "actor": "agent:cursor",
+      "reason": "Stale after Linux MainActor async test fix on #50.",
+      "timestamp": 1784421710,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "0xLeif",
+        "timestamp": 1784420055,
+        "digest": "7f57ad56e71f129716ab218f92d82f5a53475634a09a2e412184fe1e64be9592",
+        "note": null
+      },
+      "prior_verification": {
+        "timestamp": 1784420030,
+        "commit": "be4abfb477552bc0a07f10d51d33308608587b3d",
+        "contract_digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
+        "workspace_digest": "513d04709c5bd3d1346e15db2473f03c23de3257b855f568fc3ff21c4b95ed52",
+        "acceptance_input_digest": "214733c68239e2ef685a0f629aeb5b594882221dfe413c5be0da3dafd3805ae3",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "11399161f4280ad397292c3b65f562f8a9af0c75b95b4ce9880fd1a334bcad4e",
+              "entry_digest": "ef782e68ea14113009c52f9236a1d72ae6c5b5fa9c8525c54d0939d152a9f901",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f1308885314eb98dee9ded8d43319dc507054e9651636f325b35ccd33954da86",
+              "entry_digest": "ad89330589c0539409ff3a743f533d24af1eba418319f70d35041626b61ce709",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "cbfb5ec5589bcea9055e36907a9945bd6977303ab6c3e7ba30afd84501e8c106",
+              "entry_digest": "a90137998b78cf33dbfdc44313cb60c3449aeba22f2aeccef344dd00d378c2fa",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "1a7cc90974a6850fb64e14e72ef257600725d9e8a08eccd0778dd846a84d1d2c",
+              "entry_digest": "93803319a54163553d0d2945ec07d94b6a62cfe97cd2cf60b4f1e8a0f1f6a78f",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "214733c68239e2ef685a0f629aeb5b594882221dfe413c5be0da3dafd3805ae3",
+      "current_acceptance_input_digest": "4464c965715be10163bdfd544bb893d03511011f766a8ea783112c827c293be2"
     }
   ]
 }

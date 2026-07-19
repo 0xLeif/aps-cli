@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784420156,
-  "commit": "be4abfb477552bc0a07f10d51d33308608587b3d",
+  "timestamp": 1784421735,
+  "commit": "5e6433c3943e1f48d23d23d7517cdd326da5d2bd",
   "contract_digest": "a9d3e3412c9b69e2bd160147953180c7dc3adf5d3994f6b202f90db4c35a0e16",
-  "workspace_digest": "513d04709c5bd3d1346e15db2473f03c23de3257b855f568fc3ff21c4b95ed52",
-  "acceptance_input_digest": "9fa1397f4e3ac0a24e661392779df995bb4392cee73f88e2cb52e2f176e9d795",
+  "workspace_digest": "80b657c3e205c7cfa474b2d39eaa72103e8585b0c2138ef224d15ad24926f8d3",
+  "acceptance_input_digest": "e8b481a22153f1a9413a09d8d571ff50af2ab6dcf6737a193dafed6e11b8b6dc",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -41,8 +41,8 @@
         "path": "Tests/apsTests/APSTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "cbfb5ec5589bcea9055e36907a9945bd6977303ab6c3e7ba30afd84501e8c106",
-        "entry_digest": "a90137998b78cf33dbfdc44313cb60c3449aeba22f2aeccef344dd00d378c2fa",
+        "payload_digest": "075c7e91ee2bef3a339e3316c13262fc2ba9993e5a103a698057ea61fbc969ae",
+        "entry_digest": "e1c5bcab674739bf30299509bacf6192509efa71a2987fa51daa22be0c58c64d",
         "owners": [
           "@exact:test"
         ]

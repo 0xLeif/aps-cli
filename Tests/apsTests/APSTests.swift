@@ -738,7 +738,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testRequireDecodableDiskStateCorruptThrows() throws {
+    func testRequireDecodableDiskStateCorruptThrows() async throws {
         let store = StateStore()
         try store.set(.note, value: "ok")
 
