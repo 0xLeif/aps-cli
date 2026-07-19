@@ -40,6 +40,8 @@ test "$("$bin" get note)" = "smoke-note"
 "$bin" get profile --json | grep -q '"version":2'
 
 # Encrypted-file secret store: key-file mode round-trip, perms, reset.
+# Clear passphrase env so key-file mode is exercised (agents may inherit it).
+unset APS_SECRET_PASSPHRASE APS_SECRET_USE_PASSPHRASE || true
 "$bin" set secret "smoke-secret" >/dev/null
 test "$("$bin" get secret)" = "smoke-secret"
 "$bin" get secret --json | grep -q '"storage":"EncryptedFile"'
