@@ -855,7 +855,7 @@ final class APSTests: XCTestCase {
     func testSchemaDocumentCoversAllKeysAndCommands() throws {
         let document = Schema.document()
 
-        XCTAssertEqual(document.schemaVersion, 1)
+        XCTAssertEqual(document.schemaVersion, 2)
         XCTAssertEqual(document.cliVersion, "0.2.0")
         XCTAssertEqual(document.keys.map(\.name), DemoKey.allCases.map(\.rawValue))
         XCTAssertEqual(document.stateRoot.precedence, ["--state-dir", "APS_HOME", "~/.aps"])
@@ -866,7 +866,8 @@ final class APSTests: XCTestCase {
         }
 
         let secret = document.keys.first { $0.name == "secret" }
-        XCTAssertEqual(secret?.keychainAccount, APSKeychain.secretAccount)
+        XCTAssertEqual(secret?.path, "<state-root>/secret.enc")
+        XCTAssertNil(secret?.keychainAccount)
         let note = document.keys.first { $0.name == "note" }
         XCTAssertEqual(note?.path, "<state-root>/note.json")
     }
@@ -878,7 +879,7 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(byCode["invalid_value"], 64)
         XCTAssertEqual(byCode["decoding_failed"], 65)
         XCTAssertEqual(byCode["corrupt_state"], 65)
-        XCTAssertEqual(byCode["keychain_unavailable"], 69)
+        XCTAssertEqual(byCode["secret_unlock_failed"], 69)
         XCTAssertEqual(byCode["encoding_failed"], 70)
         XCTAssertEqual(byCode["persistence_failed"], 73)
         for entry in table {
@@ -892,9 +893,9 @@ final class APSTests: XCTestCase {
         let data = try XCTUnwrap(json.data(using: .utf8))
         let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
-        XCTAssertEqual(object?["schemaVersion"] as? Int, 1)
+        XCTAssertEqual(object?["schemaVersion"] as? Int, 2)
         let payloads = try XCTUnwrap(object?["payloads"] as? [String: Any])
-        for name in ["KeyValuePayload", "KeysPayload", "WatchEvent", "WatchErrorEvent", "ResetPayload", "StatsPayload", "ErrorEnvelope"] {
+        for name in ["KeyValuePayload", "KeysPayload", "WatchEvent", "WatchErrorEvent", "WatchEndEvent", "ResetPayload", "StatsPayload", "ErrorEnvelope"] {
             XCTAssertNotNil(payloads[name], "missing payload schema \(name)")
         }
         let event = try XCTUnwrap(payloads["WatchEvent"] as? [String: Any])

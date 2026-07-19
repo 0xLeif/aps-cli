@@ -48,7 +48,7 @@ extension Aps {
 
         func run() throws {
             _ = json
-            print(try CLIOutput.encodePretty(Schema.document()))
+            print(try CLIOutput.encodeJSON(Schema.document()))
         }
     }
 }

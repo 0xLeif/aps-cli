@@ -167,11 +167,15 @@ if grep -vq '^{' "$APS_HOME/watch.out"; then
   exit 1
 fi
 
-# aps schema emits the self-describing contract.
-"$bin" schema | grep -q '"schemaVersion" : 1'
-"$bin" schema | grep -q '"name" : "profile"'
-"$bin" schema | grep -q '"name" : "secret"'
-"$bin" schema | grep -q '"code" : "corrupt_state"'
-test "$("$bin" schema | grep '"cliVersion"' | sed 's/.*: "//;s/".*//')" = "$("$bin" --version)"
+# aps schema emits the self-describing contract (compact JSON when piped).
+"$bin" schema | grep -q '"schemaVersion":2'
+"$bin" schema | grep -q '"name":"profile"'
+"$bin" schema | grep -q '"name":"secret"'
+"$bin" schema | grep -q '"code":"corrupt_state"'
+"$bin" schema | grep -q '"code":"secret_unlock_failed"'
+"$bin" schema | grep -q '"WatchEndEvent"'
+CLI_VER="$("$bin" schema | sed -n 's/.*"cliVersion":"\([^"]*\)".*/\1/p' | head -1)"
+test -n "$CLI_VER"
+test "$CLI_VER" = "$("$bin" --version)"
 
 echo "smoke ok"

@@ -142,8 +142,8 @@ enum Schema {
                 account = nil
             case .secret:
                 lifetime = "persisted"
-                path = "macOS encrypted-file secret store"
-                account = APSencrypted-file secret store.secretAccount
+                path = "<state-root>/secret.enc"
+                account = nil
             case .profileName:
                 lifetime = "persisted (slice of profile)"
                 path = "<state-root>/profile.json"
