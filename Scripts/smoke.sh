@@ -140,22 +140,23 @@ echo "$out" | grep -q '"reason":"timeout"'
 "$bin" watch counter --jsonl > "$APS_HOME/watch.out" 2>/dev/null &
 WPID=$!
 sleep 1
-kill -INT $WPID
-# Bounded wait: SIGINT must stop the watch within a few seconds, even on
-# runners where signal delivery differs from a local shell.
+# SIGTERM: the GitHub runner co-opts SIGINT for job cancellation and masks it
+# in job children; TERM exercises the same handler path and exit semantics.
+kill -TERM $WPID
+# Bounded wait: the signal must stop the watch within a few seconds.
 RC=0
 for _ in $(seq 1 20); do
   kill -0 $WPID 2>/dev/null || break
   sleep 0.5
 done
 if kill -0 $WPID 2>/dev/null; then
-  echo "watch did not stop on SIGINT" >&2
+  echo "watch did not stop on signal" >&2
   kill -KILL $WPID 2>/dev/null || true
   exit 1
 fi
 wait $WPID || RC=$?
-test "${RC:-0}" -eq 130 || { echo "expected exit 130 for SIGINT, got ${RC:-0}" >&2; exit 1; }
-grep -q '"reason":"sigint"' "$APS_HOME/watch.out"
+test "${RC:-0}" -eq 143 || { echo "expected exit 143 for SIGTERM, got ${RC:-0}" >&2; exit 1; }
+grep -q '"reason":"sigterm"' "$APS_HOME/watch.out"
 if grep -vq '^{' "$APS_HOME/watch.out"; then
   echo "jsonl stream must contain only JSON lines" >&2
   exit 1
