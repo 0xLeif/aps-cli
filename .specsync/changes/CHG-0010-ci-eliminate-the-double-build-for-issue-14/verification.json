@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784429767,
-  "commit": "97b784fc4b6925ddc54900d70ab2f0a273ad1eb5",
+  "timestamp": 1784430593,
+  "commit": "c1dc563bfed6bcbbfa594fbf5a811a48294a54a3",
   "contract_digest": "36ad6788d34d58f8bdcf39e67a8f44fdba54ac7f513570c6eaf5e6aace6b68b7",
-  "workspace_digest": "f8fa9433c36fea5ee5f024de58e407f682d1443b439aa2488bb3985eed86e9f4",
-  "acceptance_input_digest": "57c257129c29cd42ee821db7216cd444d0762a2e49f3b37cb406393080bd4c37",
+  "workspace_digest": "e17d700c1eeb45a3dd219b0a15a35be24ba1d13af121a6036f18c25108111995",
+  "acceptance_input_digest": "8054c9cd918710d668db8048f7126313662470b52b299c572057ec0a2d90b0d0",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -21,8 +21,8 @@
         "path": ".github/workflows/linux-smoke.yml",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "38d34c80465d01e5693a3ffb7335075d481062e0b0ad3f814bc344748ca85b25",
-        "entry_digest": "7e086be5df0373452d73c256064f7629a2f54b423dd986567ef3f8a0972d2e38",
+        "payload_digest": "e5164a13b7836d5e0e8c05c6ed58649b6e91228b182c22407c0cbf36325ae738",
+        "entry_digest": "d4e80b4c9ff6fa711e588857def7c9b5961a9c2db0dd9e8748825269aea58d70",
         "owners": [
           "@exact:delivery"
         ]
