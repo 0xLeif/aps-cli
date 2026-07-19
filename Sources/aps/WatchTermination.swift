@@ -29,7 +29,13 @@ final class SignalBox: @unchecked Sendable {
 @discardableResult
 func installWatchSignalHandlers(_ box: SignalBox) -> [DispatchSourceSignal] {
     [SIGINT, SIGTERM].map { sig in
-        signal(sig, SIG_IGN)
+        // Block (not SIG_IGN): an ignored disposition also suppresses kqueue
+        // signal delivery on some platforms, which is how the macOS CI runner
+        // silently lost SIGINT while local shells did not.
+        var set = sigset_t()
+        sigemptyset(&set)
+        sigaddset(&set, sig)
+        sigprocmask(SIG_BLOCK, &set, nil)
         let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
         source.setEventHandler {
             box.mark(sig)
