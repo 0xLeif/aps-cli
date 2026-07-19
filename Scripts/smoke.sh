@@ -15,7 +15,7 @@ fi
 bin="$APS_BIN"
 
 "$bin" --help >/dev/null
-test "$("$bin" --version)" = "0.2.0"
+test "$("$bin" --version)" = "1.0.0"
 "$bin" keys | grep -q counter
 "$bin" keys | grep -q profile
 "$bin" keys | grep -q secret
@@ -168,14 +168,25 @@ if grep -vq '^{' "$APS_HOME/watch.out"; then
 fi
 
 # aps schema emits the self-describing contract (compact JSON when piped).
-"$bin" schema | grep -q '"schemaVersion":2'
+"$bin" schema | grep -q '"schemaVersion":3'
+"$bin" schema | grep -q '"userSchema"'
 "$bin" schema | grep -q '"name":"profile"'
 "$bin" schema | grep -q '"name":"secret"'
 "$bin" schema | grep -q '"code":"corrupt_state"'
+"$bin" schema | grep -q '"code":"unknown_key"'
 "$bin" schema | grep -q '"code":"secret_unlock_failed"'
 "$bin" schema | grep -q '"WatchEndEvent"'
 CLI_VER="$("$bin" schema | sed -n 's/.*"cliVersion":"\([^"]*\)".*/\1/p' | head -1)"
 test -n "$CLI_VER"
 test "$CLI_VER" = "$("$bin" --version)"
+test "$CLI_VER" = "1.0.0"
+
+# Dynamic schema: materialize schema.json, add a FileState key, round-trip.
+test -f "$APS_HOME/schema.json"
+"$bin" key add smokeNote --type String --storage FileState --path smoke-note.json --initial ""
+"$bin" set smokeNote "from-smoke"
+test "$("$bin" get smokeNote)" = "from-smoke"
+"$bin" schema | grep -q '"name":"smokeNote"'
+"$bin" key remove smokeNote --purge
 
 echo "smoke ok"

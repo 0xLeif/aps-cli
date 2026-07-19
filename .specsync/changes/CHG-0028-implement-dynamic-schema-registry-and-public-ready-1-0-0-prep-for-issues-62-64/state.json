@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64",
+  "slug": "implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64",
+  "title": "Implement dynamic schema registry and public-ready 1.0.0 prep for issues 62-64",
+  "description": "Implement dynamic schema registry and public-ready 1.0.0 prep for issues 62-64",
+  "kind": "feature",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "c5c36dc544afbbebddcb8765c3e60b6a46980495",
+  "created_at": 1784483366,
+  "updated_at": 1784487923,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/Aps.swift",
+    "Sources/aps/DemoKey.swift",
+    "Sources/aps/Schema.swift",
+    "Sources/aps/UserSchema.swift",
+    "Sources/aps/DynamicKeyStorage.swift",
+    "Sources/aps/KeyCommands.swift",
+    "Sources/aps/StateStore.swift",
+    "Sources/aps/StateStore+Registry.swift",
+    "Sources/aps/CLIOutput.swift",
+    "Sources/aps/Dependencies.swift",
+    "Sources/aps/SecretStore.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Scripts/smoke.sh",
+    "Scripts/smoke.ps1",
+    "README.md",
+    "GOAL.md",
+    "plugin.toml",
+    ".github/workflows/ci.yml",
+    ".github/workflows/trust.yml",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "schema.json materializes; string-key get/set/reset/dump/keys/watch; aps key add|remove|list; aps schema schemaVersion 3 with userSchema.hash; smokes green; CI/Trust on macos-latest; version/docs 1.0.0; #40 flip deferred."
+  ],
+  "selected_artifacts": [
+    "context",
+    "requirements",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "design",
+    "research"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

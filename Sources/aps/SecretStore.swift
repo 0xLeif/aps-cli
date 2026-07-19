@@ -25,20 +25,26 @@ public struct SecretStore: Sendable {
     }
 
     private let directory: String
+    private let storeFileName: String
+    private let keyName: String
 
-    /// Store rooted at the configured FileState path.
+    /// Store rooted at the configured FileState path (`secret.enc`).
     @MainActor
     public init() {
         self.directory = FileManager.defaultFileStatePath
+        self.storeFileName = "secret.enc"
+        self.keyName = "secret"
     }
 
     /// Store rooted at an explicit directory (tests, tooling).
-    public init(directory: String) {
+    public init(directory: String, storeFileName: String = "secret.enc", keyName: String = "secret") {
         self.directory = directory
+        self.storeFileName = storeFileName
+        self.keyName = keyName
     }
 
     private var storeURL: URL {
-        URL(fileURLWithPath: directory).appendingPathComponent("secret.enc")
+        URL(fileURLWithPath: directory).appendingPathComponent(storeFileName)
     }
 
     private var keyFileURL: URL {
@@ -61,7 +67,7 @@ public struct SecretStore: Sendable {
         do {
             data = try Data(contentsOf: storeURL)
         } catch {
-            throw APSError.persistenceFailed(key: .secret)
+            throw APSError.persistenceFailed(key: keyName)
         }
         let envelope: Envelope
         do {
@@ -83,11 +89,11 @@ public struct SecretStore: Sendable {
         do {
             try data.write(to: storeURL)
         } catch {
-            throw APSError.persistenceFailed(key: .secret)
+            throw APSError.persistenceFailed(key: keyName)
         }
         // Read-back verification (same discipline as FileState writes).
         guard try get() == value else {
-            throw APSError.persistenceFailed(key: .secret)
+            throw APSError.persistenceFailed(key: keyName)
         }
     }
 
@@ -215,7 +221,7 @@ public struct SecretStore: Sendable {
                 ofItemAtPath: keyFileURL.path
             )
         } catch {
-            throw APSError.persistenceFailed(key: .secret)
+            throw APSError.persistenceFailed(key: keyName)
         }
         return key
     }

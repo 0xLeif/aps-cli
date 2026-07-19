@@ -1,3 +1,6 @@
-# Context -  State Store
+---
+spec: state-store.spec.md
+---
 
-StateStore is the non-UI AppState facade used by the CLI. It owns persistence quirks (Linux UserDefaults flush), Observation-based key watching, and Combine-based watching for the `DemoStats` `@ObservedDependency`.
+StateStore is the AppState facade for the CLI: demo seed bindings, DynamicKeyStorage
+for user registry keys, real dependency injection, and dump/watch/reset helpers.

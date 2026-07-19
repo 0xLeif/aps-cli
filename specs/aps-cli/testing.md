@@ -10,3 +10,5 @@
 
 - Slice `profileName` writes land in parent `profile` FileState.
 - Torn FileState files surface `corruptState` (exit 65) on get/watch; missing files stay nil/initial.
+- Unit: schema materialize, key add, unknown_key
+- Smoke: key add/remove round-trip (sh + ps1)

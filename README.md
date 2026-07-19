@@ -2,7 +2,7 @@
 
 A tiny Swift CLI that [dogfoods](https://github.com/0xLeif/AppState) **AppState** outside SwiftUI: declare typed app state, get/set/watch/dump it, and show dependency injection.
 
-Current release line: **0.2.0** (pre-public 0.x). Targets **macOS** (primary CI), **Linux** (smoke CI), and **Windows** (PowerShell smoke CI) where AppState allows.
+Current release line: **1.0.0**. Targets **macOS**, **Linux**, and **Windows** where AppState allows. Keys come from `<state-root>/schema.json` (demo defaults materialize on first use); see the [dynamic schema RFC](docs/design/dynamic-schema.md).
 
 This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.xyz/integrate/) (fledge, spec-sync, augur, attest). See `AGENTS.md`.
 
@@ -14,16 +14,20 @@ aps set <key> <value> [--json] [--state-dir PATH]
 aps watch <key> [--count N] [--timeout SEC] [--jsonl] [--interval MS] [--state-dir PATH]
 aps dump [--json] [--state-dir PATH]
 aps keys [--json]
+aps key add|remove|list ...
 aps stats [--json] [--watch] [--count N] [--timeout SEC]
 aps reset <key> [--json] [--state-dir PATH]
 aps reset --all [--json] [--state-dir PATH]
+aps schema [--json] [--state-dir PATH]
 aps --help
 aps --version
 ```
 
 State root resolution: `--state-dir` > `APS_HOME` > `~/.aps`.
 
-### Demo keys (fixed schema)
+### Default demo keys (seed schema)
+
+On first use, aps materializes `<state-root>/schema.json` with these seed keys:
 
 | Key | Type | Storage | Lifetime |
 | --- | --- | --- | --- |
@@ -35,7 +39,14 @@ State root resolution: `--state-dir` > `APS_HOME` > `~/.aps`.
 | `secret` | `String` | `EncryptedFile` | Persisted encrypted under the state root (`secret.enc`) |
 | `profileName` | `String` | `Slice` | Projection of `profile.name` via AppState Slice |
 
-Dynamic / user-declared keys are intentionally out of scope for 0.x.
+Add or remove keys at runtime:
+
+```bash
+aps key add smokeNote --type String --storage FileState --path smoke-note.json --initial ''
+aps set smokeNote hello
+aps key remove smokeNote --purge
+aps key list --json
+```
 
 ### Encrypted-file secret store (`secret`)
 
@@ -60,7 +71,7 @@ Dynamic / user-declared keys are intentionally out of scope for 0.x.
 ## Requirements
 
 - Swift 6.0+
-- macOS 14+ (primary CI). Linux smoke runs on `ubuntu-latest`. Windows smoke runs on `windows-latest` via `Scripts/smoke.ps1`.
+- macOS 14+ (primary CI on `macos-latest`). Linux smoke runs on `ubuntu-latest`. Windows smoke runs on `windows-latest` via `Scripts/smoke.ps1`.
 - For the trust gate locally: [corvid-trust](https://github.com/CorvidLabs/trust) (`brew install CorvidLabs/tap/corvid-trust`)
 - SpecSync **5.1.1** (see `.specsync/version`). Trust CI mirrors that exact release; brew `spec-sync` latest should match.
 
@@ -81,7 +92,7 @@ fledge lanes run verify
 
 ### Fledge plugin shim
 
-This repo ships a root `plugin.toml` so fledge can install `aps` as a live-linked plugin (`fledge-plugin-aps` v0.2.0 tracks the CLI version). Publishing to the plugin hub stays deferred until the repo is public (v1.0).
+This repo ships a root `plugin.toml` so fledge can install `aps` as a live-linked plugin (`fledge-plugin-aps` v1.0.0 tracks the CLI version). Publishing to the plugin hub stays on the go-public checklist ([#40](https://github.com/0xLeif/aps-cli/issues/40)).
 
 ```bash
 # From a clone of aps-cli:
@@ -129,9 +140,11 @@ swift run aps set profile '{"name":"agent","version":1}' --json
 swift run aps get profile --json
 swift run aps set profileName agent --json
 swift run aps stats --json
+
+swift run aps key add agentNote --type String --storage FileState --path agent-note.json --initial ''
 ```
 
-`aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion` (bumped on any contract change, so agents can detect drift), state-root precedence, every key and command, payload shapes, and the error-code table. It is static contract only; live state stays in `aps dump`. ArgumentParser's full command tree is also available as JSON via `aps <cmd> --experimental-dump-help`.
+`aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion` (bumped when the document shape changes), live `userSchema` meta (formatVersion, keyCount, hash), state-root precedence, every registered key and command, payload shapes, and the error-code table. Live values stay in `aps dump`. ArgumentParser's full command tree is also available as JSON via `aps <cmd> --experimental-dump-help`.
 
 `watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process. For `note` and `profile`, polling reads the JSON files directly so AppState's FileState cache cannot hide cross-process writes.
 
@@ -165,9 +178,8 @@ Domain errors always print a human line to stderr and keep stdout empty, with a 
 | Code | Meaning | When |
 |------|---------|------|
 | 0 | success | stdout contract satisfied |
-| 64 | EX_USAGE | caller-fixable input: bad key/flags, invalid value |
-| 65 | EX_DATAERR | corrupt or undecodable persisted state (see Multi-process FileState semantics) |
-| 69 | EX_UNAVAILABLE | `secret` on a platform without Apple Security |
+| 64 | EX_USAGE | caller-fixable input: bad key/flags, invalid value, `unknown_key`, `schema_conflict` |
+| 65 | EX_DATAERR | corrupt or undecodable persisted state, or invalid `schema.json` (`schema_invalid`) |
 | 70 | EX_SOFTWARE | internal bug |
 | 73 | EX_CANTCREAT | write did not persist (unwritable state root) |
 
@@ -179,7 +191,7 @@ With `--json` / `--jsonl`, or when `APS_ERROR_JSON=1`, stderr additionally gets 
 {"error":{"code":"invalid_value","hint":"Run `aps keys` to see expected types per key.","message":"Invalid value 'nope' for counter (Int)"}}
 ```
 
-`code` is stable and safe to match on: `invalid_value`, `encoding_failed`, `decoding_failed`, `persistence_failed`, `keychain_unavailable`, `corrupt_state`.
+`code` is stable and safe to match on: `invalid_value`, `encoding_failed`, `decoding_failed`, `persistence_failed`, `corrupt_state`, `schema_invalid`, `unknown_key`, `schema_conflict`, `secret_unlock_failed`.
 
 ## Tests and smoke
 
@@ -194,12 +206,10 @@ pwsh ./Scripts/smoke.ps1
 
 | Workflow | Runner | Role |
 |----------|--------|------|
-| `.github/workflows/ci.yml` | `[self-hosted, macOS]` | build / test / smoke |
+| `.github/workflows/ci.yml` | `macos-latest` | build / test / smoke |
 | `.github/workflows/linux-smoke.yml` | `ubuntu-latest` | Linux build + smoke |
 | `.github/workflows/windows-smoke.yml` | `windows-latest` | Windows `swift test` + PowerShell smoke |
-| `.github/workflows/trust.yml` | `[self-hosted, macOS]` | CorvidLabs Trust gate |
-
-While the repository is **private**, macOS workflows use self-hosted runners. Before making the repo public, switch off self-hosted runners for fork pull requests.
+| `.github/workflows/trust.yml` | `macos-latest` | CorvidLabs Trust gate |
 
 ## Trust toolchain
 
@@ -211,7 +221,7 @@ While the repository is **private**, macOS workflows use self-hosted runners. Be
 | `.attest.json` | Provenance policy |
 | `.specsync/` | SpecSync 5.1.1 config + SDD change tracking (`.specsync/version`) |
 | `specs/` | Module contracts (`aps-cli`, `state-store`) |
-| `GOAL.md` | Active 0.x milestone checklist |
+| `GOAL.md` | Active 1.0 milestone checklist |
 | `AGENTS.md` | Standing rules (managed block required by CI) |
 
 ```bash
@@ -235,7 +245,7 @@ GOAL.md
 
 ## Next goal
 
-0.x dogfood harness is largely complete (see [`GOAL.md`](GOAL.md)). Next milestone is **v1.0.0**: dynamic schema ([RFC](docs/design/dynamic-schema.md)) and go-public ([#40](https://github.com/0xLeif/aps-cli/issues/40)).
+Prep for **1.0.0** is in progress (see [`GOAL.md`](GOAL.md)). Release-day go-public steps remain on [#40](https://github.com/0xLeif/aps-cli/issues/40).
 
 
 ## AppState surface coverage
@@ -251,21 +261,20 @@ GOAL.md
 | `@ObservedDependency` | `stats` / `aps stats` | Dogfooded |
 | `SyncState` | — | No-go ([spike](docs/spikes/syncstate-feasibility.md)) |
 | `ModelState` | — | No-go ([spike](docs/spikes/modelstate-feasibility.md)) |
-| OptionalSlice / DependencySlice | — | Not planned for 0.x |
+| OptionalSlice / DependencySlice | — | Not planned |
 
-## Non-goals (0.x)
+## Non-goals
 
 - No iCloud `SyncState` or SwiftData `ModelState` (see `docs/spikes/`)
 - No in-process plugin/daemon/network API inside `aps` itself (the repo may still be a fledge plugin shim; see above)
-- No runtime user-defined keys in 0.x (fixed demo keys only; 1.0 design is [`docs/design/dynamic-schema.md`](docs/design/dynamic-schema.md))
 
 ## Windows / tri-OS readiness
 
-Audit findings and per-OS gaps live in [`docs/windows-readiness.md`](docs/windows-readiness.md). Linux and Windows smoke CI already run on GitHub-hosted runners; the full public tri-OS matrix and self-hosted decommission are [#40](https://github.com/0xLeif/aps-cli/issues/40).
+Audit findings and per-OS gaps live in [`docs/windows-readiness.md`](docs/windows-readiness.md). CI runs the full matrix on GitHub-hosted runners (`macos-latest`, `ubuntu-latest`, `windows-latest`).
 
-## 1.0 design
+## Design
 
-- Dynamic / user-defined keys: [`docs/design/dynamic-schema.md`](docs/design/dynamic-schema.md) (issue [#39](https://github.com/0xLeif/aps-cli/issues/39))
+- Dynamic / user-defined keys: [`docs/design/dynamic-schema.md`](docs/design/dynamic-schema.md) (issues [#39](https://github.com/0xLeif/aps-cli/issues/39), [#62](https://github.com/0xLeif/aps-cli/issues/62)–[#64](https://github.com/0xLeif/aps-cli/issues/64))
 - Go-public checklist: [#40](https://github.com/0xLeif/aps-cli/issues/40)
 
 ## Related

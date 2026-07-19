@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 24
+version: 26
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -10,6 +10,8 @@ files:
   - Sources/aps/WatchTermination.swift
   - Sources/aps/SecretStore.swift
   - Sources/aps/Schema.swift
+  - Sources/aps/UserSchema.swift
+  - Sources/aps/KeyCommands.swift
 db_tables: []
 depends_on:
   - state-store
@@ -20,19 +22,20 @@ depends_on:
 ## Purpose
 
 `aps` is a small Swift executable that dogfoods AppState outside SwiftUI.
-It exposes a fixed demo schema through ArgumentParser subcommands so humans and
-agents can get, set, watch, dump, list, and reset typed application state, and
-it self-describes that contract for agents through the `schema` command.
+It exposes a registry-backed schema (`schema.json` under the state root, seeded with
+DemoKey defaults) through ArgumentParser subcommands so humans and agents can get,
+set, watch, dump, list, reset, and mutate typed application state, and it
+self-describes that contract for agents through the `schema` command.
 
 ## Public API
 
 | Export | Description |
 |--------|-------------|
-| `DemoKey` | Fixed schema enum including `profile`, `secret`, and `profileName`. |
+| `DemoKey` | Compile-time seed inventory for default schema.json keys. |
 | `ProfileDocument` | Codable `{name, version}` FileState document. |
 | `name` | ProfileDocument display name field. |
 | `version` | ProfileDocument integer version field. |
-| `init` | ProfileDocument memberwise initializer. |
+| `init` | Memberwise / store initializers. |
 | `APSError` | Typed CLI/domain errors. |
 | `counter` | Int key stored in AppState `State`. |
 | `message` | String key stored in AppState `State`. |
@@ -46,17 +49,55 @@ it self-describes that contract for agents through the `schema` command.
 | `set` | Encrypt, persist, and read-back verify. |
 | `reset` | Delete `secret.enc`, restoring the initial value. |
 | `profileName` | String Slice over `ProfileDocument.name`. |
+| `UserSchemaDocument` | On-disk schema.json document model. |
+| `SchemaKeyEntry` | One registry key entry (name/type/storage/initial/path/slice). |
+| `SchemaJSON` | JSON value used for schema initials and object fields. |
+| `UserSchema` | Load / materialize / validate / write / hash helpers for schema.json. |
+| `fileName` | `schema.json` basename. |
+| `currentFormatVersion` | Supported on-disk formatVersion. |
+| `namePattern` | Allowed key name regex. |
+| `allowedTypes` | Supported value type tokens. |
+| `allowedStorage` | Supported storage tokens. |
+| `defaultDocument` | Demo seed schema document. |
+| `schemaURL` | Path to schema.json under a state root. |
+| `loadOrMaterialize` | Load schema.json or write the demo seed when missing. |
+| `load` | Decode and validate schema.json. |
+| `write` | Validate and atomically persist schema.json. |
+| `validate` | Structural checks for schema documents. |
+| `isSafeRelativePath` | Rejects absolute / parent-traversal paths. |
+| `hash` | Stable SHA256 of canonical schema bytes. |
+| `entry` | Lookup a SchemaKeyEntry by name. |
+| `formatVersion` | UserSchemaDocument format version field. |
+| `namespace` | UserSchemaDocument namespace field. |
+| `keys` | UserSchemaDocument key list. |
+| `type` | SchemaKeyEntry value type token. |
+| `storage` | Human storage kind (`State` / `StoredState` / `FileState` / `EncryptedFile` / `Slice`). |
+| `initial` | SchemaKeyEntry initial SchemaJSON. |
+| `path` | Relative file path for FileState/EncryptedFile. |
+| `doc` | Optional key documentation string. |
+| `objectShape` | Field types for object keys. |
+| `sliceOf` | Parent key name for Slice entries. |
+| `sliceField` | Parent field name for Slice entries. |
+| `detail` | One-line description for `keys`. |
+| `lifetime` | Process vs persisted lifetime label. |
+| `wireString` | SchemaJSON rendered as a CLI wire string. |
+| `encode` | SchemaJSON Codable encode. |
+| `string` | SchemaJSON string case. |
+| `int` | SchemaJSON int case. |
+| `bool` | SchemaJSON bool case. |
+| `object` | SchemaJSON object case. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
-| `persistenceFailed` | Disk-backed key did not persist after write. |
+| `persistenceFailed` | Disk-backed key or schema.json did not persist after write. |
 | `secretUnlockFailed` | Secret store would not open (wrong passphrase or key). |
 | `corruptState` | FileState file exists but is undecodable (torn write). |
-| `corruptStateExitCode` | Exit code 65 (`EX_DATAERR`) for `corruptState`. |
-| `storage` | Human storage kind (`State` / `StoredState` / `FileState` / `EncryptedFile` / `Slice`). |
-| `valueType` | Human value type (`Int` / `String` / `Bool` / `ProfileDocument`). |
+| `schemaInvalid` | schema.json undecodable or fails validation. |
+| `unknownKey` | Name not present in the active registry. |
+| `schemaConflict` | key add would overwrite without `--force`. |
+| `corruptStateExitCode` | Exit code 65 (`EX_DATAERR`) for corrupt/invalid data. |
+| `valueType` | Human value type (`Int` / `String` / `Bool` / `object`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
-| `detail` | One-line description for `keys`. |
 | `description` | Actionable error text for humans. |
 | `code` | Stable machine error code for the JSON envelope. |
 | `exitCode` | sysexits-aligned process exit code. |
@@ -68,11 +109,10 @@ is byte-stable plain text. JSON is pretty on TTY and compact when piped (gh
 rule). `watch --json` is an alias for `--jsonl`; `keys --quiet` prints key
 names only. Machine shapes are additive-only contracts; human text may evolve.
 Command tree (informational): `Aps` is the `@main` root with get, set, watch,
-dump, keys, stats, reset, and schema. `schema` prints one cacheable JSON
-document (`SchemaDocument`): cliVersion, integer schemaVersion (bumped on any
-contract change), state-root precedence, keys, commands, payload shapes, and
-the error table. Static contract only; live state stays in `dump`.
-| `description` | Actionable error text for humans and ValidationError bridging. |
+dump, keys, key, stats, reset, and schema. `schema` prints one cacheable JSON
+document (`SchemaDocument`): cliVersion, integer schemaVersion (bumped when the
+document shape changes), state-root precedence, live registry keys, userSchema
+meta, commands, payload shapes, and the error table. Live state stays in `dump`.
 
 ## Invariants
 
@@ -130,9 +170,8 @@ Exit codes (sysexits-aligned):
 | Code | Meaning | aps mapping |
 |------|---------|-------------|
 | 0 | success | stdout contract satisfied |
-| 64 | EX_USAGE | caller-fixable: bad key/flags, `invalidValue`, reset arg conflicts |
-| 65 | EX_DATAERR | corrupt persisted state (`corruptState`) or undecodable data (`decodingFailed`) |
-| 69 | EX_UNAVAILABLE | `keychainUnavailable` on platforms without Apple Security |
+| 64 | EX_USAGE | caller-fixable: bad key/flags, `invalidValue`, `unknownKey`, `schemaConflict`, reset arg conflicts |
+| 65 | EX_DATAERR | corrupt persisted state (`corruptState`), undecodable data (`decodingFailed`), or invalid schema (`schemaInvalid`) |
 | 70 | EX_SOFTWARE | internal bug: `encodingFailed` |
 | 73 | EX_CANTCREAT | write did not persist: `persistenceFailed` |
 | 66 | EX_NOINPUT | reserved for future explicit-file operations |
@@ -143,8 +182,7 @@ Exit codes (sysexits-aligned):
 - With `--json` / `--jsonl`, or when `APS_ERROR_JSON=1`, stderr additionally
   gets one `{"error":{"code","message","hint"}}` envelope; stdout stays empty
   on error in every mode.
-- Unknown `DemoKey` token and flag shape errors: ArgumentParser rejects
-  before `run()` with its own 64.
+- Unknown registry names fail in `run()` with `unknown_key` (64).
 
 ## Dependencies
 
@@ -181,3 +219,5 @@ Exit codes (sysexits-aligned):
 | 2026-07-19 | CHG-0023-watch-signal-handling-and-termination-semantics-issue-34: Watch signal handling and termination semantics (issue 34) |
 | 2026-07-19 | CHG-0024-encrypted-file-secret-store-via-swift-crypto-issue-35: Encrypted-file secret store via swift-crypto (issue 35) |
 | 2026-07-19 | CHG-0025-aps-schema-self-describing-contract-endpoint-issue-32: Add aps schema self-describing contract endpoint (issue 32) |
+| 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Dynamic schema registry and 1.0.0 prep (issues 62-64) |
+| 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Implement dynamic schema registry and public-ready 1.0.0 prep for issues 62-64 |

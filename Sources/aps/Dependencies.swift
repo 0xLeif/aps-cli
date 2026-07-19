@@ -63,9 +63,9 @@ public final class DemoStats: ObservableObject, Sendable {
     }
 
     /// Records a successful demo-key mutation (set or reset).
-    public func recordMutation(key: DemoKey) {
+    public func recordMutation(key: String) {
         mutationCount += 1
-        lastMutatedKey = key.rawValue
+        lastMutatedKey = key
     }
 
     /// Clears counters back to their initial values.
@@ -86,9 +86,9 @@ public final class DemoStats: Sendable {
     }
 
     /// Records a successful demo-key mutation (set or reset).
-    public func recordMutation(key: DemoKey) {
+    public func recordMutation(key: String) {
         mutationCount += 1
-        lastMutatedKey = key.rawValue
+        lastMutatedKey = key
     }
 
     /// Clears counters back to their initial values.

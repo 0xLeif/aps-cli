@@ -8,26 +8,30 @@ struct Aps: ParsableCommand {
         commandName: "aps",
         abstract: "A tiny CLI that dogfoods AppState outside SwiftUI.",
         discussion: """
-        Demo keys (fixed schema for 0.x):
-          counter  Int              State        (in-memory)
-          message  String           State        (in-memory)
-          flag     Bool             StoredState  (UserDefaults)
-          note     String           FileState    (~/.aps/note.json)
-          profile  ProfileDocument  FileState    (~/.aps/profile.json)
-          secret   String           EncryptedFile (~/.aps/secret.enc)
-          profileName  String       Slice        (profile.name via AppState Slice)
+        Keys come from <state-root>/schema.json (demo defaults materialize on first use).
+        Manage entries with: aps key add|remove|list
+
+        Default seed keys:
+          counter  Int     State
+          message  String  State
+          flag     Bool    StoredState
+          note     String  FileState
+          profile  object  FileState
+          secret   String  EncryptedFile
+          profileName String Slice (profile.name)
 
         State root: --state-dir > APS_HOME > ~/.aps
 
         Built on https://github.com/0xLeif/AppState
         """,
-        version: "0.2.0",
+        version: "1.0.0",
         subcommands: [
             Get.self,
             Set.self,
             Watch.self,
             Dump.self,
             Keys.self,
+            Key.self,
             Stats.self,
             Reset.self,
             SchemaCmd.self
@@ -46,9 +50,18 @@ extension Aps {
         @Flag(name: .long, help: "Emit machine-readable JSON (accepted for symmetry; schema is always JSON).")
         var json: Bool = false
 
+        @Option(name: .long, help: "Override state directory (takes precedence over APS_HOME).")
+        var stateDir: String?
+
         func run() throws {
             _ = json
-            print(try CLIOutput.encodeJSON(Schema.document()))
+            try onMainThread {
+                do {
+                    print(try CLIOutput.encodeJSON(Schema.document(stateDir: stateDir)))
+                } catch let error as APSError {
+                    try CLIOutput.fail(error, json: true)
+                }
+            }
         }
     }
 }
@@ -56,11 +69,11 @@ extension Aps {
 extension Aps {
     struct Get: ParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Print the current value for a demo key."
+            abstract: "Print the current value for a registered key."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note | profile | secret | profileName")
-        var key: DemoKey
+        @Argument(help: "Key name from schema.json (see aps keys).")
+        var key: String
 
         @OptionGroup
         var options: StateOptions
@@ -70,20 +83,21 @@ extension Aps {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
                 do {
-                    try StateStore.requireDecodableDiskState(for: key)
+                    try StateStore.requireDecodableDiskState(forName: key)
+                    let entry = try store.resolve(key)
+                    if options.json {
+                        let payload = CLIOutput.KeyValuePayload(
+                            key: entry.name,
+                            type: entry.type,
+                            storage: entry.storage,
+                            value: try CLIOutput.typedValue(for: entry, store: store)
+                        )
+                        print(try CLIOutput.encodeJSON(payload))
+                    } else {
+                        print(try store.get(name: key))
+                    }
                 } catch let error as APSError {
                     try CLIOutput.fail(error, json: options.json)
-                }
-                if options.json {
-                    let payload = CLIOutput.KeyValuePayload(
-                        key: key.rawValue,
-                        type: key.valueType,
-                        storage: key.storage,
-                        value: try CLIOutput.typedValue(for: key, store: store)
-                    )
-                    print(try CLIOutput.encodeJSON(payload))
-                } else {
-                    print(store.get(key))
                 }
             }
         }
@@ -91,13 +105,13 @@ extension Aps {
 
     struct Set: ParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Set a demo key to a value."
+            abstract: "Set a registered key to a value."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note | profile | secret | profileName")
-        var key: DemoKey
+        @Argument(help: "Key name from schema.json (see aps keys).")
+        var key: String
 
-        @Argument(help: "New value (Bool: true/false/1/0; Int for counter; JSON for profile; String for secret/profileName)")
+        @Argument(help: "New value (Bool: true/false/1/0; Int; JSON object; or String)")
         var value: String
 
         @OptionGroup
@@ -108,20 +122,21 @@ extension Aps {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
                 do {
-                    try store.set(key, value: value)
+                    try store.set(name: key, value: value)
+                    let entry = try store.resolve(key)
+                    if options.json {
+                        let payload = CLIOutput.KeyValuePayload(
+                            key: entry.name,
+                            type: entry.type,
+                            storage: entry.storage,
+                            value: try CLIOutput.typedValue(for: entry, store: store)
+                        )
+                        print(try CLIOutput.encodeJSON(payload))
+                    } else {
+                        print(try store.get(name: key))
+                    }
                 } catch let error as APSError {
                     try CLIOutput.fail(error, json: options.json)
-                }
-                if options.json {
-                    let payload = CLIOutput.KeyValuePayload(
-                        key: key.rawValue,
-                        type: key.valueType,
-                        storage: key.storage,
-                        value: try CLIOutput.typedValue(for: key, store: store)
-                    )
-                    print(try CLIOutput.encodeJSON(payload))
-                } else {
-                    print(store.get(key))
                 }
             }
         }
@@ -132,8 +147,8 @@ extension Aps {
             abstract: "Print the value whenever it changes (Observation + polling)."
         )
 
-        @Argument(help: "Demo key: counter | message | flag | note | profile | secret | profileName")
-        var key: DemoKey
+        @Argument(help: "Key name from schema.json (see aps keys).")
+        var key: String
 
         @Option(name: .long, help: "Poll interval in milliseconds (fallback for disk-backed keys).")
         var interval: UInt64 = 250
@@ -170,8 +185,9 @@ extension Aps {
                 }
 
                 do {
+                    let entry = try store.resolve(key)
                     try store.watchBlocking(
-                        key,
+                        name: key,
                         pollInterval: TimeInterval(interval) / 1000.0,
                         shouldContinue: {
                             if let count, emitted >= count {
@@ -194,14 +210,14 @@ extension Aps {
                             // Parse the fresh `value` from watchBlocking. Do not re-query
                             // the store: FileState cache can lag cross-process disk writes.
                             if let event = try? CLIOutput.watchEvent(
-                                key: key,
+                                entry: entry,
                                 rawValue: value,
                                 timestamp: store.now
                             ), let line = try? CLIOutput.encodeLine(event) {
                                 CLIOutput.writeLine(line)
                             } else if let line = try? CLIOutput.encodeLine(
                                 CLIOutput.WatchErrorEvent(
-                                    key: key.rawValue,
+                                    key: key,
                                     error: "encoding_failed",
                                     message: "value could not be encoded as a watch event",
                                     timestamp: store.now
@@ -217,7 +233,7 @@ extension Aps {
                 } catch let error as APSError {
                     if jsonl, case .corruptState = error {
                         let event = CLIOutput.WatchErrorEvent(
-                            key: key.rawValue,
+                            key: key,
                             error: "corruptState",
                             message: error.description,
                             timestamp: store.now
@@ -232,7 +248,7 @@ extension Aps {
                 if let stopReason {
                     if jsonl {
                         let event = CLIOutput.WatchEndEvent(
-                            key: key.rawValue,
+                            key: key,
                             reason: stopReason.token,
                             timestamp: store.now
                         )
@@ -240,7 +256,7 @@ extension Aps {
                             CLIOutput.writeLine(line)
                         }
                     } else {
-                        CLIOutput.writeError("watch \(key.rawValue): stopped (\(stopReason.summary))")
+                        CLIOutput.writeError("watch \(key): stopped (\(stopReason.summary))")
                     }
                     if stopReason.exitCode != 0 {
                         throw ExitCode(stopReason.exitCode)
@@ -257,7 +273,7 @@ extension Aps {
 
     struct Dump: ParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Print all known demo keys as pretty JSON."
+            abstract: "Print all registered keys as pretty JSON."
         )
 
         @OptionGroup
@@ -269,7 +285,7 @@ extension Aps {
                 // dump is always JSON; --json is accepted for agent symmetry.
                 _ = options.json
                 do {
-                    print(try StateStore().dump())
+                    print(try StateStore().dumpRegistered())
                 } catch let error as APSError {
                     try CLIOutput.fail(error, json: true)
                 }
@@ -279,7 +295,7 @@ extension Aps {
 
     struct Keys: ParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "List the fixed demo keys and how they are stored."
+            abstract: "List registered keys and how they are stored."
         )
 
         @Flag(name: .long, help: "Emit machine-readable JSON.")
@@ -288,35 +304,45 @@ extension Aps {
         @Flag(name: .long, help: "Print only key names, one per line.")
         var quiet: Bool = false
 
+        @Option(name: .long, help: "Override state directory (takes precedence over APS_HOME).")
+        var stateDir: String?
+
         func run() throws {
-            if quiet {
-                for key in DemoKey.allCases {
-                    print(key.rawValue)
-                }
-            } else if json {
-                let payload = CLIOutput.KeysPayload(
-                    keys: DemoKey.allCases.map {
-                        CLIOutput.KeyInfo(
-                            key: $0.rawValue,
-                            type: $0.valueType,
-                            storage: $0.storage,
-                            detail: $0.detail
+            try onMainThread {
+                boot(stateDir: stateDir)
+                do {
+                    let schema = try StateStore().loadSchema()
+                    if quiet {
+                        for entry in schema.keys {
+                            print(entry.name)
+                        }
+                    } else if json {
+                        let payload = CLIOutput.KeysPayload(
+                            keys: schema.keys.map {
+                                CLIOutput.KeyInfo(
+                                    key: $0.name,
+                                    type: $0.type,
+                                    storage: $0.storage,
+                                    detail: $0.detail
+                                )
+                            }
                         )
+                        print(try CLIOutput.encodeJSON(payload))
+                    } else if TTY.stdoutIsTTY {
+                        print(TTY.table(
+                            header: ["KEY", "TYPE", "STORAGE", "DESCRIPTION"],
+                            rows: schema.keys.map {
+                                [$0.name, $0.type, $0.storage, $0.detail]
+                            }
+                        ))
+                    } else {
+                        print("KEY\tTYPE\tSTORAGE\tDESCRIPTION")
+                        for entry in schema.keys {
+                            print("\(entry.name)\t\(entry.type)\t\(entry.storage)\t\(entry.detail)")
+                        }
                     }
-                )
-                print(try CLIOutput.encodeJSON(payload))
-            } else if TTY.stdoutIsTTY {
-                // Human table; piped output below stays byte-stable TSV.
-                print(TTY.table(
-                    header: ["KEY", "TYPE", "STORAGE", "DESCRIPTION"],
-                    rows: DemoKey.allCases.map {
-                        [$0.rawValue, $0.valueType, $0.storage, $0.detail]
-                    }
-                ))
-            } else {
-                print("KEY\tTYPE\tSTORAGE\tDESCRIPTION")
-                for key in DemoKey.allCases {
-                    print("\(key.helpSummary)\t\(key.detail)")
+                } catch let error as APSError {
+                    try CLIOutput.fail(error, json: json)
                 }
             }
         }
@@ -385,13 +411,13 @@ extension Aps {
 
     struct Reset: ParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Reset one demo key (or all keys) back to its initial value."
+            abstract: "Reset one registered key (or all keys) back to its initial value."
         )
 
-        @Argument(help: "Demo key to reset. Omit with --all.")
-        var key: DemoKey?
+        @Argument(help: "Key name to reset. Omit with --all.")
+        var key: String?
 
-        @Flag(name: .long, help: "Reset every demo key.")
+        @Flag(name: .long, help: "Reset every registered key.")
         var all: Bool = false
 
         @OptionGroup
@@ -410,7 +436,7 @@ extension Aps {
                 let store = StateStore()
                 do {
                     if all {
-                        store.resetAll()
+                        try store.resetAllRegistered()
                         if options.json {
                             let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
                             print(try CLIOutput.encodeJSON(payload))
@@ -418,16 +444,17 @@ extension Aps {
                             print("reset all keys")
                         }
                     } else if let key {
-                        store.reset(key)
+                        try store.reset(name: key)
+                        let entry = try store.resolve(key)
                         if options.json {
                             let payload = CLIOutput.ResetPayload(
                                 reset: "key",
-                                key: key.rawValue,
-                                value: try CLIOutput.typedValue(for: key, store: store)
+                                key: key,
+                                value: try CLIOutput.typedValue(for: entry, store: store)
                             )
                             print(try CLIOutput.encodeJSON(payload))
                         } else {
-                            print(store.get(key))
+                            print(try store.get(name: key))
                         }
                     }
                 } catch let error as APSError {
@@ -439,13 +466,13 @@ extension Aps {
 }
 
 @MainActor
-private func boot(stateDir: String? = nil) {
+func boot(stateDir: String? = nil) {
     Application.logging(isEnabled: false)
     APSPaths.configure(stateDir: stateDir)
 }
 
 /// Synchronous `@main` starts on the real main thread; treat that as MainActor for AppState.
-private func onMainThread<T: Sendable>(
+func onMainThread<T: Sendable>(
     _ body: @MainActor () throws -> T
 ) throws -> T {
     precondition(

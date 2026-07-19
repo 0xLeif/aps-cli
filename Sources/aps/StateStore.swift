@@ -15,12 +15,12 @@ import Observation
 /// `StateStore` does not call `APSPaths.configure()`, so injected test paths stay put.
 @MainActor
 public final class StateStore {
-    @AppDependency(\.clock) private var clock: any APSClock
-    @AppDependency(\.jsonCoding) private var jsonCoding: JSONCoding
+    @AppDependency(\.clock) var clock: any APSClock
+    @AppDependency(\.jsonCoding) var jsonCoding: JSONCoding
     #if !os(Linux) && !os(Windows)
-    @ObservedDependency(\.stats) private var stats: DemoStats
+    @ObservedDependency(\.stats) var stats: DemoStats
     #else
-    @AppDependency(\.stats) private var stats: DemoStats
+    @AppDependency(\.stats) var stats: DemoStats
     #endif
 
     public init() {
@@ -81,7 +81,7 @@ public final class StateStore {
         switch key {
         case .counter:
             guard let intValue = Int(value) else {
-                throw APSError.invalidValue(key: key, value: value)
+                throw APSError.invalidValue(key: key.rawValue, value: value)
             }
             var state = Application.state(\.counter)
             state.value = intValue
@@ -90,7 +90,7 @@ public final class StateStore {
             state.value = value
         case .flag:
             guard let boolValue = Self.parseBool(value) else {
-                throw APSError.invalidValue(key: key, value: value)
+                throw APSError.invalidValue(key: key.rawValue, value: value)
             }
             var state = Application.state(\.flag)
             state.value = boolValue
@@ -103,7 +103,7 @@ public final class StateStore {
             // Confirm the value is actually on disk before claiming success.
             let onDisk = try Self.readNoteFromDisk()
             guard onDisk == value else {
-                throw APSError.persistenceFailed(key: .note)
+                throw APSError.persistenceFailed(key: "note")
             }
         case .profile:
             let document: ProfileDocument
@@ -113,13 +113,13 @@ public final class StateStore {
                 }
                 document = try JSONDecoder().decode(ProfileDocument.self, from: data)
             } catch {
-                throw APSError.invalidValue(key: key, value: value)
+                throw APSError.invalidValue(key: key.rawValue, value: value)
             }
             var state = Application.fileState(\.profile)
             state.value = document
             let onDisk = try Self.readProfileFromDisk()
             guard onDisk == document else {
-                throw APSError.persistenceFailed(key: .profile)
+                throw APSError.persistenceFailed(key: "profile")
             }
         case .secret:
             // Encrypted-file store (issue #35): age-style envelope under the
@@ -134,10 +134,10 @@ public final class StateStore {
             slice.value = value
             let onDisk = try Self.readProfileFromDisk()
             guard onDisk.name == value, onDisk.version == expectedVersion else {
-                throw APSError.persistenceFailed(key: .profileName)
+                throw APSError.persistenceFailed(key: "profileName")
             }
         }
-        stats.recordMutation(key: key)
+        stats.recordMutation(key: key.rawValue)
     }
 
     public func reset(_ key: DemoKey) {
@@ -160,7 +160,7 @@ public final class StateStore {
             var slice = Application.slice(\.profile, \.name)
             slice.value = ""
         }
-        stats.recordMutation(key: key)
+        stats.recordMutation(key: key.rawValue)
     }
 
     public func resetAll() {
@@ -317,14 +317,14 @@ public final class StateStore {
             let data = try Data(contentsOf: fileURL)
             return try JSONDecoder().decode(String.self, from: data)
         } catch {
-            throw APSError.corruptState(key: .note)
+            throw APSError.corruptState(key: "note")
         }
     }
 
     /// Requires `note.json` to exist and decode; used after writes.
     public static func readNoteFromDisk() throws -> String {
         guard let value = try readNoteFromDiskIfPresent() else {
-            throw APSError.persistenceFailed(key: .note)
+            throw APSError.persistenceFailed(key: "note")
         }
         return value
     }
@@ -338,14 +338,14 @@ public final class StateStore {
             let data = try Data(contentsOf: fileURL)
             return try JSONDecoder().decode(ProfileDocument.self, from: data)
         } catch {
-            throw APSError.corruptState(key: .profile)
+            throw APSError.corruptState(key: "profile")
         }
     }
 
     /// Requires `profile.json` to exist and decode; used after writes.
     public static func readProfileFromDisk() throws -> ProfileDocument {
         guard let document = try readProfileFromDiskIfPresent() else {
-            throw APSError.persistenceFailed(key: .profile)
+            throw APSError.persistenceFailed(key: "profile")
         }
         return document
     }

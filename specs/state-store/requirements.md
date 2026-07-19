@@ -16,11 +16,12 @@ Acceptance Criteria
 
 ### REQ-state-store-002
 
-`StateStore` SHALL inject real `APSClock` / `SystemAPSClock` (`now`) and `JSONCoding` (`encodePretty`) dependencies for `dump` output.
+`StateStore` SHALL inject real `APSClock` / `SystemAPSClock` (`now`) and `JSONCoding` (`encodePretty` / `encodeAuto`) dependencies for dump output.
 
 Acceptance Criteria
-- `dump` JSON includes every `DemoKey` and a timestamp.
+- `dump` / `dumpRegistered` JSON includes every registered key and a timestamp.
 - Dependencies are loaded via `Application.dependency` / `@AppDependency`.
+- `recordMutation` accepts a string key name.
 
 ### REQ-state-store-003
 
@@ -89,4 +90,14 @@ Direct disk reads (`readNoteFromDiskIfPresent` / `readProfileFromDiskIfPresent`)
 Acceptance Criteria
 - Missing `note.json` yields nil (not an empty-string fallback from a torn decode).
 - Undecodable on-disk JSON throws `corruptState` for note and profile.
+
+### REQ-state-store-016
+
+`StateStore` SHALL load or materialize `schema.json`, resolve string key names through the registry, and support `addKey` / `removeKey` / `dumpRegistered` / string-name `watchBlocking` for non-seed keys via DynamicKeyStorage.
+
+Acceptance Criteria
+- `loadSchema()` materializes the demo seed when `schema.json` is missing.
+- `get(name:)` / `set(name:)` / `reset(name:)` work for seed and user keys.
+- `addKey` without force throws `schemaConflict` on duplicates; `removeKey` throws `unknownKey` when missing.
+- `dumpRegistered()` includes every registry key.
 

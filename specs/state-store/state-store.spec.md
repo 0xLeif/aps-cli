@@ -1,11 +1,13 @@
 ---
 module: state-store
-version: 22
+version: 24
 status: active
 files:
   - Sources/aps/StateStore.swift
+  - Sources/aps/StateStore+Registry.swift
   - Sources/aps/DemoState.swift
   - Sources/aps/Dependencies.swift
+  - Sources/aps/DynamicKeyStorage.swift
 db_tables: []
 depends_on: []
 ---
@@ -15,25 +17,32 @@ depends_on: []
 ## Purpose
 
 `StateStore` is the AppState-facing service used by the CLI. It reads and writes
-the fixed demo keys through Application extensions, injects real dependencies
-with `@AppDependency`, and provides dump / watch / reset helpers suitable for
-non-UI use.
+registry-backed keys (DemoKey seed bindings plus DynamicKeyStorage for user keys),
+injects real dependencies with `@AppDependency`, and provides dump / watch / reset
+helpers suitable for non-UI use.
 
 ## Public API
 
 | Export | Description |
 |--------|-------------|
-| `StateStore` | MainActor facade over demo AppState keys. |
+| `StateStore` | MainActor facade over registry-backed AppState keys. |
 | `init` | Loads clock/jsonCoding/stats dependencies without forcing `~/.aps`. |
-| `get` | Returns the current string rendering for a demo key. |
-| `set` | Parses and writes a demo key value; records a stats mutation. |
-| `reset` | Restores one demo key to its initial value; records a stats mutation. |
-| `resetAll` | Restores every demo key. |
-| `dump` | JSON snapshot with typed values (pretty on TTY, compact when piped). |
-| `watchBlocking` | Observation + polling watch loop for demo keys. |
+| `get` | Returns the current string rendering for a demo or registry key. |
+| `set` | Parses and writes a demo or registry key value; records a stats mutation. |
+| `reset` | Restores one demo or registry key to its initial value; records a stats mutation. |
+| `resetAll` | Restores every demo seed key. |
+| `resetAllRegistered` | Restores every key in the active schema.json registry. |
+| `dump` | JSON snapshot of demo seed keys (pretty on TTY, compact when piped). |
+| `dumpRegistered` | JSON snapshot of every registry key. |
+| `watchBlocking` | Observation + polling watch loop for demo or string registry keys. |
 | `watchStatsBlocking` | Combine + polling watch loop for ObservedDependency stats. |
 | `statsSnapshot` | Immutable view of DemoStats counters. |
 | `resetStats` | Clears process-local DemoStats counters. |
+| `loadSchema` | Load or materialize schema.json for the active state root. |
+| `resolve` | Resolve a SchemaKeyEntry by name or throw `unknownKey`. |
+| `addKey` | Persist a new or forced-replaced schema entry. |
+| `removeKey` | Remove a schema entry; optional purge of persisted data. |
+| `stateRoot` | Active FileState / schema.json directory. |
 | `profileDocument` | Typed profile FileState accessor. |
 | `profileName` | Slice accessor for ProfileDocument.name. |
 | `readNoteFromDisk` | Direct `note.json` read requiring a present decodable file. |
@@ -50,8 +59,8 @@ non-UI use.
 | `encodeAuto` | TTY-aware JSON encode helper (pretty on TTY, compact when piped). |
 | `DemoStats` | ObservableObject mutation-stats dependency. |
 | `mutationCount` | Number of recorded set/reset mutations. |
-| `lastMutatedKey` | Raw demo key of the latest mutation. |
-| `recordMutation` | Increments counters for a demo key. |
+| `lastMutatedKey` | Raw key name of the latest mutation. |
+| `recordMutation` | Increments counters for a string key name. |
 | `reset` | Clears DemoStats counters. |
 | `DemoStatsSnapshot` | Codable snapshot of DemoStats. |
 
@@ -60,9 +69,11 @@ non-UI use.
 1. All mutating AppState access happens on the main thread / MainActor.
 2. Writing `flag` calls `UserDefaults.standard.synchronize()` so Linux flushes
    before process exit.
-3. `dump()` includes every `DemoKey` plus an ISO-8601 `timestamp`.
+3. `dumpRegistered()` includes every key in the active schema.json plus an
+   ISO-8601 `timestamp`.
 4. `watchBlocking` emits the current value first, then subsequent distinct values.
 5. Dependencies are real services, not fake stubs used only for wiring demos.
+6. `schema.json` write failures surface as `APSError.persistenceFailed`.
 
 ## Behavioral Examples
 
@@ -127,3 +138,5 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-18 | CHG-0022-tty-aware-output-git-porcelain-rule-for-issue-33: TTY-aware output under the git porcelain rule for issue 33 |
 | 2026-07-19 | CHG-0021-tty-aware-output-under-the-git-porcelain-rule-issue-33: TTY-aware output under the git porcelain rule (issue 33) |
 | 2026-07-19 | CHG-0024-encrypted-file-secret-store-via-swift-crypto-issue-35: Encrypted-file secret store via swift-crypto (issue 35) |
+| 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Dynamic schema registry and 1.0.0 prep (issues 62-64) |
+| 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Implement dynamic schema registry and public-ready 1.0.0 prep for issues 62-64 |

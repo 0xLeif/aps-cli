@@ -55,6 +55,13 @@
       "timestamp": 1784476354,
       "digest": "bc9b8838bd9fe791b72a1f3d0241e9cc4f12d308497d9cdc17be09a9ca885ec9",
       "note": "Re-accept after #39 SpecSync stale sweep."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784487251,
+      "digest": "b15e718c24bf90c2627bd937d91d9dfbd9690ced1ffc9c01aed0bed456bfa39d",
+      "note": "Re-accept digest refresh for CHG-0028 (issues 62-64)."
     }
   ],
   "reopenings": [
@@ -531,6 +538,85 @@
       },
       "stale_acceptance_input_digest": "ef2c08548ecca238f57640caf3ccb8b9e50ad8706ad1b333189ab2416b7ed77a",
       "current_acceptance_input_digest": "49d32497548abcad9e9ebda1cdec3b1e5fd62d3fe96b00cc3063af602852c858"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0017-add-fledge-plugin-toml-shim-and-validate-in-verify-lane-for-issue-37",
+      "actor": "agent:cursor",
+      "reason": "Refresh digests for CHG-0028 dynamic schema / 1.0.0 prep (issues 62-64).",
+      "timestamp": 1784486437,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784476354,
+        "digest": "bc9b8838bd9fe791b72a1f3d0241e9cc4f12d308497d9cdc17be09a9ca885ec9",
+        "note": "Re-accept after #39 SpecSync stale sweep."
+      },
+      "prior_verification": {
+        "timestamp": 1784476336,
+        "commit": "6806a8478895404e8a68a02ff15b3fbc3a984da8",
+        "contract_digest": "e0780c4cee616dc7dec7b0f63be84c43a6d0d997bce778d0d3306cd40df00291",
+        "workspace_digest": "10ac822b7187d18bdcdd0cb6af19143423a745baa7f4b993073f757d9d7d66ab",
+        "acceptance_input_digest": "49d32497548abcad9e9ebda1cdec3b1e5fd62d3fe96b00cc3063af602852c858",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d983ebbc9e685c5df057ac076d6e018e6a0a1ed357ebb8e87f346a867df21032",
+              "entry_digest": "a4ed2749015f1495334c0c1fe23e42da5b00897ce9f3eac75163dc0acc403973",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5c205853cb5bf80d2432646cb0962fe62e1b151b0d83f0a9f899b9bc849d24a1",
+              "entry_digest": "0742a72050e218d3a66201f0d069003a0e43f40f564136fc45ae4828141745fb",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "fledge.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9725ff60ff21c473dfdbc0e2ff37c57b111dd5c73e516392c0620a6c4ed8ce08",
+              "entry_digest": "be2dd708aad79baa292992dcf01d539c05bd0250ddda3df2741a969a6689b174",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "plugin.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "68b9f2ea7911e91a5c9eeb00e22a905ffa587fb11cd82519da32e087518100db",
+              "entry_digest": "eb19ef93d20438eaa1f2b86d1879921dc2d1082fcdf1d4531bab1f9a3944ca35",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "49d32497548abcad9e9ebda1cdec3b1e5fd62d3fe96b00cc3063af602852c858",
+      "current_acceptance_input_digest": "34d3b3b25abd6b209b34d1f7241d659c28d3e28271c54d775556bf5685e00499"
     }
   ]
 }

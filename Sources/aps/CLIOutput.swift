@@ -205,14 +205,14 @@ enum CLIOutput {
         switch key {
         case .counter:
             guard let intValue = Int(raw) else {
-                throw APSError.invalidValue(key: key, value: raw)
+                throw APSError.invalidValue(key: key.rawValue, value: raw)
             }
             return .int(intValue)
         case .message, .note, .secret, .profileName:
             return .string(raw)
         case .flag:
             guard let boolValue = StateStore.parseBool(raw) else {
-                throw APSError.invalidValue(key: key, value: raw)
+                throw APSError.invalidValue(key: key.rawValue, value: raw)
             }
             return .bool(boolValue)
         case .profile:
@@ -222,8 +222,42 @@ enum CLIOutput {
             do {
                 return .object(try JSONDecoder().decode(ProfileDocument.self, from: data))
             } catch {
-                throw APSError.invalidValue(key: key, value: raw)
+                throw APSError.invalidValue(key: key.rawValue, value: raw)
             }
+        }
+    }
+
+    @MainActor
+    static func typedValue(for entry: SchemaKeyEntry, store: StateStore) throws -> JSONValue {
+        try typedValue(for: entry, from: try store.get(name: entry.name))
+    }
+
+    static func typedValue(for entry: SchemaKeyEntry, from raw: String) throws -> JSONValue {
+        if let demo = DemoKey(rawValue: entry.name) {
+            return try typedValue(for: demo, from: raw)
+        }
+        switch entry.type {
+        case "Int":
+            guard let intValue = Int(raw) else {
+                throw APSError.invalidValue(key: entry.name, value: raw)
+            }
+            return .int(intValue)
+        case "Bool":
+            guard let boolValue = StateStore.parseBool(raw) else {
+                throw APSError.invalidValue(key: entry.name, value: raw)
+            }
+            return .bool(boolValue)
+        case "object":
+            guard let data = raw.data(using: .utf8) else {
+                throw APSError.decodingFailed
+            }
+            // Prefer ProfileDocument when shape matches; else keep as string envelope.
+            if let document = try? JSONDecoder().decode(ProfileDocument.self, from: data) {
+                return .object(document)
+            }
+            return .string(raw)
+        default:
+            return .string(raw)
         }
     }
 
@@ -237,6 +271,20 @@ enum CLIOutput {
             type: key.valueType,
             storage: key.storage,
             value: try typedValue(for: key, from: rawValue),
+            timestamp: timestamp
+        )
+    }
+
+    static func watchEvent(
+        entry: SchemaKeyEntry,
+        rawValue: String,
+        timestamp: Date
+    ) throws -> WatchEvent {
+        WatchEvent(
+            key: entry.name,
+            type: entry.type,
+            storage: entry.storage,
+            value: try typedValue(for: entry, from: rawValue),
             timestamp: timestamp
         )
     }

@@ -1,12 +1,12 @@
 [plugin]
 name = "fledge-plugin-aps"
-version = "0.2.0"
-description = "Tiny Swift CLI that dogfoods AppState outside SwiftUI"
+version = "1.0.0"
+description = "Tiny Swift CLI that dogfoods AppState with a dynamic schema.json registry"
 author = "0xLeif"
 
 [[commands]]
 name = "aps"
-description = "Dogfood AppState: get/set/watch/dump typed demo state"
+description = "Dogfood AppState: get/set/watch/dump registry-backed state"
 binary = ".build/release/aps"
 
 [hooks]

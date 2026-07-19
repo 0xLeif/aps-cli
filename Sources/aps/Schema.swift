@@ -1,16 +1,14 @@
 import Foundation
 
-/// `aps schema`: the self-describing contract endpoint (issue #32).
+/// `aps schema`: the self-describing contract endpoint (issue #32 / #64).
 ///
-/// Static contract only: one cacheable JSON document describing the CLI
-/// version, schema version, keys, commands, payload shapes, state-root
-/// precedence, and the error table. Live state stays in `dump`.
-/// `schemaVersion` is an integer bumped on any contract change; agents
-/// compare equality and bail on mismatch.
+/// Static fields describe CLI contract shape. `keys` project the active
+/// `schema.json` registry. `schemaVersion` bumps when the document shape
+/// changes; `userSchema.hash` tracks key-set drift.
 enum Schema {
 
-    static let cliVersion = "0.2.0"
-    static let schemaVersion = 2
+    static let cliVersion = "1.0.0"
+    static let schemaVersion = 3
 
     // MARK: - Document model
 
@@ -18,10 +16,17 @@ enum Schema {
         let cliVersion: String
         let schemaVersion: Int
         let stateRoot: StateRootDoc
+        let userSchema: UserSchemaMeta
         let keys: [KeyEntry]
         let commands: [CommandEntry]
         let payloads: [String: Node]
         let errors: [ErrorEntry]
+    }
+
+    struct UserSchemaMeta: Encodable {
+        let formatVersion: Int
+        let hash: String
+        let path: String
     }
 
     struct StateRootDoc: Encodable {
@@ -56,7 +61,7 @@ enum Schema {
         let hint: String
     }
 
-    // MARK: - Minimal JSON Schema subset (type/object/properties/required/array/items)
+    // MARK: - Minimal JSON Schema subset
 
     struct Property: Encodable {
         let name: String
@@ -101,8 +106,13 @@ enum Schema {
         Property(name: name, node: node, required: required)
     }
 
-    static func document() -> Document {
-        Document(
+    @MainActor
+    static func document(stateDir: String? = nil) throws -> Document {
+        APSPaths.configure(stateDir: stateDir)
+        let root = FileManager.defaultFileStatePath
+        let schema = try UserSchema.loadOrMaterialize(stateRoot: root)
+        let hash = try UserSchema.hash(schema)
+        return Document(
             cliVersion: cliVersion,
             schemaVersion: schemaVersion,
             stateRoot: StateRootDoc(
@@ -111,51 +121,62 @@ enum Schema {
                 flag: "--state-dir",
                 defaultPath: "~/.aps"
             ),
-            keys: keyEntries(),
+            userSchema: UserSchemaMeta(
+                formatVersion: schema.formatVersion,
+                hash: hash,
+                path: "<state-root>/schema.json"
+            ),
+            keys: keyEntries(from: schema),
             commands: commandEntries(),
             payloads: payloadNodes(),
             errors: errorEntries()
         )
     }
 
-    private static func keyEntries() -> [KeyEntry] {
-        DemoKey.allCases.map { key in
-            let lifetime: String
+    /// Static fallback used by tests that do not touch the state root.
+    static func staticDocument() -> Document {
+        let schema = UserSchema.defaultDocument()
+        let hash = (try? UserSchema.hash(schema)) ?? ""
+        return Document(
+            cliVersion: cliVersion,
+            schemaVersion: schemaVersion,
+            stateRoot: StateRootDoc(
+                precedence: ["--state-dir", "APS_HOME", "~/.aps"],
+                env: "APS_HOME",
+                flag: "--state-dir",
+                defaultPath: "~/.aps"
+            ),
+            userSchema: UserSchemaMeta(
+                formatVersion: schema.formatVersion,
+                hash: hash,
+                path: "<state-root>/schema.json"
+            ),
+            keys: keyEntries(from: schema),
+            commands: commandEntries(),
+            payloads: payloadNodes(),
+            errors: errorEntries()
+        )
+    }
+
+    private static func keyEntries(from schema: UserSchemaDocument) -> [KeyEntry] {
+        schema.keys.map { entry in
             let path: String?
-            let account: String?
-            switch key {
-            case .counter, .message:
-                lifetime = "process"
-                path = nil
-                account = nil
-            case .flag:
-                lifetime = "persisted"
+            if let relative = entry.path {
+                path = "<state-root>/\(relative)"
+            } else if entry.storage == "StoredState" {
+                path = "UserDefaults (aps.user.\(entry.name))"
+            } else if entry.name == "flag" {
                 path = "UserDefaults (aps.flag)"
-                account = nil
-            case .note:
-                lifetime = "persisted"
-                path = "<state-root>/note.json"
-                account = nil
-            case .profile:
-                lifetime = "persisted"
-                path = "<state-root>/profile.json"
-                account = nil
-            case .secret:
-                lifetime = "persisted"
-                path = "<state-root>/secret.enc"
-                account = nil
-            case .profileName:
-                lifetime = "persisted (slice of profile)"
-                path = "<state-root>/profile.json"
-                account = nil
+            } else {
+                path = nil
             }
             return KeyEntry(
-                name: key.rawValue,
-                type: key.valueType,
-                storage: key.storage,
-                lifetime: lifetime,
+                name: entry.name,
+                type: entry.type,
+                storage: entry.storage,
+                lifetime: entry.lifetime,
                 path: path,
-                keychainAccount: account
+                keychainAccount: nil
             )
         }
     }
@@ -196,9 +217,17 @@ enum Schema {
             ),
             CommandEntry(
                 name: "keys",
-                summary: "List the fixed keys and how they are stored.",
+                summary: "List registered keys and how they are stored.",
                 arguments: [],
-                flags: ["--json"],
+                flags: ["--json", "--state-dir"],
+                payload: "KeysPayload",
+                streaming: false
+            ),
+            CommandEntry(
+                name: "key",
+                summary: "Add, remove, or list schema.json entries.",
+                arguments: ["add|remove|list"],
+                flags: ["--json", "--state-dir", "--force", "--purge"],
                 payload: "KeysPayload",
                 streaming: false
             ),
@@ -222,7 +251,7 @@ enum Schema {
                 name: "schema",
                 summary: "Print this self-describing contract document.",
                 arguments: [],
-                flags: ["--json"],
+                flags: ["--json", "--state-dir"],
                 payload: "SchemaDocument",
                 streaming: false
             ),
@@ -295,6 +324,18 @@ enum Schema {
                 hint: "Run `aps keys` to see expected types per key."
             ),
             ErrorEntry(
+                code: "unknown_key",
+                exitCode: 64,
+                meaning: "key name is not in the active schema.json registry",
+                hint: "Run `aps keys` or add the key with `aps key add`."
+            ),
+            ErrorEntry(
+                code: "schema_conflict",
+                exitCode: 64,
+                meaning: "key add would overwrite an existing schema entry",
+                hint: "Choose a new name or pass --force."
+            ),
+            ErrorEntry(
                 code: "decoding_failed",
                 exitCode: 65,
                 meaning: "a value or file is not valid JSON for its key",
@@ -305,6 +346,12 @@ enum Schema {
                 exitCode: 65,
                 meaning: "a state file exists but is undecodable (torn write)",
                 hint: "Reset the key or repair the file under the state root."
+            ),
+            ErrorEntry(
+                code: "schema_invalid",
+                exitCode: 65,
+                meaning: "schema.json is present but undecodable or fails validation",
+                hint: "Fix or delete schema.json under the state root."
             ),
             ErrorEntry(
                 code: "secret_unlock_failed",
