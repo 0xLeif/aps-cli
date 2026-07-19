@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 24,
-  "id": "CHG-0024-encrypted-file-secret-store-via-swift-crypto-issue-35",
+  "sequence": 25,
+  "id": "CHG-0025-aps-schema-self-describing-contract-endpoint-issue-32",
   "acknowledged_collisions": []
 }

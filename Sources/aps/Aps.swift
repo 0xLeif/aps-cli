@@ -29,10 +29,28 @@ struct Aps: ParsableCommand {
             Dump.self,
             Keys.self,
             Stats.self,
-            Reset.self
+            Reset.self,
+            SchemaCmd.self
         ],
         defaultSubcommand: nil
     )
+}
+
+extension Aps {
+    struct SchemaCmd: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "schema",
+            abstract: "Print the self-describing CLI contract (keys, commands, payloads, errors) as JSON."
+        )
+
+        @Flag(name: .long, help: "Emit machine-readable JSON (accepted for symmetry; schema is always JSON).")
+        var json: Bool = false
+
+        func run() throws {
+            _ = json
+            print(try CLIOutput.encodeJSON(Schema.document()))
+        }
+    }
 }
 
 extension Aps {

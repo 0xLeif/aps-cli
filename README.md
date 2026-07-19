@@ -113,6 +113,7 @@ swift run aps reset --all
 ### Agent usage
 
 ```bash
+swift run aps schema                # self-describing contract: keys, commands, payloads, errors
 swift run aps get note --json
 swift run aps set counter 3 --json
 swift run aps dump --json
@@ -129,6 +130,8 @@ swift run aps get profile --json
 swift run aps set profileName agent --json
 swift run aps stats --json
 ```
+
+`aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion` (bumped on any contract change, so agents can detect drift), state-root precedence, every key and command, payload shapes, and the error-code table. It is static contract only; live state stays in `aps dump`. ArgumentParser's full command tree is also available as JSON via `aps <cmd> --experimental-dump-help`.
 
 `watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process. For `note` and `profile`, polling reads the JSON files directly so AppState's FileState cache cannot hide cross-process writes.
 

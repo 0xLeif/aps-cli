@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 23
+version: 24
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -9,6 +9,7 @@ files:
   - Sources/aps/TTY.swift
   - Sources/aps/WatchTermination.swift
   - Sources/aps/SecretStore.swift
+  - Sources/aps/Schema.swift
 db_tables: []
 depends_on:
   - state-store
@@ -20,7 +21,8 @@ depends_on:
 
 `aps` is a small Swift executable that dogfoods AppState outside SwiftUI.
 It exposes a fixed demo schema through ArgumentParser subcommands so humans and
-agents can get, set, watch, dump, list, and reset typed application state.
+agents can get, set, watch, dump, list, and reset typed application state, and
+it self-describes that contract for agents through the `schema` command.
 
 ## Public API
 
@@ -65,6 +67,12 @@ Command output modes (informational): human output is TTY-aware (aligned
 is byte-stable plain text. JSON is pretty on TTY and compact when piped (gh
 rule). `watch --json` is an alias for `--jsonl`; `keys --quiet` prints key
 names only. Machine shapes are additive-only contracts; human text may evolve.
+Command tree (informational): `Aps` is the `@main` root with get, set, watch,
+dump, keys, stats, reset, and schema. `schema` prints one cacheable JSON
+document (`SchemaDocument`): cliVersion, integer schemaVersion (bumped on any
+contract change), state-root precedence, keys, commands, payload shapes, and
+the error table. Static contract only; live state stays in `dump`.
+| `description` | Actionable error text for humans and ValidationError bridging. |
 
 ## Invariants
 
@@ -172,3 +180,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-19 | CHG-0022-tty-aware-output-under-the-git-porcelain-rule-issue-33: TTY-aware output under the git porcelain rule (issue 33) |
 | 2026-07-19 | CHG-0023-watch-signal-handling-and-termination-semantics-issue-34: Watch signal handling and termination semantics (issue 34) |
 | 2026-07-19 | CHG-0024-encrypted-file-secret-store-via-swift-crypto-issue-35: Encrypted-file secret store via swift-crypto (issue 35) |
+| 2026-07-19 | CHG-0025-aps-schema-self-describing-contract-endpoint-issue-32: Add aps schema self-describing contract endpoint (issue 32) |
