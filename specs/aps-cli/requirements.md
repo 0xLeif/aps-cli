@@ -17,14 +17,12 @@ Acceptance Criteria
 
 ### REQ-aps-cli-002
 
-`set` SHALL reject values that cannot parse to the key's type and exit non-zero via `APSError.invalidValue`. All domain errors SHALL follow the error contract: human line on stderr, taxonomy exit code, and a JSON envelope when `--json` / `--jsonl` or `APS_ERROR_JSON=1`.
+`set` SHALL reject values that cannot parse to the key's type and exit non-zero via `APSError.invalidValue`.
 
 Acceptance Criteria
 - Non-integer `counter` values fail with an invalid-value message.
 - Non-boolean `flag` values fail with an invalid-value message.
 - `APSError.description` names the key and expected type.
-- Exit codes: 64 usage, 65 corrupt or undecodable persisted state, 69 unavailable, 70 internal, 73 write did not persist.
-- The envelope shape is `{"error":{"code","message","hint"}}` with stable snake_case codes (`invalid_value`, `encoding_failed`, `decoding_failed`, `persistence_failed`, `keychain_unavailable`, `corrupt_state`); stdout stays empty on error.
 
 ### REQ-aps-cli-003
 
@@ -70,15 +68,12 @@ Acceptance Criteria
 
 ### REQ-aps-cli-012
 
-`watch` SHALL support `--count`, `--timeout`, and `--jsonl`, and SHALL handle SIGINT/SIGTERM with observable termination semantics.
+`watch` SHALL support `--count`, `--timeout`, and `--jsonl`.
 
 Acceptance Criteria
-- `--count` stops after that many printed values including the initial value (exit 0).
-- `--timeout` stops after the given seconds (exit 124).
-- SIGINT/SIGTERM stop the loop cleanly (exit 130 / 143).
-- The stop reason appears as a terminal `{"type":"end","reason":...}` event in `--jsonl` mode or a stderr line in human mode.
-- The `--jsonl` stream never contains non-JSON lines.
-- An unbounded watch prints a one-time stderr hint suggesting `--count` / `--timeout`.
+- `--count` stops after that many printed values including the initial value.
+- `--timeout` stops after the given seconds.
+- `--jsonl` emits one JSON object per line.
 
 ### REQ-aps-cli-013
 
@@ -100,9 +95,7 @@ Acceptance Criteria
 
 ### REQ-aps-cli-015
 
-Superseded by REQ-aps-cli-020 (encrypted-file secret store; issue #35).
-
-
+Superseded by REQ-aps-cli-020 (encrypted-file secret store; issue #35). The Keychain-backed SecureState demo was removed because ad-hoc CLI signatures cannot earn durable Keychain trust.
 
 ### REQ-aps-cli-016
 
@@ -132,16 +125,6 @@ Acceptance Criteria
 - `APS_HOME` resolution tests mutate the process environment with a portable helper (not POSIX-only `setenv`).
 - `specs/aps-cli/testing.md` and README document the Windows test + smoke path.
 
-
-### REQ-aps-cli-019
-
-Human output SHALL be TTY-aware under the git porcelain rule: pretty for interactive humans, byte-stable plain text when piped. JSON SHALL be pretty on TTY and compact when piped.
-
-Acceptance Criteria
-- Piped `keys` output is the TSV form with no ANSI escapes; TTY gets an aligned table with bold headers and semantic color honoring NO_COLOR.
-- `dump` / `--json` payloads are single-line compact JSON off-TTY and pretty on TTY.
-- `watch --json` behaves as `--jsonl`; `keys --quiet` prints key names only.
-- Shell completion scripts (bash/zsh/fish) are documented in README.
 
 ### REQ-aps-cli-020
 

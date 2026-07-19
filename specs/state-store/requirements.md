@@ -72,10 +72,7 @@ Acceptance Criteria
 
 ### REQ-state-store-013
 
-Superseded by REQ-aps-cli-020 (encrypted-file secret store via `SecretStore`; issue #35).
-
-
-
+Superseded by REQ-aps-cli-020 (encrypted-file secret store via `SecretStore`; issue #35). Keychain-backed SecureState paths and `keychainUnavailable` were removed from this CLI.
 
 ### REQ-state-store-014
 
