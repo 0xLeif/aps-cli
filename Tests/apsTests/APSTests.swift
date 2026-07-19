@@ -193,6 +193,7 @@ final class APSTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
     }
 
+    #if !os(Windows)
     @MainActor
     func testSecretKeyFilePermissionsAre0600() async throws {
         let path = FileManager.defaultFileStatePath
@@ -206,6 +207,7 @@ final class APSTests: XCTestCase {
         let attributes = try FileManager.default.attributesOfItem(atPath: keyURL.path)
         XCTAssertEqual(attributes[.posixPermissions] as? Int, 0o600)
     }
+    #endif
 
     @MainActor
     func testSecretStoreCorruptEnvelopeThrowsDecodingFailed() async throws {
