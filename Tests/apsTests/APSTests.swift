@@ -79,7 +79,7 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(DemoKey.secret.storage, "EncryptedFile")
         XCTAssertEqual(DemoKey.profileName.storage, "Slice")
         XCTAssertEqual(DemoKey.counter.valueType, "Int")
-        XCTAssertEqual(DemoKey.profile.valueType, "ProfileDocument")
+        XCTAssertEqual(DemoKey.profile.valueType, "object")
         XCTAssertEqual(DemoKey.secret.valueType, "String")
         XCTAssertEqual(DemoKey.profileName.valueType, "String")
         XCTAssertEqual(DemoKey.allCases.count, 7)
@@ -258,7 +258,7 @@ final class APSTests: XCTestCase {
             try store.set(.profile, value: "not-json")
             XCTFail("Expected invalid value error")
         } catch let error as APSError {
-            XCTAssertEqual(error, .invalidValue(key: .profile, value: "not-json"))
+            XCTAssertEqual(error, .invalidValue(key: "profile", value: "not-json"))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -271,7 +271,7 @@ final class APSTests: XCTestCase {
             try store.set(.counter, value: "nope")
             XCTFail("Expected invalid value error")
         } catch let error as APSError {
-            XCTAssertEqual(error, .invalidValue(key: .counter, value: "nope"))
+            XCTAssertEqual(error, .invalidValue(key: "counter", value: "nope"))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -490,12 +490,12 @@ final class APSTests: XCTestCase {
         try Data("{not-json".utf8).write(to: url)
 
         XCTAssertThrowsError(try StateStore.readNoteFromDiskIfPresent()) { error in
-            XCTAssertEqual(error as? APSError, .corruptState(key: .note))
+            XCTAssertEqual(error as? APSError, .corruptState(key: "note"))
         }
         // Must not silently fall back to AppState initial via get().
         XCTAssertEqual(store.get(.note), "ok")
         XCTAssertThrowsError(try StateStore.requireDecodableDiskState(for: .note)) { error in
-            XCTAssertEqual(error as? APSError, .corruptState(key: .note))
+            XCTAssertEqual(error as? APSError, .corruptState(key: "note"))
         }
     }
 
@@ -519,7 +519,7 @@ final class APSTests: XCTestCase {
                 }
             }
         ) { error in
-            XCTAssertEqual(error as? APSError, .corruptState(key: .note))
+            XCTAssertEqual(error as? APSError, .corruptState(key: "note"))
         }
         XCTAssertEqual(seen, ["before"])
     }
@@ -533,7 +533,7 @@ final class APSTests: XCTestCase {
         try Data("{".utf8).write(to: url)
 
         XCTAssertThrowsError(try StateStore.readProfileFromDiskIfPresent()) { error in
-            XCTAssertEqual(error as? APSError, .corruptState(key: .profile))
+            XCTAssertEqual(error as? APSError, .corruptState(key: "profile"))
         }
         XCTAssertEqual(APSError.corruptStateExitCode, 65)
     }
@@ -662,7 +662,7 @@ final class APSTests: XCTestCase {
             try store.set(.flag, value: "maybe")
             XCTFail("Expected invalid value error")
         } catch let error as APSError {
-            XCTAssertEqual(error, .invalidValue(key: .flag, value: "maybe"))
+            XCTAssertEqual(error, .invalidValue(key: "flag", value: "maybe"))
         } catch {
             XCTFail("Unexpected error: \(error)")
         }
@@ -707,36 +707,36 @@ final class APSTests: XCTestCase {
     }
 
     func testAPSErrorDescriptionsAreActionable() {
-        let invalid = APSError.invalidValue(key: .counter, value: "nope")
+        let invalid = APSError.invalidValue(key: "counter", value: "nope")
         XCTAssertTrue(invalid.description.contains("counter"))
-        XCTAssertTrue(invalid.description.contains("Int"))
+        XCTAssertTrue(invalid.description.contains("nope"))
 
-        let persistence = APSError.persistenceFailed(key: .note)
+        let persistence = APSError.persistenceFailed(key: "note")
         XCTAssertTrue(persistence.description.contains("note"))
         XCTAssertTrue(persistence.description.contains("persist"))
 
-        let corrupt = APSError.corruptState(key: .note)
+        let corrupt = APSError.corruptState(key: "note")
         XCTAssertTrue(corrupt.description.contains("note"))
         XCTAssertTrue(corrupt.description.contains("torn") || corrupt.description.contains("Corrupt"))
         XCTAssertEqual(APSError.corruptStateExitCode, 65)
     }
 
     func testAPSErrorContractCodesAndExitCodes() {
-        XCTAssertEqual(APSError.invalidValue(key: .counter, value: "x").code, "invalid_value")
+        XCTAssertEqual(APSError.invalidValue(key: "counter", value: "x").code, "invalid_value")
         XCTAssertEqual(APSError.encodingFailed.code, "encoding_failed")
         XCTAssertEqual(APSError.decodingFailed.code, "decoding_failed")
-        XCTAssertEqual(APSError.persistenceFailed(key: .note).code, "persistence_failed")
+        XCTAssertEqual(APSError.persistenceFailed(key: "note").code, "persistence_failed")
         XCTAssertEqual(APSError.secretUnlockFailed.code, "secret_unlock_failed")
-        XCTAssertEqual(APSError.corruptState(key: .note).code, "corrupt_state")
+        XCTAssertEqual(APSError.corruptState(key: "note").code, "corrupt_state")
 
-        XCTAssertEqual(APSError.invalidValue(key: .counter, value: "x").exitCode, 64)
+        XCTAssertEqual(APSError.invalidValue(key: "counter", value: "x").exitCode, 64)
         XCTAssertEqual(APSError.decodingFailed.exitCode, 65)
-        XCTAssertEqual(APSError.corruptState(key: .note).exitCode, 65)
+        XCTAssertEqual(APSError.corruptState(key: "note").exitCode, 65)
         XCTAssertEqual(APSError.secretUnlockFailed.exitCode, 69)
         XCTAssertEqual(APSError.encodingFailed.exitCode, 70)
-        XCTAssertEqual(APSError.persistenceFailed(key: .note).exitCode, 73)
+        XCTAssertEqual(APSError.persistenceFailed(key: "note").exitCode, 73)
 
-        for error in [APSError.invalidValue(key: .flag, value: "x"), .encodingFailed, .decodingFailed, .persistenceFailed(key: .flag), .secretUnlockFailed, .corruptState(key: .profile)] as [APSError] {
+        for error in [APSError.invalidValue(key: "flag", value: "x"), .encodingFailed, .decodingFailed, .persistenceFailed(key: "flag"), .secretUnlockFailed, .corruptState(key: "profile")] as [APSError] {
             XCTAssertFalse(error.hint.isEmpty, "hint required for \(error.code)")
         }
     }
@@ -744,9 +744,9 @@ final class APSTests: XCTestCase {
     func testErrorEnvelopeEncodesStableShape() throws {
         let envelope = CLIOutput.ErrorEnvelope(
             error: .init(
-                code: APSError.corruptState(key: .note).code,
-                message: APSError.corruptState(key: .note).description,
-                hint: APSError.corruptState(key: .note).hint
+                code: APSError.corruptState(key: "note").code,
+                message: APSError.corruptState(key: "note").description,
+                hint: APSError.corruptState(key: "note").hint
             )
         )
         let line = try CLIOutput.encodeLine(envelope)
@@ -853,15 +853,15 @@ final class APSTests: XCTestCase {
     }
 
     func testSchemaDocumentCoversAllKeysAndCommands() throws {
-        let document = Schema.document()
+        let document = Schema.staticDocument()
 
-        XCTAssertEqual(document.schemaVersion, 2)
-        XCTAssertEqual(document.cliVersion, "0.2.0")
+        XCTAssertEqual(document.schemaVersion, 3)
+        XCTAssertEqual(document.cliVersion, "1.0.0")
         XCTAssertEqual(document.keys.map(\.name), DemoKey.allCases.map(\.rawValue))
         XCTAssertEqual(document.stateRoot.precedence, ["--state-dir", "APS_HOME", "~/.aps"])
 
         let commandNames = document.commands.map(\.name)
-        for expected in ["get", "set", "watch", "dump", "keys", "reset", "stats", "schema"] {
+        for expected in ["get", "set", "watch", "dump", "keys", "key", "reset", "stats", "schema"] {
             XCTAssertTrue(commandNames.contains(expected), "missing command \(expected)")
         }
 
@@ -873,8 +873,8 @@ final class APSTests: XCTestCase {
     }
 
     func testSchemaErrorTableIsStable() {
-        let table = Schema.document().errors
-        XCTAssertEqual(table.count, 6)
+        let table = Schema.staticDocument().errors
+        XCTAssertEqual(table.count, 9)
         let byCode = Dictionary(uniqueKeysWithValues: table.map { ($0.code, $0.exitCode) })
         XCTAssertEqual(byCode["invalid_value"], 64)
         XCTAssertEqual(byCode["decoding_failed"], 65)
@@ -882,6 +882,9 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(byCode["secret_unlock_failed"], 69)
         XCTAssertEqual(byCode["encoding_failed"], 70)
         XCTAssertEqual(byCode["persistence_failed"], 73)
+        XCTAssertEqual(byCode["unknown_key"], 64)
+        XCTAssertEqual(byCode["schema_conflict"], 64)
+        XCTAssertEqual(byCode["schema_invalid"], 65)
         for entry in table {
             XCTAssertFalse(entry.hint.isEmpty, "hint required for \(entry.code)")
             XCTAssertFalse(entry.meaning.isEmpty, "meaning required for \(entry.code)")
@@ -889,11 +892,11 @@ final class APSTests: XCTestCase {
     }
 
     func testSchemaDocumentEncodesValidContractJSON() throws {
-        let json = try CLIOutput.encodePretty(Schema.document())
+        let json = try CLIOutput.encodePretty(Schema.staticDocument())
         let data = try XCTUnwrap(json.data(using: .utf8))
         let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
-        XCTAssertEqual(object?["schemaVersion"] as? Int, 2)
+        XCTAssertEqual(object?["schemaVersion"] as? Int, 3)
         let payloads = try XCTUnwrap(object?["payloads"] as? [String: Any])
         for name in ["KeyValuePayload", "KeysPayload", "WatchEvent", "WatchErrorEvent", "WatchEndEvent", "ResetPayload", "StatsPayload", "ErrorEnvelope"] {
             XCTAssertNotNil(payloads[name], "missing payload schema \(name)")
@@ -903,4 +906,51 @@ final class APSTests: XCTestCase {
         XCTAssertNotNil(event["properties"])
         XCTAssertNotNil(event["required"])
     }
+
+    func testUserSchemaMaterializeAndKeyAdd() async throws {
+        try await MainActor.run {
+            let root = FileManager.default.temporaryDirectory
+                .appendingPathComponent("aps-schema-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            FileManager.defaultFileStatePath = root.path
+            let store = StateStore()
+            let schema = try store.loadSchema()
+            XCTAssertEqual(schema.keys.count, 7)
+            XCTAssertTrue(FileManager.default.fileExists(atPath: root.appendingPathComponent("schema.json").path))
+            try store.addKey(
+                SchemaKeyEntry(
+                    name: "agentNote",
+                    type: "String",
+                    storage: "FileState",
+                    initial: .string(""),
+                    path: "agent-note.json",
+                    doc: "user file key"
+                ),
+                force: false
+            )
+            try store.set(name: "agentNote", value: "hello-agent")
+            XCTAssertEqual(try store.get(name: "agentNote"), "hello-agent")
+            let doc = try Schema.document(stateDir: root.path)
+            XCTAssertTrue(doc.keys.map(\.name).contains("agentNote"))
+            XCTAssertFalse(doc.userSchema.hash.isEmpty)
+        }
+    }
+
+    func testUnknownKeyError() async throws {
+        try await MainActor.run {
+            let root = FileManager.default.temporaryDirectory
+                .appendingPathComponent("aps-unknown-\(UUID().uuidString)", isDirectory: true)
+            try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+            defer { try? FileManager.default.removeItem(at: root) }
+            FileManager.defaultFileStatePath = root.path
+            let store = StateStore()
+            _ = try store.loadSchema()
+            XCTAssertThrowsError(try store.get(name: "nope")) { error in
+                XCTAssertEqual(error as? APSError, .unknownKey(name: "nope"))
+            }
+        }
+    }
+
+
 }

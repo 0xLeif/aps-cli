@@ -41,6 +41,13 @@
       "timestamp": 1784437122,
       "digest": "ef3652038a7078594cfb76ed52d915cbee1f8cf2a29e00e36c84e450b514fedf",
       "note": null
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784487002,
+      "digest": "7adbc1fc981fdb62588b575db423bc519013a7a5d7377247da4fcb28da2cd67a",
+      "note": "Re-accept digest refresh for CHG-0028 (issues 62-64)."
     }
   ],
   "reopenings": [
@@ -319,6 +326,75 @@
       },
       "stale_acceptance_input_digest": "721ce626d1e5fa2ed852bbaeb13c5138d381c9bba89821dd81a09c239fa34678",
       "current_acceptance_input_digest": "63f91b8d1df9e4ba00049e0fb7d9c404d48521d3352a1f9031eccc52e6801aa2"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0010-ci-eliminate-the-double-build-for-issue-14",
+      "actor": "agent:cursor",
+      "reason": "Refresh digests for CHG-0028 dynamic schema / 1.0.0 prep (issues 62-64).",
+      "timestamp": 1784486312,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "0xLeif",
+        "timestamp": 1784437122,
+        "digest": "ef3652038a7078594cfb76ed52d915cbee1f8cf2a29e00e36c84e450b514fedf",
+        "note": null
+      },
+      "prior_verification": {
+        "timestamp": 1784437114,
+        "commit": "9e4e9a9816f38f9d3c25080ae0f9cd7cde733d3f",
+        "contract_digest": "36ad6788d34d58f8bdcf39e67a8f44fdba54ac7f513570c6eaf5e6aace6b68b7",
+        "workspace_digest": "4d6dccf1abc426bbba43bf26de0966607c2c33caee231ababd563794a5abbde9",
+        "acceptance_input_digest": "63f91b8d1df9e4ba00049e0fb7d9c404d48521d3352a1f9031eccc52e6801aa2",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".github/workflows/ci.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a902f7c6785bb487278bfb39c95d593a45a8695f5245a9e5b9909d810410e6a8",
+              "entry_digest": "00a1986a1f0e06e1cbd4d3c3e933b240c5cb457a554e86515ba3db8241f7a263",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".github/workflows/linux-smoke.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d0dcf782a0611c59d65c5f861af3901430ab8164a175f8b62da92e28a22fbaac",
+              "entry_digest": "2701d35e67ed0ada87d23624d7ad67ba411afc8c5c9041a45689dd1cee7aa9cc",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4596b5346d690154141e9faa364f8c2934abde2e31083f80896552576b76762b",
+              "entry_digest": "f38e6dfc1754c4aa014cc51b7e54e22ee0b01ffe2656eefe2a413bd4111c9a79",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "63f91b8d1df9e4ba00049e0fb7d9c404d48521d3352a1f9031eccc52e6801aa2",
+      "current_acceptance_input_digest": "b4ff62d9d18d58aca4d3bba18e303d0b100a020cd8e9e218cb54ff5dc3dec3c7"
     }
   ]
 }

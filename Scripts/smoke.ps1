@@ -79,7 +79,7 @@ if (-not (Test-Path -LiteralPath $script:Bin)) {
 }
 
 $null = Invoke-ApsOk --help
-Assert-Equal '0.2.0' (Invoke-ApsOk --version) 'version'
+Assert-equal '1.0.0' (Invoke-ApsOk --version) 'version'
 
 $keys = Invoke-ApsOk keys
 Assert-Match $keys 'counter' 'keys counter'
@@ -157,6 +157,21 @@ $null = Invoke-ApsOk stats --watch --count 1 --timeout 2
 
 # Invalid values should fail clearly.
 Invoke-ApsExpectFail set counter nope
+
+# Schema contract + dynamic key round-trip
+$schema = Invoke-ApsOk schema
+Assert-Match $schema '"schemaVersion":3' 'schema version'
+Assert-Match $schema '"userSchema"' 'userSchema meta'
+Assert-Match $schema '"code":"unknown_key"' 'unknown_key error'
+Assert-Equal '1.0.0' (Invoke-ApsOk --version) 'cli version'
+if (-not (Test-Path (Join-Path $env:APS_HOME 'schema.json'))) {
+    throw 'expected schema.json to materialize under APS_HOME'
+}
+$null = Invoke-ApsOk key add smokeNote --type String --storage FileState --path smoke-note.json --initial ''
+Assert-equal 'from-smoke' (Invoke-ApsOk set smokeNote from-smoke) 'set smokeNote'
+Assert-equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'get smokeNote'
+Assert-Match (Invoke-ApsOk schema) '"name":"smokeNote"' 'schema lists smokeNote'
+$null = Invoke-ApsOk key remove smokeNote --purge
 
 Write-Host 'smoke ok'
 # Native commands leave $LASTEXITCODE set; clear so pwsh/GHA do not treat success as failure.

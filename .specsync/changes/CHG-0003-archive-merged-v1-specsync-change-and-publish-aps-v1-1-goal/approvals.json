@@ -111,6 +111,13 @@
       "timestamp": 1784476705,
       "digest": "d5ce0d1f66abcc4795288b0e7c58ce496e2f939e28275852c6ca9230e9f166af",
       "note": "Re-accept after #39 SpecSync stale sweep."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:cursor",
+      "timestamp": 1784486886,
+      "digest": "97b9ac0a88e5ef04d13d96ce699d7738bfd8ed09b251822add4918a441cab5c1",
+      "note": "Re-accept digest refresh for CHG-0028 (issues 62-64)."
     }
   ],
   "reopenings": [
@@ -1660,6 +1667,125 @@
       },
       "stale_acceptance_input_digest": "9431c62c0f2aebc5b04026bce0b883448ce3ec9907ac5a75bbe2094e65844b6a",
       "current_acceptance_input_digest": "32828900f0e77cb92b03afe7fd86f69e6da6cecc0ee24d1c862d751a7ffaa3e1"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0003-archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal",
+      "actor": "agent:cursor",
+      "reason": "Refresh digests for CHG-0028 dynamic schema / 1.0.0 prep (issues 62-64).",
+      "timestamp": 1784486284,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784476705,
+        "digest": "d5ce0d1f66abcc4795288b0e7c58ce496e2f939e28275852c6ca9230e9f166af",
+        "note": "Re-accept after #39 SpecSync stale sweep."
+      },
+      "prior_verification": {
+        "timestamp": 1784476682,
+        "commit": "6806a8478895404e8a68a02ff15b3fbc3a984da8",
+        "contract_digest": "641111b8f92bdfff2ba1f3bcda40f5299d9dc8a65449cd2a4a49333fac21100f",
+        "workspace_digest": "10ac822b7187d18bdcdd0cb6af19143423a745baa7f4b993073f757d9d7d66ab",
+        "acceptance_input_digest": "32828900f0e77cb92b03afe7fd86f69e6da6cecc0ee24d1c862d751a7ffaa3e1",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/.gitignore",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a3129d6f93250ade8dbacfc73bc7eeae0cc47c2f7032142ca47cb4f1ffb2483e",
+              "entry_digest": "9badbf40b83d05f58bafda0fc2cafccfe726e4da7e6e67ef513e822989e13f04",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ddf1f4cbb0fd983c8356a34b9b4f4ef77ca22764ac2ec36b223431402c043328",
+              "entry_digest": "7fd95f31d540d3d3e7128fbd03cb3207a3da428c98a81515a76b7dfc9b34d582",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/config.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "54a83f6a4a252649bac390d2e936aa0815711fba86b6bfc8ea8fff2fffdfd29b",
+              "entry_digest": "e60f979233a7db75ce63f4ef42d6f1f7676ad1655a438b9baf78558aba60ec3e",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/registry.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c423be1a5cf87318f85dc252fe0acd1c1486c5224ddc2d8e19bea1ac9c69c820",
+              "entry_digest": "7e1f068900ced849b8d1028ca40165fbdc5280ae7f53452f0e57e2710d895848",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/sdd.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2d5fb3058b1ee4ce584c3cda9410c193c4893e272ed459205e58bfde06afc7b0",
+              "entry_digest": "8c6b11fc5787eb04e7ee651eb15fbf98fc3ea22db37e65423e3d75f99c09df19",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/version",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f9893302cd3158f3b5aea394dcd2a91574869e9e6ff69e9235b10a3bf8c983fb",
+              "entry_digest": "f980ba79f6c953bed30303c6b87d8e868ad6a7f4114bf0e745c9099255e665b0",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "GOAL.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "1f202b1275871514d91e71bf71089add50fd54b7b6a01e4c2758f37ea7d7de13",
+              "entry_digest": "063f926655d07fb9d5f645ac5f092920c81ab092aaee19106d431da7b0a96820",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5c205853cb5bf80d2432646cb0962fe62e1b151b0d83f0a9f899b9bc849d24a1",
+              "entry_digest": "0742a72050e218d3a66201f0d069003a0e43f40f564136fc45ae4828141745fb",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "32828900f0e77cb92b03afe7fd86f69e6da6cecc0ee24d1c862d751a7ffaa3e1",
+      "current_acceptance_input_digest": "0c05fc1828244ac4f62a693ebd460cb424df34e719f4a4493beedc805ad73f93"
     }
   ]
 }

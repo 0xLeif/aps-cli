@@ -8,12 +8,12 @@ spec: aps-cli.spec.md
 
 ### REQ-aps-cli-001
 
-The fixed demo schema SHALL include `profile` and `secret` alongside `counter`, `message`, `flag`, and `note`.
+The default materialized schema SHALL include `profile`, `secret`, and `profileName` alongside `counter`, `message`, `flag`, and `note`.
 
 Acceptance Criteria
-- `aps keys` lists `profile` and `secret`.
+- `aps keys` lists `profile`, `secret`, and `profileName` on a fresh state root.
 - `aps set profile '{"name":"a","version":1}'` round-trips through get/dump/reset.
-- `aps set secret ...` round-trips on macOS through get/dump/reset.
+- `aps set secret ...` round-trips through get/dump/reset.
 
 ### REQ-aps-cli-002
 
@@ -43,12 +43,12 @@ Acceptance Criteria
 
 ### REQ-aps-cli-005
 
-`APSError` SHALL cover `invalidValue`, `encodingFailed`, `decodingFailed`, `persistenceFailed`, `keychainUnavailable`, and `corruptState`.
+`APSError` SHALL cover `invalidValue`, `encodingFailed`, `decodingFailed`, `persistenceFailed`, `secretUnlockFailed`, `corruptState`, `schemaInvalid`, `unknownKey`, and `schemaConflict`.
 
 Acceptance Criteria
-- Each case has an actionable `description`.
+- Each case has an actionable `description`, stable `code`, and taxonomy `exitCode`.
 - `set note` surfaces `persistenceFailed` when the on-disk value does not match after write.
-- `corruptState` is used when a FileState file exists but cannot be decoded.
+- `corruptState` / `schemaInvalid` use exit 65; `unknownKey` / `schemaConflict` use exit 64.
 
 ### REQ-aps-cli-010
 
@@ -77,10 +77,11 @@ Acceptance Criteria
 
 ### REQ-aps-cli-013
 
-The CLI `--version` string SHALL be `0.2.0` while the project is pre-public 0.x.
+The CLI `--version` string SHALL be `1.0.0`.
 
 Acceptance Criteria
-- `aps --version` prints `0.2.0`.
+- `aps --version` prints `1.0.0`.
+- `aps schema` `cliVersion` equals `1.0.0`.
 
 ### REQ-aps-cli-014
 
@@ -136,12 +137,32 @@ Acceptance Criteria
 - Wrong passphrase fails with `APSError.secretUnlockFailed`; corrupt envelope fails with `APSError.decodingFailed`.
 - Passphrase entry is env-var based; an optional TTY getpass prompt exists when `APS_SECRET_USE_PASSPHRASE=1`.
 
-### REQ-aps-cli-016
+### REQ-aps-cli-021
 
-`aps schema` SHALL emit one cacheable JSON document describing the CLI contract: cliVersion, integer schemaVersion (bumped on any contract change), state-root precedence, keys, commands, payload shapes, and the error table.
+`aps key add|remove|list` SHALL mutate or list the state-root `schema.json` registry with stable error codes `schema_invalid` (65), `unknown_key` (64), and `schema_conflict` (64).
 
 Acceptance Criteria
-- Output is valid JSON with a top-level integer `schemaVersion`.
-- Keys cover every `DemoKey`; commands cover every subcommand; the error table lists every stable code with its exit code.
+- `aps key add` persists a new entry; without `--force`, a duplicate name fails with `schema_conflict`.
+- `aps key remove` drops the entry; `--purge` deletes FileState/EncryptedFile data when present.
+- `aps key list` matches the inventory from `aps keys`.
+
+### REQ-aps-cli-022
+
+On first use of a state root, aps SHALL materialize a default `schema.json` seed matching the DemoKey inventory; subsequent commands resolve keys by string name from that registry.
+
+Acceptance Criteria
+- A fresh `--state-dir` gains `schema.json` after the first keys/get/set/schema call.
+- Unknown names fail with `unknown_key` (exit 64).
+- Invalid on-disk schema fails with `schema_invalid` (exit 65).
+
+### REQ-aps-cli-019
+
+`aps schema` SHALL emit one cacheable JSON document describing the CLI contract: cliVersion, integer schemaVersion (bumped when the document shape changes), state-root precedence, live registered keys, `userSchema` meta (formatVersion, keyCount, hash), commands, payload shapes, and the error table.
+
+Acceptance Criteria
+- Output is valid JSON with top-level integer `schemaVersion` equal to 3 after this change.
+- Keys cover every entry in the active `schema.json`; commands cover every subcommand including `key`.
 - `cliVersion` equals `aps --version`.
-- The document is static contract only; live state stays in `dump`.
+- `userSchema.hash` changes when the registry changes.
+- Live values stay in `dump`.
+

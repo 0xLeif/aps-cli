@@ -1,8 +1,6 @@
 name: CI
 
-# Private repo: run on macOS self-hosted runners (not GitHub-hosted).
-# Revisit before making the repository public: fork PRs must not run on
-# self-hosted hosts.
+# GitHub-hosted macOS runner (public-ready). Keep linux/windows smokes separate.
 
 on:
   push:
@@ -19,7 +17,7 @@ permissions:
 
 jobs:
   build-test-smoke:
-    runs-on: [self-hosted, macOS]
+    runs-on: macos-latest
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4

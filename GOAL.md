@@ -1,63 +1,45 @@
-# aps 0.2.0: agent-ready AppState dogfood harness
+# aps 1.0.0: dynamic schema + public-ready dogfood harness
 
 ## Goal
 
-Make `aps` reliable enough for agents to inspect, mutate, and watch fixed demo AppState through stable CLI contracts while the project remains pre-public 0.x.
+Ship a private 1.0.0 release candidate with a registry-backed `schema.json`,
+`aps key add|remove|list`, dynamic `aps schema` projection, and GitHub-hosted
+tri-OS CI, then execute the go-public checklist on release day.
 
 ## Why now
 
-- 0.1.0 shipped the baseline CLI and AppState demo surface (PR #1).
-- Agents need predictable JSON, state isolation, and bounded watch behavior.
-- Stay on 0.x until the repo is public; do not imply a 1.0 release.
+- 0.2.0 completed the fixed-key agent dogfood surface.
+- The dynamic schema RFC is accepted (`docs/design/dynamic-schema.md`, #39).
+- Public 1.0.0 should not require a self-hosted macOS runner for PRs.
 
-## Success criteria
+## Success criteria (prep, this pass)
 
-- [x] `get`, `set`, `dump`, `keys`, and `reset` support `--json`.
-- [x] State root is configurable through `APS_HOME`.
-- [x] `--state-dir` overrides `APS_HOME` for commands that touch state.
-- [x] State directory behavior is tested for default, environment, and flag-based paths.
-- [x] `watch` supports bounded execution with `--count` and `--timeout`.
-- [x] `watch` supports newline-delimited JSON output with `--jsonl`.
-- [x] Linux CI runs a smoke workflow that builds the CLI and exercises core commands.
-- [x] Demo key `profile` uses structured `FileState` with Codable `{name, version}`.
-- [x] SpecSync artifacts from 0.1.x are archived; active SpecSync tracks 0.2.0 work.
-- [x] README documents JSON mode, state root, watch bounds, and `profile`.
-- [x] CLI `--version` reports `0.2.0`.
-- [x] Demo key `secret` uses AppState `SecureState` (Keychain) with round-trip tests and documented CI behavior.
-- [x] Demo key `profileName` dogfoods AppState `Slice` over `profile.name`.
-- [x] `aps stats` dogfoods `@ObservedDependency` (`DemoStats`).
-- [x] SyncState and ModelState feasibility spikes document no-go for 0.x (`docs/spikes/`).
+- [x] Default `schema.json` materializes under the state root.
+- [x] `get` / `set` / `reset` / `dump` / `keys` / `watch` resolve string registry names.
+- [x] `aps key add|remove|list` mutates the registry with stable error codes.
+- [x] `aps schema` projects live keys + `userSchema.hash`; `schemaVersion` is 3.
+- [x] Smoke covers materialize + key add/remove on shell and PowerShell.
+- [x] macOS CI and Trust run on `macos-latest` (Linux/Windows smokes unchanged).
+- [x] Version strings and docs say **1.0.0**.
 
-## Explicit out of scope for 0.x
+## Explicitly deferred to release day ([#40](https://github.com/0xLeif/aps-cli/issues/40))
 
-- SyncState and ModelState
-- Plugin APIs, daemon mode, network APIs, or background services
-- Dynamic schema language or user-defined state keys
-
-## In scope (added)
-
-- `secret` is backed by an encrypted-file store (ephemeral X25519 + HKDF + ChaCha20-Poly1305 via swift-crypto; issue #35), replacing the Keychain-backed SecureState demo which prompted on every access. Works tri-OS with zero prompts (key file default; `APS_SECRET_PASSPHRASE` opt-in).
+- Flip repository visibility to public
+- Add `fledge-plugin` topic and `fledge plugins publish`
+- Decommission self-hosted runner `aps-cli-mac-arm64`
+- Cut GitHub Release / tag `v1.0.0`
+- Post-public Trust re-verify on the public repo
 
 ## Tickets
 
 | ID | Item |
 |----|------|
-| APS-01 | `--json` on core commands |
-| APS-02 | Stable JSON shapes + tests |
-| APS-03 | `APS_HOME` state root |
-| APS-04 | `--state-dir` override |
-| APS-05 | State-dir path tests |
-| APS-06 | `watch --count` / `--timeout` |
-| APS-07 | `watch --jsonl` |
-| APS-08 | Linux CI smoke |
-| APS-09 | Structured `profile` FileState |
-| APS-10 | SpecSync archive hygiene |
-| APS-11 | README agent usage |
-| APS-12 | SecureState `secret` Keychain dogfood |
-| APS-13 | ObservedDependency `stats` / `DemoStats` |
-| APS-14 | Slice `profileName` over `profile.name` |
-| APS-15 | SyncState / ModelState feasibility spikes (no-go) |
+| #62 | Schema file IO + validation + materialization |
+| #63 | Registry resolve + `aps key add/remove/list` |
+| #64 | Dynamic `aps schema` + smoke |
+| #40 | Go public + cut 1.0.0 (release day) |
 
-## Definition of done
+## Definition of done (prep)
 
-All success criteria checked; tests and Linux CI smoke pass; README examples work from a clean checkout; no out-of-scope 0.x systems introduced.
+Dynamic schema implemented and smoked tri-OS; CI/Trust on GitHub-hosted runners;
+docs/version at 1.0.0; #40 left for the explicit public flip.
