@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784438798,
-  "commit": "d39cd25e05dd197f80ae835b5baba39a6917db2f",
+  "timestamp": 1784440635,
+  "commit": "384c2b26692a3020dbbeeabece9e45f4cf4d7c3d",
   "contract_digest": "4b649d7aa4143782bcc58f83e17934f8dedfb0b944feb90b3fdaf9e4793b6e8a",
-  "workspace_digest": "8fcaebc50225b5f1bce4d95e06ff1192587cf1ce767813f3b550adbd09495178",
-  "acceptance_input_digest": "00061dbf1a476d0ce19ea1b4fc404dc9c110f1e9e45171bf83ac5bf40a8f7e68",
+  "workspace_digest": "64c0bcba0fac8f0ef02f10f4b1851cff103ae5c2929a3e0853b581a88afb8daa",
+  "acceptance_input_digest": "ad20b2bc20637a204981557563da2f88c654721ce352483e82ac4f035672f488",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -31,8 +31,8 @@
         "path": "Scripts/smoke.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "da18c7227ca19b2a29b2ee90d6e4056cb6ab803a4aea5528d4c6af6c1daa2842",
-        "entry_digest": "c95bfcb30a4031b51c42319075bceceae03660b7d019b414cce45446895f4700",
+        "payload_digest": "72d0ba5895f18111db528806dd045bca171e76b527de302d72e8f686f3796816",
+        "entry_digest": "bd08ed8f2c9e93e20d8c3e6075119e820595bfb62b57b0c6d6c822ced28c59c7",
         "owners": [
           "@exact:delivery"
         ]
@@ -41,8 +41,8 @@
         "path": "Sources/aps/Aps.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "55d23aa11c362f6e3b2c22602a546170746bb01f0d7dbe60f24e65574ab4f333",
-        "entry_digest": "8bb8642ad9a663b25ec22120e629c14cb6d720a581db1700d23ed9ec78beff53",
+        "payload_digest": "1c4eadc926957763137a2a0f279122ba0a59ff7ee5700aee8f22a8e1a8f56b05",
+        "entry_digest": "416a9732533564e60e4aa9b60e16a52bc5fb7b24e8140a19a41827635280b6a9",
         "owners": [
           "aps-cli"
         ]

@@ -146,7 +146,6 @@ extension Aps {
 
                 let signalBox = SignalBox()
                 let signalSources = installWatchSignalHandlers(signalBox)
-                _ = signalSources // retained for the watch lifetime
 
                 if count == nil && timeout == nil {
                     CLIOutput.writeError("watch: unbounded stream; press Ctrl-C to stop, or use --count/--timeout for bounded runs")
@@ -229,6 +228,11 @@ extension Aps {
                         throw ExitCode(stopReason.exitCode)
                     }
                 }
+
+                // Actual use after the loop: guarantees the dispatch sources
+                // outlive the watch (debug kept them incidentally; release
+                // optimized them away and silently lost every signal).
+                signalSources.forEach { $0.cancel() }
             }
         }
     }
