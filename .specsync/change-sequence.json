@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 36,
-  "id": "CHG-0036-archive-chg-0035-post-merge-and-exempt-specsync-lifecycle-dirs-from-sdd-coverage",
+  "sequence": 37,
+  "id": "CHG-0037-agents-md-add-dogfooding-standing-rule-agents-use-aps-for-state-issue-79",
   "acknowledged_collisions": []
 }
