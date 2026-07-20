@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784520734,
+      "digest": "0ef04ce8e0689bfffb832fe68bbca56020bfb5c680d7abe4bac1d2e9d7732995",
+      "note": "Linux link fix for the v1.0.0 backfill failure; matches linux-smoke.yml precedent."
+    },
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784520855,
+      "digest": "2a433ff11dbfaeaf1801ff7478bbd98c5ca9becc6283ad82608ea96c3380566f",
+      "note": "Re-approve after tasks.md wording fix (no unchecked post-merge task)."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784520879,
+      "digest": "3ade509afe580b49e5338fd90575c3804e3166d5615b4770528f989aae3ae187",
+      "note": "Linux release link fix; verify green."
+    }
+  ],
+  "reopenings": []
+}

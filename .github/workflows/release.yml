@@ -74,7 +74,10 @@ jobs:
             swift build -c release --arch "$ARCH"
           else
             BIN_DIR=$(swift build -c release --show-bin-path)
-            swift build -c release
+            # Linux 6.0.x toolchains: libswiftObservation.so has an undefined
+            # swift::threading::fatal ref; tolerate it at the executable link
+            # (same flag linux-smoke.yml uses for swift test).
+            swift build -c release -Xlinker --allow-shlib-undefined
           fi
           cp "$BIN_DIR/aps" "$ARTIFACT"
           "$BIN_DIR/aps" --version
