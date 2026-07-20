@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0036-archive-chg-0035-post-merge-and-exempt-specsync-lifecycle-dirs-from-sdd-coverage",
+  "slug": "archive-chg-0035-post-merge-and-exempt-specsync-lifecycle-dirs-from-sdd-coverage",
+  "title": "Archive CHG-0035 post-merge and exempt SpecSync lifecycle dirs from SDD coverage (issue 74 follow-up)",
+  "description": "Archive CHG-0035 post-merge and exempt SpecSync lifecycle dirs from SDD coverage (issue 74 follow-up)",
+  "kind": "operations",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "1fa48c0b4a90f8918b9e911d2d7fcea008225301",
+  "created_at": 1784560817,
+  "updated_at": 1784561703,
+  "affected_specs": [],
+  "affected_paths": [
+    ".specsync/",
+    "AGENTS.md"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Bookkeeping archive plus SDD policy exemption for tool-managed lifecycle dirs; no module API or requirement deltas.",
+  "acceptance_criteria": [
+    "CHG-0035 is archived under .specsync/archive/changes/; sdd.json ignored_paths exempts .specsync/changes/ and .specsync/archive/ so archive-only housekeeping PRs pass check with zero active changes; AGENTS.md rule 6 reflects the exemption; specsync change check --strict passes"
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}
