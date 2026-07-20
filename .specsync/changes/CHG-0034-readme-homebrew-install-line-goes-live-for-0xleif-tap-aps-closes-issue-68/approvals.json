@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784553841,
+      "digest": "55ed7d69a3298cb06161963e5fed1a19efeca772e695b23ec8a923ce02bc7796",
+      "note": "Brew line goes live; distribution verified end to end for issue 68."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784553910,
+      "digest": "2d604d9b36f44a9a1daec644973940f1e83f8e81dcb66488d62b36aec29d1fdd",
+      "note": "README brew line live; verify green."
+    }
+  ],
+  "reopenings": []
+}

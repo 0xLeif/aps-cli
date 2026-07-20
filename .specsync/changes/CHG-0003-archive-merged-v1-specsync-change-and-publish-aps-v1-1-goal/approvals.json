@@ -146,6 +146,13 @@
       "timestamp": 1784522467,
       "digest": "7701f6cb541cfe27e60db6da037271c530426d44213701efadedafd98585990e",
       "note": "Re-accept after #72 LICENSE/README stale sweep."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784554225,
+      "digest": "4dcbec7e3999081ac2b9eb644eb82ad88b5503aa85292949a79b506a4c3e903b",
+      "note": "Re-accept after #68 brew-line stale sweep."
     }
   ],
   "reopenings": [
@@ -2290,6 +2297,125 @@
       },
       "stale_acceptance_input_digest": "f131f387a943bf23e23a12f29e48ba457ca42384adcc64f37b206085e03794ed",
       "current_acceptance_input_digest": "250fb6f5407c8b896742999366c02215dcbcfbe1d55b08fa760b175299ab89ed"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0003-archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after README brew-line change (#68).",
+      "timestamp": 1784554161,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:kimi",
+        "timestamp": 1784522467,
+        "digest": "7701f6cb541cfe27e60db6da037271c530426d44213701efadedafd98585990e",
+        "note": "Re-accept after #72 LICENSE/README stale sweep."
+      },
+      "prior_verification": {
+        "timestamp": 1784522460,
+        "commit": "863eae82259ab09670e0734eb57cac1bc13959a5",
+        "contract_digest": "641111b8f92bdfff2ba1f3bcda40f5299d9dc8a65449cd2a4a49333fac21100f",
+        "workspace_digest": "214990a40844a550baba5a2d936a095f00e2a0086340c145e50f01d01dbe8aa9",
+        "acceptance_input_digest": "250fb6f5407c8b896742999366c02215dcbcfbe1d55b08fa760b175299ab89ed",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/.gitignore",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a3129d6f93250ade8dbacfc73bc7eeae0cc47c2f7032142ca47cb4f1ffb2483e",
+              "entry_digest": "9badbf40b83d05f58bafda0fc2cafccfe726e4da7e6e67ef513e822989e13f04",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ddf1f4cbb0fd983c8356a34b9b4f4ef77ca22764ac2ec36b223431402c043328",
+              "entry_digest": "7fd95f31d540d3d3e7128fbd03cb3207a3da428c98a81515a76b7dfc9b34d582",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/config.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "54a83f6a4a252649bac390d2e936aa0815711fba86b6bfc8ea8fff2fffdfd29b",
+              "entry_digest": "e60f979233a7db75ce63f4ef42d6f1f7676ad1655a438b9baf78558aba60ec3e",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/registry.toml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c423be1a5cf87318f85dc252fe0acd1c1486c5224ddc2d8e19bea1ac9c69c820",
+              "entry_digest": "7e1f068900ced849b8d1028ca40165fbdc5280ae7f53452f0e57e2710d895848",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/sdd.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2d5fb3058b1ee4ce584c3cda9410c193c4893e272ed459205e58bfde06afc7b0",
+              "entry_digest": "8c6b11fc5787eb04e7ee651eb15fbf98fc3ea22db37e65423e3d75f99c09df19",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/version",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f9893302cd3158f3b5aea394dcd2a91574869e9e6ff69e9235b10a3bf8c983fb",
+              "entry_digest": "f980ba79f6c953bed30303c6b87d8e868ad6a7f4114bf0e745c9099255e665b0",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "GOAL.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83453fc61da0c61361ad8f40f3c6bec184190a8742cd8d86249f60e99db112de",
+              "entry_digest": "44fe4498d28a5283d4cc9bc6b7b9c8020ba6dd7a02a0819055854df084124777",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6c58f3e0553df8f7eb1b3578dc63c09a4976420b03f16a01c37492863ff01028",
+              "entry_digest": "accbb6e0c96accc911c0aff1104be5a2d7b22794a6d2448ac7b26719caf64cd7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "250fb6f5407c8b896742999366c02215dcbcfbe1d55b08fa760b175299ab89ed",
+      "current_acceptance_input_digest": "79f6e20c2d77cd9a1e90ec0b403ce8afab83d0b3794bba416c5fd80ff575383c"
     }
   ]
 }

@@ -192,6 +192,30 @@
         "REQ-state-store-002",
         "REQ-state-store-016"
       ]
+    },
+    {
+      "timestamp": 1784554738,
+      "commit": "784a07b5141554697fc3d1ec498af7daf212b9af",
+      "contract_digest": "6f408ec97dc25d1616d0c45f9b188a6523a6b90f7babedef165cc9d51bc21e92",
+      "workspace_digest": "9d546c927da9dd19156a100eccdec8cce372ec9e7a398525b86e1985e0f9b376",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-001",
+        "REQ-aps-cli-005",
+        "REQ-aps-cli-013",
+        "REQ-aps-cli-019",
+        "REQ-aps-cli-021",
+        "REQ-aps-cli-022",
+        "REQ-state-store-002",
+        "REQ-state-store-016"
+      ]
     }
   ]
 }

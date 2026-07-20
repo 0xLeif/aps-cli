@@ -13,7 +13,84 @@
       "timestamp": 1784522347,
       "digest": "5f63a05815e40863e6caec8ab4a68fa20de3ea2a212370afef673833c0c170db",
       "note": "Add MIT license; verify green."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784554795,
+      "digest": "11b83755686a6e4b11a5ff0aa1ac46d6161fb3f2c991fd263bf83ee8e74e30d3",
+      "note": "Re-accept after #68 brew-line stale sweep."
     }
   ],
-  "reopenings": []
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0033-add-mit-license-zach-eriksen-matching-appstate-attribution-and-refresh-readme",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after README brew-line change (#68).",
+      "timestamp": 1784554773,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:kimi",
+        "timestamp": 1784522347,
+        "digest": "5f63a05815e40863e6caec8ab4a68fa20de3ea2a212370afef673833c0c170db",
+        "note": "Add MIT license; verify green."
+      },
+      "prior_verification": {
+        "timestamp": 1784522342,
+        "commit": "863eae82259ab09670e0734eb57cac1bc13959a5",
+        "contract_digest": "432e800fb6c11c6e8bfd875cfbb6510f5991d84590ddcb0a1904631c7eae52d8",
+        "workspace_digest": "214990a40844a550baba5a2d936a095f00e2a0086340c145e50f01d01dbe8aa9",
+        "acceptance_input_digest": "08e61e834ba8fa0a0d077115ab2a5973314df9bf9ab2f55356f6f069627a47e8",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c09882826aeb217dab6cbde019e7d828196801ec1e5f7df36b09e54a8c6cde04",
+              "entry_digest": "02adda92b7b41c540bee050ff9fcba05dff9f8b991addcbd5b4bca2d46188ea2",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "LICENSE",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5638332e5ac192a4425efe43297a6efe26aa57ad37a38a2e54d49306bc818e12",
+              "entry_digest": "785d9165dcf2df6e37561cf3991dac809b373b1a735a62596415c77e225b7990",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6c58f3e0553df8f7eb1b3578dc63c09a4976420b03f16a01c37492863ff01028",
+              "entry_digest": "accbb6e0c96accc911c0aff1104be5a2d7b22794a6d2448ac7b26719caf64cd7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "08e61e834ba8fa0a0d077115ab2a5973314df9bf9ab2f55356f6f069627a47e8",
+      "current_acceptance_input_digest": "8d8a1237f32cebaf89cde2290d220d8c2b92f82a5b9d4df17dee84c267d0dec1"
+    }
+  ]
 }

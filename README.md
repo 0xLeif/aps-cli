@@ -8,7 +8,11 @@ This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.
 
 ## Install
 
-Prebuilt binaries and a Homebrew tap formula (`brew install 0xLeif/tap/aps`) are in progress; see [#68](https://github.com/0xLeif/aps-cli/issues/68). Working today:
+**Homebrew:**
+
+```bash
+brew install 0xLeif/tap/aps
+```
 
 **fledge plugin** (live-linked from the plugin hub):
 
