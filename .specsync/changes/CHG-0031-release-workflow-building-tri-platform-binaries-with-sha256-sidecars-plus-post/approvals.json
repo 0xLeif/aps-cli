@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784519948,
+      "digest": "9f4340594a9ee3210194677bbf38be036463f24eb4041842a5b4b1206d961a37",
+      "note": "Release binary pipeline + tap formula sync for issue 68; tap is 0xLeif/homebrew-tap; mirrors CorvidLabs/fledge."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784519996,
+      "digest": "ea0d22774527d297c4f0b4eb9d1ab61d57669f361dcad54f0883b4de502fc408",
+      "note": "Release binary pipeline + 0xLeif/homebrew-tap formula sync; fledge lanes run verify green."
+    }
+  ],
+  "reopenings": []
+}
