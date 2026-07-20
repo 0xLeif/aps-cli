@@ -1,6 +1,6 @@
 ---
 id: CHG-0003-archive-merged-v1-specsync-change-and-publish-aps-v1-1-goal
-state: accepted
+state: archived
 type: operations
 base_commit: c02a551afc126ca5394c62baa557ceaf30fd5bc5
 ---
