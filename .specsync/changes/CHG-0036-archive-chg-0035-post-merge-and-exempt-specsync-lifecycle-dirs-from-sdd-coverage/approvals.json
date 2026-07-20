@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784560892,
+      "digest": "7c2ed3d3b21fbc7c77b84e1f791157157b39d471e84b7908ecceb783e111e279",
+      "note": "SDD lifecycle-dir exemption + AGENTS.md rule refinement + CHG-0035 archive cover."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784560913,
+      "digest": "a6bb02838659df642a54b89a5c4e44d11321515593e2ed9e47fa8efcf5776072",
+      "note": "Archive exemption and CHG-0035 archive; verify green."
+    }
+  ],
+  "reopenings": []
+}

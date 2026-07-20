@@ -42,11 +42,13 @@ Rules:
    and link the outcome so another agent can take it.
 6. After the implementing PR merges, archive its SpecSync change:
    `specsync change archive <id>` from a clean main-based checkout, pushed
-   as a small housekeeping PR. The archive preflight needs an empty
-   delivery diff vs `origin/main` and the pinned specsync release
-   (`.specsync/version`; 5.2.0+ understands squash-merged evidence).
-   `accepted` is not the terminal state; do not let accepted changes pile
-   up in `.specsync/changes/`.
+   as a small housekeeping PR. Archive moves are exempt from SDD coverage
+   (`.specsync/changes/` and `.specsync/archive/` sit in `ignored_paths`),
+   so the housekeeping PR needs no covering change. The archive preflight
+   needs an empty delivery diff vs `origin/main` and the pinned specsync
+   release (`.specsync/version`; 5.2.0+ understands squash-merged
+   evidence). `accepted` is not the terminal state; do not let accepted
+   changes pile up in `.specsync/changes/`.
 7. Prefer unclaimed open issues. Do not strip another agent's claim label.
 8. If your `agent:<name>` label does not exist, create it with a description
    of the form "Ticket claimed by <name>".
