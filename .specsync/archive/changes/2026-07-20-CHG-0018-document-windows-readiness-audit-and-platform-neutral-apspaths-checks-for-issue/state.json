@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0018-document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue",
+  "slug": "document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue",
+  "title": "Document Windows readiness audit and platform-neutral APSPaths checks for issue 36",
+  "description": "Document Windows readiness audit and platform-neutral APSPaths checks for issue 36",
+  "kind": "documentation",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "8cf886df7ac87eac4234fc3fb8c13f46362e08d6",
+  "created_at": 1784413967,
+  "updated_at": 1784558583,
+  "affected_specs": [],
+  "affected_paths": [
+    "docs/windows-readiness.md",
+    "README.md",
+    "Tests/apsTests/APSTests.swift",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Audit findings and test-only platform-neutral path check; module contracts unchanged.",
+  "acceptance_criteria": [
+    "docs/windows-readiness.md records audit, per-OS gaps, future CI matrix, and swift-crypto Windows note; README links it; APSPaths default check is platform-neutral; follow-ups #45 #46 filed."
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs",
+    "design",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

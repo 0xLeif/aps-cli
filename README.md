@@ -102,7 +102,7 @@ aps key list --json
 - Swift 6.0+
 - macOS 14+ (primary CI on `macos-latest`). Linux smoke runs on `ubuntu-latest`. Windows smoke runs on `windows-latest` via `Scripts/smoke.ps1`.
 - For the trust gate locally: [corvid-trust](https://github.com/CorvidLabs/trust) (`brew install CorvidLabs/tap/corvid-trust`)
-- SpecSync **5.1.1** (see `.specsync/version`). Trust CI mirrors that exact release; brew `spec-sync` latest should match.
+- SpecSync **5.2.0** (see `.specsync/version`). Trust CI mirrors that exact release; brew `spec-sync` latest should match.
 
 ## Build and run
 
@@ -248,7 +248,7 @@ pwsh ./Scripts/smoke.ps1
 | `.trust.toml` | Unified Trust policy |
 | `.augur.toml` | Diff-risk thresholds |
 | `.attest.json` | Provenance policy |
-| `.specsync/` | SpecSync 5.1.1 config + SDD change tracking (`.specsync/version`) |
+| `.specsync/` | SpecSync 5.2.0 config + SDD change tracking (`.specsync/version`) |
 | `specs/` | Module contracts (`aps-cli`, `state-store`) |
 | `GOAL.md` | Shipped 1.0.0 release record |
 | `AGENTS.md` | Standing rules (managed block required by CI) |

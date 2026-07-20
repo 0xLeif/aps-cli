@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0035-archive-accepted-specsync-backlog-31-changes-bump-specsync-pin-to-5-2-0-add",
+  "slug": "archive-accepted-specsync-backlog-31-changes-bump-specsync-pin-to-5-2-0-add",
+  "title": "Archive accepted SpecSync backlog (31 changes), bump specsync pin to 5.2.0, add post-merge archive rule to AGENTS.md (issue 74)",
+  "description": "Archive accepted SpecSync backlog (31 changes), bump specsync pin to 5.2.0, add post-merge archive rule to AGENTS.md (issue 74)",
+  "kind": "operations",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "de318e247be0bc426d0a0db5e25945ba975facd3",
+  "created_at": 1784559039,
+  "updated_at": 1784559209,
+  "affected_specs": [],
+  "affected_paths": [
+    ".specsync/",
+    "AGENTS.md",
+    "README.md",
+    ".github/workflows/trust.yml"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Bookkeeping archive of merged changes plus toolchain pin bump and agent rule; no module API or requirement deltas.",
+  "acceptance_criteria": [
+    ".specsync/changes/ holds no accepted merged changes; all 31 backlog changes live under .specsync/archive/changes/ with date prefixes; specsync pin is 5.2.0 across .specsync/version, trust.yml, and README; AGENTS.md standing rules include the post-merge archive step; specsync change check --strict and fledge lanes run verify pass"
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}
