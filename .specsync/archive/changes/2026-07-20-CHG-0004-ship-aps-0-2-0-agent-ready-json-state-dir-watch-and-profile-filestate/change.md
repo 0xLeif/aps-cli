@@ -1,6 +1,6 @@
 ---
 id: CHG-0004-ship-aps-0-2-0-agent-ready-json-state-dir-watch-and-profile-filestate
-state: accepted
+state: archived
 type: feature
 base_commit: 6f18ccb3015b4fc59021e690fefbf5947ade5c73
 ---
