@@ -90,6 +90,13 @@
       "timestamp": 1784498972,
       "digest": "748ada14075a45adb38b0989b5f8925a3aae7ab69d9f12f1a226907859f724dd",
       "note": "Refresh GOAL.md digest after 1.0.0 release docs."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784514974,
+      "digest": "9a7a87d5dcb1d52967bf09c8fb7b1b21fd6b6104518145fcc6f6d6c939649dcf",
+      "note": "Re-accept after #67 README stale sweep."
     }
   ],
   "reopenings": [
@@ -782,6 +789,75 @@
       },
       "stale_acceptance_input_digest": "3b11e9bf789f4af791bf396cbd92a4da70b8051a7975d07aa2ae59a7ecb7405a",
       "current_acceptance_input_digest": "d269fa03a2b5adbf45b2560860a0ab22f5a4c318109dbde66b1a2df3e91f57cf"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0014-document-appstate-coverage-matrix-and-refresh-goal-for-0-2-dogfood-surfaces",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after README docs change (#67).",
+      "timestamp": 1784514943,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784498972,
+        "digest": "748ada14075a45adb38b0989b5f8925a3aae7ab69d9f12f1a226907859f724dd",
+        "note": "Refresh GOAL.md digest after 1.0.0 release docs."
+      },
+      "prior_verification": {
+        "timestamp": 1784498964,
+        "commit": "3a1acdaf1be04e638c659761c69aba3143ffb0ab",
+        "contract_digest": "a0e81300735aa82f646433bad125e6ac0043d3680d608e1ce6dbf42c7c730e6a",
+        "workspace_digest": "0e642e855daee13c7193a9e1930e6e7367f119986f3b7b7380500732584459b5",
+        "acceptance_input_digest": "d269fa03a2b5adbf45b2560860a0ab22f5a4c318109dbde66b1a2df3e91f57cf",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "af3c8353cd24a8a6592088883407b482cd73ea4324ccda5b230ccefcadb448f3",
+              "entry_digest": "cd3321bf077cb79382d5efc61d3bc66c5ab10ed2f5c3f236b3dcc1296c6ebc04",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "GOAL.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83453fc61da0c61361ad8f40f3c6bec184190a8742cd8d86249f60e99db112de",
+              "entry_digest": "44fe4498d28a5283d4cc9bc6b7b9c8020ba6dd7a02a0819055854df084124777",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0410dc315fd7f0690f5d4b7f519a0d48044e08b9975d51c7ddb1835f072ab8ba",
+              "entry_digest": "909a086270b952ed560e0de6e9e48e6d2b1573f34154fc78c6b2460cf6610cc0",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "d269fa03a2b5adbf45b2560860a0ab22f5a4c318109dbde66b1a2df3e91f57cf",
+      "current_acceptance_input_digest": "3d68b593333c536bddfb04d289218dcf7da756131a024c54a5db2b612839672a"
     }
   ]
 }

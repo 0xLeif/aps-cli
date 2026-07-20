@@ -9,7 +9,7 @@
   "canonical_applied": true,
   "base_commit": "6806a8478895404e8a68a02ff15b3fbc3a984da8",
   "created_at": 1784475118,
-  "updated_at": 1784487502,
+  "updated_at": 1784515277,
   "affected_specs": [],
   "affected_paths": [
     "docs/design/dynamic-schema.md",

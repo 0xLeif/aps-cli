@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784511958,
+      "digest": "44603d948fcfef7867b3cb71b39637289347215df752e5c86c3e3a944defc3d5",
+      "note": "Docs-only install/distribution and RFC seed alignment for issue 67."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784512702,
+      "digest": "1a192b55b12c803f3c2abfa44fdcdacbb6e7f4f35c3ca225720943b499d4a898",
+      "note": "Install docs and RFC seed alignment for issue 67; fledge lanes run verify green."
+    }
+  ],
+  "reopenings": []
+}

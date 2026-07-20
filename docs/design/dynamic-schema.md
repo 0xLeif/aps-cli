@@ -1,7 +1,7 @@
 # RFC: Dynamic schema (user-defined keys)
 
 Issue: [#39](https://github.com/0xLeif/aps-cli/issues/39)  
-Status: **Accepted design** (documentation only; no runtime implementation in this change)  
+Status: **Implemented in v1.0.0** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); this doc remains the design record  
 Authors: agent:cursor (2026-07-19)  
 Depends on: error contract ([#31](https://github.com/0xLeif/aps-cli/issues/31)), `aps schema` ([#32](https://github.com/0xLeif/aps-cli/issues/32))  
 Milestone: v1.0.0
@@ -51,7 +51,7 @@ Constraints already locked by the rest of the 0.x train:
 Path: `<state-root>/schema.json`  
 Encoding: UTF-8 JSON, pretty-printed on write (same style as CLI `--json` pretty output).
 
-Proposed shape (illustrative; freeze in implementation SpecSync deltas):
+Shape (matches the shipped default document in `Sources/aps/UserSchema.swift`, PR [#65](https://github.com/0xLeif/aps-cli/pull/65)):
 
 ```json
 {
@@ -62,8 +62,22 @@ Proposed shape (illustrative; freeze in implementation SpecSync deltas):
       "name": "counter",
       "type": "Int",
       "storage": "State",
-      "initial": "0",
+      "initial": 0,
       "doc": "in-memory Int counter (process lifetime)"
+    },
+    {
+      "name": "message",
+      "type": "String",
+      "storage": "State",
+      "initial": "",
+      "doc": "in-memory String (process lifetime)"
+    },
+    {
+      "name": "flag",
+      "type": "Bool",
+      "storage": "StoredState",
+      "initial": false,
+      "doc": "Bool via StoredState / UserDefaults"
     },
     {
       "name": "note",
@@ -99,6 +113,7 @@ Proposed shape (illustrative; freeze in implementation SpecSync deltas):
       "storage": "Slice",
       "sliceOf": "profile",
       "sliceField": "name",
+      "initial": "",
       "doc": "projection of profile.name"
     }
   ]
