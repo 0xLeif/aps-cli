@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784589492,
+      "digest": "ea39f1738d1ca28a18e91499e5e6a7de82580a31826c704d80d34d06e6bece70",
+      "note": "Dogfooding standing rule for issue 79."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784589528,
+      "digest": "7975401b228c7e132e43ae3a9f02d36bbd612ac06cbe13e6782d3abe44387335",
+      "note": "Dogfooding rule added; verify green."
+    }
+  ],
+  "reopenings": []
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0037-agents-md-add-dogfooding-standing-rule-agents-use-aps-for-state-issue-79",
+  "slug": "agents-md-add-dogfooding-standing-rule-agents-use-aps-for-state-issue-79",
+  "title": "AGENTS.md: add dogfooding standing rule, agents use aps for state (issue 79)",
+  "description": "AGENTS.md: add dogfooding standing rule, agents use aps for state (issue 79)",
+  "kind": "documentation",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "2edbf447ab2111e8b6ff57895299f0930e72df53",
+  "created_at": 1784589467,
+  "updated_at": 1784589528,
+  "affected_specs": [],
+  "affected_paths": [
+    "AGENTS.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Standing-rule doc addition only; no module API or requirement deltas.",
+  "acceptance_criteria": [
+    "AGENTS.md gains a Dogfooding aps section directing agents to persist working state via fledge aps or the tap binary in the default state root with user-added keys; demo keys reserved for tests/smoke"
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

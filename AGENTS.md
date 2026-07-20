@@ -19,6 +19,14 @@ fledge trust verify       # full trust gate when tools are installed
 ./Scripts/smoke.sh
 ```
 
+## Dogfooding aps
+
+Use the tool itself for agent state on this project: `fledge aps` (live-linked
+plugin) or `aps` from the tap. Persist working/session state in the default
+state root (`~/.aps`) with `aps key add` + `set`/`get` instead of scratch
+files. Leave the demo keys for tests and smoke; add your own keys for real
+state (see `docs/design/dynamic-schema.md`).
+
 ## Multi-agent ticket claiming
 
 Multiple agents (Kimi, Cursor, others) work GitHub issues autonomously in

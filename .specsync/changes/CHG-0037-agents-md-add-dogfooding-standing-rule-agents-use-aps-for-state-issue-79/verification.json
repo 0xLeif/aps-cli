@@ -1,0 +1,41 @@
+{
+  "timestamp": 1784589523,
+  "commit": "2edbf447ab2111e8b6ff57895299f0930e72df53",
+  "contract_digest": "ea39f1738d1ca28a18e91499e5e6a7de82580a31826c704d80d34d06e6bece70",
+  "workspace_digest": "f0f3d127ad388e8df3f675fe1592421f4cf183d9779f771f905d36016fb6e99f",
+  "acceptance_input_digest": "108f6f7218239b460468200a7f372756a4f5c3a3f14b498e09ae142768b30568",
+  "acceptance_manifest": {
+    "schema_version": 1,
+    "entries": [
+      {
+        "path": ".specsync/change-sequence.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "2d61c7a1633f766c19172f00b8e431f953221a0cc28f92bc62a30e580113927d",
+        "entry_digest": "e1e54aee6a1b41a807750064a9b8882d7b7df9ba469b86b3aa245698e6b966e9",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "AGENTS.md",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "ff39a34643ef2b8f6d3ffcb4274f58f01535a7bffb8702ca1bc43c551aa646fa",
+        "entry_digest": "feb76ecaab0901e66dbe03d9dfaa15abc22174883ae9a3f3c79c48a069778e21",
+        "owners": [
+          "@exact:delivery"
+        ]
+      }
+    ]
+  },
+  "passed": true,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": []
+}
