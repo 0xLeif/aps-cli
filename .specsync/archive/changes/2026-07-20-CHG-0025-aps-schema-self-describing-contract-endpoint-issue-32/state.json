@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0025-aps-schema-self-describing-contract-endpoint-issue-32",
+  "slug": "aps-schema-self-describing-contract-endpoint-issue-32",
+  "title": "Aps schema self-describing contract endpoint (issue 32)",
+  "description": "aps schema self-describing contract endpoint (issue 32)",
+  "kind": "feature",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "8cf886df7ac87eac4234fc3fb8c13f46362e08d6",
+  "created_at": 1784416844,
+  "updated_at": 1784558778,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    "Sources/aps/Schema.swift",
+    "Sources/aps/Aps.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Scripts/smoke.sh",
+    "specs/aps-cli",
+    "README.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "aps schema emits one cacheable JSON document: cliVersion (equals aps --version), integer schemaVersion (bumped on contract change), state-root precedence, every DemoKey with type/storage/lifetime/path, every subcommand with flags and payload refs, payload JSON shapes, and the stable error table with exit codes. Static contract only; tests assert coverage and validity; smoke greps schemaVersion and checks cliVersion equals --version."
+  ],
+  "selected_artifacts": [
+    "context",
+    "requirements",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "design"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "yes"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0034-readme-homebrew-install-line-goes-live-for-0xleif-tap-aps-closes-issue-68",
+  "slug": "readme-homebrew-install-line-goes-live-for-0xleif-tap-aps-closes-issue-68",
+  "title": "README: Homebrew install line goes live for 0xLeif/tap/aps (closes issue 68)",
+  "description": "README: Homebrew install line goes live for 0xLeif/tap/aps (closes issue 68)",
+  "kind": "documentation",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "784a07b5141554697fc3d1ec498af7daf212b9af",
+  "created_at": 1784553777,
+  "updated_at": 1784558894,
+  "affected_specs": [],
+  "affected_paths": [
+    "README.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "README install section text only; no module API or requirement deltas.",
+  "acceptance_criteria": [
+    "README Install section leads with the working brew install 0xLeif/tap/aps command and drops the in-progress note"
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

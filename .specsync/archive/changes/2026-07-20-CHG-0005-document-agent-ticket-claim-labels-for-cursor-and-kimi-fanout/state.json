@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0005-document-agent-ticket-claim-labels-for-cursor-and-kimi-fanout",
+  "slug": "document-agent-ticket-claim-labels-for-cursor-and-kimi-fanout",
+  "title": "Document agent ticket claim labels for Cursor and Kimi fanout",
+  "description": "Document agent ticket claim labels for Cursor and Kimi fanout",
+  "kind": "documentation",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "2f7adb19349bf8700b736a9b300cfd2435ca176b",
+  "created_at": 1784400356,
+  "updated_at": 1784557968,
+  "affected_specs": [],
+  "affected_paths": [
+    "AGENTS.md",
+    ".specsync/"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Documents Cursor/Kimi agent ticket claim labels; no module API changes.",
+  "acceptance_criteria": [
+    "AGENTS.md documents agent:cursor and agent:kimi claim rules; one agent label per ticket; remove label when PR is up or work stops."
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

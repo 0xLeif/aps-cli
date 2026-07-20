@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0022-tty-aware-output-under-the-git-porcelain-rule-issue-33",
+  "slug": "tty-aware-output-under-the-git-porcelain-rule-issue-33",
+  "title": "TTY-aware output under the git porcelain rule (issue 33)",
+  "description": "TTY-aware output under the git porcelain rule (issue 33)",
+  "kind": "feature",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "c4ecd60b2a46bca4780f1b4af79a1d495d646287",
+  "created_at": 1784422790,
+  "updated_at": 1784558704,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/TTY.swift",
+    "Sources/aps/Aps.swift",
+    "Sources/aps/CLIOutput.swift",
+    "Sources/aps/Dependencies.swift",
+    "Sources/aps/StateStore.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Scripts/smoke.sh",
+    "specs/aps-cli",
+    "specs/state-store",
+    "README.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "TTY output is human-pretty (aligned keys table with bold header, semantic color honoring NO_COLOR) while piped output stays byte-stable plain (TSV, no ANSI); JSON is pretty on TTY and compact when piped for dump and all --json payloads; watch --json aliases --jsonl; keys --quiet prints names only; completion scripts documented; machine shapes additive-only; tests and smoke assert all of it."
+  ],
+  "selected_artifacts": [
+    "context",
+    "requirements",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "design"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "yes"
+  }
+}

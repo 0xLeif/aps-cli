@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0026-rfc-dynamic-schema-user-defined-keys-design-doc-for-issue-39",
+  "slug": "rfc-dynamic-schema-user-defined-keys-design-doc-for-issue-39",
+  "title": "RFC dynamic schema user-defined keys design doc for issue 39",
+  "description": "RFC dynamic schema user-defined keys design doc for issue 39",
+  "kind": "documentation",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "6806a8478895404e8a68a02ff15b3fbc3a984da8",
+  "created_at": 1784475118,
+  "updated_at": 1784558799,
+  "affected_specs": [],
+  "affected_paths": [
+    "docs/design/dynamic-schema.md",
+    "README.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Design RFC and README links only; no module API or requirement deltas until implementation.",
+  "acceptance_criteria": [
+    "docs/design/dynamic-schema.md records locked decisions, schema.json layout, SpecSync strategy, migration phases, and go implementation plan; README links the RFC."
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

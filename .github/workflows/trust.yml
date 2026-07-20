@@ -1,7 +1,7 @@
 name: Trust
 
 # CorvidLabs trust gate on GitHub-hosted macOS runners.
-# SpecSync pin is 5.1.1 via Trust v1.0.1 + a runner-temp file:// mirror
+# SpecSync pin is 5.2.0 via Trust v1.0.1 + a runner-temp file:// mirror
 # (non-default SpecSync versions cannot use the remote GitHub download path).
 # Fledge is preseeded into RUNNER_TEMP to avoid curl transfer flakes.
 
@@ -42,13 +42,13 @@ jobs:
           fi
 
       # Trust rejects remote download overrides for non-default SpecSync versions.
-      # Stage the 5.1.1 release archives under RUNNER_TEMP for an authority-free
+      # Stage the 5.2.0 release archives under RUNNER_TEMP for an authority-free
       # file:// mirror (platform archive + adjacent .sha256).
-      - name: Prepare SpecSync 5.1.1 local mirror
+      - name: Prepare SpecSync 5.2.0 local mirror
         id: specsync_mirror
         run: |
           set -euo pipefail
-          VERSION="5.1.1"
+          VERSION="5.2.0"
           MIRROR="${RUNNER_TEMP}/specsync-${VERSION}-mirror"
           mkdir -p "$MIRROR"
           BASE="https://github.com/CorvidLabs/spec-sync/releases/download/v${VERSION}"
@@ -102,7 +102,7 @@ jobs:
         uses: CorvidLabs/trust@c8f969a12209575877b5eca1ec557431621381e0 # v1.0.1
         with:
           range: ${{ steps.trust_range.outputs.range }}
-          specsync-version: "5.1.1"
+          specsync-version: "5.2.0"
           specsync-download-base-url: file://${{ steps.specsync_mirror.outputs.path }}
 
       - name: Check managed agent rules

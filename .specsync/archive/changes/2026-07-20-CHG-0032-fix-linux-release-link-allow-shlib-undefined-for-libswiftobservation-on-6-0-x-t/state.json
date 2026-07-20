@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0032-fix-linux-release-link-allow-shlib-undefined-for-libswiftobservation-on-6-0-x-t",
+  "slug": "fix-linux-release-link-allow-shlib-undefined-for-libswiftobservation-on-6-0-x-t",
+  "title": "Fix Linux release link: allow-shlib-undefined for libswiftObservation on 6.0.x toolchains (issue 68 backfill failure)",
+  "description": "Fix Linux release link: allow-shlib-undefined for libswiftObservation on 6.0.x toolchains (issue 68 backfill failure)",
+  "kind": "bug_fix",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "059f44132ee1a840c143a0e62b0ded1b66ad4974",
+  "created_at": 1784520663,
+  "updated_at": 1784558880,
+  "affected_specs": [],
+  "affected_paths": [
+    ".github/workflows/release.yml",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "CI release workflow fix only; no module API or requirement deltas.",
+  "acceptance_criteria": [
+    "Release workflow Linux leg builds aps-linux-x86_64 successfully on the 6.0.x toolchain (link tolerates the libswiftObservation undefined ref); macOS legs unchanged"
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0009-spike-modelstate-swiftdata-feasibility-findings-for-issue-20",
+  "slug": "spike-modelstate-swiftdata-feasibility-findings-for-issue-20",
+  "title": "Spike: ModelState (SwiftData) feasibility findings for issue 20",
+  "description": "Spike: ModelState (SwiftData) feasibility findings for issue 20",
+  "kind": "documentation",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "86b744aac2397802fef518764e1b52ff6b5db475",
+  "created_at": 1784405688,
+  "updated_at": 1784558192,
+  "affected_specs": [],
+  "affected_paths": [
+    "docs/spikes/modelstate-feasibility.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Documentation-only spike findings; no module API changes.",
+  "acceptance_criteria": [
+    "Findings doc at docs/spikes/modelstate-feasibility.md with go/no-go recommendation for ModelState in a bare CLI."
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

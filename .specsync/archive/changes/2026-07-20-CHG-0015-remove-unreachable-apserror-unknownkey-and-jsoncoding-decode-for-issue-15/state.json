@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0015-remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15",
+  "slug": "remove-unreachable-apserror-unknownkey-and-jsoncoding-decode-for-issue-15",
+  "title": "Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15",
+  "description": "Remove unreachable APSError.unknownKey and JSONCoding.decode for issue 15",
+  "kind": "refactor",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "cb05f64c650260c5f3960b192d3be70c0e450627",
+  "created_at": 1784410136,
+  "updated_at": 1784558468,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/DemoKey.swift",
+    "Sources/aps/Dependencies.swift",
+    "Sources/aps/StateStore.swift",
+    "Tests/apsTests/APSTests.swift",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "APSError.unknownKey and JSONCoding.decode are removed; specs no longer list them; profile set still parses JSON; fledge lanes run verify passes."
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing",
+    "design",
+    "tasks",
+    "requirements",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "yes"
+  }
+}

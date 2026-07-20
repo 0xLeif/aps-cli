@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0020-prove-swift-test-on-windows-latest-and-portable-aps-home-env-tests-for-issue-46",
+  "slug": "prove-swift-test-on-windows-latest-and-portable-aps-home-env-tests-for-issue-46",
+  "title": "Prove swift test on windows-latest and portable APS_HOME env tests for issue 46",
+  "description": "Prove swift test on windows-latest and portable APS_HOME env tests for issue 46",
+  "kind": "feature",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "7571e11d1f4da488f9540b0175420f69501814e1",
+  "created_at": 1784418239,
+  "updated_at": 1784558647,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    "Tests/apsTests/APSTests.swift",
+    ".github/workflows/windows-smoke.yml",
+    "README.md",
+    "docs/windows-readiness.md",
+    "specs/aps-cli/testing.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "windows-smoke.yml runs swift test then smoke.ps1 on windows-latest; APSPaths env test uses portable setProcessEnv; docs/README updated."
+  ],
+  "selected_artifacts": [
+    "context",
+    "requirements",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "design"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

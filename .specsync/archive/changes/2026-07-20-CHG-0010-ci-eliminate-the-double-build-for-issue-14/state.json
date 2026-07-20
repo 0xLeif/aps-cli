@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0010-ci-eliminate-the-double-build-for-issue-14",
+  "slug": "ci-eliminate-the-double-build-for-issue-14",
+  "title": "CI: eliminate the double build for issue 14",
+  "description": "CI: eliminate the double build for issue 14",
+  "kind": "operations",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "778676002ccdf9bbc6646fd2435644a902f73801",
+  "created_at": 1784405770,
+  "updated_at": 1784558238,
+  "affected_specs": [],
+  "affected_paths": [
+    ".github/workflows/ci.yml",
+    ".github/workflows/linux-smoke.yml",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "CI workflow-only change; no module API or CLI contract changes.",
+  "acceptance_criteria": [
+    "macOS CI runs a single release configuration (swift test -c release then smoke against .build/release/aps); Linux smoke runs swift test then smoke against the debug binary without a separate prior build step."
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

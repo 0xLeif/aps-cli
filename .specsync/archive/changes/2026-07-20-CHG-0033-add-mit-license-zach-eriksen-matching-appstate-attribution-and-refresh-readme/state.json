@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0033-add-mit-license-zach-eriksen-matching-appstate-attribution-and-refresh-readme",
+  "slug": "add-mit-license-zach-eriksen-matching-appstate-attribution-and-refresh-readme",
+  "title": "Add MIT license (Zach Eriksen, matching AppState attribution) and refresh README layout block (issue 72)",
+  "description": "Add MIT license (Zach Eriksen, matching AppState attribution) and refresh README layout block (issue 72)",
+  "kind": "documentation",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "863eae82259ab09670e0734eb57cac1bc13959a5",
+  "created_at": 1784522309,
+  "updated_at": 1784558888,
+  "affected_specs": [],
+  "affected_paths": [
+    "LICENSE",
+    "README.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "License file and README listing only; no module API or requirement deltas.",
+  "acceptance_criteria": [
+    "Root LICENSE contains canonical MIT text with Copyright (c) 2026 Zach Eriksen; README layout block lists LICENSE and all six workflows"
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

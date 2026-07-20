@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0027-preseed-fledge-with-curl-retries-in-trust-workflow-for-issue-39-ci-flake",
+  "slug": "preseed-fledge-with-curl-retries-in-trust-workflow-for-issue-39-ci-flake",
+  "title": "Preseed Fledge with curl retries in Trust workflow for issue 39 CI flake",
+  "description": "Preseed Fledge with curl retries in Trust workflow for issue 39 CI flake",
+  "kind": "documentation",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "df57539989daa26bb8d4e343ed47dbd18178b73d",
+  "created_at": 1784480195,
+  "updated_at": 1784558817,
+  "affected_specs": [],
+  "affected_paths": [
+    ".github/workflows/trust.yml",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Workflow download resilience only; module contracts unchanged.",
+  "acceptance_criteria": [
+    "trust.yml preseeds Fledge 1.7.0 into RUNNER_TEMP/corvid-trust-fledge with curl retries and checksum verification; SpecSync mirror downloads also retry."
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784559122,
+      "digest": "0a84464ee9e3f7b869f3d8ebf3abadaff03ffdd9ef64fcd9df4b1a6bdf7bc20f",
+      "note": "Archive backlog + 5.2.0 pin + AGENTS.md archive rule for issue 74."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784559209,
+      "digest": "a3263b3be7e72093e0497464f76dd36dba73cb75c09d2adb234efe1c87cc7ab3",
+      "note": "Backlog archived, pin at 5.2.0, AGENTS.md rule added; verify green."
+    }
+  ],
+  "reopenings": []
+}
