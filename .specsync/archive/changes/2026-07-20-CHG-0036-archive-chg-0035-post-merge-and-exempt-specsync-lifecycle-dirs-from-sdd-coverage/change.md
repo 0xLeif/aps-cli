@@ -1,6 +1,6 @@
 ---
 id: CHG-0036-archive-chg-0035-post-merge-and-exempt-specsync-lifecycle-dirs-from-sdd-coverage
-state: accepted
+state: archived
 type: operations
 base_commit: 1fa48c0b4a90f8918b9e911d2d7fcea008225301
 ---
