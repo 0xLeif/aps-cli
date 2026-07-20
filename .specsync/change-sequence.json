@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 31,
-  "id": "CHG-0031-release-workflow-building-tri-platform-binaries-with-sha256-sidecars-plus-post",
+  "sequence": 32,
+  "id": "CHG-0032-fix-linux-release-link-allow-shlib-undefined-for-libswiftobservation-on-6-0-x-t",
   "acknowledged_collisions": []
 }

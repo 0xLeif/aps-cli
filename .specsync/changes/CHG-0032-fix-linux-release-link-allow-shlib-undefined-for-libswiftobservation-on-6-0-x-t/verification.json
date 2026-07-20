@@ -1,22 +1,12 @@
 {
-  "timestamp": 1784520991,
+  "timestamp": 1784520874,
   "commit": "059f44132ee1a840c143a0e62b0ded1b66ad4974",
-  "contract_digest": "9f4340594a9ee3210194677bbf38be036463f24eb4041842a5b4b1206d961a37",
+  "contract_digest": "2a433ff11dbfaeaf1801ff7478bbd98c5ca9becc6283ad82608ea96c3380566f",
   "workspace_digest": "96f1e30631b874e7c1d199149babbc80a70728f31d400c4a18c27112cb2ccac6",
-  "acceptance_input_digest": "79abd2f7069fad99151e8054ca0936e913f00a42c6387bbefc76afa2954e24d2",
+  "acceptance_input_digest": "090c85ff29febc2176dec8926b773c73a549125ccfcb3e220b34b117af22740d",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
-      {
-        "path": ".github/workflows/post-release-formula.yml",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "0e134a8b1ae1797cc7029913a0f0036c0535fa1475310e5a5cf58a861ba08fc9",
-        "entry_digest": "f653b9175e6c4ca0e12a12477b89048d6d6ad823e2663754aa7e2d18cbf16758",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
       {
         "path": ".github/workflows/release.yml",
         "kind": "file",
@@ -31,8 +21,8 @@
         "path": ".specsync/change-sequence.json",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "b9a3922f6e28d6740deb357f44ba66d01953ffa85258be81b72f808498bc4f15",
-        "entry_digest": "92f677ed615e27169df7630157efbc298b8226eadbee6f9b608eb33e02a8e915",
+        "payload_digest": "79457cd7a5b8f8a4c4920905aae6c9b712d41400c0531e77e3d1305e6f37efc8",
+        "entry_digest": "68d94d8d15643190a41e3f011b3a8eddb8de4f92159272d0e6fe19b286b61481",
         "owners": [
           "@exact:delivery"
         ]

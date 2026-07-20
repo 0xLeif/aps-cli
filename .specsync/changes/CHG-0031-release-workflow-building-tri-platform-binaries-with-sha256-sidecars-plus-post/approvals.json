@@ -13,7 +13,84 @@
       "timestamp": 1784519996,
       "digest": "ea0d22774527d297c4f0b4eb9d1ab61d57669f361dcad54f0883b4de502fc408",
       "note": "Release binary pipeline + 0xLeif/homebrew-tap formula sync; fledge lanes run verify green."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784520998,
+      "digest": "102d172850f7e69c206842dfd5e0007d99bebb7b64f335e42c6884cc466985e5",
+      "note": "Re-accept after CHG-0032 release.yml fix."
     }
   ],
-  "reopenings": []
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0031-release-workflow-building-tri-platform-binaries-with-sha256-sidecars-plus-post",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after release.yml Linux link fix (CHG-0032).",
+      "timestamp": 1784520973,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:kimi",
+        "timestamp": 1784519996,
+        "digest": "ea0d22774527d297c4f0b4eb9d1ab61d57669f361dcad54f0883b4de502fc408",
+        "note": "Release binary pipeline + 0xLeif/homebrew-tap formula sync; fledge lanes run verify green."
+      },
+      "prior_verification": {
+        "timestamp": 1784519991,
+        "commit": "c6e416a38d36064608db0f7f5c7e6adaec01a0c3",
+        "contract_digest": "9f4340594a9ee3210194677bbf38be036463f24eb4041842a5b4b1206d961a37",
+        "workspace_digest": "a46876f060f064bf6a014fc55f6193c9e58f9df151cd77a5b6421034c10b4b5e",
+        "acceptance_input_digest": "d1f9a0d5313c26a2a7cc558aa52a1d8c865975dbcf0009a83a3abe2a631c3dbb",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".github/workflows/post-release-formula.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0e134a8b1ae1797cc7029913a0f0036c0535fa1475310e5a5cf58a861ba08fc9",
+              "entry_digest": "f653b9175e6c4ca0e12a12477b89048d6d6ad823e2663754aa7e2d18cbf16758",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".github/workflows/release.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "090554a9bb1368829d8c5a589a0077d50aa9d5aa6a10204a5227ce0fb698481b",
+              "entry_digest": "30b1248fdb2c10700b21351e4575cd1de3ac38925a82d2d2e959bdfe518982db",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b9a3922f6e28d6740deb357f44ba66d01953ffa85258be81b72f808498bc4f15",
+              "entry_digest": "92f677ed615e27169df7630157efbc298b8226eadbee6f9b608eb33e02a8e915",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "d1f9a0d5313c26a2a7cc558aa52a1d8c865975dbcf0009a83a3abe2a631c3dbb",
+      "current_acceptance_input_digest": "79abd2f7069fad99151e8054ca0936e913f00a42c6387bbefc76afa2954e24d2"
+    }
+  ]
 }
