@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784517144,
+  "timestamp": 1784517431,
   "commit": "16a37ff955c2401a54b3edaaf9800fcf0bc765c3",
-  "contract_digest": "e0780c4cee616dc7dec7b0f63be84c43a6d0d997bce778d0d3306cd40df00291",
+  "contract_digest": "44603d948fcfef7867b3cb71b39637289347215df752e5c86c3e3a944defc3d5",
   "workspace_digest": "1cd3ae41cd33230c4ec6dd17fbd766abf687ee60f6cefa61ecc0c0210a12a109",
-  "acceptance_input_digest": "3451bcfd835143e17bf1533e31d2efee9ee528f9ededb1ab965dd9d665514473",
+  "acceptance_input_digest": "bd744dd1f5df0c2b08a063b024f9d9039c6146f7588870529a03b7f6ef424c92",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -11,8 +11,8 @@
         "path": ".specsync/change-sequence.json",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "d983ebbc9e685c5df057ac076d6e018e6a0a1ed357ebb8e87f346a867df21032",
-        "entry_digest": "a4ed2749015f1495334c0c1fe23e42da5b00897ce9f3eac75163dc0acc403973",
+        "payload_digest": "62af71b29affe6ef7cf29646cb321cce265be98488aa1826f0fb5fa5a98b907a",
+        "entry_digest": "a3f28c059dd1f9f48d5d3d836adc9ac4491dd5373391688e0030e7e7c699fc7f",
         "owners": [
           "@exact:delivery"
         ]
@@ -28,21 +28,11 @@
         ]
       },
       {
-        "path": "fledge.toml",
+        "path": "docs/design/dynamic-schema.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "9725ff60ff21c473dfdbc0e2ff37c57b111dd5c73e516392c0620a6c4ed8ce08",
-        "entry_digest": "be2dd708aad79baa292992dcf01d539c05bd0250ddda3df2741a969a6689b174",
-        "owners": [
-          "@exact:delivery"
-        ]
-      },
-      {
-        "path": "plugin.toml",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "268c0eb147e12950d00d6e5868c81f59b119fd29360c34236ee5a42ae86c921d",
-        "entry_digest": "c92ca24a67f582abe62e968b4b0392fe86fb981e09d7e4eca0f3dc8cc6fea4ab",
+        "payload_digest": "6fe7767e95eb2e80a83e603d57a483565aabdc4ba3386134214d61deaa2a46d9",
+        "entry_digest": "dee5f806c7a8aab9e5a7bc01560557a0f027fcddc83f78f623bc02f7f1428d14",
         "owners": [
           "@exact:delivery"
         ]

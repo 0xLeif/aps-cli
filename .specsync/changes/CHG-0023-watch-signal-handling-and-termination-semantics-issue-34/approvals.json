@@ -69,6 +69,20 @@
       "timestamp": 1784489003,
       "digest": "7e8511953ca38b944b87d9731c6471aca30372213a289a641adfd5d8e55eb969",
       "note": "Refresh spec digests after CHG-0028 delta apply."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784515195,
+      "digest": "d6563118ff253c961f04c62c89bf10a19033d04c7410e66138af2779bb567185",
+      "note": "Re-accept after #67 README stale sweep."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784517307,
+      "digest": "0dac42022f5237655d45a6b72da3971005d514f9f17ceaa211b8f1f87ec65883",
+      "note": "Re-accept after tap-org README fix."
     }
   ],
   "reopenings": [
@@ -1097,6 +1111,348 @@
       },
       "stale_acceptance_input_digest": "07c17a5d2142c30518cb70e8ab67e9566465800f6fbfd66605413d408ec65059",
       "current_acceptance_input_digest": "d21fb0c9f831e4316e1bf415bfdea3f7a7b3f7640adfae0dbf616b701efb3915"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0023-watch-signal-handling-and-termination-semantics-issue-34",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after README docs change (#67).",
+      "timestamp": 1784515171,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784489003,
+        "digest": "7e8511953ca38b944b87d9731c6471aca30372213a289a641adfd5d8e55eb969",
+        "note": "Refresh spec digests after CHG-0028 delta apply."
+      },
+      "prior_verification": {
+        "timestamp": 1784488994,
+        "commit": "33b322ee8e0dc80d6dc3712babc0739e05cd13cc",
+        "contract_digest": "25fe6805ba0a024591c22a9ded8174901a7e6e296635188032781610464ad7fe",
+        "workspace_digest": "28202d4b76add1bea53cef26a39eb42dac09b76a1601830561e1eed89ca4ad4e",
+        "acceptance_input_digest": "d21fb0c9f831e4316e1bf415bfdea3f7a7b3f7640adfae0dbf616b701efb3915",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c48b06a0983d1a0475c88a72bd301401f07ba7e3a2fa3bb4f7056955c0fff5e",
+              "entry_digest": "f1fbfb85fad385558f98a15b1757bbf806d70f206fc92c3b20930d26673aef5e",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0410dc315fd7f0690f5d4b7f519a0d48044e08b9975d51c7ddb1835f072ab8ba",
+              "entry_digest": "909a086270b952ed560e0de6e9e48e6d2b1573f34154fc78c6b2460cf6610cc0",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Scripts/smoke.sh",
+              "kind": "file",
+              "mode": 33261,
+              "payload_digest": "39d16c6d8baf282856fc081355024c99065ac48f1e95a44fc69af012a15686fa",
+              "entry_digest": "405443a4f7b34070d808e605454795334d031c31578ab568611cdb4b38de90f4",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/Aps.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "3032b4022f3734415b571d1afe07cac9ebf915f953a9357b1266b97136390cda",
+              "entry_digest": "9a6aecc101f72a24c65147d58053185e86b152892e2aa5abcab7c5fc9fb0c8bb",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/CLIOutput.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "84fd92d403849e70f6487c50a2b638352bdd1d7ecf9a4a35d0f951c674461bba",
+              "entry_digest": "2a469e4de06d0b1166fdc2f1c212dd7a99f78a21dd853064f37f73bc7a4f75a9",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/WatchTermination.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d68fcc1d7c8f5268d2d46003459c356e0b68aa16dd8412177b11eb4d744acf9f",
+              "entry_digest": "4190521ffcec836800af83d92de4569d88b056ba264992b8e2346786228bd01e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5e497910759f3fbad9ec2f4b8e1fc8c220c3e85ab1a0dc9a9a944b896f8c9c16",
+              "entry_digest": "072d7951c5b091da76c888e806ae037dac17cff9d19256cf64235f4e2ac342dd",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "specs/aps-cli",
+              "kind": "non_file",
+              "mode": 0,
+              "payload_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "entry_digest": "6f7c83bad496153e7b31ed762f67bd1c75394999419522d3535142c1e5746b58",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "29bc5bc58d2da6eb49137f0b3ff2a9f182c347d98caa230e61edb53c329f2949",
+              "entry_digest": "83be2ab975ad8225cb01d67684c91666d420af4a95e33f98d31bb0a94d9aeb59",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "182183107241d5e136669cc86ff900434645cc2045138b88d4e18c2df39e50bf",
+              "entry_digest": "ca1d17a0777e063e5dec1abf355b8dce6e1d3882d372956dddfb636b3afcd1b8",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a8fd90a62fb52b4567b99ecc87edefa5dc0708e9b7d9b2d4012cb6a0db64937e",
+              "entry_digest": "ac23398cc11e9403997cc7021a9929f2c4c0f493188f79a56a04129eaf320a41",
+              "owners": [
+                "aps-cli"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-012"
+        ]
+      },
+      "stale_acceptance_input_digest": "d21fb0c9f831e4316e1bf415bfdea3f7a7b3f7640adfae0dbf616b701efb3915",
+      "current_acceptance_input_digest": "9db553b2bf606160cec11eb2accd20e1a0937deb5468bd333baa3be7de24c82e"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0023-watch-signal-handling-and-termination-semantics-issue-34",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after tap-org README fix (#68 direction: 0xLeif/homebrew-tap).",
+      "timestamp": 1784517284,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:kimi",
+        "timestamp": 1784515195,
+        "digest": "d6563118ff253c961f04c62c89bf10a19033d04c7410e66138af2779bb567185",
+        "note": "Re-accept after #67 README stale sweep."
+      },
+      "prior_verification": {
+        "timestamp": 1784515189,
+        "commit": "3a91ca059b8fa774c40e5c798ee5334ad20cecdf",
+        "contract_digest": "25fe6805ba0a024591c22a9ded8174901a7e6e296635188032781610464ad7fe",
+        "workspace_digest": "8703b3a042fe8d6f4ab3484aa3793c08155fb77e448c45e252a3a542a93804d2",
+        "acceptance_input_digest": "9db553b2bf606160cec11eb2accd20e1a0937deb5468bd333baa3be7de24c82e",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c48b06a0983d1a0475c88a72bd301401f07ba7e3a2fa3bb4f7056955c0fff5e",
+              "entry_digest": "f1fbfb85fad385558f98a15b1757bbf806d70f206fc92c3b20930d26673aef5e",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "681bf87e201d070c6186429fb9923a766bbd1d2f2367c8c35579a695d6f66b77",
+              "entry_digest": "1736aa0a3d0ddb3c5c1c7bca3546ac2ed3e0e641ff74faf87d20ed2c6f1ec7c6",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Scripts/smoke.sh",
+              "kind": "file",
+              "mode": 33261,
+              "payload_digest": "39d16c6d8baf282856fc081355024c99065ac48f1e95a44fc69af012a15686fa",
+              "entry_digest": "405443a4f7b34070d808e605454795334d031c31578ab568611cdb4b38de90f4",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/Aps.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "3032b4022f3734415b571d1afe07cac9ebf915f953a9357b1266b97136390cda",
+              "entry_digest": "9a6aecc101f72a24c65147d58053185e86b152892e2aa5abcab7c5fc9fb0c8bb",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/CLIOutput.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "84fd92d403849e70f6487c50a2b638352bdd1d7ecf9a4a35d0f951c674461bba",
+              "entry_digest": "2a469e4de06d0b1166fdc2f1c212dd7a99f78a21dd853064f37f73bc7a4f75a9",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/WatchTermination.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d68fcc1d7c8f5268d2d46003459c356e0b68aa16dd8412177b11eb4d744acf9f",
+              "entry_digest": "4190521ffcec836800af83d92de4569d88b056ba264992b8e2346786228bd01e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5e497910759f3fbad9ec2f4b8e1fc8c220c3e85ab1a0dc9a9a944b896f8c9c16",
+              "entry_digest": "072d7951c5b091da76c888e806ae037dac17cff9d19256cf64235f4e2ac342dd",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "specs/aps-cli",
+              "kind": "non_file",
+              "mode": 0,
+              "payload_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "entry_digest": "6f7c83bad496153e7b31ed762f67bd1c75394999419522d3535142c1e5746b58",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "29bc5bc58d2da6eb49137f0b3ff2a9f182c347d98caa230e61edb53c329f2949",
+              "entry_digest": "83be2ab975ad8225cb01d67684c91666d420af4a95e33f98d31bb0a94d9aeb59",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "182183107241d5e136669cc86ff900434645cc2045138b88d4e18c2df39e50bf",
+              "entry_digest": "ca1d17a0777e063e5dec1abf355b8dce6e1d3882d372956dddfb636b3afcd1b8",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a8fd90a62fb52b4567b99ecc87edefa5dc0708e9b7d9b2d4012cb6a0db64937e",
+              "entry_digest": "ac23398cc11e9403997cc7021a9929f2c4c0f493188f79a56a04129eaf320a41",
+              "owners": [
+                "aps-cli"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-012"
+        ]
+      },
+      "stale_acceptance_input_digest": "9db553b2bf606160cec11eb2accd20e1a0937deb5468bd333baa3be7de24c82e",
+      "current_acceptance_input_digest": "402766afc6af0b6e367d92cc9f941b98e021295110092817e6666231791d2174"
     }
   ]
 }

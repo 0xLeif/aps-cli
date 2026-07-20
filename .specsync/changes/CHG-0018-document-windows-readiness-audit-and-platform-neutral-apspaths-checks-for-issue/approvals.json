@@ -76,6 +76,20 @@
       "timestamp": 1784487282,
       "digest": "b7a952cae479d15ad9aa5edaeab68416755e3e9f8fa910508e557549795d0ba0",
       "note": "Re-accept digest refresh for CHG-0028 (issues 62-64)."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784515058,
+      "digest": "b71fb00e44b37842b2e75744126dbe73ad81cd1e9c9a86c8c0c631b992447d8b",
+      "note": "Re-accept after #67 README stale sweep."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784517176,
+      "digest": "63d36d37344ea3e2b066f5ecc04597d5bcbeba9a7c565f0a0718bf93ee0cb432",
+      "note": "Re-accept after tap-org README fix."
     }
   ],
   "reopenings": [
@@ -710,6 +724,164 @@
       },
       "stale_acceptance_input_digest": "5980cee89626bef1ac114a0fa67ee7fb37d907a692e2f74d99c76ebde193444c",
       "current_acceptance_input_digest": "6a7083e15db772f66ea4fd2c687dcec5e651c2ba3a2fb64cc3eb1de252cf92e4"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0018-document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after README docs change (#67).",
+      "timestamp": 1784515036,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:cursor",
+        "timestamp": 1784487282,
+        "digest": "b7a952cae479d15ad9aa5edaeab68416755e3e9f8fa910508e557549795d0ba0",
+        "note": "Re-accept digest refresh for CHG-0028 (issues 62-64)."
+      },
+      "prior_verification": {
+        "timestamp": 1784487268,
+        "commit": "c5c36dc544afbbebddcb8765c3e60b6a46980495",
+        "contract_digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
+        "workspace_digest": "6fd8900be3fd098dd634731c48af53155cdb591982f083409f768b01c367fea5",
+        "acceptance_input_digest": "6a7083e15db772f66ea4fd2c687dcec5e651c2ba3a2fb64cc3eb1de252cf92e4",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "11399161f4280ad397292c3b65f562f8a9af0c75b95b4ce9880fd1a334bcad4e",
+              "entry_digest": "ef782e68ea14113009c52f9236a1d72ae6c5b5fa9c8525c54d0939d152a9f901",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0410dc315fd7f0690f5d4b7f519a0d48044e08b9975d51c7ddb1835f072ab8ba",
+              "entry_digest": "909a086270b952ed560e0de6e9e48e6d2b1573f34154fc78c6b2460cf6610cc0",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5e497910759f3fbad9ec2f4b8e1fc8c220c3e85ab1a0dc9a9a944b896f8c9c16",
+              "entry_digest": "072d7951c5b091da76c888e806ae037dac17cff9d19256cf64235f4e2ac342dd",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a807cbb47e76fb39f27b6136315147be654ae37b044b6f7d73e9dc1fed9b8176",
+              "entry_digest": "f8614191469e65f306d82023c07dea6c0e95a804380eef9c5d2cf981ed188fb3",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "6a7083e15db772f66ea4fd2c687dcec5e651c2ba3a2fb64cc3eb1de252cf92e4",
+      "current_acceptance_input_digest": "ef211e1c17db7d45cd138e77acdf46516f653b372f295c1ea764f88632e69ab9"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0018-document-windows-readiness-audit-and-platform-neutral-apspaths-checks-for-issue",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after tap-org README fix (#68 direction: 0xLeif/homebrew-tap).",
+      "timestamp": 1784517154,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:kimi",
+        "timestamp": 1784515058,
+        "digest": "b71fb00e44b37842b2e75744126dbe73ad81cd1e9c9a86c8c0c631b992447d8b",
+        "note": "Re-accept after #67 README stale sweep."
+      },
+      "prior_verification": {
+        "timestamp": 1784515052,
+        "commit": "3a91ca059b8fa774c40e5c798ee5334ad20cecdf",
+        "contract_digest": "cc901bc4d6dd8c9a29b4bab3040676345cb2b0d7ba85c859fb5b7dda6becfc94",
+        "workspace_digest": "8703b3a042fe8d6f4ab3484aa3793c08155fb77e448c45e252a3a542a93804d2",
+        "acceptance_input_digest": "ef211e1c17db7d45cd138e77acdf46516f653b372f295c1ea764f88632e69ab9",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "11399161f4280ad397292c3b65f562f8a9af0c75b95b4ce9880fd1a334bcad4e",
+              "entry_digest": "ef782e68ea14113009c52f9236a1d72ae6c5b5fa9c8525c54d0939d152a9f901",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "681bf87e201d070c6186429fb9923a766bbd1d2f2367c8c35579a695d6f66b77",
+              "entry_digest": "1736aa0a3d0ddb3c5c1c7bca3546ac2ed3e0e641ff74faf87d20ed2c6f1ec7c6",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5e497910759f3fbad9ec2f4b8e1fc8c220c3e85ab1a0dc9a9a944b896f8c9c16",
+              "entry_digest": "072d7951c5b091da76c888e806ae037dac17cff9d19256cf64235f4e2ac342dd",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/windows-readiness.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a807cbb47e76fb39f27b6136315147be654ae37b044b6f7d73e9dc1fed9b8176",
+              "entry_digest": "f8614191469e65f306d82023c07dea6c0e95a804380eef9c5d2cf981ed188fb3",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "ef211e1c17db7d45cd138e77acdf46516f653b372f295c1ea764f88632e69ab9",
+      "current_acceptance_input_digest": "78dc11e78d14174d64be5205e957548f728fdafec7654b33cb07d79367ecf553"
     }
   ]
 }

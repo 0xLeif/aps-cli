@@ -1,0 +1,96 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784511958,
+      "digest": "44603d948fcfef7867b3cb71b39637289347215df752e5c86c3e3a944defc3d5",
+      "note": "Docs-only install/distribution and RFC seed alignment for issue 67."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784512702,
+      "digest": "1a192b55b12c803f3c2abfa44fdcdacbb6e7f4f35c3ca225720943b499d4a898",
+      "note": "Install docs and RFC seed alignment for issue 67; fledge lanes run verify green."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784517436,
+      "digest": "be8bb748f5202771d76296c98b41acd7cd709d7a0e19710469673e82ef4a2e8f",
+      "note": "Re-accept after tap-org README fix."
+    }
+  ],
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0030-docs-readme-install-section-and-post-1-0-refresh-dynamic-schema-rfc-seed-examp",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after tap-org README fix (#68 direction: 0xLeif/homebrew-tap).",
+      "timestamp": 1784517415,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:kimi",
+        "timestamp": 1784512702,
+        "digest": "1a192b55b12c803f3c2abfa44fdcdacbb6e7f4f35c3ca225720943b499d4a898",
+        "note": "Install docs and RFC seed alignment for issue 67; fledge lanes run verify green."
+      },
+      "prior_verification": {
+        "timestamp": 1784512347,
+        "commit": "3a91ca059b8fa774c40e5c798ee5334ad20cecdf",
+        "contract_digest": "44603d948fcfef7867b3cb71b39637289347215df752e5c86c3e3a944defc3d5",
+        "workspace_digest": "8703b3a042fe8d6f4ab3484aa3793c08155fb77e448c45e252a3a542a93804d2",
+        "acceptance_input_digest": "043919a84eb68fbef46260a3fbeb557cd728a86aa6820117c81357778c310dba",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "62af71b29affe6ef7cf29646cb321cce265be98488aa1826f0fb5fa5a98b907a",
+              "entry_digest": "a3f28c059dd1f9f48d5d3d836adc9ac4491dd5373391688e0030e7e7c699fc7f",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "681bf87e201d070c6186429fb9923a766bbd1d2f2367c8c35579a695d6f66b77",
+              "entry_digest": "1736aa0a3d0ddb3c5c1c7bca3546ac2ed3e0e641ff74faf87d20ed2c6f1ec7c6",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6fe7767e95eb2e80a83e603d57a483565aabdc4ba3386134214d61deaa2a46d9",
+              "entry_digest": "dee5f806c7a8aab9e5a7bc01560557a0f027fcddc83f78f623bc02f7f1428d14",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "043919a84eb68fbef46260a3fbeb557cd728a86aa6820117c81357778c310dba",
+      "current_acceptance_input_digest": "bd744dd1f5df0c2b08a063b024f9d9039c6146f7588870529a03b7f6ef424c92"
+    }
+  ]
+}

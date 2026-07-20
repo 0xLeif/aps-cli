@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0030-docs-readme-install-section-and-post-1-0-refresh-dynamic-schema-rfc-seed-examp",
+  "slug": "docs-readme-install-section-and-post-1-0-refresh-dynamic-schema-rfc-seed-examp",
+  "title": "Docs: README install section and post-1.0 refresh; dynamic-schema RFC seed example matches shipped 7-key default (issue 67)",
+  "description": "Docs: README install section and post-1.0 refresh; dynamic-schema RFC seed example matches shipped 7-key default (issue 67)",
+  "kind": "documentation",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "3a91ca059b8fa774c40e5c798ee5334ad20cecdf",
+  "created_at": 1784509876,
+  "updated_at": 1784517436,
+  "affected_specs": [],
+  "affected_paths": [
+    "README.md",
+    "docs/design/dynamic-schema.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Docs-only install/distribution and design-record refresh; no module API or requirement deltas.",
+  "acceptance_criteria": [
+    "README gains a working Install section (fledge plugin hub, Mint, source) and drops stale go-public lines; GOAL.md trust-table row reflects shipped 1.0.0; dynamic-schema.md seed example matches the shipped 7-key default document and status reads implemented"
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}
