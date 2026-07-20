@@ -1,6 +1,6 @@
 ---
 id: CHG-0035-archive-accepted-specsync-backlog-31-changes-bump-specsync-pin-to-5-2-0-add
-state: accepted
+state: archived
 type: operations
 base_commit: de318e247be0bc426d0a0db5e25945ba975facd3
 ---
