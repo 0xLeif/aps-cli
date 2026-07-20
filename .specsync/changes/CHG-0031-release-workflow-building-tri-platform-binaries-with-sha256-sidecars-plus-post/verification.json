@@ -1,0 +1,51 @@
+{
+  "timestamp": 1784519991,
+  "commit": "c6e416a38d36064608db0f7f5c7e6adaec01a0c3",
+  "contract_digest": "9f4340594a9ee3210194677bbf38be036463f24eb4041842a5b4b1206d961a37",
+  "workspace_digest": "a46876f060f064bf6a014fc55f6193c9e58f9df151cd77a5b6421034c10b4b5e",
+  "acceptance_input_digest": "d1f9a0d5313c26a2a7cc558aa52a1d8c865975dbcf0009a83a3abe2a631c3dbb",
+  "acceptance_manifest": {
+    "schema_version": 1,
+    "entries": [
+      {
+        "path": ".github/workflows/post-release-formula.yml",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "0e134a8b1ae1797cc7029913a0f0036c0535fa1475310e5a5cf58a861ba08fc9",
+        "entry_digest": "f653b9175e6c4ca0e12a12477b89048d6d6ad823e2663754aa7e2d18cbf16758",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/workflows/release.yml",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "090554a9bb1368829d8c5a589a0077d50aa9d5aa6a10204a5227ce0fb698481b",
+        "entry_digest": "30b1248fdb2c10700b21351e4575cd1de3ac38925a82d2d2e959bdfe518982db",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".specsync/change-sequence.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "b9a3922f6e28d6740deb357f44ba66d01953ffa85258be81b72f808498bc4f15",
+        "entry_digest": "92f677ed615e27169df7630157efbc298b8226eadbee6f9b608eb33e02a8e915",
+        "owners": [
+          "@exact:delivery"
+        ]
+      }
+    ]
+  },
+  "passed": true,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": []
+}

@@ -1,0 +1,108 @@
+name: Release
+
+# Builds the binary release assets the 0xLeif/homebrew-tap formula points
+# at (see Formula/fledge.rb in CorvidLabs/homebrew-tap for the pattern). Both macOS arches are
+# built on macos-latest via `swift build --arch`; no Intel runner needed.
+#
+# Triggers:
+# - tag push (v*): normal release path, assets attach to the tag's release.
+# - workflow_dispatch with a tag input: backfill/repair assets on an existing
+#   release (e.g. v1.0.0, which predates this workflow) without cutting a new
+#   version. The post-release-formula workflow has the same recovery lever.
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing release tag to build/attach assets for (e.g. v1.0.0)"
+        required: true
+        type: string
+
+jobs:
+  test:
+    name: Test gate
+    runs-on: macos-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+      - run: swift build
+      - run: swift test
+
+  build:
+    needs: [test]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            arch: arm64
+            artifact: aps-macos-aarch64
+          - os: macos-latest
+            arch: x86_64
+            artifact: aps-macos-x86_64
+          - os: ubuntu-latest
+            arch: ""
+            artifact: aps-linux-x86_64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Install Swift (Linux)
+        if: runner.os == 'Linux'
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+
+      - name: Build release binary
+        env:
+          ARCH: ${{ matrix.arch }}
+          ARTIFACT: ${{ matrix.artifact }}
+        run: |
+          set -euo pipefail
+          if [ -n "$ARCH" ]; then
+            BIN_DIR=$(swift build -c release --arch "$ARCH" --show-bin-path)
+            swift build -c release --arch "$ARCH"
+          else
+            BIN_DIR=$(swift build -c release --show-bin-path)
+            swift build -c release
+          fi
+          cp "$BIN_DIR/aps" "$ARTIFACT"
+          "$BIN_DIR/aps" --version
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.artifact }}
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Generate checksums
+        run: |
+          cd artifacts
+          for file in *; do
+            [ -f "$file" ] || continue
+            sha256sum "$file" | sed "s|.*/||" > "${file}.sha256"
+          done
+          cat *.sha256
+      - name: Attach to release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.tag || github.ref_name }}
+          generate_release_notes: true
+          files: artifacts/*
