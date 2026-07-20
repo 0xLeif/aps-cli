@@ -265,7 +265,8 @@ docs/design/
 Scripts/smoke.sh
 Scripts/smoke.ps1
 GOAL.md
-.github/workflows/{ci,linux-smoke,windows-smoke,trust}.yml
+LICENSE
+.github/workflows/{ci,linux-smoke,windows-smoke,trust,release,post-release-formula}.yml
 ```
 
 ## Next goal

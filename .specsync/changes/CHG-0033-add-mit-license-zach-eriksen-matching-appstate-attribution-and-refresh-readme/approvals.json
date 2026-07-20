@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784522324,
+      "digest": "432e800fb6c11c6e8bfd875cfbb6510f5991d84590ddcb0a1904631c7eae52d8",
+      "note": "MIT license + README layout refresh for issue 72."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784522347,
+      "digest": "5f63a05815e40863e6caec8ab4a68fa20de3ea2a212370afef673833c0c170db",
+      "note": "Add MIT license; verify green."
+    }
+  ],
+  "reopenings": []
+}
