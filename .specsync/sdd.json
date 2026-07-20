@@ -22,7 +22,10 @@
     "CLAUDE.md",
     "Scripts/"
   ],
-  "ignored_paths": [],
+  "ignored_paths": [
+    ".specsync/changes/",
+    ".specsync/archive/"
+  ],
   "verification_commands": [
     "fledge lanes run verify"
   ],

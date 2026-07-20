@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 35,
-  "id": "CHG-0035-archive-accepted-specsync-backlog-31-changes-bump-specsync-pin-to-5-2-0-add",
+  "sequence": 36,
+  "id": "CHG-0036-archive-chg-0035-post-merge-and-exempt-specsync-lifecycle-dirs-from-sdd-coverage",
   "acknowledged_collisions": []
 }
