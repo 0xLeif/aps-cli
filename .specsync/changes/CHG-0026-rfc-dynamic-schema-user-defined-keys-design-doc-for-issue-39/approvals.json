@@ -27,6 +27,13 @@
       "timestamp": 1784515277,
       "digest": "edab23e7b73b732b26f0da17dc19a1c25ca0684109cedd8ec486afc2f7289eef",
       "note": "Re-accept after #67 README stale sweep."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784517384,
+      "digest": "51704024491e2ec3fc73ea4cfde90c5d538c48c38cf14030b341d380c870b9b9",
+      "note": "Re-accept after tap-org README fix."
     }
   ],
   "reopenings": [
@@ -167,6 +174,75 @@
       },
       "stale_acceptance_input_digest": "70660d57dd5992bbce3454ba62454d341a8e88dcba478a7a0678af1c74533b99",
       "current_acceptance_input_digest": "52d8450618bc49d914b6f142816b349e13f373e5dbd6e08f52d51749aa89d459"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0026-rfc-dynamic-schema-user-defined-keys-design-doc-for-issue-39",
+      "actor": "agent:kimi",
+      "reason": "Rebind stale exact-only evidence after tap-org README fix (#68 direction: 0xLeif/homebrew-tap).",
+      "timestamp": 1784517363,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "agent:kimi",
+        "timestamp": 1784515277,
+        "digest": "edab23e7b73b732b26f0da17dc19a1c25ca0684109cedd8ec486afc2f7289eef",
+        "note": "Re-accept after #67 README stale sweep."
+      },
+      "prior_verification": {
+        "timestamp": 1784515271,
+        "commit": "3a91ca059b8fa774c40e5c798ee5334ad20cecdf",
+        "contract_digest": "d9fe7f1d60d16b01b3a3d75caaa9e90a0c43e052f97f796b057bd3644c0629cf",
+        "workspace_digest": "8703b3a042fe8d6f4ab3484aa3793c08155fb77e448c45e252a3a542a93804d2",
+        "acceptance_input_digest": "52d8450618bc49d914b6f142816b349e13f373e5dbd6e08f52d51749aa89d459",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "370558b9b6fc63687fee283b7c16677197c9cbcd858ea4290a6d70fbcb939afc",
+              "entry_digest": "97a242bec524cb7892f37887a6534b9233a353c336db56ea106198c2403f01de",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "681bf87e201d070c6186429fb9923a766bbd1d2f2367c8c35579a695d6f66b77",
+              "entry_digest": "1736aa0a3d0ddb3c5c1c7bca3546ac2ed3e0e641ff74faf87d20ed2c6f1ec7c6",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6fe7767e95eb2e80a83e603d57a483565aabdc4ba3386134214d61deaa2a46d9",
+              "entry_digest": "dee5f806c7a8aab9e5a7bc01560557a0f027fcddc83f78f623bc02f7f1428d14",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "52d8450618bc49d914b6f142816b349e13f373e5dbd6e08f52d51749aa89d459",
+      "current_acceptance_input_digest": "be6d8b58c215d290462955bd976a97628819c7e08f2c846d7963d359fae73464"
     }
   ]
 }
