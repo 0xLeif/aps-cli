@@ -3,59 +3,17 @@
     {
       "gate": "definition",
       "actor": "agent:kimi",
-      "timestamp": 1784586933,
-      "digest": "1d8336e85046384a7c97288bd4cf2b1a680b99b523042e35d8ea31fe0bc0e0a0",
+      "timestamp": 1784589492,
+      "digest": "ea39f1738d1ca28a18e91499e5e6a7de82580a31826c704d80d34d06e6bece70",
       "note": "Dogfooding standing rule for issue 79."
     },
     {
       "gate": "acceptance",
       "actor": "agent:kimi",
-      "timestamp": 1784587057,
-      "digest": "cceacdccfd9b412c0ed0036e6f260c4b317f7c4e4082d2affcd89e5fb9c64923",
+      "timestamp": 1784589528,
+      "digest": "7975401b228c7e132e43ae3a9f02d36bbd612ac06cbe13e6782d3abe44387335",
       "note": "Dogfooding rule added; verify green."
-    },
-    {
-      "gate": "acceptance",
-      "actor": "agent:kimi",
-      "timestamp": 1784588521,
-      "digest": "36eff06de30505a5a447007a6056aa15fd38023d5aebc01e5e130ae0d3f3178c",
-      "note": "Re-accept after sequence ledger repair."
     }
   ],
-  "reopenings": [
-    {
-      "schema_version": 1,
-      "change_id": "CHG-0037-agents-md-add-dogfooding-standing-rule-agents-use-aps-for-state-issue-79",
-      "actor": "agent:kimi",
-      "reason": "Rebind after repairing sequence ledger claim to 37 (stale cargo-built binary skipped the claim at change new).",
-      "timestamp": 1784588495,
-      "from_state": "accepted",
-      "to_state": "verifying",
-      "superseded_approval": {
-        "gate": "acceptance",
-        "actor": "agent:kimi",
-        "timestamp": 1784587057,
-        "digest": "cceacdccfd9b412c0ed0036e6f260c4b317f7c4e4082d2affcd89e5fb9c64923",
-        "note": "Dogfooding rule added; verify green."
-      },
-      "prior_verification": {
-        "timestamp": 1784587056,
-        "commit": "3a4bec681fc4cc87e2e739bd7826ce42258d88e8",
-        "contract_digest": "1d8336e85046384a7c97288bd4cf2b1a680b99b523042e35d8ea31fe0bc0e0a0",
-        "workspace_digest": "01cfc565b2ba2c47d5717774f80688702dc1466e0e107c51bbd40e9299d01d84",
-        "acceptance_input_digest": "7eebe0393df204996f4851adc73c978093fd012d75116a0e75812a9bfd720d50",
-        "passed": true,
-        "commands": [
-          {
-            "command": "fledge lanes run verify",
-            "success": true,
-            "exit_code": 0
-          }
-        ],
-        "requirement_ids": []
-      },
-      "stale_acceptance_input_digest": "7eebe0393df204996f4851adc73c978093fd012d75116a0e75812a9bfd720d50",
-      "current_acceptance_input_digest": "957de34abd98acf683dc92a0ba54083bc6b1c4f041a4396443f7f5a9425122a3"
-    }
-  ]
+  "reopenings": []
 }

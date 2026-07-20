@@ -2,7 +2,7 @@
 id: CHG-0037-agents-md-add-dogfooding-standing-rule-agents-use-aps-for-state-issue-79
 state: accepted
 type: documentation
-base_commit: 3a4bec681fc4cc87e2e739bd7826ce42258d88e8
+base_commit: 2edbf447ab2111e8b6ff57895299f0930e72df53
 ---
 
 # AGENTS.md: add dogfooding standing rule, agents use aps for state (issue 79)
