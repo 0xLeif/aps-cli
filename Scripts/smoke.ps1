@@ -56,17 +56,6 @@ function Invoke-ApsExpectFail {
     }
 }
 
-function Invoke-ApsExpectExit {
-    param(
-        [Parameter(Mandatory = $true)][int]$ExitCode,
-        [Parameter(Mandatory = $true, ValueFromRemainingArguments = $true)][string[]]$ApsArgs
-    )
-    $result = Invoke-ApsOutput @ApsArgs
-    if ($result.ExitCode -ne $ExitCode) {
-        throw "expected aps $($ApsArgs -join ' ') exit $ExitCode, got $($result.ExitCode): $($result.Text)"
-    }
-}
-
 $smokeHome = if ($env:APS_HOME) {
     $env:APS_HOME
 } else {
@@ -204,7 +193,10 @@ $null = Invoke-ApsOk key remove smokeNote --purge
 
 # Schema conflict: duplicate key add without --force exits 64 (#90).
 $null = Invoke-ApsOk key add race1 --type String --storage FileState --path race-1.json --initial ''
-Invoke-ApsExpectExit -ExitCode 64 key add race1 --type String --storage FileState --path race-1.json --initial ''
+$dup = Invoke-ApsOutput key add race1 --type String --storage FileState --path race-1.json --initial ''
+if ($dup.ExitCode -ne 64) {
+    throw "expected duplicate key add exit 64, got $($dup.ExitCode): $($dup.Text)"
+}
 $null = Invoke-ApsOk key remove race1 --purge
 
 Write-Host 'smoke ok'
