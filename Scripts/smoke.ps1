@@ -49,16 +49,21 @@ function Invoke-ApsOk {
 }
 
 function Invoke-ApsExpectFail {
-    param(
-        [int]$ExpectedExit = -1,
-        [Parameter(ValueFromRemainingArguments = $true)][string[]]$ApsArgs
-    )
+    param([Parameter(ValueFromRemainingArguments = $true)][string[]]$ApsArgs)
     $result = Invoke-ApsOutput @ApsArgs
     if ($result.ExitCode -eq 0) {
         throw "expected aps $($ApsArgs -join ' ') to fail"
     }
-    if ($ExpectedExit -ge 0 -and $result.ExitCode -ne $ExpectedExit) {
-        throw "expected aps $($ApsArgs -join ' ') exit $ExpectedExit, got $($result.ExitCode)"
+}
+
+function Invoke-ApsExpectExit {
+    param(
+        [Parameter(Mandatory = $true)][int]$ExitCode,
+        [Parameter(Mandatory = $true, ValueFromRemainingArguments = $true)][string[]]$ApsArgs
+    )
+    $result = Invoke-ApsOutput @ApsArgs
+    if ($result.ExitCode -ne $ExitCode) {
+        throw "expected aps $($ApsArgs -join ' ') exit $ExitCode, got $($result.ExitCode): $($result.Text)"
     }
 }
 
@@ -199,7 +204,7 @@ $null = Invoke-ApsOk key remove smokeNote --purge
 
 # Schema conflict: duplicate key add without --force exits 64 (#90).
 $null = Invoke-ApsOk key add race1 --type String --storage FileState --path race-1.json --initial ''
-Invoke-ApsExpectFail -ExpectedExit 64 key add race1 --type String --storage FileState --path race-1.json --initial ''
+Invoke-ApsExpectExit -ExitCode 64 key add race1 --type String --storage FileState --path race-1.json --initial ''
 $null = Invoke-ApsOk key remove race1 --purge
 
 Write-Host 'smoke ok'
