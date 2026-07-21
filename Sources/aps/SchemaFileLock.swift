@@ -135,8 +135,9 @@ public enum SchemaFileLock {
         }
     }
 
-    /// True when `.held` is missing/corrupt, the writer PID is dead, or the
-    /// timestamp is older than `windowsHeldStaleAge`.
+    /// True when `.held` is missing/corrupt, the writer PID is dead or matches
+    /// this process (orphaned leftover / PID reuse), or the timestamp is older
+    /// than `windowsHeldStaleAge`.
     private static func isWindowsHeldStale(at url: URL) -> Bool {
         guard
             let data = try? Data(contentsOf: url),
@@ -146,6 +147,11 @@ public enum SchemaFileLock {
         }
         let age = Date().timeIntervalSince1970 - payload.ts
         if age >= windowsHeldStaleAge || age < 0 {
+            return true
+        }
+        // A held file claiming our own PID cannot be a live peer lock in this
+        // single-threaded CLI; it is an orphan (often from Windows PID reuse).
+        if payload.pid == GetCurrentProcessId() {
             return true
         }
         return !windowsProcessIsAlive(pid: payload.pid)
