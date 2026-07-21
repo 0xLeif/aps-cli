@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 38,
-  "id": "CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch",
+  "sequence": 39,
+  "id": "CHG-0039-docs-install-fledge-plugin-from-aps-cli-itself-retire-hub-snapshot-issue-92",
   "acknowledged_collisions": []
 }
