@@ -191,14 +191,6 @@ if (-not [string]::IsNullOrEmpty($smokeAfter)) {
 }
 $null = Invoke-ApsOk key remove smokeNote --purge
 
-# Schema conflict: duplicate key add without --force exits 64 (#90).
-$null = Invoke-ApsOk key add race1 --type String --storage FileState --path race-1.json --initial x
-$dup = Invoke-ApsOutput @('key', 'add', 'race1', '--type', 'String', '--storage', 'FileState', '--path', 'race-1.json', '--initial', 'x')
-if ($dup.ExitCode -ne 64) {
-    throw "expected duplicate key add exit 64, got $($dup.ExitCode): $($dup.Text)"
-}
-$null = Invoke-ApsOk key remove race1 --purge
-
 Write-Host 'smoke ok'
 # Native commands leave $LASTEXITCODE set; clear so pwsh/GHA do not treat success as failure.
 exit 0

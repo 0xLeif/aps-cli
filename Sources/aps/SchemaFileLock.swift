@@ -24,7 +24,9 @@ public enum SchemaFileLock {
     private static let processLock = NSLock()
 
     /// Maximum age of a Windows `.held` lock before it is treated as stale.
-    private static let windowsHeldStaleAge: TimeInterval = 5 * 60
+    /// CLI RMW holds are milliseconds; a short TTL also covers PID reuse when a
+    /// leftover `.held` outlives its writer.
+    private static let windowsHeldStaleAge: TimeInterval = 3
 
     public static func withExclusiveLock<T>(
         stateRoot: String,
