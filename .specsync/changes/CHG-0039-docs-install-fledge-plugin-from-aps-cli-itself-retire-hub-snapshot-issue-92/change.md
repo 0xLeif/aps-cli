@@ -2,7 +2,7 @@
 id: CHG-0039-docs-install-fledge-plugin-from-aps-cli-itself-retire-hub-snapshot-issue-92
 state: accepted
 type: documentation
-base_commit: 2eac0ec7e7bf7bbd69976c30d9d553f19aacacc1
+base_commit: 7a7e6be41d286c2c6de01bca962f9076b6063eac
 ---
 
 # Docs: install fledge plugin from aps-cli itself, retire hub snapshot (issue 92)

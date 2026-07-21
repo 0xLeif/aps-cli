@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784674919,
-  "commit": "2eac0ec7e7bf7bbd69976c30d9d553f19aacacc1",
-  "contract_digest": "81d2356a1ab5a814d2f6ef34ccd6b9983a931071c8ce09089c58b48d67a0f27b",
-  "workspace_digest": "608f836756d96c3de56fd6e552661d1094d5834551db6139d450509fe7c14850",
-  "acceptance_input_digest": "d54c6a18bb591b337a2cf926f15d3e61dc150cd78b619cf51960d9ab0c869fe9",
+  "timestamp": 1784675825,
+  "commit": "28bbc1a38016d9561ceb742bfbd932c80304eec0",
+  "contract_digest": "e5db719f75f18df660d3950ecf6bd085393c0a7603a7ac13d9517adb650cc480",
+  "workspace_digest": "d269473e4bf24e480f173ba3c2baa3ac39b4477e0f45894a99b54ad61c67684e",
+  "acceptance_input_digest": "5f1257fc6c1849773f80ccf6ef6fee69fdc2c6b9c5e6892c4ea6f925f7f9cb61",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -11,8 +11,8 @@
         "path": ".specsync/change-sequence.json",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "c47872bc57e36d610e69bebdc4a32f4ac1aebb2d248e37807afa2c2dccbb9c7d",
-        "entry_digest": "d76be485e8e9bd864ff982396edc5dded7abc4a1381756b3a7c836f5e5bd1b7f",
+        "payload_digest": "7f74668cd9fee4ce2a87be13d8a26bf628e542b7886cb325a7a66406e789cd41",
+        "entry_digest": "9529f033d095bb14d4094349b83b18ab8fcee10e91a56e6e0c9d89ffa10112e4",
         "owners": [
           "@exact:delivery"
         ]
@@ -31,8 +31,8 @@
         "path": "README.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "baa79d0826f1e0349d84ab618c4bd613fdd877d8b80c7278ef6d886d6ab00ccb",
-        "entry_digest": "839462376113556fd2e33027b0c3893963005076e2a18426b1822390f026480f",
+        "payload_digest": "0f26eb1d07d215970e0eb30ae0b3838173a1a3d0a699da01ed2dee8575aaf386",
+        "entry_digest": "db1df56f5a45454e4d00bae11fe4d6621b46f0d1fa7a6694d5a67b23f7732b1d",
         "owners": [
           "@exact:delivery"
         ]
