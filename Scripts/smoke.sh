@@ -9,7 +9,7 @@ export APS_HOME="$SMOKE_HOME"
 mkdir -p "$APS_HOME"
 
 if [[ -z "${APS_BIN:-}" ]]; then
-  swift build -c debug
+  ./Scripts/build.sh -c debug
   APS_BIN=".build/debug/aps"
 fi
 bin="$APS_BIN"
@@ -84,6 +84,12 @@ test -z "$("$bin" get note)"
 "$bin" reset --all >/dev/null
 test "$("$bin" get flag)" = "false"
 test -z "$("$bin" get note)"
+
+# --state-dir as a root flag (before the subcommand) must work.
+ROOTDIR="$(mktemp -d "${TMPDIR:-/tmp}/aps-smoke-root.XXXXXX")"
+"$bin" --state-dir "$ROOTDIR" set note "root-flag" >/dev/null
+test "$("$bin" --state-dir "$ROOTDIR" get note)" = "root-flag"
+test "$("$bin" get note --state-dir "$ROOTDIR")" = "root-flag"
 
 # Bounded watch should exit.
 "$bin" watch counter --count 1 --timeout 2 >/dev/null
@@ -168,7 +174,7 @@ if grep -vq '^{' "$APS_HOME/watch.out"; then
 fi
 
 # aps schema emits the self-describing contract (compact JSON when piped).
-"$bin" schema | grep -q '"schemaVersion":3'
+"$bin" schema | grep -q '"schemaVersion":4'
 "$bin" schema | grep -q '"userSchema"'
 "$bin" schema | grep -q '"name":"profile"'
 "$bin" schema | grep -q '"name":"secret"'
@@ -176,6 +182,7 @@ fi
 "$bin" schema | grep -q '"code":"unknown_key"'
 "$bin" schema | grep -q '"code":"secret_unlock_failed"'
 "$bin" schema | grep -q '"WatchEndEvent"'
+"$bin" schema | grep -q '"--registered"'
 CLI_VER="$("$bin" schema | sed -n 's/.*"cliVersion":"\([^"]*\)".*/\1/p' | head -1)"
 test -n "$CLI_VER"
 test "$CLI_VER" = "$("$bin" --version)"
@@ -187,6 +194,42 @@ test -f "$APS_HOME/schema.json"
 "$bin" set smokeNote "from-smoke"
 test "$("$bin" get smokeNote)" = "from-smoke"
 "$bin" schema | grep -q '"name":"smokeNote"'
+
+# Safer reset: --all is seed-only; --registered wipes user keys too.
+"$bin" reset --all >/dev/null
+test "$("$bin" get smokeNote)" = "from-smoke"
+"$bin" reset --registered >/dev/null
+test -z "$("$bin" get smokeNote)"
 "$bin" key remove smokeNote --purge
+
+# Passphrase SET must unlock: wrong phrase leaves ciphertext unchanged.
+unset APS_SECRET_PASSPHRASE APS_SECRET_USE_PASSPHRASE || true
+"$bin" reset secret >/dev/null || true
+APS_SECRET_PASSPHRASE=alpha "$bin" set secret "owned-by-alpha" >/dev/null
+BEFORE="$(wc -c < "$APS_HOME/secret.enc" | tr -d ' ')"
+if APS_SECRET_PASSPHRASE=beta "$bin" set secret "stolen-by-beta" >/dev/null 2>&1; then
+  echo "expected wrong-passphrase set to fail" >&2
+  exit 1
+fi
+AFTER="$(wc -c < "$APS_HOME/secret.enc" | tr -d ' ')"
+test "$BEFORE" = "$AFTER"
+test "$(APS_SECRET_PASSPHRASE=alpha "$bin" get secret)" = "owned-by-alpha"
+"$bin" reset secret >/dev/null
+
+# Parallel key add must keep every distinct name (schema lock).
+for i in $(seq 1 8); do
+  "$bin" key add "race$i" --type String --storage FileState --path "race-$i.json" --initial "" &
+done
+wait
+for i in $(seq 1 8); do
+  "$bin" keys --quiet | grep -qx "race$i" || { echo "missing race$i after parallel add" >&2; exit 1; }
+done
+# Duplicate add without --force must fail with exit 64 after a successful peer add (#90).
+dup_rc=0
+"$bin" key add race1 --type String --storage FileState --path race-1.json --initial "" >/dev/null 2>&1 || dup_rc=$?
+test "$dup_rc" -eq 64 || { echo "expected exit 64 for duplicate key add, got $dup_rc" >&2; exit 1; }
+for i in $(seq 1 8); do
+  "$bin" key remove "race$i" --purge
+done
 
 echo "smoke ok"

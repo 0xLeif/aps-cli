@@ -8,7 +8,7 @@ import Foundation
 enum Schema {
 
     static let cliVersion = "1.0.0"
-    static let schemaVersion = 3
+    static let schemaVersion = 4
 
     // MARK: - Document model
 
@@ -233,9 +233,9 @@ enum Schema {
             ),
             CommandEntry(
                 name: "reset",
-                summary: "Reset one key (or --all) back to its initial value.",
+                summary: "Reset one key, seed keys (--all), or every registered key (--registered).",
                 arguments: ["[<key>]"],
-                flags: ["--all", "--json", "--state-dir"],
+                flags: ["--all", "--registered", "--json", "--state-dir"],
                 payload: "ResetPayload",
                 streaming: false
             ),
@@ -243,7 +243,7 @@ enum Schema {
                 name: "stats",
                 summary: "Print process-local mutation stats.",
                 arguments: [],
-                flags: ["--watch", "--count", "--timeout", "--interval", "--json"],
+                flags: ["--watch", "--count", "--timeout", "--interval", "--json", "--state-dir"],
                 payload: "StatsPayload",
                 streaming: true
             ),
@@ -296,7 +296,7 @@ enum Schema {
                 prop("timestamp", .prim("string (ISO-8601)")),
             ]),
             "ResetPayload": .obj([
-                prop("reset", .prim("string (\"all\" | \"key\")")),
+                prop("reset", .prim("string (\"all\" | \"registered\" | \"key\")")),
                 prop("key", .prim("string?"), required: false),
                 prop("value", jsonValue, required: false),
             ]),

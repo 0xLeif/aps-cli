@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch",
+  "slug": "harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch",
+  "title": "Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock",
+  "description": "Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock",
+  "kind": "bug_fix",
+  "state": "implementing",
+  "base_commit": "2eac0ec7e7bf7bbd69976c30d9d553f19aacacc1",
+  "created_at": 1784646126,
+  "updated_at": 1784648535,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/",
+    "Tests/apsTests/",
+    "Scripts/",
+    "README.md",
+    "specs/",
+    ".specsync/change-sequence.json",
+    "fledge.toml",
+    "plugin.toml",
+    ".github/workflows/"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Root --state-dir works before subcommand; reset --all is seed-only with --registered for full wipe; SecretStore.set unlocks existing envelope before rewrite; schema add/remove holds exclusive lock and re-reads; tests+smoke cover these; README updated."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

@@ -90,45 +90,55 @@ extension StateStore {
     }
 
     /// Add or replace a schema entry and persist schema.json.
+    ///
+    /// Holds `SchemaFileLock` and re-reads under the lock so parallel `key add`
+    /// cannot drop peer updates (issue #90).
     @MainActor
     public func addKey(_ entry: SchemaKeyEntry, force: Bool) throws {
-        var schema = try loadSchema()
-        if let index = schema.keys.firstIndex(where: { $0.name == entry.name }) {
-            guard force else {
-                throw APSError.schemaConflict(name: entry.name)
+        let root = stateRoot
+        try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            var schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            if let index = schema.keys.firstIndex(where: { $0.name == entry.name }) {
+                guard force else {
+                    throw APSError.schemaConflict(name: entry.name)
+                }
+                schema.keys[index] = entry
+            } else {
+                schema.keys.append(entry)
             }
-            schema.keys[index] = entry
-        } else {
-            schema.keys.append(entry)
+            try UserSchema.write(schema, stateRoot: root)
         }
-        try UserSchema.write(schema, stateRoot: stateRoot)
     }
 
     /// Remove a schema entry. Optionally delete FileState/EncryptedFile data.
     @MainActor
     public func removeKey(name: String, purge: Bool) throws {
-        var schema = try loadSchema()
-        guard let index = schema.keys.firstIndex(where: { $0.name == name }) else {
-            throw APSError.unknownKey(name: name)
+        let root = stateRoot
+        let entry: SchemaKeyEntry = try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            var schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            guard let index = schema.keys.firstIndex(where: { $0.name == name }) else {
+                throw APSError.unknownKey(name: name)
+            }
+            let removed = schema.keys[index]
+            if schema.keys.contains(where: { $0.storage == "Slice" && $0.sliceOf == name }) {
+                throw APSError.schemaInvalid(
+                    reason: "cannot remove '\(name)' while slice keys still reference it"
+                )
+            }
+            schema.keys.remove(at: index)
+            try UserSchema.write(schema, stateRoot: root)
+            return removed
         }
-        let entry = schema.keys[index]
-        if schema.keys.contains(where: { $0.storage == "Slice" && $0.sliceOf == name }) {
-            throw APSError.schemaInvalid(
-                reason: "cannot remove '\(name)' while slice keys still reference it"
-            )
-        }
-        schema.keys.remove(at: index)
-        try UserSchema.write(schema, stateRoot: stateRoot)
         if purge {
             switch entry.storage {
             case "FileState":
                 if let path = entry.path {
-                    let url = URL(fileURLWithPath: stateRoot).appendingPathComponent(path)
+                    let url = URL(fileURLWithPath: root).appendingPathComponent(path)
                     try? FileManager.default.removeItem(at: url)
                 }
             case "EncryptedFile":
                 let store = SecretStore(
-                    directory: stateRoot,
+                    directory: root,
                     storeFileName: entry.path ?? "\(name).enc",
                     keyName: name
                 )

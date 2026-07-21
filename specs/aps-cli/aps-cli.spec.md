@@ -10,6 +10,7 @@ files:
   - Sources/aps/WatchTermination.swift
   - Sources/aps/SecretStore.swift
   - Sources/aps/Schema.swift
+  - Sources/aps/SchemaFileLock.swift
   - Sources/aps/UserSchema.swift
   - Sources/aps/KeyCommands.swift
 db_tables: []
@@ -43,16 +44,18 @@ self-describes that contract for agents through the `schema` command.
 | `note` | String key stored in AppState `FileState`. |
 | `profile` | ProfileDocument key stored in AppState `FileState`. |
 | `secret` | String key stored in the encrypted-file secret store (`secret.enc`). |
-| `SecretStore` | Encrypted-file store: `get` / `set` / `reset` over `secret.enc`. |
+| `SecretStore` | Encrypted-file store: `get` / `set` (unlock-before-rewrite) / `reset` over `secret.enc`. |
 | `hasSecret` | True when a store file exists (missing means initial value). |
 | `get` | Decrypt the stored secret; loud corrupt/unlock failures. |
-| `set` | Encrypt, persist, and read-back verify. |
+| `set` | Unlock existing envelope when present, then seal and verify. |
 | `reset` | Delete `secret.enc`, restoring the initial value. |
 | `profileName` | String Slice over `ProfileDocument.name`. |
 | `UserSchemaDocument` | On-disk schema.json document model. |
 | `SchemaKeyEntry` | One registry key entry (name/type/storage/initial/path/slice). |
 | `SchemaJSON` | JSON value used for schema initials and object fields. |
 | `UserSchema` | Load / materialize / validate / write / hash helpers for schema.json. |
+| `SchemaFileLock` | Exclusive lock helper for schema.json RMW. |
+| `withExclusiveLock` | Run a schema mutation body under the exclusive lock. |
 | `fileName` | `schema.json` basename. |
 | `currentFormatVersion` | Supported on-disk formatVersion. |
 | `namePattern` | Allowed key name regex. |
@@ -61,6 +64,8 @@ self-describes that contract for agents through the `schema` command.
 | `defaultDocument` | Demo seed schema document. |
 | `schemaURL` | Path to schema.json under a state root. |
 | `loadOrMaterialize` | Load schema.json or write the demo seed when missing. |
+| `loadOrMaterializeUnlocked` | Materialize helper for callers that already hold SchemaFileLock. |
+| `loadUnlocked` | Decode schema.json without taking SchemaFileLock. |
 | `load` | Decode and validate schema.json. |
 | `write` | Validate and atomically persist schema.json. |
 | `validate` | Structural checks for schema documents. |
@@ -108,11 +113,14 @@ Command output modes (informational): human output is TTY-aware (aligned
 is byte-stable plain text. JSON is pretty on TTY and compact when piped (gh
 rule). `watch --json` is an alias for `--jsonl`; `keys --quiet` prints key
 names only. Machine shapes are additive-only contracts; human text may evolve.
-Command tree (informational): `Aps` is the `@main` root with get, set, watch,
-dump, keys, key, stats, reset, and schema. `schema` prints one cacheable JSON
-document (`SchemaDocument`): cliVersion, integer schemaVersion (bumped when the
-document shape changes), state-root precedence, live registry keys, userSchema
-meta, commands, payload shapes, and the error table. Live state stays in `dump`.
+Command tree (informational): `APSEntrypoint` peels root `--state-dir` then
+dispatches to `Aps` with get, set, watch, dump, keys, key, stats, reset, and
+schema. `schema` prints one cacheable JSON document (`SchemaDocument`):
+cliVersion, integer schemaVersion (bumped when the document shape changes;
+currently 4), state-root precedence, live registry keys, userSchema meta,
+commands, payload shapes, and the error table. Live state stays in `dump`.
+`reset --all` restores seed keys only; `reset --registered` restores every
+registry key.
 
 ## Invariants
 
@@ -126,6 +134,8 @@ meta, commands, payload shapes, and the error table. Live state stays in `dump`.
    `counter` or `message`.
 4. `watch` must flush each printed value immediately when stdout is not a TTY.
 5. `keys` and `--help` do not mutate application state.
+6. State root: subcommand `--state-dir` > root `--state-dir` > `APS_HOME` > `~/.aps`.
+7. EncryptedFile SET never clobbers ciphertext without a successful unlock when a file exists.
 
 6. `watch` termination is observable in both channels: a terminal
    `{"type":"end","reason":"count|timeout|sigint|sigterm"}` event in `--jsonl`

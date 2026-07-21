@@ -38,21 +38,23 @@ cd aps-cli && swift build -c release
 ## Commands
 
 ```text
+aps [--state-dir PATH] <subcommand> ...
 aps get <key> [--json] [--state-dir PATH]
 aps set <key> <value> [--json] [--state-dir PATH]
 aps watch <key> [--count N] [--timeout SEC] [--jsonl] [--interval MS] [--state-dir PATH]
 aps dump [--json] [--state-dir PATH]
-aps keys [--json]
+aps keys [--json] [--state-dir PATH]
 aps key add|remove|list ...
-aps stats [--json] [--watch] [--count N] [--timeout SEC]
+aps stats [--json] [--watch] [--count N] [--timeout SEC] [--state-dir PATH]
 aps reset <key> [--json] [--state-dir PATH]
 aps reset --all [--json] [--state-dir PATH]
+aps reset --registered [--json] [--state-dir PATH]
 aps schema [--json] [--state-dir PATH]
 aps --help
 aps --version
 ```
 
-State root resolution: `--state-dir` > `APS_HOME` > `~/.aps`.
+State root resolution: `--state-dir` (root form `aps --state-dir PATH <cmd>` or on the subcommand; subcommand wins) > `APS_HOME` > `~/.aps`.
 
 ### Default demo keys (seed schema)
 
@@ -83,9 +85,12 @@ aps key list --json
 
 - **`secret.enc`** holds the encrypted envelope (ephemeral public key, nonce, ciphertext, tag, base64 JSON). Nothing plaintext at rest.
 - **Key file mode (default):** a recipient key is generated on first use at `<state-root>/secret.key` (base64 X25519, mode 0600), like an SSH key. Zero prompts, works headless and in CI, on every OS.
-- **Passphrase mode:** set `APS_SECRET_PASSPHRASE` to derive the key from a passphrase via HKDF-SHA256 (no key file). Wrong passphrases fail loudly with `secretUnlockFailed`.
+- **Passphrase mode:** set `APS_SECRET_PASSPHRASE` to derive the key from a passphrase via HKDF-SHA256 (no key file). Wrong passphrases fail loudly with `secretUnlockFailed` on both get and set.
+- **Stateful gating:** until `secret.enc` exists, the first write seals with whichever recipient is active (key file or passphrase). After that, set must unlock the existing envelope before rewrite; a wrong passphrase cannot silently re-key.
+- A corrupt `secret.enc` envelope blocks both get and set with `decoding_failed` until you run `aps reset secret` (or repair the file).
 - **Interactive opt-in:** with `APS_SECRET_USE_PASSPHRASE=1` on a TTY, aps prompts once itself (its own getpass prompt, not macOS Keychain's).
 - `aps reset secret` deletes `secret.enc`; the key file is kept for future writes.
+- `aps reset --all` restores DemoKey seed keys only (safe for agent FileState keys). Use `aps reset --registered` to wipe every key in `schema.json`.
 - The previous AppState `SecureState` / Keychain backend was replaced: ad-hoc signed CLI binaries can never earn durable Keychain trust, so every access prompted for a password. AppState itself is unchanged; SecureState remains dogfooded in [AppStateExamples](https://github.com/0xLeif/AppStateExamples).
 
 ### Dependencies
@@ -148,6 +153,7 @@ swift run aps set profile '{"name":"agent","version":1}'
 swift run aps dump
 swift run aps watch note --interval 200 --count 2 --timeout 5
 swift run aps reset --all
+swift run aps reset --registered
 ```
 
 ### Agent usage
@@ -161,6 +167,7 @@ swift run aps keys --json
 swift run aps reset note --json
 
 APS_HOME=/tmp/aps-agent swift run aps set note "isolated state"
+swift run aps --state-dir /tmp/aps-agent get note --json
 swift run aps get note --json --state-dir /tmp/aps-agent
 
 swift run aps watch note --count 2 --timeout 5 --jsonl
@@ -173,7 +180,7 @@ swift run aps stats --json
 swift run aps key add agentNote --type String --storage FileState --path agent-note.json --initial ''
 ```
 
-`aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion` (bumped when the document shape changes), live `userSchema` meta (formatVersion, keyCount, hash), state-root precedence, every registered key and command, payload shapes, and the error-code table. Live values stay in `aps dump`. ArgumentParser's full command tree is also available as JSON via `aps <cmd> --experimental-dump-help`.
+`aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion` (bumped when the document shape changes; currently **4**), live `userSchema` meta (formatVersion, keyCount, hash), state-root precedence, every registered key and command, payload shapes, and the error-code table. Live values stay in `aps dump`. ArgumentParser's full command tree is also available as JSON via `aps <cmd> --experimental-dump-help`.
 
 `watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process. For `note` and `profile`, polling reads the JSON files directly so AppState's FileState cache cannot hide cross-process writes.
 

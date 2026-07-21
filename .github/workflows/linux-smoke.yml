@@ -32,10 +32,9 @@ jobs:
         run: swift --version
 
       - name: Test (debug)
-        # libswiftObservation.so has an undefined swift::threading::fatal ref on
-        # Linux 6.0.x toolchains; tolerate it at the shared-lib link (same as the
-        # executable's default). Verified in swift:6.0.3-noble containers.
-        run: swift test -Xlinker --allow-shlib-undefined
+        # Portable wrapper adds Linux -Xlinker --allow-shlib-undefined for the
+        # Observation toolchain bug on 6.0.x.
+        run: ./Scripts/test.sh
 
       - name: Smoke CLI
         env:

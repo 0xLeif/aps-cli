@@ -40,9 +40,15 @@ helpers suitable for non-UI use.
 | `resetStats` | Clears process-local DemoStats counters. |
 | `loadSchema` | Load or materialize schema.json for the active state root. |
 | `resolve` | Resolve a SchemaKeyEntry by name or throw `unknownKey`. |
-| `addKey` | Persist a new or forced-replaced schema entry. |
-| `removeKey` | Remove a schema entry; optional purge of persisted data. |
+| `addKey` | Persist a new or forced-replaced schema entry under SchemaFileLock. |
+| `removeKey` | Remove a schema entry under SchemaFileLock; optional purge of persisted data. |
 | `stateRoot` | Active FileState / schema.json directory. |
+| `APSPaths` | State-root resolution; peels root `--state-dir` before ArgumentParser. |
+| `peelRootStateDir` | Removes leading `--state-dir` tokens from argv before the subcommand. |
+| `setRootStateDirOverride` | Stores a peeled root `--state-dir` for `boot`. |
+| `rootStateDirOverride` | Peeled root override consulted when resolving the state directory. |
+| `configure` | Apply resolved path (subcommand > root override > APS_HOME > ~/.aps) to FileManager.defaultFileStatePath. |
+| `defaultFileStateDirectory` | `~/.aps` fallback path. |
 | `profileDocument` | Typed profile FileState accessor. |
 | `profileName` | Slice accessor for ProfileDocument.name. |
 | `readNoteFromDisk` | Direct `note.json` read requiring a present decodable file. |
@@ -74,6 +80,8 @@ helpers suitable for non-UI use.
 4. `watchBlocking` emits the current value first, then subsequent distinct values.
 5. Dependencies are real services, not fake stubs used only for wiring demos.
 6. `schema.json` write failures surface as `APSError.persistenceFailed`.
+7. Schema RMW (add/remove/materialize-on-missing) is serialized by `SchemaFileLock`.
+8. `SecretStore.set` never replaces an existing envelope without a successful unlock.
 
 ## Behavioral Examples
 

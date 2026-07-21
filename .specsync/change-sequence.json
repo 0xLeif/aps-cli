@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 37,
-  "id": "CHG-0037-agents-md-add-dogfooding-standing-rule-agents-use-aps-for-state-issue-79",
+  "sequence": 38,
+  "id": "CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch",
   "acknowledged_collisions": []
 }
