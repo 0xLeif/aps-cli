@@ -14,10 +14,10 @@ This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.
 brew install 0xLeif/tap/aps
 ```
 
-**fledge plugin** (live-linked from the plugin hub):
+**fledge plugin** (this repo is the plugin; no separate hub repo needed):
 
 ```bash
-fledge plugins install https://github.com/0xLeif/fledge-plugin-aps.git
+fledge plugins install 0xLeif/aps-cli
 fledge aps keys --json
 ```
 
@@ -126,7 +126,7 @@ fledge lanes run verify
 
 ### Fledge plugin shim
 
-This repo ships a root `plugin.toml` so fledge can install `aps` as a live-linked plugin (`fledge-plugin-aps` v1.0.0 tracks the CLI version). Published on the plugin hub at [0xLeif/fledge-plugin-aps](https://github.com/0xLeif/fledge-plugin-aps).
+This repo ships a root `plugin.toml`, so aps-cli is itself the fledge plugin (`fledge-plugin-aps` v1.0.0 tracks the CLI version). Install straight from this repo: `fledge plugins install 0xLeif/aps-cli`. The earlier hub snapshot repo (0xLeif/fledge-plugin-aps) is retired; aps-cli is the only source of truth.
 
 ```bash
 # From a clone of aps-cli:

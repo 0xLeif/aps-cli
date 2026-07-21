@@ -12,13 +12,13 @@ Public 1.0.0 with a registry-backed `schema.json`, GitHub-hosted tri-OS CI, and 
 - [x] Repo public; `fledge-plugin` topic
 - [x] Self-hosted runner `aps-cli-mac-arm64` removed
 - [x] GitHub Release [v1.0.0](https://github.com/0xLeif/aps-cli/releases/tag/v1.0.0)
-- [x] Plugin hub repo [0xLeif/fledge-plugin-aps](https://github.com/0xLeif/fledge-plugin-aps)
+- [x] Plugin install from this repo: `fledge plugins install 0xLeif/aps-cli` (hub snapshot [0xLeif/fledge-plugin-aps](https://github.com/0xLeif/fledge-plugin-aps) retired; aps-cli is the plugin)
 
 ## Install
 
 ```bash
 git clone https://github.com/0xLeif/aps-cli.git
 cd aps-cli && swift build -c release
-# or via fledge:
-fledge plugins install https://github.com/0xLeif/fledge-plugin-aps.git
+# or via fledge (this repo is the plugin):
+fledge plugins install 0xLeif/aps-cli
 ```

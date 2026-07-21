@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agent:kimi",
+      "timestamp": 1784674869,
+      "digest": "81d2356a1ab5a814d2f6ef34ccd6b9983a931071c8ce09089c58b48d67a0f27b",
+      "note": "Plugin install docs point at aps-cli; hub snapshot retired (issue 92)."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agent:kimi",
+      "timestamp": 1784674925,
+      "digest": "90d8c7d10ba2b6cdb0e733c59728761570f3afd3c5467477bc3e1402896daf3f",
+      "note": "Docs updated; verify green."
+    }
+  ],
+  "reopenings": []
+}
