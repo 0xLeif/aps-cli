@@ -27,6 +27,20 @@
       "timestamp": 1784646739,
       "digest": "1585893a80f1c37316c38d0338d38f3c5e2a7f12b546fc9ea25eff0251c6d536",
       "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "Cursor Agent",
+      "timestamp": 1784648506,
+      "digest": "e2a7a5f1d3132822831ecd65de7a444de41904d4a4f04745b40e901c38eb1ca4",
+      "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "Cursor Agent",
+      "timestamp": 1784648535,
+      "digest": "e2a7a5f1d3132822831ecd65de7a444de41904d4a4f04745b40e901c38eb1ca4",
+      "note": null
     }
   ],
   "reopenings": []

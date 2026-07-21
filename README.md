@@ -87,6 +87,7 @@ aps key list --json
 - **Key file mode (default):** a recipient key is generated on first use at `<state-root>/secret.key` (base64 X25519, mode 0600), like an SSH key. Zero prompts, works headless and in CI, on every OS.
 - **Passphrase mode:** set `APS_SECRET_PASSPHRASE` to derive the key from a passphrase via HKDF-SHA256 (no key file). Wrong passphrases fail loudly with `secretUnlockFailed` on both get and set.
 - **Stateful gating:** until `secret.enc` exists, the first write seals with whichever recipient is active (key file or passphrase). After that, set must unlock the existing envelope before rewrite; a wrong passphrase cannot silently re-key.
+- A corrupt `secret.enc` envelope blocks both get and set with `decoding_failed` until you run `aps reset secret` (or repair the file).
 - **Interactive opt-in:** with `APS_SECRET_USE_PASSPHRASE=1` on a TTY, aps prompts once itself (its own getpass prompt, not macOS Keychain's).
 - `aps reset secret` deletes `secret.enc`; the key file is kept for future writes.
 - `aps reset --all` restores DemoKey seed keys only (safe for agent FileState keys). Use `aps reset --registered` to wipe every key in `schema.json`.

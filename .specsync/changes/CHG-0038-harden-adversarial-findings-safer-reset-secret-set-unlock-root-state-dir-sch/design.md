@@ -18,9 +18,12 @@ throws `secretUnlockFailed` and leaves ciphertext untouched. First write / post-
 still seals with the current recipient key (key file or passphrase). Documents that
 passphrase gating is stateful until a keyed envelope exists.
 
-**Schema lock:** `SchemaFileLock` combines a process-local mutex (same-process
-threads; plain `flock` does not serialize those on Linux) with POSIX
-`fcntl(F_SETLKW)` for cross-process exclusion, or LockFileEx-style exclusive
-create/retry on Windows (`schema.json.lock.held`). `addKey` / `removeKey`
-re-load under the lock before write. Materialize double-checks under the same
-lock to avoid racing a peer add.
+**Schema lock:** `SchemaFileLock` combines a process-local non-recursive mutex
+(same-process threads; plain `flock` does not serialize those on Linux) with
+POSIX `fcntl(F_SETLKW)` (EINTR-retried; Darwin/Glibc flock fields set by name)
+for cross-process exclusion. Windows uses exclusive create/retry on
+`schema.json.lock.held` with a PID+timestamp payload; a held file is stale when
+the PID is dead or the timestamp is older than five minutes. `addKey` /
+`removeKey` re-load under the lock before write. Materialize double-checks under
+the same lock to avoid racing a peer add. Callers must not nest
+`withExclusiveLock` (use UserSchema `*Unlocked` helpers inside the body).

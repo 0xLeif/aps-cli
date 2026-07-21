@@ -11,15 +11,16 @@ artifact: testing
 | --- | --- |
 | REQ-aps-cli-011 | `testPeelRootStateDirBeforeSubcommand`; smoke `aps --state-dir OTHER get note` |
 | REQ-aps-cli-019 | smoke/schemaVersion 4; `testSchemaDocumentCoversAllKeysAndCommands` |
-| REQ-aps-cli-020 | `testSecretSetRequiresUnlockBeforeRewrite`; smoke wrong-passphrase SET |
+| REQ-aps-cli-020 | `testSecretSetRequiresUnlockBeforeRewrite`; smoke wrong-passphrase SET; README corrupt-envelope note |
 | REQ-aps-cli-023 | `testResetAllLeavesUserKeysResetRegisteredClearsThem`; smoke seed vs registered |
 | REQ-aps-cli-024 | smoke greps `schemaVersion` 4 and `--registered`; schema unit test |
 | REQ-state-store-016 | `testUserSchemaMaterializeAndKeyAdd`; registry get/set/reset; resetAll scope test |
-| REQ-state-store-017 | `testParallelSchemaAddsUnderLockRetainAllKeys`; smoke parallel `key add` |
+| REQ-state-store-017 | `testParallelSchemaAddsUnderLockRetainAllKeys`; smoke parallel `key add`; smoke duplicate add exit 64 |
 | REQ-state-store-018 | `testSecretSetRequiresUnlockBeforeRewrite` |
 
 ## Suites
 
 - `./Scripts/test.sh` (61 tests)
-- `./Scripts/smoke.sh` and `Scripts/smoke.ps1`
+- `./Scripts/smoke.sh` and `Scripts/smoke.ps1` (includes duplicate `key add` exit 64)
 - `fledge lanes run verify`
+- CI/Trust use portable Scripts wrappers; SchemaFileLock compiles on Darwin and Linux

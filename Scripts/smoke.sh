@@ -223,6 +223,12 @@ done
 wait
 for i in $(seq 1 8); do
   "$bin" keys --quiet | grep -qx "race$i" || { echo "missing race$i after parallel add" >&2; exit 1; }
+done
+# Duplicate add without --force must fail with exit 64 after a successful peer add (#90).
+dup_rc=0
+"$bin" key add race1 --type String --storage FileState --path race-1.json --initial "" >/dev/null 2>&1 || dup_rc=$?
+test "$dup_rc" -eq 64 || { echo "expected exit 64 for duplicate key add, got $dup_rc" >&2; exit 1; }
+for i in $(seq 1 8); do
   "$bin" key remove "race$i" --purge
 done
 

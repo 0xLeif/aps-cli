@@ -24,7 +24,7 @@ jobs:
       - name: Swift version
         run: swift --version
       - name: Test (release)
-        run: swift test -c release
+        run: ./Scripts/test.sh -c release
       - name: Smoke CLI
         env:
           APS_BIN: .build/release/aps
