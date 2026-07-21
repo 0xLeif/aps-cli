@@ -1,6 +1,6 @@
 ---
 id: CHG-0039-docs-install-fledge-plugin-from-aps-cli-itself-retire-hub-snapshot-issue-92
-state: accepted
+state: archived
 type: documentation
 base_commit: 7a7e6be41d286c2c6de01bca962f9076b6063eac
 ---
