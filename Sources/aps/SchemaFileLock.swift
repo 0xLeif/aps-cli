@@ -110,6 +110,9 @@ public enum SchemaFileLock {
             .appendingPathComponent("schema.json.lock.held")
         let deadline = Date().addingTimeInterval(60)
         while true {
+            if Date() >= deadline {
+                throw APSError.persistenceFailed(key: UserSchema.fileName)
+            }
             do {
                 let payload = HeldPayload(
                     pid: GetCurrentProcessId(),
@@ -120,12 +123,12 @@ public enum SchemaFileLock {
                 defer { try? FileManager.default.removeItem(at: heldURL) }
                 return try body()
             } catch {
-                if isWindowsHeldStale(at: heldURL) {
+                // Only steal a held file when it exists and is stale. A missing
+                // held file means the write failed for another reason; back off
+                // instead of spinning forever on continue.
+                if FileManager.default.fileExists(atPath: heldURL.path),
+                   isWindowsHeldStale(at: heldURL) {
                     try? FileManager.default.removeItem(at: heldURL)
-                    continue
-                }
-                if Date() >= deadline {
-                    throw APSError.persistenceFailed(key: UserSchema.fileName)
                 }
                 Thread.sleep(forTimeInterval: 0.05)
             }
