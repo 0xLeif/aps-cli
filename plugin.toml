@@ -10,8 +10,8 @@ description = "Dogfood AppState: get/set/watch/dump registry-backed state"
 binary = ".build/release/aps"
 
 [hooks]
-# Package.swift is auto-detected; this keeps a release binary for the command path.
-build = "swift build -c release"
+# Package.swift is auto-detected; portable wrapper handles Linux linker flags.
+build = "./Scripts/build.sh -c release"
 
 [capabilities]
 exec = false

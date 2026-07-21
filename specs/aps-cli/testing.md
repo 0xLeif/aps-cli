@@ -7,8 +7,9 @@
 - Windows CI: `swift test` + `Scripts/smoke.ps1` on `windows-latest` (`windows-smoke.yml`)
 
 - Encrypted-file `secret` round-trip / wrong-passphrase `secretUnlockFailed` / corrupt envelope `decodingFailed`.
+- Secret SET with wrong passphrase leaves ciphertext unchanged; root `--state-dir` peel; safer reset; schema lock.
 
 - Slice `profileName` writes land in parent `profile` FileState.
 - Torn FileState files surface `corruptState` (exit 65) on get/watch; missing files stay nil/initial.
-- Unit: schema materialize, key add, unknown_key
+- Unit: schema materialize, key add, unknown_key, schemaVersion 4, peel/unlock/reset/lock tests
 - Smoke: key add/remove round-trip (sh + ps1)

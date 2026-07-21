@@ -1,0 +1,33 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "Cursor Agent",
+      "timestamp": 1784646388,
+      "digest": "681ac064ab907881974971f40f18385c588cfdff51e6bf9f20e2a74e8b97f63e",
+      "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "Cursor Agent",
+      "timestamp": 1784646594,
+      "digest": "42048f2b50c73a0aba03285dc04f756b8f83b03391a7682c3392c7e18a89bb08",
+      "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "Cursor Agent",
+      "timestamp": 1784646692,
+      "digest": "7bc14df1c0e31add53a011c008b6d893127ffa226fb6ea592ed5b4e30997a1f2",
+      "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "Cursor Agent",
+      "timestamp": 1784646739,
+      "digest": "1585893a80f1c37316c38d0338d38f3c5e2a7f12b546fc9ea25eff0251c6d536",
+      "note": null
+    }
+  ],
+  "reopenings": []
+}

@@ -79,15 +79,23 @@ public struct SecretStore: Sendable {
     }
 
     /// Encrypt and store the value, then verify by decrypting the file back.
+    ///
+    /// When an envelope already exists, unlock it with the current recipient key
+    /// before rewriting. A wrong passphrase or key fails with
+    /// `secretUnlockFailed` and leaves ciphertext unchanged (issue #89).
     public func set(_ value: String) throws {
         try FileManager.default.createDirectory(
             atPath: directory,
             withIntermediateDirectories: true
         )
+        if hasSecret {
+            // Prove the caller can open the existing envelope before re-keying.
+            _ = try get()
+        }
         let envelope = try seal(value)
         let data = try JSONEncoder().encode(envelope)
         do {
-            try data.write(to: storeURL)
+            try data.write(to: storeURL, options: .atomic)
         } catch {
             throw APSError.persistenceFailed(key: keyName)
         }

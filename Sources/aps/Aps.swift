@@ -2,7 +2,17 @@ import ArgumentParser
 import AppState
 import Foundation
 
+/// Peel root `--state-dir` before ArgumentParser (issue #87), then dispatch.
 @main
+enum APSEntrypoint {
+    static func main() {
+        var args = Array(CommandLine.arguments.dropFirst())
+        let peeled = APSPaths.peelRootStateDir(from: &args)
+        APSPaths.setRootStateDirOverride(peeled)
+        Aps.main(args)
+    }
+}
+
 struct Aps: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "aps",
@@ -20,7 +30,8 @@ struct Aps: ParsableCommand {
           secret   String  EncryptedFile
           profileName String Slice (profile.name)
 
-        State root: --state-dir > APS_HOME > ~/.aps
+        State root: --state-dir (root or subcommand) > APS_HOME > ~/.aps
+        Root form: aps --state-dir PATH <subcommand> ...
 
         Built on https://github.com/0xLeif/AppState
         """,
@@ -368,9 +379,12 @@ extension Aps {
         @Flag(name: .long, help: "Emit machine-readable JSON.")
         var json: Bool = false
 
+        @Option(name: .long, help: "Override state directory (takes precedence over APS_HOME).")
+        var stateDir: String?
+
         func run() throws {
             try onMainThread {
-                boot()
+                boot(stateDir: stateDir)
                 let store = StateStore()
 
                 if watch {
@@ -411,24 +425,32 @@ extension Aps {
 
     struct Reset: ParsableCommand {
         static let configuration = CommandConfiguration(
-            abstract: "Reset one registered key (or all keys) back to its initial value."
+            abstract: "Reset one key, all seed keys (--all), or every registered key (--registered)."
         )
 
-        @Argument(help: "Key name to reset. Omit with --all.")
+        @Argument(help: "Key name to reset. Omit with --all or --registered.")
         var key: String?
 
-        @Flag(name: .long, help: "Reset every registered key.")
+        @Flag(name: .long, help: "Reset every DemoKey seed key. User-added keys are left alone.")
         var all: Bool = false
+
+        @Flag(name: .long, help: "Reset every key in schema.json, including user-added keys.")
+        var registered: Bool = false
 
         @OptionGroup
         var options: StateOptions
 
         func run() throws {
-            guard all || key != nil else {
-                throw ValidationError("Pass a key or --all. Example: aps reset counter")
+            guard all || registered || key != nil else {
+                throw ValidationError(
+                    "Pass a key, --all (seed keys), or --registered. Example: aps reset counter"
+                )
             }
-            if all && key != nil {
-                throw ValidationError("Pass either a key or --all, not both.")
+            if all && registered {
+                throw ValidationError("Pass either --all or --registered, not both.")
+            }
+            if (all || registered) && key != nil {
+                throw ValidationError("Pass either a key or a bulk reset flag, not both.")
             }
 
             try onMainThread {
@@ -436,12 +458,24 @@ extension Aps {
                 let store = StateStore()
                 do {
                     if all {
-                        try store.resetAllRegistered()
+                        store.resetAll()
                         if options.json {
                             let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
                             print(try CLIOutput.encodeJSON(payload))
                         } else {
-                            print("reset all keys")
+                            print("reset seed keys")
+                        }
+                    } else if registered {
+                        try store.resetAllRegistered()
+                        if options.json {
+                            let payload = CLIOutput.ResetPayload(
+                                reset: "registered",
+                                key: nil,
+                                value: nil
+                            )
+                            print(try CLIOutput.encodeJSON(payload))
+                        } else {
+                            print("reset all registered keys")
                         }
                     } else if let key {
                         try store.reset(name: key)
@@ -468,6 +502,7 @@ extension Aps {
 @MainActor
 func boot(stateDir: String? = nil) {
     Application.logging(isEnabled: false)
+    // Subcommand --state-dir wins over peeled root --state-dir.
     APSPaths.configure(stateDir: stateDir)
 }
 

@@ -855,7 +855,7 @@ final class APSTests: XCTestCase {
     func testSchemaDocumentCoversAllKeysAndCommands() throws {
         let document = Schema.staticDocument()
 
-        XCTAssertEqual(document.schemaVersion, 3)
+        XCTAssertEqual(document.schemaVersion, 4)
         XCTAssertEqual(document.cliVersion, "1.0.0")
         XCTAssertEqual(document.keys.map(\.name), DemoKey.allCases.map(\.rawValue))
         XCTAssertEqual(document.stateRoot.precedence, ["--state-dir", "APS_HOME", "~/.aps"])
@@ -864,6 +864,8 @@ final class APSTests: XCTestCase {
         for expected in ["get", "set", "watch", "dump", "keys", "key", "reset", "stats", "schema"] {
             XCTAssertTrue(commandNames.contains(expected), "missing command \(expected)")
         }
+        let reset = document.commands.first { $0.name == "reset" }
+        XCTAssertTrue(reset?.flags.contains("--registered") == true)
 
         let secret = document.keys.first { $0.name == "secret" }
         XCTAssertEqual(secret?.path, "<state-root>/secret.enc")
@@ -896,7 +898,7 @@ final class APSTests: XCTestCase {
         let data = try XCTUnwrap(json.data(using: .utf8))
         let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
-        XCTAssertEqual(object?["schemaVersion"] as? Int, 3)
+        XCTAssertEqual(object?["schemaVersion"] as? Int, 4)
         let payloads = try XCTUnwrap(object?["payloads"] as? [String: Any])
         for name in ["KeyValuePayload", "KeysPayload", "WatchEvent", "WatchErrorEvent", "WatchEndEvent", "ResetPayload", "StatsPayload", "ErrorEnvelope"] {
             XCTAssertNotNil(payloads[name], "missing payload schema \(name)")
@@ -952,5 +954,137 @@ final class APSTests: XCTestCase {
         }
     }
 
+    func testPeelRootStateDirBeforeSubcommand() {
+        var args = ["--state-dir", "/tmp/aps-root", "get", "note"]
+        let peeled = APSPaths.peelRootStateDir(from: &args)
+        XCTAssertEqual(peeled, "/tmp/aps-root")
+        XCTAssertEqual(args, ["get", "note"])
+
+        var equals = ["--state-dir=/tmp/eq", "dump"]
+        XCTAssertEqual(APSPaths.peelRootStateDir(from: &equals), "/tmp/eq")
+        XCTAssertEqual(equals, ["dump"])
+
+        var after = ["get", "note", "--state-dir", "/tmp/late"]
+        XCTAssertNil(APSPaths.peelRootStateDir(from: &after))
+        XCTAssertEqual(after, ["get", "note", "--state-dir", "/tmp/late"])
+    }
+
+#if !os(Windows)
+    @MainActor
+    func testSecretSetRequiresUnlockBeforeRewrite() async throws {
+        setenv("APS_SECRET_PASSPHRASE", "alpha", 1)
+        defer {
+            unsetenv("APS_SECRET_PASSPHRASE")
+        }
+
+        let path = FileManager.defaultFileStatePath
+        let store = SecretStore(directory: path)
+        try store.set("owned-by-alpha")
+        let url = URL(fileURLWithPath: path).appendingPathComponent("secret.enc")
+        let before = try Data(contentsOf: url)
+
+        setenv("APS_SECRET_PASSPHRASE", "beta", 1)
+        XCTAssertThrowsError(try store.set("stolen-by-beta")) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+        let after = try Data(contentsOf: url)
+        XCTAssertEqual(before, after)
+
+        setenv("APS_SECRET_PASSPHRASE", "alpha", 1)
+        XCTAssertEqual(try store.get(), "owned-by-alpha")
+        store.reset()
+    }
+#endif
+
+    @MainActor
+    func testResetAllLeavesUserKeysResetRegisteredClearsThem() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-reset-scope-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        FileManager.defaultFileStatePath = root.path
+
+        let store = StateStore()
+        try store.addKey(
+            SchemaKeyEntry(
+                name: "agentStatus",
+                type: "String",
+                storage: "FileState",
+                initial: .string(""),
+                path: "agent-status.json",
+                doc: "agent key"
+            ),
+            force: false
+        )
+        try store.set(name: "agentStatus", value: "exploring")
+        try store.set(.flag, value: "true")
+
+        store.resetAll()
+        XCTAssertEqual(store.get(.flag), "false")
+        XCTAssertEqual(try store.get(name: "agentStatus"), "exploring")
+
+        try store.resetAllRegistered()
+        XCTAssertEqual(try store.get(name: "agentStatus"), "")
+    }
+
+    func testParallelSchemaAddsUnderLockRetainAllKeys() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-schema-lock-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let schemaURL = UserSchema.schemaURL(stateRoot: root.path)
+        try UserSchema.write(UserSchema.defaultDocument(), to: schemaURL)
+
+        final class FailureBox: @unchecked Sendable {
+            private let lock = NSLock()
+            private var values: [String] = []
+            func append(_ value: String) {
+                lock.lock()
+                values.append(value)
+                lock.unlock()
+            }
+            var snapshot: [String] {
+                lock.lock()
+                defer { lock.unlock() }
+                return values
+            }
+        }
+
+        let group = DispatchGroup()
+        let failures = FailureBox()
+        let count = 16
+        for index in 0..<count {
+            group.enter()
+            DispatchQueue.global(qos: .userInitiated).async {
+                defer { group.leave() }
+                do {
+                    try SchemaFileLock.withExclusiveLock(stateRoot: root.path) {
+                        var document = try UserSchema.loadUnlocked(stateRoot: root.path)
+                        document.keys.append(
+                            SchemaKeyEntry(
+                                name: "race\(index)",
+                                type: "String",
+                                storage: "FileState",
+                                initial: .string(""),
+                                path: "race-\(index).json",
+                                doc: "race"
+                            )
+                        )
+                        try UserSchema.write(document, to: schemaURL)
+                    }
+                } catch {
+                    failures.append("\(error)")
+                }
+            }
+        }
+        XCTAssertEqual(group.wait(timeout: .now() + 30), .success)
+        let failureList = failures.snapshot
+        XCTAssertTrue(failureList.isEmpty, failureList.joined(separator: "; "))
+
+        let final = try UserSchema.load(from: schemaURL)
+        let raceNames = Set(final.keys.map(\.name).filter { $0.hasPrefix("race") })
+        XCTAssertEqual(raceNames.count, count)
+    }
 
 }

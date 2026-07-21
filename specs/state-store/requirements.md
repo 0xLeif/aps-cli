@@ -93,11 +93,28 @@ Acceptance Criteria
 
 ### REQ-state-store-016
 
-`StateStore` SHALL load or materialize `schema.json`, resolve string key names through the registry, and support `addKey` / `removeKey` / `dumpRegistered` / string-name `watchBlocking` for non-seed keys via DynamicKeyStorage.
+`StateStore` SHALL load or materialize `schema.json`, resolve string key names through the registry, and support `addKey` / `removeKey` / `dumpRegistered` / string-name `watchBlocking` for non-seed keys via DynamicKeyStorage. Schema mutations use `SchemaFileLock`.
 
 Acceptance Criteria
 - `loadSchema()` materializes the demo seed when `schema.json` is missing.
 - `get(name:)` / `set(name:)` / `reset(name:)` work for seed and user keys.
 - `addKey` without force throws `schemaConflict` on duplicates; `removeKey` throws `unknownKey` when missing.
 - `dumpRegistered()` includes every registry key.
+- `resetAll()` restores seed keys only; `resetAllRegistered()` restores every registry key.
+
+### REQ-state-store-017
+
+`StateStore.addKey` / `removeKey` SHALL hold an exclusive lock on the state-root schema lock file, re-read `schema.json` under that lock, then write. Concurrent adds with distinct names SHALL all persist.
+
+Acceptance Criteria
+- Parallel RMW under the lock retains every distinct added key.
+- Duplicate add without `--force` still throws `schemaConflict` after a successful peer add.
+
+### REQ-state-store-018
+
+`SecretStore.set` SHALL call unlock (`get`) when an envelope file exists before sealing a new value. Failure SHALL throw `secretUnlockFailed` without replacing the file.
+
+Acceptance Criteria
+- After sealing with passphrase A, set with passphrase B throws and leaves bytes unchanged.
+- First set on a missing file still succeeds without a prior unlock.
 

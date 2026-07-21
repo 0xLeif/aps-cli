@@ -194,8 +194,31 @@ public enum UserSchema {
     }
 
     /// Load schema.json or materialize the default document when missing.
+    ///
+    /// Materialize races with peer `key add` are serialized via `SchemaFileLock`.
     @MainActor
     public static func loadOrMaterialize(stateRoot: String) throws -> UserSchemaDocument {
+        let url = schemaURL(stateRoot: stateRoot)
+        if FileManager.default.fileExists(atPath: url.path) {
+            return try load(from: url)
+        }
+        return try SchemaFileLock.withExclusiveLock(stateRoot: stateRoot) {
+            if FileManager.default.fileExists(atPath: url.path) {
+                return try load(from: url)
+            }
+            let document = defaultDocument()
+            try write(document, to: url)
+            return document
+        }
+    }
+
+    /// Load without taking the schema lock (caller already holds it).
+    public static func loadUnlocked(stateRoot: String) throws -> UserSchemaDocument {
+        try load(from: schemaURL(stateRoot: stateRoot))
+    }
+
+    /// Load or materialize without taking the schema lock (caller already holds it).
+    public static func loadOrMaterializeUnlocked(stateRoot: String) throws -> UserSchemaDocument {
         let url = schemaURL(stateRoot: stateRoot)
         if FileManager.default.fileExists(atPath: url.path) {
             return try load(from: url)

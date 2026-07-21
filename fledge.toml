@@ -2,9 +2,9 @@
 # Docs: https://github.com/CorvidLabs/fledge
 
 [tasks]
-build = "swift build"
-test = "swift test"
-release-build = "swift build -c release"
+build = "./Scripts/build.sh"
+test = "./Scripts/test.sh"
+release-build = "./Scripts/build.sh -c release"
 smoke = "./Scripts/smoke.sh"
 # Manifest-only: warns if `.build/release/aps` is missing (created by release/install hooks).
 plugin-validate = "fledge plugins validate ."

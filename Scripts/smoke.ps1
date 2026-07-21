@@ -148,6 +148,16 @@ if (-not [string]::IsNullOrEmpty($noteAll)) {
     throw "expected empty note after reset --all, got '$noteAll'"
 }
 
+# Root --state-dir before the subcommand.
+$rootDir = Join-Path $env:TEMP ("aps-smoke-root-" + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Path $rootDir | Out-Null
+try {
+    $null = Invoke-ApsOk --state-dir $rootDir set note root-flag
+    Assert-Equal 'root-flag' (Invoke-ApsOk --state-dir $rootDir get note) 'root state-dir get'
+} finally {
+    Remove-Item -Recurse -Force $rootDir -ErrorAction SilentlyContinue
+}
+
 # Bounded watch should exit.
 $null = Invoke-ApsOk watch counter --count 1 --timeout 2
 
@@ -160,17 +170,25 @@ Invoke-ApsExpectFail set counter nope
 
 # Schema contract + dynamic key round-trip
 $schema = Invoke-ApsOk schema
-Assert-Match $schema '"schemaVersion":3' 'schema version'
+Assert-Match $schema '"schemaVersion":4' 'schema version'
 Assert-Match $schema '"userSchema"' 'userSchema meta'
 Assert-Match $schema '"code":"unknown_key"' 'unknown_key error'
+Assert-Match $schema '"--registered"' 'reset registered flag'
 Assert-Equal '1.0.0' (Invoke-ApsOk --version) 'cli version'
 if (-not (Test-Path (Join-Path $env:APS_HOME 'schema.json'))) {
     throw 'expected schema.json to materialize under APS_HOME'
 }
 $null = Invoke-ApsOk key add smokeNote --type String --storage FileState --path smoke-note.json --initial ''
-Assert-equal 'from-smoke' (Invoke-ApsOk set smokeNote from-smoke) 'set smokeNote'
-Assert-equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'get smokeNote'
+Assert-Equal 'from-smoke' (Invoke-ApsOk set smokeNote from-smoke) 'set smokeNote'
+Assert-Equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'get smokeNote'
 Assert-Match (Invoke-ApsOk schema) '"name":"smokeNote"' 'schema lists smokeNote'
+$null = Invoke-ApsOk reset --all
+Assert-Equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'reset --all leaves user key'
+$null = Invoke-ApsOk reset --registered
+$smokeAfter = Invoke-ApsOk get smokeNote
+if (-not [string]::IsNullOrEmpty($smokeAfter)) {
+    throw "expected empty smokeNote after reset --registered, got '$smokeAfter'"
+}
 $null = Invoke-ApsOk key remove smokeNote --purge
 
 Write-Host 'smoke ok'
