@@ -1,3 +1,4 @@
+import AppState
 import Foundation
 
 /// Process-local and file-backed storage for user-defined schema keys.
@@ -69,7 +70,9 @@ enum DynamicKeyStorage {
                 try memorySet(entry, value: initial)
             }
         case "StoredState":
-            UserDefaults.standard.removeObject(forKey: storedDefaultsKey(entry.name))
+            let store = userDefaults
+            store.removeObject(forKey: storedDefaultsKey(entry.name))
+            (store as? UserDefaults)?.synchronize()
             UserDefaults.standard.synchronize()
             if entry.initial != nil {
                 try storedSet(entry, value: initial)
@@ -149,44 +152,56 @@ enum DynamicKeyStorage {
 
     // MARK: - StoredState
 
+    private static var userDefaults: any UserDefaultsManaging {
+        Application.dependency(\Application.userDefaults)
+    }
+
     private static func storedDefaultsKey(_ name: String) -> String {
         "aps.user.\(name)"
     }
 
     private static func storedGet(_ entry: SchemaKeyEntry) -> String {
         let key = storedDefaultsKey(entry.name)
+        let store = userDefaults
         switch entry.type {
         case "Int":
-            if UserDefaults.standard.object(forKey: key) != nil {
-                return String(UserDefaults.standard.integer(forKey: key))
+            if let object = store.object(forKey: key) {
+                if let intValue = object as? Int { return String(intValue) }
+                if let strValue = object as? String, let intValue = Int(strValue) { return String(intValue) }
             }
             return entry.initial?.wireString ?? "0"
         case "Bool":
-            if UserDefaults.standard.object(forKey: key) != nil {
-                return UserDefaults.standard.bool(forKey: key) ? "true" : "false"
+            if let object = store.object(forKey: key) {
+                if let boolValue = object as? Bool { return boolValue ? "true" : "false" }
+                if let strValue = object as? String, let boolValue = StateStore.parseBool(strValue) { return boolValue ? "true" : "false" }
             }
             return entry.initial?.wireString ?? "false"
         default:
-            return UserDefaults.standard.string(forKey: key) ?? entry.initial?.wireString ?? ""
+            if let object = store.object(forKey: key) as? String {
+                return object
+            }
+            return entry.initial?.wireString ?? ""
         }
     }
 
     private static func storedSet(_ entry: SchemaKeyEntry, value: String) throws {
         let key = storedDefaultsKey(entry.name)
+        let store = userDefaults
         switch entry.type {
         case "Int":
             guard let intValue = Int(value) else {
                 throw APSError.invalidValue(key: entry.name, value: value)
             }
-            UserDefaults.standard.set(intValue, forKey: key)
+            store.set(intValue, forKey: key)
         case "Bool":
             guard let boolValue = StateStore.parseBool(value) else {
                 throw APSError.invalidValue(key: entry.name, value: value)
             }
-            UserDefaults.standard.set(boolValue, forKey: key)
+            store.set(boolValue, forKey: key)
         default:
-            UserDefaults.standard.set(value, forKey: key)
+            store.set(value, forKey: key)
         }
+        (store as? UserDefaults)?.synchronize()
         UserDefaults.standard.synchronize()
     }
 

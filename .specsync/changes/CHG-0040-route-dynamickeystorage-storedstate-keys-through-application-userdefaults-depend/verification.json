@@ -1,0 +1,41 @@
+{
+  "timestamp": 1784678324,
+  "commit": "f76afad21becf7146c6edde94255c64bb29defe3",
+  "contract_digest": "7d91cd7bb66b86c043984cba122b476dc42bfef901379d9554b3babd97f0d2d1",
+  "workspace_digest": "64e32ea855ee40baf6c663cb8c9b8bcf75344e5a932272790bcd8591ae89abe5",
+  "acceptance_input_digest": "1491d3cced04b7a5d87d5e087f0cbc3b15f7decc72ebc408161ec63e5160ca7f",
+  "acceptance_manifest": {
+    "schema_version": 1,
+    "entries": [
+      {
+        "path": ".specsync/change-sequence.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "cdda1123ed839cd0be06bd0dc8b6a645e30df7b026a100f43c311117229d4b7a",
+        "entry_digest": "0b46fc36718d4018b9210380ba868ee8bb4faf04ba60ba175f81d15ced93c68d",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "Tests/apsTests/APSTests.swift",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "55b1979873057354432b3081cea5b7578c0146d38c8cfb9e128f835319331ffc",
+        "entry_digest": "41d911ee1b7d1c36d86afa6f518cf51df4e6340642098a49f31265581a148553",
+        "owners": [
+          "@exact:test"
+        ]
+      }
+    ]
+  },
+  "passed": true,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": []
+}

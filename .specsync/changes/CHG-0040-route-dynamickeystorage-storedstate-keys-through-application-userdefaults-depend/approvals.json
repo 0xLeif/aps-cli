@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "agy",
+      "timestamp": 1784678167,
+      "digest": "3925b3a7bda848beaa285b8f6338c3fdce4785d2e6c8d1f6736889f8c54bd1f9",
+      "note": null
+    },
+    {
+      "gate": "definition",
+      "actor": "agy",
+      "timestamp": 1784678300,
+      "digest": "7d91cd7bb66b86c043984cba122b476dc42bfef901379d9554b3babd97f0d2d1",
+      "note": null
+    },
+    {
+      "gate": "acceptance",
+      "actor": "agy",
+      "timestamp": 1784678331,
+      "digest": "bf1ad882e387ead081f215df19078f00de29170c354416adc98e9b5faf46cdcd",
+      "note": null
+    }
+  ],
+  "reopenings": []
+}
