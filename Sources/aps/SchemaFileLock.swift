@@ -12,7 +12,7 @@ import WinSDK
 
 /// Exclusive cross-process lock for `schema.json` read-modify-write.
 ///
-/// Lock file: `<state-root>/schema.json.lock`. Combines a process-local mutex
+/// Lock file: `<state-root>/<lockFileName>`. Combines a process-local mutex
 /// (so same-process threads serialize; plain `flock` does not) with POSIX
 /// `fcntl(F_SETLKW)` for cross-process exclusion. Windows uses an exclusive
 /// create/retry on `schema.json.lock.held`, with PID+timestamp stale recovery.
@@ -28,8 +28,13 @@ public enum SchemaFileLock {
     /// leftover `.held` outlives its writer.
     private static let windowsHeldStaleAge: TimeInterval = 3
 
-    public static func withExclusiveLock<T>(
+    public static func withExclusiveLock<T>(stateRoot: String, _ body: () throws -> T) throws -> T {
+        try withExclusiveLock(stateRoot: stateRoot, lockFileName: "schema.json.lock", body)
+    }
+
+    internal static func withExclusiveLock<T>(
         stateRoot: String,
+        lockFileName: String,
         _ body: () throws -> T
     ) throws -> T {
         processLock.lock()
@@ -45,20 +50,23 @@ public enum SchemaFileLock {
             throw APSError.persistenceFailed(key: UserSchema.fileName)
         }
 
+        let safeLockFileName = URL(fileURLWithPath: lockFileName).lastPathComponent
+
         #if os(Windows)
-        return try withWindowsLock(stateRoot: stateRoot, body)
+        return try withWindowsLock(stateRoot: stateRoot, lockFileName: safeLockFileName, body)
         #else
-        return try withPOSIXLock(stateRoot: stateRoot, body)
+        return try withPOSIXLock(stateRoot: stateRoot, lockFileName: safeLockFileName, body)
         #endif
     }
 
     #if !os(Windows)
     private static func withPOSIXLock<T>(
         stateRoot: String,
+        lockFileName: String,
         _ body: () throws -> T
     ) throws -> T {
         let lockURL = URL(fileURLWithPath: stateRoot)
-            .appendingPathComponent("schema.json.lock")
+            .appendingPathComponent(lockFileName)
         if !FileManager.default.fileExists(atPath: lockURL.path) {
             _ = FileManager.default.createFile(atPath: lockURL.path, contents: Data())
         }
@@ -106,10 +114,11 @@ public enum SchemaFileLock {
 
     private static func withWindowsLock<T>(
         stateRoot: String,
+        lockFileName: String,
         _ body: () throws -> T
     ) throws -> T {
         let heldURL = URL(fileURLWithPath: stateRoot)
-            .appendingPathComponent("schema.json.lock.held")
+            .appendingPathComponent("\(lockFileName).held")
         let deadline = Date().addingTimeInterval(60)
         while true {
             if Date() >= deadline {

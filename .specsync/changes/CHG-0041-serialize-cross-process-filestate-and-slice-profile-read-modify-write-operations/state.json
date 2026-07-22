@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations",
+  "slug": "serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations",
+  "title": "Serialize cross-process FileState and Slice profile read-modify-write operations",
+  "description": "Serialize cross-process FileState and Slice profile read-modify-write operations",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "6a40258d80047be13132e68b0597ff3bfe9b52b7",
+  "created_at": 1784763748,
+  "updated_at": 1784764274,
+  "affected_specs": [
+    "state-store",
+    "aps-cli"
+  ],
+  "affected_paths": [
+    "Sources/aps/StateStore.swift",
+    "Sources/aps/DynamicKeyStorage.swift",
+    "Sources/aps/SchemaFileLock.swift",
+    "Scripts/smoke.sh",
+    "specs/state-store/",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Concurrent profile and profileName CLI writes produce valid profile JSON with version 99 preserved; per-file locks serialize DynamicKeyStorage FileState and Slice writes; fledge lanes run verify passes"
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

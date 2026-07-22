@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 40,
-  "id": "CHG-0040-route-dynamickeystorage-storedstate-keys-through-application-userdefaults-depend",
+  "sequence": 41,
+  "id": "CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations",
   "acknowledged_collisions": []
 }
