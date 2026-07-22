@@ -1,6 +1,6 @@
 ---
 id: CHG-0040-route-dynamickeystorage-storedstate-keys-through-application-userdefaults-depend
-state: accepted
+state: archived
 type: bug_fix
 base_commit: f76afad21becf7146c6edde94255c64bb29defe3
 ---
