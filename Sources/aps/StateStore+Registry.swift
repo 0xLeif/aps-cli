@@ -1,3 +1,4 @@
+import AppState
 import Foundation
 
 extension StateStore {
@@ -144,7 +145,9 @@ extension StateStore {
                 )
                 store.reset()
             case "StoredState":
-                UserDefaults.standard.removeObject(forKey: "aps.user.\(name)")
+                let store = Application.dependency(\Application.userDefaults)
+                store.removeObject(forKey: "aps.user.\(name)")
+                (store as? UserDefaults)?.synchronize()
                 UserDefaults.standard.synchronize()
             case "State":
                 DynamicKeyStorage.clearMemory(named: name)

@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0040-route-dynamickeystorage-storedstate-keys-through-application-userdefaults-depend",
+  "slug": "route-dynamickeystorage-storedstate-keys-through-application-userdefaults-depend",
+  "title": "Route DynamicKeyStorage StoredState keys through Application userDefaults dependency (issue 82)",
+  "description": "Route DynamicKeyStorage StoredState keys through Application userDefaults dependency (issue 82)",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "f76afad21becf7146c6edde94255c64bb29defe3",
+  "created_at": 1784678142,
+  "updated_at": 1784678331,
+  "affected_specs": [],
+  "affected_paths": [
+    "Tests/apsTests/APSTests.swift",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Bug fix for test isolation and userDefaults injection",
+  "acceptance_criteria": [
+    "DynamicKeyStorage StoredState operations use Application userDefaults dependency; tests overriding userDefaults cover dynamic StoredState keys."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

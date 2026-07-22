@@ -1087,4 +1087,41 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(raceNames.count, count)
     }
 
+    private final class MockUserDefaults: UserDefaultsManaging, @unchecked Sendable {
+        var storage: [String: Any] = [:]
+        func object(forKey key: String) -> Any? { storage[key] }
+        func removeObject(forKey key: String) { storage.removeValue(forKey: key) }
+        func set(_ value: Any?, forKey key: String) { storage[key] = value }
+    }
+
+    @MainActor
+    func testDynamicKeyStorageStoredStateUsesUserDefaultsDependency() async throws {
+        let mockDefaults = MockUserDefaults()
+        let overrideToken = Application.override(\Application.userDefaults, with: mockDefaults)
+        defer { _ = overrideToken }
+
+        let entry = SchemaKeyEntry(
+            name: "testStoredStateKey",
+            type: "String",
+            storage: "StoredState",
+            initial: .string("initial_val"),
+            path: nil,
+            doc: "test stored state"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+
+        let initialVal = try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        XCTAssertEqual(initialVal, "initial_val")
+
+        try DynamicKeyStorage.set(entry: entry, value: "new_val", stateRoot: "/tmp", schema: schema)
+        let currentVal = try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        XCTAssertEqual(currentVal, "new_val")
+
+        XCTAssertEqual(mockDefaults.object(forKey: "aps.user.testStoredStateKey") as? String, "new_val")
+        XCTAssertNil(UserDefaults.standard.object(forKey: "aps.user.testStoredStateKey"))
+
+        try DynamicKeyStorage.reset(entry: entry, stateRoot: "/tmp", schema: schema)
+        XCTAssertEqual(mockDefaults.object(forKey: "aps.user.testStoredStateKey") as? String, "initial_val")
+    }
+
 }
