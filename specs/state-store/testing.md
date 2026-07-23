@@ -6,6 +6,9 @@
 - dump includes dependency-driven timestamp and all keys
 - DemoStats ObservedDependency records mutations and Combine publishes on change
 - watchStatsBlocking detects dependency mutation
+- Isolation: hermetic UserDefaults for StoredState `flag`; per-case FileState
+  path; `DynamicKeyStorage.resetProcessMemory()` between cases; parallel suite
+  via `Scripts/test-parallel.sh`
 
 - Encrypted-file `secret` round-trip / wrong-passphrase `secretUnlockFailed` / corrupt envelope `decodingFailed`.
 - Secret SET unlock-before-rewrite; parallel schema RMW under SchemaFileLock.

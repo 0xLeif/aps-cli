@@ -40,18 +40,46 @@ private func setProcessEnv(_ key: String, _ value: String?) {
 }
 
 final class APSTests: XCTestCase {
+    /// Held between setUp and tearDown so `--parallel` cannot interleave cases.
+    private var holdsIsolationGate = false
+    private var fileStatePath: String?
+    private var userDefaultsOverride: Application.DependencyOverride?
+    private var hermeticDefaults: InMemoryUserDefaults?
+
     override func setUp() async throws {
         try await super.setUp()
 
-        await MainActor.run {
-            Application.logging(isEnabled: false)
+        // Serialize Application singleton access across parallel workers.
+        await TestIsolationGate.shared.acquire()
+        holdsIsolationGate = true
 
-            // Isolate FileState under a unique temp directory for this test run.
-            let path = FileManager.default.temporaryDirectory
-                .appendingPathComponent("aps-tests-\(UUID().uuidString)", isDirectory: true)
-                .path
+        // Build scoped resources off the MainActor so we do not capture `self`
+        // inside a main-actor closure (Swift 6 isolation).
+        let path = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-tests-\(UUID().uuidString)", isDirectory: true)
+            .path
+        fileStatePath = path
+        try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+
+        let defaults = InMemoryUserDefaults()
+        hermeticDefaults = defaults
+
+        // Secret passphrase env is process-global; start each case clean.
+        setProcessEnv("APS_SECRET_PASSPHRASE", nil)
+        setProcessEnv("APS_SECRET_USE_PASSPHRASE", nil)
+
+        // Drop any leftover standard-domain flag from prior non-hermetic runs so
+        // hermetic assertions are meaningful on developer machines / CI caches.
+        UserDefaults.standard.removeObject(forKey: "App/aps.flag")
+        UserDefaults.standard.synchronize()
+
+        let override = await MainActor.run { () -> Application.DependencyOverride in
+            Application.logging(isEnabled: false)
             FileManager.defaultFileStatePath = path
-            try? FileManager.default.createDirectory(atPath: path, withIntermediateDirectories: true)
+
+            let token = Application.override(\.userDefaults, with: defaults)
+
+            DynamicKeyStorage.resetProcessMemory()
 
             Application.reset(\.counter)
             Application.reset(\.message)
@@ -59,7 +87,39 @@ final class APSTests: XCTestCase {
             Application.reset(fileState: \.note)
             Application.reset(fileState: \.profile)
             Application.dependency(\.stats).reset()
+            return token
         }
+        userDefaultsOverride = override
+    }
+
+    override func tearDown() async throws {
+        let path = fileStatePath
+
+        await MainActor.run {
+            DynamicKeyStorage.resetProcessMemory()
+            Application.reset(\.counter)
+            Application.reset(\.message)
+            Application.reset(storedState: \.flag)
+            Application.reset(fileState: \.note)
+            Application.reset(fileState: \.profile)
+            Application.dependency(\.stats).reset()
+        }
+
+        if let path {
+            try? FileManager.default.removeItem(atPath: path)
+        }
+        fileStatePath = nil
+        hermeticDefaults = nil
+
+        await userDefaultsOverride?.cancel()
+        userDefaultsOverride = nil
+
+        if holdsIsolationGate {
+            await TestIsolationGate.shared.release()
+            holdsIsolationGate = false
+        }
+
+        try await super.tearDown()
     }
 
     func testParseBool() {
@@ -679,6 +739,41 @@ final class APSTests: XCTestCase {
 
         reader.reset(.flag)
         XCTAssertEqual(StateStore().get(.flag), "false")
+    }
+
+    @MainActor
+    func testUserDefaultsStandardIsHermetic() async throws {
+        // StoredState must use the per-test InMemoryUserDefaults override, not
+        // UserDefaults.standard (App/aps.flag is the AppState StoredState key).
+        let store = StateStore()
+        try store.set(.flag, value: "true")
+        XCTAssertEqual(store.get(.flag), "true")
+
+        XCTAssertNil(
+            UserDefaults.standard.object(forKey: "App/aps.flag"),
+            "flag round-trip must not pollute UserDefaults.standard"
+        )
+        XCTAssertTrue(
+            hermeticDefaults?.keys.contains("App/aps.flag") == true,
+            "expected App/aps.flag in the hermetic suite, got \(hermeticDefaults?.keys ?? [])"
+        )
+
+        store.reset(.flag)
+        XCTAssertEqual(store.get(.flag), "false")
+        XCTAssertNil(UserDefaults.standard.object(forKey: "App/aps.flag"))
+    }
+
+    @MainActor
+    func testIsolationStartsWithCleanDemoState() async throws {
+        let store = StateStore()
+        XCTAssertEqual(store.get(.counter), "0")
+        XCTAssertEqual(store.get(.message), "")
+        XCTAssertEqual(store.get(.flag), "false")
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
+        XCTAssertTrue(
+            FileManager.defaultFileStatePath.contains("aps-tests-"),
+            "setUp must inject a temp FileState path"
+        )
     }
 
     @MainActor

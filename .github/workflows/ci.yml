@@ -1,6 +1,6 @@
 name: CI
 
-# GitHub-hosted macOS runner (public-ready). Keep linux/windows smokes separate.
+# GitHub-hosted macOS + Linux matrix. Either platform failure fails this workflow.
 
 on:
   push:
@@ -17,15 +17,41 @@ permissions:
 
 jobs:
   build-test-smoke:
-    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            swift_setup: false
+            configuration: release
+            aps_bin: .build/release/aps
+          - os: ubuntu-latest
+            swift_setup: true
+            configuration: debug
+            aps_bin: .build/debug/aps
+    runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+
+      - name: Install Swift
+        if: matrix.swift_setup
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "6.0"
+
       - name: Swift version
         run: swift --version
-      - name: Test (release)
-        run: ./Scripts/test.sh -c release
+
+      - name: Test
+        run: ./Scripts/test.sh -c ${{ matrix.configuration }}
+
+      - name: Test parallel (isolation regression)
+        run: ./Scripts/test-parallel.sh
+        env:
+          APS_TEST_WORKERS: "4"
+
       - name: Smoke CLI
         env:
-          APS_BIN: .build/release/aps
+          APS_BIN: ${{ matrix.aps_bin }}
         run: ./Scripts/smoke.sh
