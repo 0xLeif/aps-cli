@@ -14,9 +14,13 @@ fi
 if [[ "$version" =~ ^v ]]; then
     version="${version#v}"
 fi
-if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo "::error::Invalid aps release version '$version'; expected a semantic version such as 1.0.0." >&2
+semver_pattern='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+if [[ ! "$version" =~ $semver_pattern ]]; then
+    echo "::error::Invalid aps release version '$version'; expected SemVer such as 1.0.0, 1.0.0-rc.1, or 1.0.0+build.1." >&2
     exit 1
+fi
+if [[ "${APS_VALIDATE_VERSION_ONLY:-0}" == "1" ]]; then
+    exit 0
 fi
 if [[ -z "$runner_temp" ]]; then
     echo "::error::RUNNER_TEMP is required so the installer can use a job-scoped location." >&2
@@ -24,7 +28,7 @@ if [[ -z "$runner_temp" ]]; then
 fi
 
 case "${runner_os}:${runner_arch}" in
-    Linux:X64) asset="aps-linux-x86_64" ;;
+    Linux:X64) asset="aps-linux-x86_64-portable.tar.gz" ;;
     macOS:X64) asset="aps-macos-x86_64" ;;
     macOS:ARM64) asset="aps-macos-aarch64" ;;
     *)
@@ -66,8 +70,23 @@ if [[ "$actual" != "$checksum" ]]; then
     exit 1
 fi
 
-chmod 0755 "$binary_tmp"
-mv -f "$binary_tmp" "$binary"
+if [[ "$asset" == *.tar.gz ]]; then
+    payload_dir="$download_dir/payload"
+    rm -rf "$payload_dir"
+    mkdir -p "$payload_dir"
+    tar -xzf "$binary_tmp" -C "$payload_dir"
+    if [[ ! -f "$payload_dir/aps" || ! -d "$payload_dir/lib" ]]; then
+        echo "::error::Portable aps archive is missing aps or lib/." >&2
+        exit 1
+    fi
+    chmod 0755 "$payload_dir/aps"
+    mv -f "$payload_dir/aps" "$binary"
+    mkdir -p "$install_dir/lib"
+    cp -R "$payload_dir/lib/." "$install_dir/lib/"
+else
+    chmod 0755 "$binary_tmp"
+    mv -f "$binary_tmp" "$binary"
+fi
 echo "$install_dir" >> "$GITHUB_PATH"
 
 if [[ -z "${APS_HOME:-}" ]]; then

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0043-address-installer-action-review-feedback-with-portable-linux-release-packaging",
+  "slug": "address-installer-action-review-feedback-with-portable-linux-release-packaging",
+  "title": "Address installer Action review feedback with portable Linux release packaging, SemVer support, and CI coverage",
+  "description": "Address installer Action review feedback with portable Linux release packaging, SemVer support, and CI coverage",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "8e2108601b182584e59b3e534b67199247593a0a",
+  "created_at": 1784773570,
+  "updated_at": 1784773796,
+  "affected_specs": [],
+  "affected_paths": [
+    ".github/actions/install-aps",
+    ".github/workflows/release.yml",
+    "fledge.toml",
+    "README.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This review-fix change updates CI packaging, the reusable Action, its docs, and test wiring; it does not change Swift runtime code or a canonical Swift API.",
+  "acceptance_criteria": [
+    "README uses an Action ref containing action.yml and passes an explicit release version; the release workflow publishes a Linux bundle containing aps and Swift runtime libraries with an $ORIGIN/lib rpath; the installer accepts SemVer prerelease/build suffixes and extracts the verified bundle; the installer contract test runs in fledge verify; strict SpecSync and fledge verification pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "no"
+  }
+}

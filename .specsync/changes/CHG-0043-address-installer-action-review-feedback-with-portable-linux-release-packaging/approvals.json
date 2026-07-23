@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784773613,
+      "digest": "f3cdf7e24b7bdd8fac01c63521bbfbc3793930aca8504b7f5af70363b2eee426",
+      "note": "Definition approved for PR #104 review fixes."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784773751,
+      "digest": "6eaa24895681151d4653b4ce8dc0c84248ae9995e1f6ce3d606b12d77d00a662",
+      "note": "Reapprove current review-fix definition after completing verification task."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1784773796,
+      "digest": "17c1faa7690878f037dbcc9a085aedc699888ae83f7288e796811d3454e167a9",
+      "note": "Accept review-fix evidence for PR #104."
+    }
+  ],
+  "reopenings": []
+}

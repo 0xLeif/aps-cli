@@ -9,6 +9,7 @@ release-build = "./Scripts/build.sh -c release"
 smoke = "./Scripts/smoke.sh"
 # Use aps as a CI helper under a job-scoped APS_HOME (not only smoke the binary).
 ci-dogfood = "./Scripts/ci-dogfood.sh"
+install-action-test = "./.github/actions/install-aps/test.sh"
 # Manifest-only: warns if `.build/release/aps` is missing (created by release/install hooks).
 plugin-validate = "fledge plugins validate ."
 # Keep specsync out of lanes.verify: Trust/SpecSync run it as a top-level gate
@@ -18,4 +19,4 @@ check = "fledge run build && fledge run test && fledge run test-parallel && fled
 
 [lanes.verify]
 description = "Native quality gate (build, test, parallel isolation, smoke, ci-dogfood, plugin manifest)"
-steps = ["build", "test", "test-parallel", "smoke", "ci-dogfood", "plugin-validate"]
+steps = ["build", "test", "test-parallel", "smoke", "ci-dogfood", "install-action-test", "plugin-validate"]

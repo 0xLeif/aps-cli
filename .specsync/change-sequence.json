@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 42,
-  "id": "CHG-0042-add-reusable-foreign-workflow-installer-action-for-release-binaries",
+  "sequence": 43,
+  "id": "CHG-0043-address-installer-action-review-feedback-with-portable-linux-release-packaging",
   "acknowledged_collisions": []
 }
