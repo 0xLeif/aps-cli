@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 27
+version: 29
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -44,7 +44,7 @@ self-describes that contract for agents through the `schema` command.
 | `note` | String key stored in AppState `FileState`. |
 | `profile` | ProfileDocument key stored in AppState `FileState`. |
 | `secret` | String key stored in the encrypted-file secret store (`secret.enc`). |
-| `SecretStore` | Encrypted-file store: `get` / `set` (unlock-before-rewrite) / `reset` over `secret.enc`. |
+| `SecretStore` | Encrypted-file store: `get` / `set` (unlock-before-rewrite) / `reset` over `secret.enc`; fresh `set` serializes key recovery/creation, sealing, and envelope persistence through `secret.store.lock`, while direct key creation uses `secret.key.lock`. |
 | `hasSecret` | True when a store file exists (missing means initial value). |
 | `get` | Decrypt the stored secret; loud corrupt/unlock failures. |
 | `set` | Unlock existing envelope when present, then seal and verify. |
@@ -54,7 +54,7 @@ self-describes that contract for agents through the `schema` command.
 | `SchemaKeyEntry` | One registry key entry (name/type/storage/initial/path/slice). |
 | `SchemaJSON` | JSON value used for schema initials and object fields. |
 | `UserSchema` | Load / materialize / validate / write / hash helpers for schema.json. |
-| `SchemaFileLock` | Exclusive lock helper for schema.json RMW. |
+| `SchemaFileLock` | Exclusive cross-process lock helper; Windows retries only lock acquisition and propagates protected-body errors unchanged. |
 | `withExclusiveLock` | Run a schema mutation body under the exclusive lock. |
 | `fileName` | `schema.json` basename. |
 | `currentFormatVersion` | Supported on-disk formatVersion. |
@@ -136,10 +136,17 @@ registry key.
 6. `keys` and `--help` do not mutate application state.
 7. State root: subcommand `--state-dir` > root `--state-dir` > `APS_HOME` > `~/.aps`.
 8. EncryptedFile SET never clobbers ciphertext without a successful unlock when a file exists.
-9. `watch` handles SIGINT/SIGTERM on a background dispatch queue, so termination
+9. Fresh SecretStore SET serializes invalid-key recovery, first-use key creation, seal,
+   atomic envelope write, and read-back verification through `secret.store.lock`;
+   direct missing/invalid key access uses `secret.key.lock` and valid reads do not require it.
+10. SecretStore SET serializes unlock, seal, atomic envelope write, and read-back verification
+   through `secret.store.lock`.
+11. SchemaFileLock propagates errors thrown by its protected body unchanged on every platform,
+   including Windows.
+12. `watch` handles SIGINT/SIGTERM on a background dispatch queue, so termination
    does not depend on the main thread servicing its run loop; polling waits are
    capped to observe those signals promptly.
-10. `watch --timeout` bounds each polling wait by the remaining timeout so a large
+13. `watch --timeout` bounds each polling wait by the remaining timeout so a large
    `--interval` cannot delay timeout termination.
 
 6. `watch` termination is observable in both channels: a terminal

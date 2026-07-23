@@ -1198,6 +1198,25 @@ final class APSTests: XCTestCase {
     }
 #endif
 
+#if os(Windows)
+    func testSchemaFileLockPropagatesBodyErrors() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-lock-error-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        XCTAssertThrowsError(
+            try SchemaFileLock.withExclusiveLock(
+                stateRoot: root.path,
+                lockFileName: "secret.store.lock"
+            ) {
+                throw APSError.secretUnlockFailed
+            }
+        ) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+    }
+#endif
+
     @MainActor
     func testResetAllLeavesUserKeysResetRegisteredClearsThem() async throws {
         let root = FileManager.default.temporaryDirectory
