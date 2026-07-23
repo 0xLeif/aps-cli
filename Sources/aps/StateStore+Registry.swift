@@ -178,7 +178,7 @@ extension StateStore {
         onChange(last)
         let slice = max(pollInterval / 5.0, 0.05)
         while shouldContinue() {
-            RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
+            waitForWatchPoll(interval: slice)
             let current = try get(name: name)
             if current != last {
                 last = current

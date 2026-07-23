@@ -218,7 +218,7 @@ public final class StateStore {
         let slice = max(pollInterval / 5.0, 0.05)
 
         while shouldContinue() {
-            RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
+            waitForWatchPoll(interval: slice)
             let current = statsSnapshot()
             if current != last {
                 last = current
@@ -270,7 +270,7 @@ public final class StateStore {
             #endif
 
             while shouldContinue() {
-                RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
+                waitForWatchPoll(interval: slice)
                 let current = try freshValue(key)
                 if flag.isSet || current != last {
                     if current != last {

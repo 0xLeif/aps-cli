@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 25
+version: 26
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -120,7 +120,7 @@ Then keys include message with value "hi" and a timestamp field exists.
 
 - AppState (`Application`, `State`, `StoredState`, `FileState`, `@AppDependency`)
 - Observation (`withObservationTracking`) for in-process watch delivery
-- Foundation (`UserDefaults`, `RunLoop`, `JSONEncoder`)
+- Foundation (`UserDefaults`, `Thread.sleep`, `JSONEncoder`)
 
 ## Change Log
 
@@ -149,3 +149,4 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Dynamic schema registry and 1.0.0 prep (issues 62-64) |
 | 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Implement dynamic schema registry and public-ready 1.0.0 prep for issues 62-64 |
 | 2026-07-22 | CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations: Serialize cross-process FileState and Slice profile read-modify-write operations |
+| 2026-07-22 | Issue-0097-linux-safe-watch-polling: Replace RunLoop limit-date polling with cancellation-safe sleeps. |

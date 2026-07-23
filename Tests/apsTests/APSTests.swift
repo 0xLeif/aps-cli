@@ -627,6 +627,42 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    internal func testWatchCancellationStopsPollingWithoutRunLoopTimeout() async throws {
+        let store = StateStore()
+        var shouldPoll = true
+        var seen: [String] = []
+
+        try store.watchBlocking(
+            .counter,
+            pollInterval: 0.05,
+            shouldContinue: { shouldPoll }
+        ) { value in
+            seen.append(value)
+            shouldPoll = false
+        }
+
+        XCTAssertEqual(seen, ["0"])
+    }
+
+    @MainActor
+    internal func testWatchTimeoutStopsAfterDeadline() async throws {
+        let store = StateStore()
+        let deadline = Date().addingTimeInterval(0.1)
+        var seen: [String] = []
+
+        try store.watchBlocking(
+            .counter,
+            pollInterval: 0.05,
+            shouldContinue: { Date() < deadline }
+        ) { value in
+            seen.append(value)
+        }
+
+        XCTAssertEqual(seen, ["0"])
+        XCTAssertGreaterThanOrEqual(Date(), deadline)
+    }
+
+    @MainActor
     func testNoteUsesInjectedFileStatePath() async throws {
         let path = FileManager.defaultFileStatePath
         XCTAssertTrue(path.contains("aps-tests-"), "setUp must inject a temp FileState path")
