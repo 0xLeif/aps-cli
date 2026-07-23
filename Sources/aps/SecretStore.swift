@@ -101,6 +101,9 @@ public struct SecretStore: Sendable {
             atPath: directory,
             withIntermediateDirectories: true
         )
+        if !hasSecret {
+            try removeInvalidKeyFileWithoutEnvelope()
+        }
         if hasSecret {
             // Prove the caller can open the existing envelope before re-keying.
             _ = try getUnlocked(lockKeyFile: false)
@@ -257,6 +260,20 @@ public struct SecretStore: Sendable {
             return nil
         }
         return key
+    }
+
+    private func removeInvalidKeyFileWithoutEnvelope() throws {
+        guard
+            FileManager.default.fileExists(atPath: keyFileURL.path),
+            loadKeyFileIfValid() == nil
+        else {
+            return
+        }
+        do {
+            try FileManager.default.removeItem(at: keyFileURL)
+        } catch {
+            throw APSError.persistenceFailed(key: keyName)
+        }
     }
 
     private func createKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {

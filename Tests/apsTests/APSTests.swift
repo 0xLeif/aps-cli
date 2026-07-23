@@ -299,6 +299,19 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    func testSecretStoreFreshSetRecoversInvalidKeyWithoutEnvelope() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        try Data("partial-key".utf8).write(to: keyURL)
+
+        let store = SecretStore(directory: path)
+        try store.set("recovered-secret")
+
+        XCTAssertEqual(try store.get(), "recovered-secret")
+        XCTAssertNotEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
+    }
+
+    @MainActor
     func testSecretStoreReadExistingKeyDoesNotCreateKeyLock() async throws {
         let path = FileManager.defaultFileStatePath
         let store = SecretStore(directory: path)
