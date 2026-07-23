@@ -662,6 +662,13 @@ final class APSTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(Date(), deadline)
     }
 
+    internal func testWatchPollingCapsLargeIntervals() {
+        let startedAt = Date()
+        waitForWatchPoll(interval: 1.0)
+
+        XCTAssertLessThan(Date().timeIntervalSince(startedAt), 0.5)
+    }
+
     @MainActor
     func testNoteUsesInjectedFileStatePath() async throws {
         let path = FileManager.defaultFileStatePath

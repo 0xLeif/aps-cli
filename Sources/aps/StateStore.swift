@@ -237,7 +237,7 @@ public final class StateStore {
         }
     }
 
-    /// Blocking watch for the synchronous CLI: Observation + RunLoop polling.
+    /// Blocking watch for the synchronous CLI: Observation plus platform-safe polling.
     ///
     /// - Observation covers in-process mutations (`State`).
     /// - Polling re-reads values so `FileState` / `StoredState` / `SecureState` updates can surface when

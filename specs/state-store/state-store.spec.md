@@ -5,6 +5,7 @@ status: active
 files:
   - Sources/aps/StateStore.swift
   - Sources/aps/StateStore+Registry.swift
+  - Sources/aps/WatchPolling.swift
   - Sources/aps/DemoState.swift
   - Sources/aps/Dependencies.swift
   - Sources/aps/DynamicKeyStorage.swift
@@ -120,7 +121,7 @@ Then keys include message with value "hi" and a timestamp field exists.
 
 - AppState (`Application`, `State`, `StoredState`, `FileState`, `@AppDependency`)
 - Observation (`withObservationTracking`) for in-process watch delivery
-- Foundation (`UserDefaults`, `Thread.sleep`, `JSONEncoder`)
+- Foundation (`UserDefaults`, `RunLoop` on Apple, `Thread.sleep` elsewhere, `JSONEncoder`)
 
 ## Change Log
 

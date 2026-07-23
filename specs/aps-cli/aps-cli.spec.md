@@ -136,6 +136,9 @@ registry key.
 5. `keys` and `--help` do not mutate application state.
 6. State root: subcommand `--state-dir` > root `--state-dir` > `APS_HOME` > `~/.aps`.
 7. EncryptedFile SET never clobbers ciphertext without a successful unlock when a file exists.
+8. `watch` handles SIGINT/SIGTERM on a background dispatch queue, so termination
+   does not depend on the main thread servicing its run loop; polling waits are
+   capped to observe those signals promptly.
 
 6. `watch` termination is observable in both channels: a terminal
    `{"type":"end","reason":"count|timeout|sigint|sigterm"}` event in `--jsonl`
