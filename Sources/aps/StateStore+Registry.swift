@@ -161,6 +161,7 @@ extension StateStore {
     public func watchBlocking(
         name: String,
         pollInterval: TimeInterval = 0.25,
+        pollDeadline: Date? = nil,
         shouldContinue: () -> Bool = { true },
         onChange: (String) -> Void
     ) throws {
@@ -168,6 +169,7 @@ extension StateStore {
             try watchBlocking(
                 demo,
                 pollInterval: pollInterval,
+                pollDeadline: pollDeadline,
                 shouldContinue: shouldContinue,
                 onChange: onChange
             )
@@ -178,7 +180,7 @@ extension StateStore {
         onChange(last)
         let slice = max(pollInterval / 5.0, 0.05)
         while shouldContinue() {
-            RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
+            waitForWatchPoll(interval: slice, deadline: pollDeadline)
             let current = try get(name: name)
             if current != last {
                 last = current

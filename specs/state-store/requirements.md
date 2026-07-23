@@ -34,7 +34,7 @@ Acceptance Criteria
 
 ### REQ-state-store-004
 
-`watchBlocking` SHALL combine Observation with RunLoop polling and honor `shouldContinue`; for `note`, polling SHALL read the file directly so cross-process writes are visible despite AppState FileState caching; `parseBool` accepts common truthy/falsey tokens. Existing undecodable FileState files SHALL throw `APSError.corruptState` instead of falling back to AppState initials.
+`watchBlocking` SHALL combine Observation with polling that does not depend on a future RunLoop limit date and honor `shouldContinue`; for `note`, polling SHALL read the file directly so cross-process writes are visible despite AppState FileState caching; `parseBool` accepts common truthy/falsey tokens. Existing undecodable FileState files SHALL throw `APSError.corruptState` instead of falling back to AppState initials.
 
 Acceptance Criteria
 - In-process `State` mutations are observed.
@@ -125,4 +125,3 @@ FileState and Slice read-modify-write operations on the same state file SHALL us
 Acceptance Criteria
 - Concurrent `profile` and `profileName` writes produce valid JSON and preserve the parent version.
 - Dynamic FileState and Slice writes use the same per-file lock.
-

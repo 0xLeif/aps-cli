@@ -23,9 +23,10 @@ final class SignalBox: @unchecked Sendable {
     }
 }
 
-/// Install DispatchSource handlers for SIGINT/SIGTERM on the main queue.
-/// The watch loop's RunLoop draining delivers them; the box is polled by
-/// `shouldContinue`. Sources must be retained for the watch's lifetime.
+/// Install DispatchSource handlers for SIGINT/SIGTERM on a background queue.
+/// The watch loop may be sleeping on the main thread, so signal delivery must
+/// not depend on that thread servicing its run loop. Sources must be retained
+/// for the watch's lifetime.
 @discardableResult
 func installWatchSignalHandlers(_ box: SignalBox) -> [DispatchSourceSignal] {
     [SIGINT, SIGTERM].compactMap { sig in
@@ -42,9 +43,10 @@ func installWatchSignalHandlers(_ box: SignalBox) -> [DispatchSourceSignal] {
         sigemptyset(&set)
         sigaddset(&set, sig)
         sigprocmask(SIG_BLOCK, &set, nil)
-        let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+        let source = DispatchSource.makeSignalSource(signal: sig, queue: .global(qos: .userInitiated))
         source.setEventHandler {
             box.mark(sig)
+            WatchPollingWakeup.shared.signal()
         }
         source.resume()
         return source

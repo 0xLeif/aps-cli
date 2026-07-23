@@ -201,6 +201,7 @@ public final class StateStore {
     /// so mutations recorded by `set` / `reset` surface to the CLI without SwiftUI.
     public func watchStatsBlocking(
         pollInterval: TimeInterval = 0.25,
+        pollDeadline: Date? = nil,
         shouldContinue: () -> Bool = { true },
         onChange: (DemoStatsSnapshot) -> Void
     ) {
@@ -218,7 +219,7 @@ public final class StateStore {
         let slice = max(pollInterval / 5.0, 0.05)
 
         while shouldContinue() {
-            RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
+            waitForWatchPoll(interval: slice, deadline: pollDeadline)
             let current = statsSnapshot()
             if current != last {
                 last = current
@@ -237,7 +238,7 @@ public final class StateStore {
         }
     }
 
-    /// Blocking watch for the synchronous CLI: Observation + RunLoop polling.
+    /// Blocking watch for the synchronous CLI: Observation plus platform-safe polling.
     ///
     /// - Observation covers in-process mutations (`State`).
     /// - Polling re-reads values so `FileState` / `StoredState` / `SecureState` updates can surface when
@@ -250,6 +251,7 @@ public final class StateStore {
     public func watchBlocking(
         _ key: DemoKey,
         pollInterval: TimeInterval = 0.25,
+        pollDeadline: Date? = nil,
         shouldContinue: () -> Bool = { true },
         onChange: (String) -> Void
     ) throws {
@@ -270,7 +272,7 @@ public final class StateStore {
             #endif
 
             while shouldContinue() {
-                RunLoop.current.run(until: Date(timeIntervalSinceNow: slice))
+                waitForWatchPoll(interval: slice, deadline: pollDeadline)
                 let current = try freshValue(key)
                 if flag.isSet || current != last {
                     if current != last {

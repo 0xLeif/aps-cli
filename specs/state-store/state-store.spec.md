@@ -1,10 +1,11 @@
 ---
 module: state-store
-version: 25
+version: 26
 status: active
 files:
   - Sources/aps/StateStore.swift
   - Sources/aps/StateStore+Registry.swift
+  - Sources/aps/WatchPolling.swift
   - Sources/aps/DemoState.swift
   - Sources/aps/Dependencies.swift
   - Sources/aps/DynamicKeyStorage.swift
@@ -34,8 +35,8 @@ helpers suitable for non-UI use.
 | `resetAllRegistered` | Restores every key in the active schema.json registry. |
 | `dump` | JSON snapshot of demo seed keys (pretty on TTY, compact when piped). |
 | `dumpRegistered` | JSON snapshot of every registry key. |
-| `watchBlocking` | Observation + polling watch loop for demo or string registry keys. |
-| `watchStatsBlocking` | Combine + polling watch loop for ObservedDependency stats. |
+| `watchBlocking` | Observation + polling watch loop for demo or string registry keys, bounded by an optional deadline. |
+| `watchStatsBlocking` | Combine + polling watch loop for ObservedDependency stats, bounded by an optional deadline. |
 | `statsSnapshot` | Immutable view of DemoStats counters. |
 | `resetStats` | Clears process-local DemoStats counters. |
 | `loadSchema` | Load or materialize schema.json for the active state root. |
@@ -78,6 +79,7 @@ helpers suitable for non-UI use.
 3. `dumpRegistered()` includes every key in the active schema.json plus an
    ISO-8601 `timestamp`.
 4. `watchBlocking` emits the current value first, then subsequent distinct values.
+5. A supplied polling deadline bounds the wait even when the configured interval is larger.
 5. Dependencies are real services, not fake stubs used only for wiring demos.
 6. `schema.json` write failures surface as `APSError.persistenceFailed`.
 7. Schema RMW (add/remove/materialize-on-missing) is serialized by `SchemaFileLock`.
@@ -120,7 +122,7 @@ Then keys include message with value "hi" and a timestamp field exists.
 
 - AppState (`Application`, `State`, `StoredState`, `FileState`, `@AppDependency`)
 - Observation (`withObservationTracking`) for in-process watch delivery
-- Foundation (`UserDefaults`, `RunLoop`, `JSONEncoder`)
+- Foundation (`UserDefaults`, `RunLoop` on Apple, `Thread.sleep` elsewhere, `JSONEncoder`)
 
 ## Change Log
 
@@ -149,3 +151,4 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Dynamic schema registry and 1.0.0 prep (issues 62-64) |
 | 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Implement dynamic schema registry and public-ready 1.0.0 prep for issues 62-64 |
 | 2026-07-22 | CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations: Serialize cross-process FileState and Slice profile read-modify-write operations |
+| 2026-07-22 | Issue-0097-linux-safe-watch-polling: Replace RunLoop limit-date polling with cancellation-safe sleeps. |

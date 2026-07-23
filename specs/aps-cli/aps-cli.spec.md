@@ -133,9 +133,14 @@ registry key.
 3. `State` keys are process-local; a new process must not be expected to retain
    `counter` or `message`.
 4. `watch` must flush each printed value immediately when stdout is not a TTY.
-5. `keys` and `--help` do not mutate application state.
-6. State root: subcommand `--state-dir` > root `--state-dir` > `APS_HOME` > `~/.aps`.
-7. EncryptedFile SET never clobbers ciphertext without a successful unlock when a file exists.
+6. `keys` and `--help` do not mutate application state.
+7. State root: subcommand `--state-dir` > root `--state-dir` > `APS_HOME` > `~/.aps`.
+8. EncryptedFile SET never clobbers ciphertext without a successful unlock when a file exists.
+9. `watch` handles SIGINT/SIGTERM on a background dispatch queue, so termination
+   does not depend on the main thread servicing its run loop; polling waits are
+   capped to observe those signals promptly.
+10. `watch --timeout` bounds each polling wait by the remaining timeout so a large
+   `--interval` cannot delay timeout termination.
 
 6. `watch` termination is observable in both channels: a terminal
    `{"type":"end","reason":"count|timeout|sigint|sigterm"}` event in `--jsonl`

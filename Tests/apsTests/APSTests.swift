@@ -627,6 +627,70 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    internal func testWatchCancellationStopsPollingWithoutRunLoopTimeout() async throws {
+        let store = StateStore()
+        var shouldPoll = true
+        var seen: [String] = []
+
+        try store.watchBlocking(
+            .counter,
+            pollInterval: 0.05,
+            shouldContinue: { shouldPoll }
+        ) { value in
+            seen.append(value)
+            shouldPoll = false
+        }
+
+        XCTAssertEqual(seen, ["0"])
+    }
+
+    @MainActor
+    internal func testWatchTimeoutStopsAfterDeadline() async throws {
+        let store = StateStore()
+        let deadline = Date().addingTimeInterval(0.1)
+        var seen: [String] = []
+
+        try store.watchBlocking(
+            .counter,
+            pollInterval: 0.05,
+            shouldContinue: { Date() < deadline }
+        ) { value in
+            seen.append(value)
+        }
+
+        XCTAssertEqual(seen, ["0"])
+        XCTAssertGreaterThanOrEqual(Date(), deadline)
+    }
+
+    @MainActor
+    internal func testWatchTimeoutBoundsLargePollingInterval() async throws {
+        let store = StateStore()
+        let deadline = Date().addingTimeInterval(0.1)
+        let startedAt = Date()
+        var seen: [String] = []
+
+        try store.watchBlocking(
+            .counter,
+            pollInterval: 60.0,
+            pollDeadline: deadline,
+            shouldContinue: { Date() < deadline }
+        ) { value in
+            seen.append(value)
+        }
+
+        XCTAssertEqual(seen, ["0"])
+        XCTAssertLessThan(Date().timeIntervalSince(startedAt), 0.5)
+    }
+
+    internal func testWatchPollingCanInterruptLargeIntervals() {
+        let startedAt = Date()
+        WatchPollingWakeup.shared.signal()
+        waitForWatchPoll(interval: 1.0)
+
+        XCTAssertLessThan(Date().timeIntervalSince(startedAt), 0.5)
+    }
+
+    @MainActor
     func testNoteUsesInjectedFileStatePath() async throws {
         let path = FileManager.defaultFileStatePath
         XCTAssertTrue(path.contains("aps-tests-"), "setUp must inject a temp FileState path")

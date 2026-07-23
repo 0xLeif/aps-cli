@@ -200,6 +200,7 @@ extension Aps {
                     try store.watchBlocking(
                         name: key,
                         pollInterval: TimeInterval(interval) / 1000.0,
+                        pollDeadline: deadline,
                         shouldContinue: {
                             if let count, emitted >= count {
                                 stopReason = .count
@@ -393,6 +394,7 @@ extension Aps {
 
                     store.watchStatsBlocking(
                         pollInterval: TimeInterval(interval) / 1000.0,
+                        pollDeadline: deadline,
                         shouldContinue: {
                             if let count, emitted >= count { return false }
                             if let deadline, Date() >= deadline { return false }
