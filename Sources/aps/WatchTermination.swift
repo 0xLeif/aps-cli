@@ -46,6 +46,7 @@ func installWatchSignalHandlers(_ box: SignalBox) -> [DispatchSourceSignal] {
         let source = DispatchSource.makeSignalSource(signal: sig, queue: .global(qos: .userInitiated))
         source.setEventHandler {
             box.mark(sig)
+            WatchPollingWakeup.shared.signal()
         }
         source.resume()
         return source

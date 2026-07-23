@@ -662,8 +662,9 @@ final class APSTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(Date(), deadline)
     }
 
-    internal func testWatchPollingCapsLargeIntervals() {
+    internal func testWatchPollingCanInterruptLargeIntervals() {
         let startedAt = Date()
+        WatchPollingWakeup.shared.signal()
         waitForWatchPoll(interval: 1.0)
 
         XCTAssertLessThan(Date().timeIntervalSince(startedAt), 0.5)
