@@ -321,6 +321,9 @@ final class APSTests: XCTestCase {
         let originalEnvelope = try Data(contentsOf: envelopeURL)
         try Data("partial-key".utf8).write(to: keyURL)
 
+        XCTAssertThrowsError(try store.get()) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
         XCTAssertThrowsError(try store.set("replacement-secret")) { error in
             XCTAssertEqual(error as? APSError, .secretUnlockFailed)
         }

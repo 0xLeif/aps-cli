@@ -274,7 +274,15 @@ public struct SecretStore: Sendable {
             return key
         }
 
-        return try createKeyFile()
+        let hasExistingKeyPath = FileManager.default.fileExists(atPath: keyFileURL.path)
+        do {
+            return try createKeyFile()
+        } catch let error as APSError {
+            if hasExistingKeyPath, case .persistenceFailed = error {
+                throw APSError.secretUnlockFailed
+            }
+            throw error
+        }
     }
 
     private func loadKeyFileIfValid() -> Curve25519.KeyAgreement.PrivateKey? {
