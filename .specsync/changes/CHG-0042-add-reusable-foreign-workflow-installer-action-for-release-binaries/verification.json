@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784772544,
-  "commit": "39c6d1202b17e57d6c9bb0447474d381a036a1fd",
+  "timestamp": 1784774736,
+  "commit": "d47c194501ffaa7bec952aee5dc534b1e1e48257",
   "contract_digest": "05ef81fd94a905804922016aa2ef5cda4d2d3852a22672257f4ca4b1b64ecd8a",
-  "workspace_digest": "fba798116cebf08698b3b7816adcf4fb210b3ece29d50c8bbfc0e35ae2156349",
-  "acceptance_input_digest": "a0f3b0b7febcb3d9ffb8b7523a9081ec85245a81e8f9d4f821c121205defd160",
+  "workspace_digest": "f251cae936a60cdab1180d5d9973b70c5ee9b5e4773a664017aed36d613b1540",
+  "acceptance_input_digest": "83af65ffdf61cd998a0fb0309a54de05206fe66b5678f48e8d93d887d936fb0f",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -31,8 +31,8 @@
         "path": ".github/actions/install-aps/install.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "f18ceba2795956198f4deb178a446779e8b31b53cdb4a7a10a83c459e5da381e",
-        "entry_digest": "92eba80693ce976c6ab3286035473c076d3d17d8fa7aad51856a2ba8e9c258a5",
+        "payload_digest": "05cdf46aef5df850fc9cb015ab69400b16080c4d25c966a30bd8013fcd8a411f",
+        "entry_digest": "3a3ceccedbe0032e71dbeb79270c7137e1b0d597857bbef44d78d78d6e591cc5",
         "owners": [
           "@exact:delivery"
         ]
@@ -41,8 +41,8 @@
         "path": ".github/actions/install-aps/test.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "39e3d8086f0006e604293eb58d9eccee57f4788fdc4e37d2f8c61530310338ed",
-        "entry_digest": "05593357eead95c547948ff58b0990a619b9137b56a79a927073ce1c7e03f88f",
+        "payload_digest": "37d4ddbd0f07fbfc8d714fe67a942b0c5275538d20f9041be932f32268bfbae9",
+        "entry_digest": "029551c2e2f018b4ad1950b41e60a084a87c505682b82fdaf393647312710832",
         "owners": [
           "@exact:delivery"
         ]
@@ -61,8 +61,8 @@
         "path": "README.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "89ac82261f6c45c5a661f526bffc2e3f98d80657f3d511b8975f5a27929603e0",
-        "entry_digest": "f178f52ba4ac4fa8d077c1bc5bf2b957ee764a955fd9d894bec41b4a3427b6b6",
+        "payload_digest": "7d957cb4ecd087caf9f971870af6a6356a927499dfe6fbd0ab566a9263c5c4e6",
+        "entry_digest": "3f5e622a0abd2b60c09115aa2ba50b3070429b6abcd9df2c171c89735bdafde2",
         "owners": [
           "@exact:delivery"
         ]

@@ -45,6 +45,21 @@
         }
       ],
       "requirement_ids": []
+    },
+    {
+      "timestamp": 1784774736,
+      "commit": "d47c194501ffaa7bec952aee5dc534b1e1e48257",
+      "contract_digest": "05ef81fd94a905804922016aa2ef5cda4d2d3852a22672257f4ca4b1b64ecd8a",
+      "workspace_digest": "f251cae936a60cdab1180d5d9973b70c5ee9b5e4773a664017aed36d613b1540",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": []
     }
   ]
 }
