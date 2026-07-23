@@ -1,0 +1,101 @@
+{
+  "timestamp": 1784773785,
+  "commit": "8e2108601b182584e59b3e534b67199247593a0a",
+  "contract_digest": "6eaa24895681151d4653b4ce8dc0c84248ae9995e1f6ce3d606b12d77d00a662",
+  "workspace_digest": "f251cae936a60cdab1180d5d9973b70c5ee9b5e4773a664017aed36d613b1540",
+  "acceptance_input_digest": "67d185f4cea82aafaec1a13d7c33c0309a0f4aff5a16f7578dccf4b1f571c652",
+  "acceptance_manifest": {
+    "schema_version": 1,
+    "entries": [
+      {
+        "path": ".github/actions/install-aps",
+        "kind": "non_file",
+        "mode": 0,
+        "payload_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "entry_digest": "24430a6d76bce8a3af28414d01fe397c6190f66f88f3cc7d08a045c83c38476a",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/actions/install-aps/action.yml",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "314d4348a9a3ebf9592932bcda785ea02955609abad6cddd69d74ede4c5cdb31",
+        "entry_digest": "93083e7a4dcfcb03ccb8b879c235632c45407b6ca5254bce8a1763fd5d0d3cb7",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/actions/install-aps/install.sh",
+        "kind": "file",
+        "mode": 33261,
+        "payload_digest": "05cdf46aef5df850fc9cb015ab69400b16080c4d25c966a30bd8013fcd8a411f",
+        "entry_digest": "3a3ceccedbe0032e71dbeb79270c7137e1b0d597857bbef44d78d78d6e591cc5",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/actions/install-aps/test.sh",
+        "kind": "file",
+        "mode": 33261,
+        "payload_digest": "37d4ddbd0f07fbfc8d714fe67a942b0c5275538d20f9041be932f32268bfbae9",
+        "entry_digest": "029551c2e2f018b4ad1950b41e60a084a87c505682b82fdaf393647312710832",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/workflows/release.yml",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "ee6ccd5a4f90a6fe0f21be9fe34d00c748b57eab77924536d4737a03ba99f801",
+        "entry_digest": "eef71c6dc40631d961895a108dea5284edcc53200c2377c95312962d74f9b8f1",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".specsync/change-sequence.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "1a60375f0dbb39eb783c27fbb3f783cce72659a038f4a17d48d827ba94ad1b2b",
+        "entry_digest": "f5ca29c0beb404d1f1eb929c2e00af1db29452fd3b7b3f440ca32dfbc47a54ad",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "README.md",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "7d957cb4ecd087caf9f971870af6a6356a927499dfe6fbd0ab566a9263c5c4e6",
+        "entry_digest": "3f5e622a0abd2b60c09115aa2ba50b3070429b6abcd9df2c171c89735bdafde2",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "fledge.toml",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "dde47d89b832530465f763babf6366352046346251ea110c66f5649c831cc762",
+        "entry_digest": "161058e96f1ba61ab3feeea134d1e69964eb0553de50ca98ce65ff8e649685f4",
+        "owners": [
+          "@exact:delivery"
+        ]
+      }
+    ]
+  },
+  "passed": true,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": []
+}

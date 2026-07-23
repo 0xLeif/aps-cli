@@ -51,7 +51,7 @@ jobs:
             artifact: aps-macos-x86_64
           - os: ubuntu-latest
             arch: ""
-            artifact: aps-linux-x86_64
+            artifact: aps-linux-x86_64-portable.tar.gz
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,7 +79,25 @@ jobs:
             # (same flag linux-smoke.yml uses for swift test).
             swift build -c release -Xlinker --allow-shlib-undefined
           fi
-          cp "$BIN_DIR/aps" "$ARTIFACT"
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            package_dir="${ARTIFACT%.tar.gz}-bundle"
+            mkdir -p "$package_dir/lib"
+            cp "$BIN_DIR/aps" "$package_dir/aps"
+            # Keep Swift/Foundation/Observation shared libraries beside aps;
+            # the $ORIGIN/lib rpath makes this bundle runnable without Swift.
+            swift build -c release -Xlinker --allow-shlib-undefined \
+              -Xlinker -rpath -Xlinker "\$ORIGIN/lib"
+            ldd "$BIN_DIR/aps" | awk '/=> \/|^\// { print ($3 ~ /^\// ? $3 : $1) }' | sort -u | while read -r dependency; do
+              case "$dependency" in
+                */swift/linux/*)
+                  cp -L "$dependency" "$package_dir/lib/" ;;
+              esac
+            done
+            test -n "$(find "$package_dir/lib" -type f -print -quit)"
+            tar -C "$package_dir" -czf "$ARTIFACT" aps lib
+          else
+            cp "$BIN_DIR/aps" "$ARTIFACT"
+          fi
           "$BIN_DIR/aps" --version
 
       - uses: actions/upload-artifact@v4
@@ -98,11 +116,11 @@ jobs:
       - name: Generate checksums
         run: |
           cd artifacts
-          for file in *; do
+          for file in ./*; do
             [ -f "$file" ] || continue
             sha256sum "$file" | sed "s|.*/||" > "${file}.sha256"
           done
-          cat *.sha256
+          cat -- ./*.sha256
       - name: Attach to release
         uses: softprops/action-gh-release@v2
         with:

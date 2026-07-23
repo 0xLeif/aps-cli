@@ -1,0 +1,31 @@
+name: Install aps
+description: Download the matching aps release binary and configure CI state.
+inputs:
+  version:
+    description: Release version to install, without or with a leading v. Defaults to the ref used for this Action.
+    required: false
+    default: "${{ github.action_ref }}"
+outputs:
+  version:
+    description: Installed aps release version.
+    value: "${{ steps.install.outputs.version }}"
+  asset:
+    description: Release asset selected for the runner.
+    value: "${{ steps.install.outputs.asset }}"
+runs:
+  using: composite
+  steps:
+    - name: Install aps on supported runner
+      id: install
+      if: runner.os != 'Windows'
+      shell: bash
+      env:
+        APS_VERSION: ${{ inputs.version }}
+        APS_RUNNER_OS: ${{ runner.os }}
+        APS_RUNNER_ARCH: ${{ runner.arch }}
+      run: ${{ github.action_path }}/install.sh
+    - name: Explain unsupported Windows runner
+      if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        Write-Error "aps releases do not currently publish a Windows binary. Use a macOS or Linux runner, or build aps from source."

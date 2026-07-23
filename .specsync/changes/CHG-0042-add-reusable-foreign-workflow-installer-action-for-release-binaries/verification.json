@@ -1,0 +1,81 @@
+{
+  "timestamp": 1784774736,
+  "commit": "d47c194501ffaa7bec952aee5dc534b1e1e48257",
+  "contract_digest": "05ef81fd94a905804922016aa2ef5cda4d2d3852a22672257f4ca4b1b64ecd8a",
+  "workspace_digest": "f251cae936a60cdab1180d5d9973b70c5ee9b5e4773a664017aed36d613b1540",
+  "acceptance_input_digest": "83af65ffdf61cd998a0fb0309a54de05206fe66b5678f48e8d93d887d936fb0f",
+  "acceptance_manifest": {
+    "schema_version": 1,
+    "entries": [
+      {
+        "path": ".github/actions/install-aps",
+        "kind": "non_file",
+        "mode": 0,
+        "payload_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "entry_digest": "24430a6d76bce8a3af28414d01fe397c6190f66f88f3cc7d08a045c83c38476a",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/actions/install-aps/action.yml",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "314d4348a9a3ebf9592932bcda785ea02955609abad6cddd69d74ede4c5cdb31",
+        "entry_digest": "93083e7a4dcfcb03ccb8b879c235632c45407b6ca5254bce8a1763fd5d0d3cb7",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/actions/install-aps/install.sh",
+        "kind": "file",
+        "mode": 33261,
+        "payload_digest": "05cdf46aef5df850fc9cb015ab69400b16080c4d25c966a30bd8013fcd8a411f",
+        "entry_digest": "3a3ceccedbe0032e71dbeb79270c7137e1b0d597857bbef44d78d78d6e591cc5",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".github/actions/install-aps/test.sh",
+        "kind": "file",
+        "mode": 33261,
+        "payload_digest": "37d4ddbd0f07fbfc8d714fe67a942b0c5275538d20f9041be932f32268bfbae9",
+        "entry_digest": "029551c2e2f018b4ad1950b41e60a084a87c505682b82fdaf393647312710832",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".specsync/change-sequence.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "be78420f90ad8a07d6e4f8547da0dc4f2f0ef85116009fb831920bb28048a23b",
+        "entry_digest": "7576f6acc74ed2943943f1f39e0d0c1d74a4b00a67b782c30a2321b79b18cad5",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "README.md",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "7d957cb4ecd087caf9f971870af6a6356a927499dfe6fbd0ab566a9263c5c4e6",
+        "entry_digest": "3f5e622a0abd2b60c09115aa2ba50b3070429b6abcd9df2c171c89735bdafde2",
+        "owners": [
+          "@exact:delivery"
+        ]
+      }
+    ]
+  },
+  "passed": true,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": []
+}
