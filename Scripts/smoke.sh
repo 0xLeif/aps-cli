@@ -4,7 +4,10 @@ set -euo pipefail
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
 
-SMOKE_HOME="${APS_HOME:-$(mktemp -d "${TMPDIR:-/tmp}/aps-smoke.XXXXXX")}"
+# Always isolate smoke in a fresh root. Agents/CI often export APS_HOME for
+# dogfooding; reusing that root makes `keys --quiet | wc -l` flake (demo + agent
+# keys). Override explicitly with APS_SMOKE_HOME when needed.
+SMOKE_HOME="${APS_SMOKE_HOME:-$(mktemp -d "${TMPDIR:-/tmp}/aps-smoke.XXXXXX")}"
 export APS_HOME="$SMOKE_HOME"
 mkdir -p "$APS_HOME"
 

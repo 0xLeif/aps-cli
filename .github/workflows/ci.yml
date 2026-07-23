@@ -55,3 +55,7 @@ jobs:
         env:
           APS_BIN: ${{ matrix.aps_bin }}
         run: ./Scripts/smoke.sh
+      - name: CI dogfood (use aps as a job-scoped helper)
+        env:
+          APS_BIN: ${{ matrix.aps_bin }}
+        run: ./Scripts/ci-dogfood.sh

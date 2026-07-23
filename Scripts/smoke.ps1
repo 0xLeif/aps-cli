@@ -56,8 +56,11 @@ function Invoke-ApsExpectFail {
     }
 }
 
-$smokeHome = if ($env:APS_HOME) {
-    $env:APS_HOME
+# Always isolate smoke in a fresh root. Agents/CI often export APS_HOME for
+# dogfooding; reusing that root makes key-count assertions flake. Override with
+# APS_SMOKE_HOME when needed.
+$smokeHome = if ($env:APS_SMOKE_HOME) {
+    $env:APS_SMOKE_HOME
 } else {
     Join-Path ([System.IO.Path]::GetTempPath()) ("aps-smoke-" + [guid]::NewGuid().ToString('N'))
 }
