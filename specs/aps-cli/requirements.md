@@ -136,7 +136,7 @@ Acceptance Criteria
 The `secret` key SHALL be backed by an encrypted-file secret store under the state root (ephemeral X25519 + HKDF + ChaCha20-Poly1305 via swift-crypto), with zero interactive prompts in key-file mode and passphrase mode via `APS_SECRET_PASSPHRASE`. When `secret.enc` already exists, `set` SHALL unlock with the current recipient key before rewriting; unlock failure SHALL leave the file unchanged and surface `APSError.secretUnlockFailed`. Passphrase vs key-file mode remains stateful: a fresh or reset store seals with whichever recipient is active on first write.
 
 Acceptance Criteria
-- `secret` round-trips set/get/reset with ciphertext at rest in `secret.enc`; the key file is mode 0600.
+- `secret` round-trips set/get/reset with ciphertext at rest in `secret.enc`; first-use key creation is serialized, atomic, and creates the key file with mode 0600.
 - No Security.framework/Keychain imports; works on macOS and Linux.
 - Wrong passphrase on `get` fails with `APSError.secretUnlockFailed`; corrupt envelope fails with `APSError.decodingFailed`.
 - Wrong passphrase on `set` against an existing envelope fails with `secretUnlockFailed` and does not change ciphertext.
@@ -197,4 +197,3 @@ lock API.
 Acceptance Criteria
 - Schema mutations continue to use `schema.json.lock`.
 - FileState and Slice writes can serialize on `profile.json.lock`.
-

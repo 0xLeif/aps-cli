@@ -267,6 +267,36 @@ final class APSTests: XCTestCase {
         let attributes = try FileManager.default.attributesOfItem(atPath: keyURL.path)
         XCTAssertEqual(attributes[.posixPermissions] as? Int, 0o600)
     }
+
+    @MainActor
+    func testSecretStoreParallelFreshWritesShareKeyFile() async throws {
+        let path = FileManager.defaultFileStatePath
+        let values = (0..<12).map { "parallel-secret-\($0)" }
+        let failures = await withTaskGroup(of: String?.self, returning: [String].self) { group in
+            values.forEach { value in
+                group.addTask {
+                    do {
+                        try SecretStore(directory: path).set(value)
+                        return nil
+                    } catch {
+                        return String(describing: error)
+                    }
+                }
+            }
+
+            var failures: [String] = []
+            for await failure in group {
+                if let failure {
+                    failures.append(failure)
+                }
+            }
+            return failures
+        }
+
+        XCTAssertTrue(failures.isEmpty, "Parallel fresh writes failed: \(failures)")
+        let finalValue = try SecretStore(directory: path).get()
+        XCTAssertTrue(values.contains(finalValue))
+    }
     #endif
 
     @MainActor

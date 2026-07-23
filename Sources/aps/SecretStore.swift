@@ -63,6 +63,10 @@ public struct SecretStore: Sendable {
     /// does not parse throws `APSError.decodingFailed`; a valid envelope that
     /// does not open throws `APSError.secretUnlockFailed` (wrong key).
     public func get() throws -> String {
+        try getUnlocked(lockKeyFile: true)
+    }
+
+    private func getUnlocked(lockKeyFile: Bool) throws -> String {
         let data: Data
         do {
             data = try Data(contentsOf: storeURL)
@@ -75,7 +79,7 @@ public struct SecretStore: Sendable {
         } catch {
             throw APSError.decodingFailed
         }
-        return try open(envelope)
+        return try open(envelope, lockKeyFile: lockKeyFile)
     }
 
     /// Encrypt and store the value, then verify by decrypting the file back.
@@ -84,15 +88,24 @@ public struct SecretStore: Sendable {
     /// before rewriting. A wrong passphrase or key fails with
     /// `secretUnlockFailed` and leaves ciphertext unchanged (issue #89).
     public func set(_ value: String) throws {
+        try SchemaFileLock.withExclusiveLock(
+            stateRoot: directory,
+            lockFileName: "secret.store.lock"
+        ) {
+            try setUnlocked(value)
+        }
+    }
+
+    private func setUnlocked(_ value: String) throws {
         try FileManager.default.createDirectory(
             atPath: directory,
             withIntermediateDirectories: true
         )
         if hasSecret {
             // Prove the caller can open the existing envelope before re-keying.
-            _ = try get()
+            _ = try getUnlocked(lockKeyFile: false)
         }
-        let envelope = try seal(value)
+        let envelope = try seal(value, lockKeyFile: false)
         let data = try JSONEncoder().encode(envelope)
         do {
             try data.write(to: storeURL, options: .atomic)
@@ -100,7 +113,7 @@ public struct SecretStore: Sendable {
             throw APSError.persistenceFailed(key: keyName)
         }
         // Read-back verification (same discipline as FileState writes).
-        guard try get() == value else {
+        guard try getUnlocked(lockKeyFile: false) == value else {
             throw APSError.persistenceFailed(key: keyName)
         }
     }
@@ -112,8 +125,8 @@ public struct SecretStore: Sendable {
 
     // MARK: - Envelope cryptography
 
-    private func seal(_ value: String) throws -> Envelope {
-        let recipientPublic = try recipientKey().publicKey
+    private func seal(_ value: String, lockKeyFile: Bool) throws -> Envelope {
+        let recipientPublic = try recipientKey(lockKeyFile: lockKeyFile).publicKey
         let ephemeral = Curve25519.KeyAgreement.PrivateKey()
         let symmetric = try deriveSymmetricKey(privateKey: ephemeral, publicKey: recipientPublic)
         let nonce = ChaChaPoly.Nonce()
@@ -130,7 +143,7 @@ public struct SecretStore: Sendable {
         )
     }
 
-    private func open(_ envelope: Envelope) throws -> String {
+    private func open(_ envelope: Envelope, lockKeyFile: Bool) throws -> String {
         guard
             let ephemeralPublicData = Data(base64Encoded: envelope.ephemeralPublicKey),
             let nonceData = Data(base64Encoded: envelope.nonce),
@@ -143,7 +156,7 @@ public struct SecretStore: Sendable {
             throw APSError.decodingFailed
         }
         let symmetric = try deriveSymmetricKey(
-            privateKey: recipientKey(),
+            privateKey: try recipientKey(lockKeyFile: lockKeyFile),
             publicKey: ephemeralPublic
         )
         let plaintext: Data
@@ -173,7 +186,7 @@ public struct SecretStore: Sendable {
 
     // MARK: - Recipient key
 
-    private func recipientKey() throws -> Curve25519.KeyAgreement.PrivateKey {
+    private func recipientKey(lockKeyFile: Bool) throws -> Curve25519.KeyAgreement.PrivateKey {
         if let passphrase = ProcessInfo.processInfo.environment["APS_SECRET_PASSPHRASE"] {
             guard !passphrase.isEmpty else {
                 throw APSError.secretUnlockFailed
@@ -187,7 +200,10 @@ public struct SecretStore: Sendable {
             return Self.keyFromPassphrase(passphrase)
         }
         #endif
-        return try loadOrCreateKeyFile()
+        if lockKeyFile {
+            return try loadOrCreateKeyFile()
+        }
+        return try loadOrCreateKeyFileUnlocked()
     }
 
     static func keyFromPassphrase(_ passphrase: String) -> Curve25519.KeyAgreement.PrivateKey {
@@ -212,23 +228,28 @@ public struct SecretStore: Sendable {
     }
 
     private func loadOrCreateKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {
+        return try SchemaFileLock.withExclusiveLock(
+            stateRoot: directory,
+            lockFileName: "secret.key.lock"
+        ) {
+            try loadOrCreateKeyFileUnlocked()
+        }
+    }
+
+    private func loadOrCreateKeyFileUnlocked() throws -> Curve25519.KeyAgreement.PrivateKey {
         if let data = try? Data(contentsOf: keyFileURL),
            let raw = Data(base64Encoded: data),
            let key = try? Curve25519.KeyAgreement.PrivateKey(rawRepresentation: raw) {
             return key
         }
+
         let key = Curve25519.KeyAgreement.PrivateKey()
-        try FileManager.default.createDirectory(
-            atPath: directory,
-            withIntermediateDirectories: true
+        let created = FileManager.default.createFile(
+            atPath: keyFileURL.path,
+            contents: key.rawRepresentation.base64EncodedData(),
+            attributes: [.posixPermissions: 0o600]
         )
-        do {
-            try key.rawRepresentation.base64EncodedData().write(to: keyFileURL)
-            try FileManager.default.setAttributes(
-                [.posixPermissions: 0o600],
-                ofItemAtPath: keyFileURL.path
-            )
-        } catch {
+        guard created else {
             throw APSError.persistenceFailed(key: keyName)
         }
         return key
