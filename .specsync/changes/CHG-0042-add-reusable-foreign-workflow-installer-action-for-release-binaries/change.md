@@ -1,6 +1,6 @@
 ---
 id: CHG-0042-add-reusable-foreign-workflow-installer-action-for-release-binaries
-state: implementing
+state: accepted
 type: feature
 base_commit: 644ea11c8d735f2c85dd708366611b81298c8818
 ---
