@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784771656,
+      "digest": "c62ad8c94f71934ea15c33ae8344fff71b28ddeca7f4d77b5a1de88785323137",
+      "note": "Definition approved for issue #84."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784771879,
+      "digest": "05ef81fd94a905804922016aa2ef5cda4d2d3852a22672257f4ca4b1b64ecd8a",
+      "note": "Re-approve current artifact digest after recording completed verification task."
+    }
+  ],
+  "reopenings": []
+}

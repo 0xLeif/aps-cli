@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 41,
-  "id": "CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations",
+  "sequence": 42,
+  "id": "CHG-0042-add-reusable-foreign-workflow-installer-action-for-release-binaries",
   "acknowledged_collisions": []
 }

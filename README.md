@@ -35,6 +35,18 @@ cd aps-cli && swift build -c release
 .build/release/aps --help
 ```
 
+**Foreign GitHub Actions workflows:** use the reusable composite Action to install the release binary without a Swift toolchain:
+
+```yaml
+- uses: 0xLeif/aps-cli/.github/actions/install-aps@v1.0.0
+  # Optional when the Action ref is not a release tag:
+  # with:
+  #   version: 1.0.0
+- run: aps set note "run-${{ github.run_id }}"
+```
+
+The Action selects the release asset for Linux x64, macOS x64, or macOS arm64, verifies its `.sha256` sidecar before moving it into the job-scoped `${RUNNER_TEMP}/aps/bin`, and adds that directory to `PATH`. It defaults `APS_HOME` to `${RUNNER_TEMP}/aps-home` through `GITHUB_ENV`; an existing `APS_HOME` is preserved. Pin the Action to a release tag or pass an explicit semantic `version`. Windows is not supported until a Windows release asset is published.
+
 ## Commands
 
 ```text
