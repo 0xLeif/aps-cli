@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784767865,
-  "commit": "427f42e57bd11a2b92b6245abbcc347549cacec6",
+  "timestamp": 1784769617,
+  "commit": "efc56b441f641f1311c8b4b08332876b0bf694b8",
   "contract_digest": "d0845b60a9c43a12bdb1f6588e678b92d18f05ef83644edcc009ea40a5b58720",
-  "workspace_digest": "372b56f7730cfe3c512902828b84742b222e671e92116377173c500de9fd9826",
-  "acceptance_input_digest": "581db891b8bb35709a6c7012356d0c3cb12c926ec74c3ac1140320f0443070bf",
+  "workspace_digest": "e2ca7cd6b5fe9865aa854869b7ef203de499e5ced25e97603458f5a608ad9003",
+  "acceptance_input_digest": "f003e0e71ab347492e47a5ca902fbf595c390a325fa1a14bc235f98a4b566f8b",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -21,8 +21,8 @@
         "path": "Scripts/smoke.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "ea93b7ee69bbd829015e5ed2980f6889332db914a36d5074e6ca64159eaac3ad",
-        "entry_digest": "42bc00afd55e8963205030f0651e720ced04c3ece87b0e24968c44daa60e8e82",
+        "payload_digest": "430bebc7d4a1539115bbe0f3620bc872e53bcf8e2e0b64ab50c84748704a2ad0",
+        "entry_digest": "bfb75c49144f37901337044676b88bfefb2d8874f09c521c9dbb38735d436a13",
         "owners": [
           "@exact:delivery"
         ]

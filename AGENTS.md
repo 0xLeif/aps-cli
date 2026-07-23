@@ -10,22 +10,59 @@ A Swift CLI that dogfoods [AppState](https://github.com/0xLeif/AppState) outside
 | `Tests/apsTests/` | Round-trip, watch, reset, and dependency tests |
 | `specs/` | SpecSync contracts for the CLI and state surface |
 | `Scripts/smoke.sh` | End-to-end CLI smoke checks |
+| `Scripts/ci-dogfood.sh` | Job-scoped APS_HOME proof that CI *uses* aps |
 
 ## Workflow
 
 ```sh
-fledge lanes run verify   # build + test + smoke
+fledge lanes run verify   # build + test + smoke + ci-dogfood
 fledge trust verify       # full trust gate when tools are installed
 ./Scripts/smoke.sh
+./Scripts/ci-dogfood.sh
 ```
 
 ## Dogfooding aps
 
-Use the tool itself for agent state on this project: `fledge aps` (live-linked
-plugin) or `aps` from the tap. Persist working/session state in the default
-state root (`~/.aps`) with `aps key add` + `set`/`get` instead of scratch
-files. Leave the demo keys for tests and smoke; add your own keys for real
-state (see `docs/design/dynamic-schema.md`).
+Use the tool itself for agent and CI state on this project: `fledge aps`
+(live-linked plugin) or `aps` from a local build / the tap. Prefer aps keys
+over scratch files.
+
+### Bootstrap (Linux cloud / this repo)
+
+```sh
+./Scripts/build.sh -c release    # portable; raw swift build can fail on Linux 6.0.x
+export PATH="$PWD/.build/release:$PATH"
+# Optional isolation from a polluted home root:
+# export APS_HOME=/tmp/aps-agent-$USER
+```
+
+### Session keys (FileState only)
+
+Leave demo seed keys (`counter`, `message`, `flag`, `note`, `profile`, `secret`,
+`profileName`) for tests and `Scripts/smoke.sh`. Add your own keys:
+
+```sh
+aps key add agentStatus --type String --storage FileState --path agent-status.json --initial ''
+aps key add agentIssue  --type Int    --storage FileState --path agent-issue.json  --initial 0
+aps key add agentBranch --type String --storage FileState --path agent-branch.json --initial ''
+aps set agentStatus exploring
+aps set agentIssue 82
+aps set agentBranch "$(git branch --show-current)"
+aps get agentStatus --json
+aps dump --json
+```
+
+Rules:
+
+- Prefer **FileState** for anything that must survive process boundaries.
+- Avoid **StoredState** for agent keys until #82 (user StoredState is not
+  scoped by `--state-dir` / `APS_HOME`).
+- Avoid `aps reset --all` on a dogfood root that holds agent keys (it resets
+  every registered key).
+- In CI, always set a job-scoped `APS_HOME` or `--state-dir` (see
+  `Scripts/ci-dogfood.sh`).
+
+See `docs/design/dynamic-schema.md` for the registry model.
 
 ## Multi-agent ticket claiming
 

@@ -8,7 +8,7 @@
   "state": "implementing",
   "base_commit": "2eac0ec7e7bf7bbd69976c30d9d553f19aacacc1",
   "created_at": 1784646126,
-  "updated_at": 1784648535,
+  "updated_at": 1784768758,
   "affected_specs": [
     "aps-cli",
     "state-store"
@@ -17,6 +17,7 @@
     "Sources/aps/",
     "Tests/apsTests/",
     "Scripts/",
+    "AGENTS.md",
     "README.md",
     "specs/",
     ".specsync/change-sequence.json",
