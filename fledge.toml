@@ -4,6 +4,7 @@
 [tasks]
 build = "./Scripts/build.sh"
 test = "./Scripts/test.sh"
+test-parallel = "./Scripts/test-parallel.sh"
 release-build = "./Scripts/build.sh -c release"
 smoke = "./Scripts/smoke.sh"
 # Manifest-only: warns if `.build/release/aps` is missing (created by release/install hooks).
@@ -11,8 +12,8 @@ plugin-validate = "fledge plugins validate ."
 # Keep specsync out of lanes.verify: Trust/SpecSync run it as a top-level gate
 # so verification commands cannot recurse into specsync check.
 spec = "specsync check"
-check = "fledge run build && fledge run test && fledge run smoke && fledge run plugin-validate && fledge run spec"
+check = "fledge run build && fledge run test && fledge run test-parallel && fledge run smoke && fledge run plugin-validate && fledge run spec"
 
 [lanes.verify]
-description = "Native quality gate (build, test, smoke, plugin manifest)"
-steps = ["build", "test", "smoke", "plugin-validate"]
+description = "Native quality gate (build, test, parallel isolation, smoke, plugin manifest)"
+steps = ["build", "test", "test-parallel", "smoke", "plugin-validate"]

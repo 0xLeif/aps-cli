@@ -1,7 +1,8 @@
 name: Linux smoke
 
-# GitHub-hosted Linux build + smoke for the 0.x agent-ready milestone.
-# Complements the private-repo macOS self-hosted CI/Trust workflows.
+# Linux coverage now lives in the CI matrix (ci.yml). This workflow remains as a
+# lightweight duplicate so existing required checks named "Linux smoke" keep
+# green while branch protection is updated to the CI matrix cells.
 
 on:
   push:
@@ -35,6 +36,9 @@ jobs:
         # Portable wrapper adds Linux -Xlinker --allow-shlib-undefined for the
         # Observation toolchain bug on 6.0.x.
         run: ./Scripts/test.sh
+
+      - name: Test parallel (isolation regression)
+        run: ./Scripts/test-parallel.sh
 
       - name: Smoke CLI
         env:
