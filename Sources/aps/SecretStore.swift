@@ -106,7 +106,16 @@ public struct SecretStore: Sendable {
         }
         if hasSecret {
             // Prove the caller can open the existing envelope before re-keying.
-            _ = try getUnlocked(lockKeyFile: false)
+            do {
+                _ = try getUnlocked(lockKeyFile: false)
+            } catch let error as APSError {
+                if case .persistenceFailed = error {
+                    throw APSError.secretUnlockFailed
+                }
+                throw error
+            } catch {
+                throw APSError.secretUnlockFailed
+            }
         }
         let envelope = try seal(value, lockKeyFile: false)
         let data = try JSONEncoder().encode(envelope)
@@ -268,6 +277,13 @@ public struct SecretStore: Sendable {
             loadKeyFileIfValid() == nil
         else {
             return
+        }
+        guard
+            let attributes = try? FileManager.default.attributesOfItem(atPath: keyFileURL.path),
+            let type = attributes[.type] as? FileAttributeType,
+            type == .typeRegular
+        else {
+            throw APSError.persistenceFailed(key: keyName)
         }
         do {
             try FileManager.default.removeItem(at: keyFileURL)

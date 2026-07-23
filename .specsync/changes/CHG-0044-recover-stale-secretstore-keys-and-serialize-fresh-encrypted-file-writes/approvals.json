@@ -27,6 +27,13 @@
       "timestamp": 1784815477,
       "digest": "03228cb18b83be120daab066179062ac78b8a0be9bd8a003e752ca0f92461712",
       "note": "Re-approve after renumbering CHG-0042 to CHG-0044 (main claimed 0042/0043 via #104); content unchanged."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1784816889,
+      "digest": "3e218be9e2a53e8636340bfe4a06ae8fea752b79573a9bad9c5f8444639436c0",
+      "note": "Approve current CHG-0044 review-fix definition and evidence scope."
     }
   ],
   "reopenings": []

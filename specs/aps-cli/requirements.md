@@ -208,3 +208,5 @@ Acceptance Criteria
 - A partial `secret.key` does not make the first fresh SET fail with
   `persistenceFailed`.
 - A successful recovery leaves a valid key and decryptable envelope.
+- A `secret.key` directory is never removed during recovery, and a corrupt
+  existing key with an envelope surfaces `secretUnlockFailed`.

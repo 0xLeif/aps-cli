@@ -18,4 +18,6 @@ SHALL not require that lock.
 
 When no `secret.enc` envelope exists, a fresh SecretStore SET SHALL recover an
 invalid stale `secret.key` before creating replacement key material. The fresh
-SET operation SHALL remain serialized by `secret.store.lock`.
+SET operation SHALL remain serialized by `secret.store.lock`. A corrupt key
+with an existing `secret.enc` envelope SHALL surface `secretUnlockFailed`, and
+recovery SHALL never remove a `secret.key` directory.
