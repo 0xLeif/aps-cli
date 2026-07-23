@@ -34,6 +34,7 @@ internal final class WatchPollingWakeup: @unchecked Sendable {
 /// Linux and Windows use an interruptible semaphore wait instead. Apple
 /// platforms service short run-loop slices so main-actor work remains live;
 /// every platform can be woken promptly by signal delivery.
-internal func waitForWatchPoll(interval: TimeInterval) {
-    WatchPollingWakeup.shared.wait(interval: interval)
+internal func waitForWatchPoll(interval: TimeInterval, deadline: Date? = nil) {
+    let remainingInterval = deadline.map { min(interval, $0.timeIntervalSinceNow) } ?? interval
+    WatchPollingWakeup.shared.wait(interval: max(remainingInterval, 0))
 }

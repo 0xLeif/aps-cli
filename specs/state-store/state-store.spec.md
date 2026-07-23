@@ -35,8 +35,8 @@ helpers suitable for non-UI use.
 | `resetAllRegistered` | Restores every key in the active schema.json registry. |
 | `dump` | JSON snapshot of demo seed keys (pretty on TTY, compact when piped). |
 | `dumpRegistered` | JSON snapshot of every registry key. |
-| `watchBlocking` | Observation + polling watch loop for demo or string registry keys. |
-| `watchStatsBlocking` | Combine + polling watch loop for ObservedDependency stats. |
+| `watchBlocking` | Observation + polling watch loop for demo or string registry keys, bounded by an optional deadline. |
+| `watchStatsBlocking` | Combine + polling watch loop for ObservedDependency stats, bounded by an optional deadline. |
 | `statsSnapshot` | Immutable view of DemoStats counters. |
 | `resetStats` | Clears process-local DemoStats counters. |
 | `loadSchema` | Load or materialize schema.json for the active state root. |
@@ -79,6 +79,7 @@ helpers suitable for non-UI use.
 3. `dumpRegistered()` includes every key in the active schema.json plus an
    ISO-8601 `timestamp`.
 4. `watchBlocking` emits the current value first, then subsequent distinct values.
+5. A supplied polling deadline bounds the wait even when the configured interval is larger.
 5. Dependencies are real services, not fake stubs used only for wiring demos.
 6. `schema.json` write failures surface as `APSError.persistenceFailed`.
 7. Schema RMW (add/remove/materialize-on-missing) is serialized by `SchemaFileLock`.

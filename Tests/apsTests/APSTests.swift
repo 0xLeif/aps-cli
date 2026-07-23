@@ -662,6 +662,26 @@ final class APSTests: XCTestCase {
         XCTAssertGreaterThanOrEqual(Date(), deadline)
     }
 
+    @MainActor
+    internal func testWatchTimeoutBoundsLargePollingInterval() async throws {
+        let store = StateStore()
+        let deadline = Date().addingTimeInterval(0.1)
+        let startedAt = Date()
+        var seen: [String] = []
+
+        try store.watchBlocking(
+            .counter,
+            pollInterval: 60.0,
+            pollDeadline: deadline,
+            shouldContinue: { Date() < deadline }
+        ) { value in
+            seen.append(value)
+        }
+
+        XCTAssertEqual(seen, ["0"])
+        XCTAssertLessThan(Date().timeIntervalSince(startedAt), 0.5)
+    }
+
     internal func testWatchPollingCanInterruptLargeIntervals() {
         let startedAt = Date()
         WatchPollingWakeup.shared.signal()
