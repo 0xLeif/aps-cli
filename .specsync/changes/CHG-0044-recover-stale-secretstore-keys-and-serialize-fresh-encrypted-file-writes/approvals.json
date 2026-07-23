@@ -20,6 +20,13 @@
       "timestamp": 1784776069,
       "digest": "bda3c90664cffaab2b81189939bf7e76bbd3294fb4e22dff80a456501c509887",
       "note": "Approve successor delta for REQ-aps-cli-026 while testing evidence covers existing REQ-aps-cli-020."
+    },
+    {
+      "gate": "definition",
+      "actor": "kimi",
+      "timestamp": 1784815477,
+      "digest": "03228cb18b83be120daab066179062ac78b8a0be9bd8a003e752ca0f92461712",
+      "note": "Re-approve after renumbering CHG-0042 to CHG-0044 (main claimed 0042/0043 via #104); content unchanged."
     }
   ],
   "reopenings": []
