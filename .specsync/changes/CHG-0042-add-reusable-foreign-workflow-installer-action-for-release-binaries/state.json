@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0042-add-reusable-foreign-workflow-installer-action-for-release-binaries",
+  "slug": "add-reusable-foreign-workflow-installer-action-for-release-binaries",
+  "title": "Add reusable foreign-workflow installer Action for release binaries",
+  "description": "Add reusable foreign-workflow installer Action for release binaries",
+  "kind": "feature",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "644ea11c8d735f2c85dd708366611b81298c8818",
+  "created_at": 1784771478,
+  "updated_at": 1784774789,
+  "affected_specs": [],
+  "affected_paths": [
+    ".github/actions/install-aps",
+    "README.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This change adds a GitHub composite Action and user-facing workflow documentation; it does not change the Swift runtime or any canonical Swift API contract.",
+  "acceptance_criteria": [
+    "The composite Action selects the release asset for supported GitHub-hosted macOS and Linux runner architectures, verifies its SHA-256 sidecar before installation, adds the executable directory to PATH, defaults APS_HOME under RUNNER_TEMP without overwriting an explicit APS_HOME, and documents/test these behaviors. fledge lanes run verify and Action tests pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "requirements",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "research",
+    "design"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "no"
+  }
+}

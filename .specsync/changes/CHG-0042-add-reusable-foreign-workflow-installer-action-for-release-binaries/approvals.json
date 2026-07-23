@@ -1,0 +1,133 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784771656,
+      "digest": "c62ad8c94f71934ea15c33ae8344fff71b28ddeca7f4d77b5a1de88785323137",
+      "note": "Definition approved for issue #84."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784771879,
+      "digest": "05ef81fd94a905804922016aa2ef5cda4d2d3852a22672257f4ca4b1b64ecd8a",
+      "note": "Re-approve current artifact digest after recording completed verification task."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1784772562,
+      "digest": "f1fdb8ec3e0df0d798532003689dbd47893a4d81a9ce6edff691423c6440074b",
+      "note": "Accept refreshed branch-head verification evidence for PR #104."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1784774789,
+      "digest": "4d9b7b27366defe4eac0df59e7a926dfd8cfe2ca8455fa69b34e6784d39eea43",
+      "note": "Accept refreshed CHG-0042 evidence for the current PR head."
+    }
+  ],
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0042-add-reusable-foreign-workflow-installer-action-for-release-binaries",
+      "actor": "Codex",
+      "reason": "Trust reported exact-only installer input changed after acceptance; refresh evidence on current PR head.",
+      "timestamp": 1784774671,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "Codex",
+        "timestamp": 1784772562,
+        "digest": "f1fdb8ec3e0df0d798532003689dbd47893a4d81a9ce6edff691423c6440074b",
+        "note": "Accept refreshed branch-head verification evidence for PR #104."
+      },
+      "prior_verification": {
+        "timestamp": 1784772544,
+        "commit": "39c6d1202b17e57d6c9bb0447474d381a036a1fd",
+        "contract_digest": "05ef81fd94a905804922016aa2ef5cda4d2d3852a22672257f4ca4b1b64ecd8a",
+        "workspace_digest": "fba798116cebf08698b3b7816adcf4fb210b3ece29d50c8bbfc0e35ae2156349",
+        "acceptance_input_digest": "a0f3b0b7febcb3d9ffb8b7523a9081ec85245a81e8f9d4f821c121205defd160",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".github/actions/install-aps",
+              "kind": "non_file",
+              "mode": 0,
+              "payload_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "entry_digest": "24430a6d76bce8a3af28414d01fe397c6190f66f88f3cc7d08a045c83c38476a",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".github/actions/install-aps/action.yml",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "314d4348a9a3ebf9592932bcda785ea02955609abad6cddd69d74ede4c5cdb31",
+              "entry_digest": "93083e7a4dcfcb03ccb8b879c235632c45407b6ca5254bce8a1763fd5d0d3cb7",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".github/actions/install-aps/install.sh",
+              "kind": "file",
+              "mode": 33261,
+              "payload_digest": "f18ceba2795956198f4deb178a446779e8b31b53cdb4a7a10a83c459e5da381e",
+              "entry_digest": "92eba80693ce976c6ab3286035473c076d3d17d8fa7aad51856a2ba8e9c258a5",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".github/actions/install-aps/test.sh",
+              "kind": "file",
+              "mode": 33261,
+              "payload_digest": "39e3d8086f0006e604293eb58d9eccee57f4788fdc4e37d2f8c61530310338ed",
+              "entry_digest": "05593357eead95c547948ff58b0990a619b9137b56a79a927073ce1c7e03f88f",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be78420f90ad8a07d6e4f8547da0dc4f2f0ef85116009fb831920bb28048a23b",
+              "entry_digest": "7576f6acc74ed2943943f1f39e0d0c1d74a4b00a67b782c30a2321b79b18cad5",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "89ac82261f6c45c5a661f526bffc2e3f98d80657f3d511b8975f5a27929603e0",
+              "entry_digest": "f178f52ba4ac4fa8d077c1bc5bf2b957ee764a955fd9d894bec41b4a3427b6b6",
+              "owners": [
+                "@exact:delivery"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "a0f3b0b7febcb3d9ffb8b7523a9081ec85245a81e8f9d4f821c121205defd160",
+      "current_acceptance_input_digest": "83af65ffdf61cd998a0fb0309a54de05206fe66b5678f48e8d93d887d936fb0f"
+    }
+  ]
+}
