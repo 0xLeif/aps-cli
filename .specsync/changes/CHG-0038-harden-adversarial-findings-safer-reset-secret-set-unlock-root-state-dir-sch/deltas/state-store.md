@@ -1,26 +1,5 @@
 # state-store harden adversarial findings
 
-## ADDED
-
-### REQUIREMENT REQ-state-store-017
-
-`StateStore.addKey` / `removeKey` SHALL hold an exclusive lock on the state-root schema
-lock file, re-read `schema.json` under that lock, then write. Concurrent adds with
-distinct names SHALL all persist.
-
-Acceptance Criteria
-- Parallel RMW under the lock retains every distinct added key.
-- Duplicate add without `--force` still throws `schemaConflict` after a successful peer add.
-
-### REQUIREMENT REQ-state-store-018
-
-`SecretStore.set` SHALL call unlock (`get`) when an envelope file exists before sealing a
-new value. Failure SHALL throw `secretUnlockFailed` without replacing the file.
-
-Acceptance Criteria
-- After sealing with passphrase A, set with passphrase B throws and leaves bytes unchanged.
-- First set on a missing file still succeeds without a prior unlock.
-
 ## MODIFIED
 
 ### REQUIREMENT REQ-state-store-016

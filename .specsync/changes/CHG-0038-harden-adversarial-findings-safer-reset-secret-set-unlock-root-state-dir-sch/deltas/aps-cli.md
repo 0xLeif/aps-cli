@@ -1,27 +1,5 @@
 # aps-cli harden adversarial findings
 
-## ADDED
-
-### REQUIREMENT REQ-aps-cli-023
-
-`aps reset --all` SHALL restore only DemoKey seed keys. `aps reset --registered` SHALL
-restore every key in the active `schema.json` registry. Passing both, or a key with
-either flag, SHALL fail with a validation error.
-
-Acceptance Criteria
-- After `key add` + `set`, `reset --all` leaves the user key value unchanged.
-- `reset --registered` restores that user key to its initial value.
-- JSON payloads use `"reset":"all"` for `--all` and `"reset":"registered"` for `--registered`.
-
-### REQUIREMENT REQ-aps-cli-024
-
-`aps schema` SHALL advertise root-or-subcommand `--state-dir`, reset `--registered`, and
-bump integer `schemaVersion` to 4 for this contract shape change.
-
-Acceptance Criteria
-- `aps schema` emits `"schemaVersion":4`.
-- The `reset` command entry lists flags including `--registered`.
-
 ## MODIFIED
 
 ### REQUIREMENT REQ-aps-cli-011

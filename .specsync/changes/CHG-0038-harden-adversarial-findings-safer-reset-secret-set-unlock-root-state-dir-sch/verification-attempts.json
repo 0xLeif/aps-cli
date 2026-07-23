@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "attempts": [
+    {
+      "timestamp": 1784818869,
+      "commit": "0844f24405cf2906c37a2356cc2c91145f9e154d",
+      "contract_digest": "e09aea8aa2a335361166c162a0ed36d8d9a9235d6f866705a8fc1171a81e2ea8",
+      "workspace_digest": "9ec1ddeb50f018d4f4e09c5a2721903b22f156a1e82d00037b355f1764bea151",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-011",
+        "REQ-aps-cli-019",
+        "REQ-aps-cli-020",
+        "REQ-aps-cli-024",
+        "REQ-state-store-016",
+        "REQ-state-store-017",
+        "REQ-state-store-018"
+      ]
+    },
+    {
+      "timestamp": 1784818966,
+      "commit": "0844f24405cf2906c37a2356cc2c91145f9e154d",
+      "contract_digest": "d6b9e02cb22bddd8841b45a9ae284ff54d6170c8f6a52d2345a6b3ad0a2a0799",
+      "workspace_digest": "9ec1ddeb50f018d4f4e09c5a2721903b22f156a1e82d00037b355f1764bea151",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-011",
+        "REQ-aps-cli-019",
+        "REQ-aps-cli-020",
+        "REQ-state-store-016",
+        "REQ-state-store-017",
+        "REQ-state-store-018"
+      ]
+    },
+    {
+      "timestamp": 1784819550,
+      "commit": "0844f24405cf2906c37a2356cc2c91145f9e154d",
+      "contract_digest": "410ab01ad68814d4e891e6fe95beb5c9a17b947458450a8647a0f5947660aedb",
+      "workspace_digest": "9ec1ddeb50f018d4f4e09c5a2721903b22f156a1e82d00037b355f1764bea151",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-011",
+        "REQ-aps-cli-019",
+        "REQ-aps-cli-020",
+        "REQ-state-store-016"
+      ]
+    }
+  ]
+}

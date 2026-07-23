@@ -34,6 +34,27 @@
       "timestamp": 1784816889,
       "digest": "3e218be9e2a53e8636340bfe4a06ae8fea752b79573a9bad9c5f8444639436c0",
       "note": "Approve current CHG-0044 review-fix definition and evidence scope."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784819623,
+      "digest": "d5795d6e521b3768735f2b44abf975cfdc3301e467a824468495c7356c9cdae9",
+      "note": "Dependency CHG-0038 is now accepted; re-approving the current artifact digest."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784819765,
+      "digest": "d3485b2d3988d68ff6b38c0d974f9eaaf2bddbb5304c2f4211355545d758c479",
+      "note": "Restored the missing MODIFIED REQ-aps-cli-020 delta from this change\\x27s requirements artifact; removed stale duplicate REQ-026."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1784820019,
+      "digest": "1eb82ae7697e2ed92450ddafa6d60667ad9ecee5209de83e6f341e233d267f16",
+      "note": "Verified restored REQ-020 contract and SecretStore behavior with the full native gate."
     }
   ],
   "reopenings": []

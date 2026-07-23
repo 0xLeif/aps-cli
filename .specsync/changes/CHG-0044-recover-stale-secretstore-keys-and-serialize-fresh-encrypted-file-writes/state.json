@@ -5,10 +5,11 @@
   "title": "Recover stale SecretStore keys and serialize fresh encrypted-file writes",
   "description": "Recover stale SecretStore keys and serialize fresh encrypted-file writes",
   "kind": "bug_fix",
-  "state": "approved",
+  "state": "accepted",
+  "canonical_applied": true,
   "base_commit": "03bde98e722b064eadf5186e1a325c506fbd4ecb",
   "created_at": 1784775763,
-  "updated_at": 1784816889,
+  "updated_at": 1784820019,
   "affected_specs": [
     "aps-cli"
   ],

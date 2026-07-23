@@ -1,6 +1,6 @@
 ---
 id: CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes
-state: approved
+state: accepted
 type: bug_fix
 base_commit: 03bde98e722b064eadf5186e1a325c506fbd4ecb
 ---

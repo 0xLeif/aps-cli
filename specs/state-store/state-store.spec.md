@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 26
+version: 27
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -77,9 +77,8 @@ helpers suitable for non-UI use.
 2. Writing `flag` calls `UserDefaults.standard.synchronize()` so Linux flushes
    before process exit.
 3. `dumpRegistered()` includes every key in the active schema.json plus an
-   ISO-8601 `timestamp`.
+   ISO-8601 timestamp.
 4. `watchBlocking` emits the current value first, then subsequent distinct values.
-5. A supplied polling deadline bounds the wait even when the configured interval is larger.
 5. Dependencies are real services, not fake stubs used only for wiring demos.
 6. `schema.json` write failures surface as `APSError.persistenceFailed`.
 7. Schema RMW (add/remove/materialize-on-missing) is serialized by `SchemaFileLock`.
@@ -152,3 +151,4 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Implement dynamic schema registry and public-ready 1.0.0 prep for issues 62-64 |
 | 2026-07-22 | CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations: Serialize cross-process FileState and Slice profile read-modify-write operations |
 | 2026-07-22 | Issue-0097-linux-safe-watch-polling: Replace RunLoop limit-date polling with cancellation-safe sleeps. |
+| 2026-07-23 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |
