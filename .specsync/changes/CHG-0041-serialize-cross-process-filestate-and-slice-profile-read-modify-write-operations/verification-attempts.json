@@ -175,6 +175,24 @@
         "REQ-aps-cli-025",
         "REQ-state-store-019"
       ]
+    },
+    {
+      "timestamp": 1784774215,
+      "commit": "260f37e73d7fcdae283046fcab3c68e529eaf19e",
+      "contract_digest": "d0845b60a9c43a12bdb1f6588e678b92d18f05ef83644edcc009ea40a5b58720",
+      "workspace_digest": "a36c76257587d8fd6b41241bde4f1a5698230fce8ac9113eaf8475748ddda575",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-025",
+        "REQ-state-store-019"
+      ]
     }
   ]
 }
