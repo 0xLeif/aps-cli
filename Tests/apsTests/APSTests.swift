@@ -297,6 +297,19 @@ final class APSTests: XCTestCase {
         let finalValue = try SecretStore(directory: path).get()
         XCTAssertTrue(values.contains(finalValue))
     }
+
+    @MainActor
+    func testSecretStoreReadExistingKeyDoesNotCreateKeyLock() async throws {
+        let path = FileManager.defaultFileStatePath
+        let store = SecretStore(directory: path)
+        try store.set("read-only-secret")
+
+        let lockURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key.lock")
+        try? FileManager.default.removeItem(at: lockURL)
+
+        XCTAssertEqual(try store.get(), "read-only-secret")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: lockURL.path))
+    }
     #endif
 
     @MainActor

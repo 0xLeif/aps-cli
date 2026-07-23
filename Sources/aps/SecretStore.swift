@@ -228,6 +228,10 @@ public struct SecretStore: Sendable {
     }
 
     private func loadOrCreateKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {
+        if let key = loadKeyFileIfValid() {
+            return key
+        }
+
         return try SchemaFileLock.withExclusiveLock(
             stateRoot: directory,
             lockFileName: "secret.key.lock"
@@ -237,12 +241,25 @@ public struct SecretStore: Sendable {
     }
 
     private func loadOrCreateKeyFileUnlocked() throws -> Curve25519.KeyAgreement.PrivateKey {
-        if let data = try? Data(contentsOf: keyFileURL),
-           let raw = Data(base64Encoded: data),
-           let key = try? Curve25519.KeyAgreement.PrivateKey(rawRepresentation: raw) {
+        if let key = loadKeyFileIfValid() {
             return key
         }
 
+        return try createKeyFile()
+    }
+
+    private func loadKeyFileIfValid() -> Curve25519.KeyAgreement.PrivateKey? {
+        guard
+            let data = try? Data(contentsOf: keyFileURL),
+            let raw = Data(base64Encoded: data),
+            let key = try? Curve25519.KeyAgreement.PrivateKey(rawRepresentation: raw)
+        else {
+            return nil
+        }
+        return key
+    }
+
+    private func createKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {
         let key = Curve25519.KeyAgreement.PrivateKey()
         let created = FileManager.default.createFile(
             atPath: keyFileURL.path,
