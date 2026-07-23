@@ -1,6 +1,6 @@
 ---
 id: CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch
-state: implementing
+state: accepted
 type: bug_fix
 base_commit: 2eac0ec7e7bf7bbd69976c30d9d553f19aacacc1
 ---

@@ -1,0 +1,61 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1784775905,
+      "digest": "639aba2bbac2105ff7492f59577c3afdc2c382b5eef2046c5087f455393842c2",
+      "note": "Definition approved for stale-key recovery and REQ-aps-cli-020 evidence."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1784775948,
+      "digest": "4c73caf0be92cf31b22dc7987b3317953a10fc92be8d52c218af05b279b65c56",
+      "note": "Re-approve after declaring CHG-0038 ordering dependency."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1784776069,
+      "digest": "bda3c90664cffaab2b81189939bf7e76bbd3294fb4e22dff80a456501c509887",
+      "note": "Approve successor delta for REQ-aps-cli-026 while testing evidence covers existing REQ-aps-cli-020."
+    },
+    {
+      "gate": "definition",
+      "actor": "kimi",
+      "timestamp": 1784815477,
+      "digest": "03228cb18b83be120daab066179062ac78b8a0be9bd8a003e752ca0f92461712",
+      "note": "Re-approve after renumbering CHG-0042 to CHG-0044 (main claimed 0042/0043 via #104); content unchanged."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1784816889,
+      "digest": "3e218be9e2a53e8636340bfe4a06ae8fea752b79573a9bad9c5f8444639436c0",
+      "note": "Approve current CHG-0044 review-fix definition and evidence scope."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784819623,
+      "digest": "d5795d6e521b3768735f2b44abf975cfdc3301e467a824468495c7356c9cdae9",
+      "note": "Dependency CHG-0038 is now accepted; re-approving the current artifact digest."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784819765,
+      "digest": "d3485b2d3988d68ff6b38c0d974f9eaaf2bddbb5304c2f4211355545d758c479",
+      "note": "Restored the missing MODIFIED REQ-aps-cli-020 delta from this change\\x27s requirements artifact; removed stale duplicate REQ-026."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1784820019,
+      "digest": "1eb82ae7697e2ed92450ddafa6d60667ad9ecee5209de83e6f341e233d267f16",
+      "note": "Verified restored REQ-020 contract and SecretStore behavior with the full native gate."
+    }
+  ],
+  "reopenings": []
+}

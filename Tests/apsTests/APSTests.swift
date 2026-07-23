@@ -267,6 +267,124 @@ final class APSTests: XCTestCase {
         let attributes = try FileManager.default.attributesOfItem(atPath: keyURL.path)
         XCTAssertEqual(attributes[.posixPermissions] as? Int, 0o600)
     }
+
+    @MainActor
+    func testSecretStoreParallelFreshWritesShareKeyFile() async throws {
+        let path = FileManager.defaultFileStatePath
+        let values = (0..<12).map { "parallel-secret-\($0)" }
+        let failures = await withTaskGroup(of: String?.self, returning: [String].self) { group in
+            values.forEach { value in
+                group.addTask {
+                    do {
+                        try SecretStore(directory: path).set(value)
+                        return nil
+                    } catch {
+                        return String(describing: error)
+                    }
+                }
+            }
+
+            var failures: [String] = []
+            for await failure in group {
+                if let failure {
+                    failures.append(failure)
+                }
+            }
+            return failures
+        }
+
+        XCTAssertTrue(failures.isEmpty, "Parallel fresh writes failed: \(failures)")
+        let finalValue = try SecretStore(directory: path).get()
+        XCTAssertTrue(values.contains(finalValue))
+    }
+
+    @MainActor
+    func testSecretStoreFreshSetRecoversInvalidKeyWithoutEnvelope() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        try Data("partial-key".utf8).write(to: keyURL)
+
+        let store = SecretStore(directory: path)
+        try store.set("recovered-secret")
+
+        XCTAssertEqual(try store.get(), "recovered-secret")
+        XCTAssertNotEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
+    }
+
+    @MainActor
+    func testSecretStoreExistingEnvelopeWithInvalidKeyThrowsUnlockFailed() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        let envelopeURL = URL(fileURLWithPath: path).appendingPathComponent("secret.enc")
+        let store = SecretStore(directory: path)
+        try store.set("existing-secret")
+        let originalEnvelope = try Data(contentsOf: envelopeURL)
+        try Data("partial-key".utf8).write(to: keyURL)
+
+        XCTAssertThrowsError(try store.get()) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+        XCTAssertThrowsError(try store.set("replacement-secret")) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+        XCTAssertEqual(try Data(contentsOf: envelopeURL), originalEnvelope)
+    }
+
+    @MainActor
+    func testSecretStoreFreshSetDoesNotRemoveSecretKeyDirectory() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        try FileManager.default.createDirectory(at: keyURL, withIntermediateDirectories: false)
+
+        XCTAssertThrowsError(try SecretStore(directory: path).set("directory-key")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+        var isDirectory: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: keyURL.path, isDirectory: &isDirectory))
+        XCTAssertTrue(isDirectory.boolValue)
+    }
+
+    @MainActor
+    func testSecretStorePassphraseSetIgnoresStaleSecretKeyDirectory() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        try FileManager.default.createDirectory(at: keyURL, withIntermediateDirectories: false)
+        setProcessEnv("APS_SECRET_PASSPHRASE", "passphrase-secret")
+        defer { setProcessEnv("APS_SECRET_PASSPHRASE", nil) }
+
+        let store = SecretStore(directory: path)
+        try store.set("passphrase-value")
+
+        XCTAssertEqual(try store.get(), "passphrase-value")
+        var isDirectory: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: keyURL.path, isDirectory: &isDirectory))
+        XCTAssertTrue(isDirectory.boolValue)
+    }
+
+    @MainActor
+    func testSecretStoreExistingEnvelopePersistenceFailureRemainsPersistenceFailed() async throws {
+        let path = FileManager.defaultFileStatePath
+        let envelopeURL = URL(fileURLWithPath: path).appendingPathComponent("secret.enc")
+        try FileManager.default.createDirectory(at: envelopeURL, withIntermediateDirectories: false)
+
+        XCTAssertThrowsError(try SecretStore(directory: path).set("unreadable-envelope")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: envelopeURL.path))
+    }
+
+    @MainActor
+    func testSecretStoreReadExistingKeyDoesNotCreateKeyLock() async throws {
+        let path = FileManager.defaultFileStatePath
+        let store = SecretStore(directory: path)
+        try store.set("read-only-secret")
+
+        let lockURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key.lock")
+        try? FileManager.default.removeItem(at: lockURL)
+
+        XCTAssertEqual(try store.get(), "read-only-secret")
+        XCTAssertFalse(FileManager.default.fileExists(atPath: lockURL.path))
+    }
     #endif
 
     @MainActor
@@ -1152,6 +1270,25 @@ final class APSTests: XCTestCase {
         setenv("APS_SECRET_PASSPHRASE", "alpha", 1)
         XCTAssertEqual(try store.get(), "owned-by-alpha")
         store.reset()
+    }
+#endif
+
+#if os(Windows)
+    func testSchemaFileLockPropagatesBodyErrors() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-lock-error-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        XCTAssertThrowsError(
+            try SchemaFileLock.withExclusiveLock(
+                stateRoot: root.path,
+                lockFileName: "secret.store.lock"
+            ) {
+                throw APSError.secretUnlockFailed
+            }
+        ) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
     }
 #endif
 
