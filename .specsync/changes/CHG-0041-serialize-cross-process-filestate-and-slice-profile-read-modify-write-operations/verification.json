@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784769617,
-  "commit": "efc56b441f641f1311c8b4b08332876b0bf694b8",
+  "timestamp": 1784772511,
+  "commit": "3cab907879f91b08e05900e2ee7b2d225754ccae",
   "contract_digest": "d0845b60a9c43a12bdb1f6588e678b92d18f05ef83644edcc009ea40a5b58720",
-  "workspace_digest": "e2ca7cd6b5fe9865aa854869b7ef203de499e5ced25e97603458f5a608ad9003",
-  "acceptance_input_digest": "f003e0e71ab347492e47a5ca902fbf595c390a325fa1a14bc235f98a4b566f8b",
+  "workspace_digest": "0f5c4f128484e24658828b7aa68f08d251eeb3cc111389c4e521d19e141d6d5c",
+  "acceptance_input_digest": "18c5614b072a9039c86426a6ae60412fcf08df8a4f923d8a548993f9b5089506",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -51,8 +51,8 @@
         "path": "Sources/aps/StateStore.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "543158d8ef7553c81015fddebd19f9bdbd3039b769f97682dd514124316e2986",
-        "entry_digest": "63d59cf0372bfaffd8c83492562711219500721ccab5f7979e0712161ea80d53",
+        "payload_digest": "4608cf21941455f93c5cdb406b98726efeb7ecef6790d1acc44759d002a01612",
+        "entry_digest": "2bb1956766428299d35108cd166f6b6db159626f9d01cc5337207ef7d9a7568f",
         "owners": [
           "state-store"
         ]
@@ -121,8 +121,8 @@
         "path": "specs/state-store/requirements.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "1b37b782eb02875ed5044b933e00a9b27fc7c721f6fe60055faadfd4c81b4c60",
-        "entry_digest": "9be552e6e1a5df22eef12906fde78a289500d26689c0096edafc91075b32eb2a",
+        "payload_digest": "0799a32de689577556953130ac5e91033178c2e608f161768655df5a875e3b18",
+        "entry_digest": "08d795940f7892b8c58a4eb72b29d2d41a6703b1e5912d7af1997123b3b0dc78",
         "owners": [
           "state-store"
         ]
@@ -131,8 +131,8 @@
         "path": "specs/state-store/state-store.spec.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "f38de1c661bb60fdaee4616bfbbba73a388e4f08fbc3641eacb1762577a45e77",
-        "entry_digest": "5b599611b22a63e5e6746e42c0bbf56f017213c486e3442e797b012c528c6f74",
+        "payload_digest": "28c4554acbc922abd8ab9c8b9ae433e0f9041791ede24891900e482be6a6247f",
+        "entry_digest": "337688d41cc95e264c2e54cade0fec29f4d674ccd26dc47a56838d4609e67e8d",
         "owners": [
           "state-store"
         ]
