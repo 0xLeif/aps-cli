@@ -140,6 +140,8 @@ Acceptance Criteria
 - No Security.framework/Keychain imports; works on macOS and Linux.
 - Wrong passphrase on `get` fails with `APSError.secretUnlockFailed`; corrupt envelope fails with `APSError.decodingFailed`.
 - Wrong passphrase on `set` against an existing envelope fails with `secretUnlockFailed` and does not change ciphertext.
+- Passphrase-mode writes ignore stale `secret.key` paths, while unreadable or
+  missing envelopes preserve `persistenceFailed` during `set`.
 - Passphrase entry is env-var based; an optional TTY getpass prompt exists when `APS_SECRET_USE_PASSPHRASE=1`.
 
 ### REQ-aps-cli-021

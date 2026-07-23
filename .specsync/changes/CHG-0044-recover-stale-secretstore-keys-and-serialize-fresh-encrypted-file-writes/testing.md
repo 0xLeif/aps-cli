@@ -9,7 +9,7 @@ artifact: testing
 
 | Requirement | Evidence |
 | --- | --- |
-| REQ-aps-cli-020 | `testSecretStoreParallelFreshWritesShareKeyFile`; `testSecretStoreFreshSetRecoversInvalidKeyWithoutEnvelope`; `Sources/aps/SecretStore.swift` store-lock path and stale-key recovery |
+| REQ-aps-cli-020 | `testSecretStoreParallelFreshWritesShareKeyFile`; `testSecretStoreFreshSetRecoversInvalidKeyWithoutEnvelope`; `testSecretStorePassphraseSetIgnoresStaleSecretKeyDirectory`; `testSecretStoreExistingEnvelopePersistenceFailureRemainsPersistenceFailed`; `Sources/aps/SecretStore.swift` store-lock path and stale-key recovery |
 | REQ-aps-cli-026 | `testSecretStoreFreshSetRecoversInvalidKeyWithoutEnvelope`; `testSecretStoreExistingEnvelopeWithInvalidKeyThrowsUnlockFailed`; `testSecretStoreFreshSetDoesNotRemoveSecretKeyDirectory`; invalid-key recovery before `createFile` |
 
 The fledge verification gate covers build, unit tests, smoke, and plugin validation.

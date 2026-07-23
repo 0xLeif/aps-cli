@@ -342,6 +342,35 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    func testSecretStorePassphraseSetIgnoresStaleSecretKeyDirectory() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        try FileManager.default.createDirectory(at: keyURL, withIntermediateDirectories: false)
+        setProcessEnv("APS_SECRET_PASSPHRASE", "passphrase-secret")
+        defer { setProcessEnv("APS_SECRET_PASSPHRASE", nil) }
+
+        let store = SecretStore(directory: path)
+        try store.set("passphrase-value")
+
+        XCTAssertEqual(try store.get(), "passphrase-value")
+        var isDirectory: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: keyURL.path, isDirectory: &isDirectory))
+        XCTAssertTrue(isDirectory.boolValue)
+    }
+
+    @MainActor
+    func testSecretStoreExistingEnvelopePersistenceFailureRemainsPersistenceFailed() async throws {
+        let path = FileManager.defaultFileStatePath
+        let envelopeURL = URL(fileURLWithPath: path).appendingPathComponent("secret.enc")
+        try FileManager.default.createDirectory(at: envelopeURL, withIntermediateDirectories: false)
+
+        XCTAssertThrowsError(try SecretStore(directory: path).set("unreadable-envelope")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: envelopeURL.path))
+    }
+
+    @MainActor
     func testSecretStoreReadExistingKeyDoesNotCreateKeyLock() async throws {
         let path = FileManager.defaultFileStatePath
         let store = SecretStore(directory: path)

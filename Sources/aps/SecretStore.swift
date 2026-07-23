@@ -51,6 +51,18 @@ public struct SecretStore: Sendable {
         URL(fileURLWithPath: directory).appendingPathComponent("secret.key")
     }
 
+    private var usesPassphraseMode: Bool {
+        if ProcessInfo.processInfo.environment["APS_SECRET_PASSPHRASE"] != nil {
+            return true
+        }
+        #if !os(Windows)
+        return ProcessInfo.processInfo.environment["APS_SECRET_USE_PASSPHRASE"] == "1"
+            && isatty(FileHandle.standardError.fileDescriptor) == 1
+        #else
+        return false
+        #endif
+    }
+
     // MARK: - Public API
 
     /// True when a secret is stored (missing file means the initial value).
@@ -101,19 +113,17 @@ public struct SecretStore: Sendable {
             atPath: directory,
             withIntermediateDirectories: true
         )
-        if !hasSecret {
+        if !hasSecret && !usesPassphraseMode {
             try removeInvalidKeyFileWithoutEnvelope()
         }
         if hasSecret {
             // Prove the caller can open the existing envelope before re-keying.
             do {
                 _ = try getUnlocked(lockKeyFile: false)
-            } catch let error as APSError {
-                if case .persistenceFailed = error {
-                    throw APSError.secretUnlockFailed
-                }
-                throw error
             } catch {
+                if let error = error as? APSError {
+                    throw error
+                }
                 throw APSError.secretUnlockFailed
             }
         }
@@ -215,7 +225,14 @@ public struct SecretStore: Sendable {
         if lockKeyFile {
             return try loadOrCreateKeyFile()
         }
-        return try loadOrCreateKeyFileUnlocked()
+        do {
+            return try loadOrCreateKeyFileUnlocked()
+        } catch let error as APSError {
+            if case .persistenceFailed = error {
+                throw APSError.secretUnlockFailed
+            }
+            throw error
+        }
     }
 
     static func keyFromPassphrase(_ passphrase: String) -> Curve25519.KeyAgreement.PrivateKey {
