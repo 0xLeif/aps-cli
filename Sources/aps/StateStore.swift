@@ -115,11 +115,17 @@ public final class StateStore {
             } catch {
                 throw APSError.invalidValue(key: key.rawValue, value: value)
             }
-            var state = Application.fileState(\.profile)
-            state.value = document
-            let onDisk = try Self.readProfileFromDisk()
-            guard onDisk == document else {
-                throw APSError.persistenceFailed(key: "profile")
+            try SchemaFileLock.withExclusiveLock(
+                stateRoot: FileManager.defaultFileStatePath,
+                lockFileName: "profile.json.lock"
+            ) {
+                try Self.refreshProfileFileStateFromDisk()
+                var state = Application.fileState(\.profile)
+                state.value = document
+                let onDisk = try Self.readProfileFromDisk()
+                guard onDisk == document else {
+                    throw APSError.persistenceFailed(key: "profile")
+                }
             }
         case .secret:
             // Encrypted-file store (issue #35): age-style envelope under the
@@ -128,13 +134,18 @@ public final class StateStore {
         case .profileName:
             // Refresh FileState from disk before Slice write so a stale cached
             // ProfileDocument cannot clobber a newer on-disk version.
-            try Self.refreshProfileFileStateFromDisk()
-            let expectedVersion = (try? Self.readProfileFromDisk())?.version ?? 0
-            var slice = Application.slice(\.profile, \.name)
-            slice.value = value
-            let onDisk = try Self.readProfileFromDisk()
-            guard onDisk.name == value, onDisk.version == expectedVersion else {
-                throw APSError.persistenceFailed(key: "profileName")
+            try SchemaFileLock.withExclusiveLock(
+                stateRoot: FileManager.defaultFileStatePath,
+                lockFileName: "profile.json.lock"
+            ) {
+                try Self.refreshProfileFileStateFromDisk()
+                let expectedVersion = (try? Self.readProfileFromDisk())?.version ?? 0
+                var slice = Application.slice(\.profile, \.name)
+                slice.value = value
+                let onDisk = try Self.readProfileFromDisk()
+                guard onDisk.name == value, onDisk.version == expectedVersion else {
+                    throw APSError.persistenceFailed(key: "profileName")
+                }
             }
         }
         stats.recordMutation(key: key.rawValue)

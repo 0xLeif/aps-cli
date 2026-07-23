@@ -39,6 +39,20 @@ test "$("$bin" get note)" = "smoke-note"
 "$bin" get profile --json | grep -q '"name":"smoke"'
 "$bin" get profile --json | grep -q '"version":2'
 
+# Parent FileState and Slice read-modify-write operations must serialize and
+# refresh from disk so concurrent writers preserve both fields.
+RACE_HOME="$(mktemp -d "${TMPDIR:-/tmp}/aps-smoke-profile-race.XXXXXX")"
+APS_HOME="$RACE_HOME" "$bin" set profile '{"name":"base","version":1}' >/dev/null
+APS_HOME="$RACE_HOME" "$bin" set profile '{"name":"parent","version":99}' >/dev/null &
+APS_HOME="$RACE_HOME" "$bin" set profileName "slice-name" >/dev/null &
+wait
+RACE_PROFILE="$(APS_HOME="$RACE_HOME" "$bin" get profile)"
+# The name is order-dependent because a full parent write may legitimately
+# win over a concurrent Slice write; the parent version must survive either
+# serialized order and the document must remain valid JSON.
+echo "$RACE_PROFILE" | grep -q '"name":"'
+echo "$RACE_PROFILE" | grep -q '"version":99'
+
 # Encrypted-file secret store: key-file mode round-trip, perms, reset.
 # Clear passphrase env so key-file mode is exercised (agents may inherit it).
 unset APS_SECRET_PASSPHRASE APS_SECRET_USE_PASSPHRASE || true

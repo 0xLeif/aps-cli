@@ -1,0 +1,47 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784763825,
+      "digest": "6166897864ae3723db2986ea1ac1e66fa4b51ed53dcfd4ed404942c1d2fcff3c",
+      "note": "Definition approved after implementation review and successful smoke reproduction."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784764049,
+      "digest": "84b3fface6bf7f5ec1712b2dbb6d5f45dd4f77b5e793f3c79de14929179779df",
+      "note": "Add requirement evidence mapping for verification"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784764154,
+      "digest": "30adef0721fdc06e98750f5de9c17a55201d485a1e9376283fbfbc0805dfbeb5",
+      "note": "Narrow affected paths to the files changed by this ticket and keep lock-file customization internal"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784764209,
+      "digest": "1f81acda00834c4d880ef910f37deb33652b47ef6fe3d78fba852d0aea6999b2",
+      "note": "Include aps-cli canonical ownership for SchemaFileLock while preserving the public API"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1784764249,
+      "digest": "d0845b60a9c43a12bdb1f6588e678b92d18f05ef83644edcc009ea40a5b58720",
+      "note": "Add the shared lock contract to the owning aps-cli spec"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1784764274,
+      "digest": "a46335e0569c96b5bcbb7dced5a4c5586372a67e39b770e78d51ee76f9b4f189",
+      "note": "Verified concurrent FileState and Slice writes with smoke and fledge gate"
+    }
+  ],
+  "reopenings": []
+}

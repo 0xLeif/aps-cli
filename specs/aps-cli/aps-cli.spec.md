@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 26
+version: 27
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -231,3 +231,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-19 | CHG-0025-aps-schema-self-describing-contract-endpoint-issue-32: Add aps schema self-describing contract endpoint (issue 32) |
 | 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Dynamic schema registry and 1.0.0 prep (issues 62-64) |
 | 2026-07-19 | CHG-0028-implement-dynamic-schema-registry-and-public-ready-1-0-0-prep-for-issues-62-64: Implement dynamic schema registry and public-ready 1.0.0 prep for issues 62-64 |
+| 2026-07-22 | CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations: Serialize cross-process FileState and Slice profile read-modify-write operations |

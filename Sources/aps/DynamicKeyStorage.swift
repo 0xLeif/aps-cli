@@ -211,6 +211,11 @@ enum DynamicKeyStorage {
         URL(fileURLWithPath: stateRoot).appendingPathComponent(entry.path ?? "\(entry.name).json")
     }
 
+    private static func fileLockName(_ entry: SchemaKeyEntry) -> String {
+        let filename = URL(fileURLWithPath: entry.path ?? "\(entry.name).json").lastPathComponent
+        return "\(filename).lock"
+    }
+
     private static func fileGet(_ entry: SchemaKeyEntry, stateRoot: String) throws -> String {
         let url = fileURL(entry, stateRoot: stateRoot)
         guard FileManager.default.fileExists(atPath: url.path) else {
@@ -236,6 +241,15 @@ enum DynamicKeyStorage {
     }
 
     private static func fileSet(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
+        try SchemaFileLock.withExclusiveLock(
+            stateRoot: stateRoot,
+            lockFileName: fileLockName(entry)
+        ) {
+            try fileSetUnlocked(entry, value: value, stateRoot: stateRoot)
+        }
+    }
+
+    private static func fileSetUnlocked(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
         let url = fileURL(entry, stateRoot: stateRoot)
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
@@ -333,37 +347,42 @@ enum DynamicKeyStorage {
         else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
-        let raw = try fileGet(parent, stateRoot: stateRoot)
-        var object: [String: Any]
-        if let data = raw.data(using: .utf8),
-           let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            object = parsed
-        } else {
-            object = [:]
-        }
-        if let shape = parent.objectShape?[field] {
-            switch shape {
-            case "Int":
-                guard let intValue = Int(value) else {
-                    throw APSError.invalidValue(key: entry.name, value: value)
+        try SchemaFileLock.withExclusiveLock(
+            stateRoot: stateRoot,
+            lockFileName: fileLockName(parent)
+        ) {
+            let raw = try fileGet(parent, stateRoot: stateRoot)
+            var object: [String: Any]
+            if let data = raw.data(using: .utf8),
+               let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                object = parsed
+            } else {
+                object = [:]
+            }
+            if let shape = parent.objectShape?[field] {
+                switch shape {
+                case "Int":
+                    guard let intValue = Int(value) else {
+                        throw APSError.invalidValue(key: entry.name, value: value)
+                    }
+                    object[field] = intValue
+                case "Bool":
+                    guard let boolValue = StateStore.parseBool(value) else {
+                        throw APSError.invalidValue(key: entry.name, value: value)
+                    }
+                    object[field] = boolValue
+                default:
+                    object[field] = value
                 }
-                object[field] = intValue
-            case "Bool":
-                guard let boolValue = StateStore.parseBool(value) else {
-                    throw APSError.invalidValue(key: entry.name, value: value)
-                }
-                object[field] = boolValue
-            default:
+            } else {
                 object[field] = value
             }
-        } else {
-            object[field] = value
+            // Avoid `.sortedKeys`: not available on all Linux Foundation builds we smoke.
+            let data = try JSONSerialization.data(withJSONObject: object)
+            guard let encoded = String(data: data, encoding: .utf8) else {
+                throw APSError.encodingFailed
+            }
+            try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot)
         }
-        // Avoid `.sortedKeys`: not available on all Linux Foundation builds we smoke.
-        let data = try JSONSerialization.data(withJSONObject: object)
-        guard let encoded = String(data: data, encoding: .utf8) else {
-            throw APSError.encodingFailed
-        }
-        try fileSet(parent, value: encoded, stateRoot: stateRoot)
     }
 }
