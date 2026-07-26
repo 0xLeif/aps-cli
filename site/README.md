@@ -15,11 +15,18 @@ Open `http://localhost:3000`.
 
 ```bash
 npm run build
+npm run build:pages
 npm test
 npm run lint
 ```
 
-The site is built with vinext and deployed through the repository's Sites configuration. Product claims should remain aligned with the root README, `docs/release-readiness.md`, and the SpecSync contracts.
+The default build uses vinext and remains deployable through the repository's
+Sites configuration. `npm run build:pages` creates a static export in `out/`
+with the `/aps-cli` project base path. The Pages workflow validates site changes
+on pull requests and deploys that static artifact after a push to `main`.
+
+Product claims should remain aligned with the root README,
+`docs/release-readiness.md`, and the SpecSync contracts.
 
 ## Design system
 
