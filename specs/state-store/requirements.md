@@ -93,7 +93,10 @@ Acceptance Criteria
 
 ### REQ-state-store-016
 
-`StateStore` SHALL load or materialize `schema.json`, resolve string key names through the registry, and support `addKey` / `removeKey` / `dumpRegistered` / string-name `watchBlocking` for non-seed keys via DynamicKeyStorage. Schema mutations use `SchemaFileLock`.
+`StateStore` SHALL load or materialize `schema.json`, resolve string key names through the
+registry, and support `addKey` / `removeKey` / `dumpRegistered` / string-name
+`watchBlocking` for non-seed keys via DynamicKeyStorage. Schema mutations use
+`SchemaFileLock`.
 
 Acceptance Criteria
 - `loadSchema()` materializes the demo seed when `schema.json` is missing.

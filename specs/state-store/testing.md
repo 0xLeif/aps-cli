@@ -11,6 +11,7 @@
   via `Scripts/test-parallel.sh`
 
 - Encrypted-file `secret` round-trip / wrong-passphrase `secretUnlockFailed` / corrupt envelope `decodingFailed`.
+- Encrypted-file `secret` parallel fresh writes share one atomically created `0600` key file.
 - Secret SET unlock-before-rewrite; parallel schema RMW under SchemaFileLock.
 - `resetAll` leaves user keys; `resetAllRegistered` clears them.
 - Slice `profileName` writes land in parent `profile` FileState.

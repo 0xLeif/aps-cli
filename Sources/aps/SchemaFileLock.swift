@@ -124,15 +124,14 @@ public enum SchemaFileLock {
             if Date() >= deadline {
                 throw APSError.persistenceFailed(key: UserSchema.fileName)
             }
+            let payload = HeldPayload(
+                pid: GetCurrentProcessId(),
+                ts: Date().timeIntervalSince1970
+            )
+            let data: Data
             do {
-                let payload = HeldPayload(
-                    pid: GetCurrentProcessId(),
-                    ts: Date().timeIntervalSince1970
-                )
-                let data = try JSONEncoder().encode(payload)
+                data = try JSONEncoder().encode(payload)
                 try data.write(to: heldURL, options: .withoutOverwriting)
-                defer { try? FileManager.default.removeItem(at: heldURL) }
-                return try body()
             } catch {
                 // Only steal a held file when it exists and is stale. A missing
                 // held file means the write failed for another reason; back off
@@ -142,7 +141,10 @@ public enum SchemaFileLock {
                     try? FileManager.default.removeItem(at: heldURL)
                 }
                 Thread.sleep(forTimeInterval: 0.05)
+                continue
             }
+            defer { try? FileManager.default.removeItem(at: heldURL) }
+            return try body()
         }
     }
 

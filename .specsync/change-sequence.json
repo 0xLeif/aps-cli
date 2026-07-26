@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 43,
-  "id": "CHG-0043-address-installer-action-review-feedback-with-portable-linux-release-packaging",
+  "sequence": 44,
+  "id": "CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes",
   "acknowledged_collisions": []
 }
