@@ -1,6 +1,6 @@
 ---
 id: CHG-0046-publish-the-aps-product-site-through-github-pages
-state: accepted
+state: archived
 type: operations
 base_commit: 5e9c35d2721e26d8ce913fe2893230e95b2a9e2b
 ---
