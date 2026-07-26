@@ -1,6 +1,6 @@
 ---
 id: CHG-0045-refresh-project-documentation-and-add-the-swift-themed-aps-product-site
-state: accepted
+state: archived
 type: documentation
 base_commit: c67ec6b717322741e16752bfdf0f2da1f0f45e23
 ---

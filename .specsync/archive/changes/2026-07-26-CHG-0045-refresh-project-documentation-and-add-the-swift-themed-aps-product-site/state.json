@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0045-refresh-project-documentation-and-add-the-swift-themed-aps-product-site",
+  "slug": "refresh-project-documentation-and-add-the-swift-themed-aps-product-site",
+  "title": "Refresh project documentation and add the Swift-themed aps product site",
+  "description": "Refresh project documentation and add the Swift-themed aps product site",
+  "kind": "documentation",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "c67ec6b717322741e16752bfdf0f2da1f0f45e23",
+  "created_at": 1785092010,
+  "updated_at": 1785093854,
+  "affected_specs": [],
+  "affected_paths": [
+    "README.md",
+    "GOAL.md",
+    "docs",
+    "site",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This change documents current behavior, release-readiness findings, and adds a presentation site without changing the normative CLI or state-store contracts.",
+  "acceptance_criteria": [
+    "README leads with the product promise and links current status; docs provide a navigable hub and evidence-backed release checklist; the responsive Swift-themed site renders its install, command, architecture, platform, and readiness content; site build, render test, lint, production audit, fledge verify, and SpecSync checks pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "docs",
+    "design",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}
