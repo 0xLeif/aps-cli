@@ -70,8 +70,12 @@ internal final class SchemaStoragePathTests: XCTestCase {
         try withStateRoot { root in
             let path = try SchemaStoragePath("nested/value.json")
             let resolved = try path.resolve(stateRoot: root.path)
+            let canonicalRoot = root.standardizedFileURL.resolvingSymlinksInPath()
 
-            XCTAssertEqual(resolved, root.appendingPathComponent("nested/value.json"))
+            XCTAssertEqual(
+                resolved,
+                canonicalRoot.appendingPathComponent("nested/value.json")
+            )
         }
     }
 

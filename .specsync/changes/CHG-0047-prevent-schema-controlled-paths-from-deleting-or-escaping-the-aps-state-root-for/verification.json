@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785108874,
-  "commit": "f9df938860ae3b8f07796d6deb6d4ff0dc365185",
+  "timestamp": 1785110077,
+  "commit": "bf331c7002c96db15a323a56a22dabdc21f42e73",
   "contract_digest": "5e08b1fba625f43bdead108c77cc76205a1b6aaeb94199cf15db11a7366fb5e9",
-  "workspace_digest": "644975748e1b2ab266f014aef0a86ea34f2764f0bdbff4ffaf6bfbceea7b12fd",
-  "acceptance_input_digest": "a31dc6d54573bedbb4b2835c7757e61d0615c6f8a0706d338f9dae6053cf2f10",
+  "workspace_digest": "6bc21cac91eca2989c0fd54789d53dceaf0e54ebd943bcfb4b2a46f929b50b9e",
+  "acceptance_input_digest": "fea3b413c92f598452c100e4c94e616a0f16e0a446e1129dbd5f463a942f2cd7",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -111,8 +111,8 @@
         "path": "Tests/apsTests/SchemaStoragePathTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "e8ca9f37078d02da752b06cfff4016bc2048816035c2958207188a5c9652fe5d",
-        "entry_digest": "38496b9510903262d2dd046600dfeca856e2447e28ce7471ff119202092e768d",
+        "payload_digest": "a675b84a554a72ced10cecbe51b643b0787ff43d9294a816889e1f9421244093",
+        "entry_digest": "5252d0e13b5f2ad9108dad5b03873f65550091c5829079039d090c290c43fecb",
         "owners": [
           "@exact:test"
         ]
