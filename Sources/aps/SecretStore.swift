@@ -110,7 +110,7 @@ public struct SecretStore: Sendable {
 
     private func setUnlocked(_ value: String) throws {
         try FileManager.default.createDirectory(
-            atPath: directory,
+            at: storeURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
         if !hasSecret && !usesPassphraseMode {
@@ -142,7 +142,8 @@ public struct SecretStore: Sendable {
 
     /// Reset to the initial value: the store file is deleted.
     public func reset() {
-        try? FileManager.default.removeItem(at: storeURL)
+        guard let storagePath = try? SchemaStoragePath(storeFileName) else { return }
+        try? storagePath.removeRegularFileIfPresent(stateRoot: directory)
     }
 
     // MARK: - Envelope cryptography

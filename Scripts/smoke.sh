@@ -212,6 +212,14 @@ test -f "$APS_HOME/schema.json"
 test "$("$bin" get smokeNote)" = "from-smoke"
 "$bin" schema | grep -q '"name":"smokeNote"'
 
+# Schema-controlled paths cannot alias the state root or endanger unrelated files.
+echo "must-survive" > "$APS_HOME/path-safety-sentinel.txt"
+if "$bin" key add unsafeRoot --type String --storage EncryptedFile --path . --initial "" >/dev/null 2>&1; then
+  echo "expected state-root storage path to fail" >&2
+  exit 1
+fi
+test -f "$APS_HOME/path-safety-sentinel.txt"
+
 # Safer reset: --all is seed-only; --registered wipes user keys too.
 "$bin" reset --all >/dev/null
 test "$("$bin" get smokeNote)" = "from-smoke"

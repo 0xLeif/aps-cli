@@ -241,15 +241,15 @@ public enum UserSchema {
         } catch {
             throw APSError.schemaInvalid(reason: "undecodable \(fileName)")
         }
-        try validate(document)
+        try validate(document, stateRoot: url.deletingLastPathComponent().path)
         return document
     }
 
     public static func write(_ document: UserSchemaDocument, to url: URL) throws {
-        try validate(document)
         let directory = url.deletingLastPathComponent()
         do {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            try validate(document, stateRoot: directory.path)
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
             let data = try encoder.encode(document)
@@ -273,6 +273,7 @@ public enum UserSchema {
             )
         }
         var seen = Set<String>()
+        var storagePaths = Set<String>()
         let nameRegex = try? NSRegularExpression(pattern: namePattern)
         for entry in document.keys {
             if seen.contains(entry.name) {
@@ -295,9 +296,15 @@ public enum UserSchema {
                 )
             }
             if entry.storage == "FileState" || entry.storage == "EncryptedFile" {
-                guard let path = entry.path, isSafeRelativePath(path) else {
+                guard let path = entry.path else {
                     throw APSError.schemaInvalid(
                         reason: "\(entry.name) requires a safe relative path"
+                    )
+                }
+                let storagePath = try SchemaStoragePath(path)
+                guard storagePaths.insert(storagePath.collisionKey).inserted else {
+                    throw APSError.schemaInvalid(
+                        reason: "\(entry.name) path '\(path)' collides with another key"
                     )
                 }
             }
@@ -330,10 +337,21 @@ public enum UserSchema {
     }
 
     public static func isSafeRelativePath(_ path: String) -> Bool {
-        guard !path.isEmpty, !path.hasPrefix("/"), !path.contains("..") else {
-            return false
+        (try? SchemaStoragePath(path)) != nil
+    }
+
+    /// Validate the complete schema plus current filesystem path shapes.
+    public static func validate(_ document: UserSchemaDocument, stateRoot: String) throws {
+        try validate(document)
+        for entry in document.keys
+            where entry.storage == "FileState" || entry.storage == "EncryptedFile" {
+            guard let rawPath = entry.path else {
+                throw APSError.schemaInvalid(
+                    reason: "\(entry.name) requires a safe relative path"
+                )
+            }
+            _ = try SchemaStoragePath(rawPath).resolve(stateRoot: stateRoot)
         }
-        return true
     }
 
     /// Stable hash of canonicalized schema.json bytes for `aps schema` drift detection.

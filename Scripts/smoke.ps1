@@ -185,6 +185,15 @@ $null = Invoke-ApsOk key add smokeNote --type String --storage FileState --path 
 Assert-Equal 'from-smoke' (Invoke-ApsOk set smokeNote from-smoke) 'set smokeNote'
 Assert-Equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'get smokeNote'
 Assert-Match (Invoke-ApsOk schema) '"name":"smokeNote"' 'schema lists smokeNote'
+
+# Schema-controlled paths cannot alias the state root or endanger unrelated files.
+$sentinel = Join-Path $env:APS_HOME 'path-safety-sentinel.txt'
+Set-Content -LiteralPath $sentinel -Value 'must-survive'
+Invoke-ApsExpectFail key add unsafeRoot --type String --storage EncryptedFile --path . --initial ''
+if (-not (Test-Path -LiteralPath $sentinel -PathType Leaf)) {
+    throw 'unsafe schema path removed the state-root sentinel'
+}
+
 $null = Invoke-ApsOk reset --all
 Assert-Equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'reset --all leaves user key'
 $null = Invoke-ApsOk reset --registered

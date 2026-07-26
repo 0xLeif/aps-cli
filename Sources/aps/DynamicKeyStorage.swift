@@ -78,18 +78,12 @@ enum DynamicKeyStorage {
                 try storedSet(entry, value: initial)
             }
         case "FileState":
-            let url = fileURL(entry, stateRoot: stateRoot)
-            try? FileManager.default.removeItem(at: url)
+            try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
             if entry.initial != nil {
                 try fileSet(entry, value: initial, stateRoot: stateRoot)
             }
         case "EncryptedFile":
-            let store = SecretStore(
-                directory: stateRoot,
-                storeFileName: entry.path ?? "\(entry.name).enc",
-                keyName: entry.name
-            )
-            store.reset()
+            try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
         case "Slice":
             try sliceSet(entry: entry, value: initial, stateRoot: stateRoot, schema: schema)
         default:
@@ -100,16 +94,12 @@ enum DynamicKeyStorage {
     static func requireDecodable(entry: SchemaKeyEntry, stateRoot: String) throws {
         switch entry.storage {
         case "FileState":
-            let url = fileURL(entry, stateRoot: stateRoot)
+            let url = try fileURL(entry, stateRoot: stateRoot)
             guard FileManager.default.fileExists(atPath: url.path) else { return }
             _ = try Data(contentsOf: url)
             // Presence is enough; typed decode happens on get.
         case "EncryptedFile":
-            let store = SecretStore(
-                directory: stateRoot,
-                storeFileName: entry.path ?? "\(entry.name).enc",
-                keyName: entry.name
-            )
+            let store = try encryptedStore(entry, stateRoot: stateRoot)
             if store.hasSecret {
                 _ = try store.get()
             }
@@ -207,8 +197,17 @@ enum DynamicKeyStorage {
 
     // MARK: - FileState
 
-    private static func fileURL(_ entry: SchemaKeyEntry, stateRoot: String) -> URL {
-        URL(fileURLWithPath: stateRoot).appendingPathComponent(entry.path ?? "\(entry.name).json")
+    private static func storagePath(for entry: SchemaKeyEntry) throws -> SchemaStoragePath {
+        guard let rawPath = entry.path else {
+            throw APSError.schemaInvalid(
+                reason: "\(entry.name) requires a safe relative path"
+            )
+        }
+        return try SchemaStoragePath(rawPath)
+    }
+
+    private static func fileURL(_ entry: SchemaKeyEntry, stateRoot: String) throws -> URL {
+        try storagePath(for: entry).resolve(stateRoot: stateRoot)
     }
 
     private static func fileLockName(_ entry: SchemaKeyEntry) -> String {
@@ -217,7 +216,7 @@ enum DynamicKeyStorage {
     }
 
     private static func fileGet(_ entry: SchemaKeyEntry, stateRoot: String) throws -> String {
-        let url = fileURL(entry, stateRoot: stateRoot)
+        let url = try fileURL(entry, stateRoot: stateRoot)
         guard FileManager.default.fileExists(atPath: url.path) else {
             return entry.initial?.wireString ?? (entry.type == "object" ? "{}" : "")
         }
@@ -250,7 +249,7 @@ enum DynamicKeyStorage {
     }
 
     private static func fileSetUnlocked(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
-        let url = fileURL(entry, stateRoot: stateRoot)
+        let url = try fileURL(entry, stateRoot: stateRoot)
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
             withIntermediateDirectories: true
@@ -288,21 +287,26 @@ enum DynamicKeyStorage {
     // MARK: - EncryptedFile
 
     private static func encryptedGet(_ entry: SchemaKeyEntry, stateRoot: String) throws -> String {
-        let store = SecretStore(
-            directory: stateRoot,
-            storeFileName: entry.path ?? "\(entry.name).enc",
-            keyName: entry.name
-        )
+        let store = try encryptedStore(entry, stateRoot: stateRoot)
         return store.hasSecret ? try store.get() : (entry.initial?.wireString ?? "")
     }
 
     private static func encryptedSet(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
-        let store = SecretStore(
+        let store = try encryptedStore(entry, stateRoot: stateRoot)
+        try store.set(value)
+    }
+
+    private static func encryptedStore(
+        _ entry: SchemaKeyEntry,
+        stateRoot: String
+    ) throws -> SecretStore {
+        let path = try storagePath(for: entry)
+        _ = try path.resolve(stateRoot: stateRoot)
+        return SecretStore(
             directory: stateRoot,
-            storeFileName: entry.path ?? "\(entry.name).enc",
+            storeFileName: path.rawValue,
             keyName: entry.name
         )
-        try store.set(value)
     }
 
     // MARK: - Slice

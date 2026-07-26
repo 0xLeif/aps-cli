@@ -1,12 +1,12 @@
 # RFC: Dynamic schema (user-defined keys)
 
 Issue: [#39](https://github.com/0xLeif/aps-cli/issues/39)  
-Status: **Implemented in v1.0.0, hardening in progress** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); this doc remains the design record
+Status: **Implemented in v1.0.0, hardening in progress** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); path safety implemented for v1.1.0; this doc remains the design record
 Authors: agent:cursor (2026-07-19)  
 Depends on: error contract ([#31](https://github.com/0xLeif/aps-cli/issues/31)), `aps schema` ([#32](https://github.com/0xLeif/aps-cli/issues/32))  
 Milestone: v1.0.0
 
-> Release-readiness note: the current implementation does not yet fully enforce this RFC's path-safety, object-shape, Slice-reference, or single-source-of-truth requirements. Do not treat the implemented status as proof that every invariant below is enforced. Track the closure criteria in [release readiness](../release-readiness.md).
+> Release-readiness note: the current implementation enforces the path-safety invariants below. Object-shape, Slice-reference, and single-source-of-truth hardening remain open. Track the remaining closure criteria in [release readiness](../release-readiness.md).
 
 ## Verdict
 
@@ -135,6 +135,8 @@ Rules:
 | `Slice` | Requires `sliceOf` + `sliceField` pointing at an `object` key |
 | `path` | Required for `FileState` / `EncryptedFile`; canonical regular-file location contained below the state root, not reserved, shared, a directory, or reachable through a symlink escape |
 | `initial` | Required; used by `reset` and first read |
+
+Paths use `/` separators and portable filename components. They must be relative, non-empty, and cannot contain `.` or `..` components, Windows device names, control characters, trailing dots or spaces, or characters unavailable in portable Windows filenames. APS internal files and lock-file suffixes are reserved. Collision checks normalize Unicode composition and case so a schema remains safe when copied between case-sensitive and case-insensitive filesystems. Filesystem shape checks run again for every persistent operation because the state root may change after schema load.
 
 Missing `schema.json` on an existing state root: **materialize the built-in default** (demo keys) on first mutating command or on `aps key` / `aps schema` that needs it, then continue. Never invent empty schemas for legacy roots that already have `note.json` / `profile.json` without a file.
 

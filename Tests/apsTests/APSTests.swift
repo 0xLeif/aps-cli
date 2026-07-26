@@ -1257,6 +1257,133 @@ final class APSTests: XCTestCase {
         }
     }
 
+    @MainActor
+    internal func testSchemaRejectsStateRootAndPreservesSentinel() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-schema-root-escape-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        FileManager.defaultFileStatePath = root.path
+
+        let sentinel = root.appendingPathComponent("must-survive.txt")
+        try Data("sentinel".utf8).write(to: sentinel)
+        let store = StateStore()
+
+        XCTAssertThrowsError(
+            try store.addKey(
+                SchemaKeyEntry(
+                    name: "unsafeRoot",
+                    type: "String",
+                    storage: "EncryptedFile",
+                    initial: .string(""),
+                    path: ".",
+                    doc: "must be rejected"
+                ),
+                force: false
+            )
+        )
+        XCTAssertTrue(FileManager.default.fileExists(atPath: sentinel.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: root.path))
+    }
+
+    internal func testSchemaRejectsPortableStoragePathCollision() throws {
+        var document = UserSchema.defaultDocument()
+        document.keys.append(
+            SchemaKeyEntry(
+                name: "caseCollision",
+                type: "String",
+                storage: "FileState",
+                initial: .string(""),
+                path: "NOTE.JSON",
+                doc: "portable collision with note.json"
+            )
+        )
+
+        XCTAssertThrowsError(try UserSchema.validate(document))
+    }
+
+    internal func testParallelSchemaPathCollisionAllowsOneWinner() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-schema-path-race-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try UserSchema.write(UserSchema.defaultDocument(), to: UserSchema.schemaURL(stateRoot: root.path))
+
+        let successes = await withTaskGroup(of: Bool.self, returning: Int.self) { group in
+            for (name, path) in [("collisionA", "shared.json"), ("collisionB", "SHARED.JSON")] {
+                group.addTask {
+                    do {
+                        try SchemaFileLock.withExclusiveLock(stateRoot: root.path) {
+                            var document = try UserSchema.loadUnlocked(stateRoot: root.path)
+                            document.keys.append(
+                                SchemaKeyEntry(
+                                    name: name,
+                                    type: "String",
+                                    storage: "FileState",
+                                    initial: .string(""),
+                                    path: path,
+                                    doc: "portable collision contender"
+                                )
+                            )
+                            try UserSchema.write(
+                                document,
+                                to: UserSchema.schemaURL(stateRoot: root.path)
+                            )
+                        }
+                        return true
+                    } catch {
+                        return false
+                    }
+                }
+            }
+
+            var count = 0
+            for await succeeded in group where succeeded {
+                count += 1
+            }
+            return count
+        }
+
+        XCTAssertEqual(successes, 1)
+        let document = try UserSchema.load(from: UserSchema.schemaURL(stateRoot: root.path))
+        XCTAssertEqual(
+            document.keys.filter { $0.name == "collisionA" || $0.name == "collisionB" }.count,
+            1
+        )
+    }
+
+    @MainActor
+    internal func testNestedStoragePathRoundTripsAndResets() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-schema-nested-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        FileManager.defaultFileStatePath = root.path
+
+        let store = StateStore()
+        try store.addKey(
+            SchemaKeyEntry(
+                name: "nestedNote",
+                type: "String",
+                storage: "FileState",
+                initial: .string(""),
+                path: "agents/codex/note.json",
+                doc: "valid nested state"
+            ),
+            force: false
+        )
+        try store.set(name: "nestedNote", value: "ready")
+        XCTAssertEqual(try store.get(name: "nestedNote"), "ready")
+
+        try store.reset(name: "nestedNote")
+        XCTAssertEqual(try store.get(name: "nestedNote"), "")
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: root.appendingPathComponent("agents/codex/note.json").path
+            )
+        )
+    }
+
     func testUnknownKeyError() async throws {
         try await MainActor.run {
             let root = FileManager.default.temporaryDirectory
