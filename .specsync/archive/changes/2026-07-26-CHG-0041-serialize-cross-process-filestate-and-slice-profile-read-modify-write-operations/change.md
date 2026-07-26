@@ -1,6 +1,6 @@
 ---
 id: CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations
-state: accepted
+state: archived
 type: bug_fix
 base_commit: 6a40258d80047be13132e68b0597ff3bfe9b52b7
 ---
