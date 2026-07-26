@@ -1,0 +1,12 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785092085,
+      "digest": "213d2ba6b5110da85478f9c5f1b561f3e11da31ca983204f9794468aabf67820",
+      "note": "Documentation-only change accurately reflects the audited implementation and adds a non-normative project site."
+    }
+  ],
+  "reopenings": []
+}
