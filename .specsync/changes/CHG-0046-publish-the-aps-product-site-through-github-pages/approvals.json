@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785093139,
+      "digest": "19b8af607601c0ccbd4767ca224ec90813ab2145545a47ebfad3c41dbd8f3f82",
+      "note": "Static Pages delivery preserves the existing site source and Sites build while adding automated public publishing."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785093510,
+      "digest": "b0dd8a5afffe47191c51e332f474bf76eccd900820b8b79f6e97ffbd55869f7f",
+      "note": "GitHub Pages export, workflow, tests, and existing hosting build verified."
+    }
+  ],
+  "reopenings": []
+}

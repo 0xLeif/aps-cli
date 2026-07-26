@@ -1,0 +1,301 @@
+{
+  "timestamp": 1785093497,
+  "commit": "5e9c35d2721e26d8ce913fe2893230e95b2a9e2b",
+  "contract_digest": "19b8af607601c0ccbd4767ca224ec90813ab2145545a47ebfad3c41dbd8f3f82",
+  "workspace_digest": "04e72d795b2d8985be0d72a24ce5f22d82034c6d43b1ec47167bb6221037a66f",
+  "acceptance_input_digest": "2b1f8ed1512c69c851ebb5343d827815c5cd32e042966c98bf42eeecd93432e5",
+  "acceptance_manifest": {
+    "schema_version": 1,
+    "entries": [
+      {
+        "path": ".github/workflows/pages.yml",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "ba7dc4c39814a8bbb2cdce155594ca027bd21898757a74ddf3719ec05d54d892",
+        "entry_digest": "dc1d02e606b6a3a4bad9518c8ed6bac4ccd05d3649b1e9d147c3b3d4ca96f2a1",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": ".specsync/change-sequence.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "04406270cdf353bf3ea68a1ad8eb7254aaab7ac0bc7f4c79505d4a30742a9118",
+        "entry_digest": "da3c3b24ff6a4ad5e8ebb2d751a7bff2c36f73a8ef3d7f2bbf47ce4db85e4b97",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site",
+        "kind": "non_file",
+        "mode": 0,
+        "payload_digest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "entry_digest": "baabf25afc32345acaf1d78cf9adc0b2600e1787d2ae1f7441dba3eae5ace614",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/.gitignore",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "9330ec0cf46e80c4e038be7c3abd363b518b902387f46c7f5842c46de5d28f9c",
+        "entry_digest": "297f0e544f9440771132e1e3b0fc07214509d550d11b603768c9c299570524d2",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/.openai/hosting.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "49894b5b9f8657e2cb0557512ba037be41e0350abd8aa1f67c6eb1467a6800b9",
+        "entry_digest": "aa9a77f8e870f7397761f09df35e512076eb4f710622984b3bba95e6165c906f",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/README.md",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "97309e01775a560e870da74ce081ae9dbbae5c52fb9872dde6e416ffc937ec93",
+        "entry_digest": "567931172dd44e6c10f8bfeb6bd2394b69a06fa973144b6d17e88c2d5264b8bc",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/app/chatgpt-auth.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "17a965f8948b21510cdf8ecbd70c5fdf58100e10970463f6a8fd2cc4795f8044",
+        "entry_digest": "7567327334c64e8af2db86b238260f74cbb2f19df769443d8b8e79cfb465fee3",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/app/globals.css",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "47d3be8b732ed8a9459c3d5f09cdcebb3c4e13ac2d99f560989ba4e75a5b6f5b",
+        "entry_digest": "fbeb272b1dbb864d74d4f30476fa08af44198fd2c657507392d257c18472dfdc",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/app/layout.tsx",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "de48f9a37321bd7c217efc9aefa39d0061ec4a31c2895a0ace9f7ecd65952687",
+        "entry_digest": "333ec7e31679528d9101d9760d903efcd2a292caa9d831eff36815d566fbef1c",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/app/page.tsx",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "dbb1362798fdf123b79426fde797918687474db5f380471925242e14c020b1d0",
+        "entry_digest": "e66fa98b8deff234bebaa36fe30b5ed6ee567d44efe2941110e2c84ea3c2d5c8",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/build/sites-vite-plugin.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "81b7cbfaeb970611572256aba0e313425beb3809f6426f63750696c15d9c756b",
+        "entry_digest": "d4558d9d4c404901db5de7fe5cddc05b629ab0fbdc1e1d3c9248a5c90a501579",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/db/index.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "dc7610b00b918e0ffff1360a63626f16655ced3064b2eaf96095a4101fb14bcd",
+        "entry_digest": "3a78d28bbdb9c4dfedede61e76ad10719d66b1688443b7446b4d21a6367964a0",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/db/schema.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "13ddacbf0be50e054d450a6c642b7fdc1aa943fd6b99084711e07e58b600390d",
+        "entry_digest": "cdb355fb9765287d155c7c6683da61409deecfb18f9e61295d3ded1b72607ae5",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/drizzle.config.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "af081f7384aaeb0082cf422e29f139d137ca2f6a57c69b2c37b9fb1f8479867b",
+        "entry_digest": "e57e49e244d3c00abbe59f94133256be071a34a337f1156e4ecd4f4d191ed8e4",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/drizzle/meta/_journal.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "90cb374e093894d0efce6f1830d873a42aadd8ba49d2f024495e5cb2e1c8c303",
+        "entry_digest": "2201e92ef9ac6e47cb6be8d225e3611edcee1daa06238c5191bc327a87bae331",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/eslint.config.mjs",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "870f1adccecf3051cbcd9fd307cef51d7633cf510979c181a81f4b1797273493",
+        "entry_digest": "64944ddf50fd825146da4e3b5e7b0dcfb5c9171fd8ef38ad5e8d5747eed34dbf",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/examples/d1/app/api/notes/route.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "a3d4a74fd53b7bf53e2df41f169d9d9d44a8b22aeb6d92f4e754956079af8909",
+        "entry_digest": "24995a3a6419cbe787166328a98f5392c23fa76ea61f3c3b031d990e7c8a8481",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/examples/d1/db/schema.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "d89eabd95716ce404f5f7ca2a254220435be8ddce7c899d7ef461ff22ec80454",
+        "entry_digest": "2b4affeaa14e50d9418e9caca9d54eb01e74a890e87da5bfe0e016dea76df12e",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/next.config.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "f217ad20bf50c1cec9369055d9547750602170f628ad608ea772855357f5406a",
+        "entry_digest": "e5be7f3f362cbbc549cedb7519c9cbdc69b9554a7347b7464af0c1a368f70c86",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/package-lock.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "9f8388fe9fcdfe27dc4263677d781b50036dea191f8d394b75e335c21f21eb00",
+        "entry_digest": "d0ec348dfda835ec4302198d16bdd358a6a2fb98ee3166a40c718ecee026c2f6",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/package.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "b95e101a5f90088f31f9e730338b13abe70518f41b70f2e62d3ee1a1addff184",
+        "entry_digest": "c49177166534092ff89a208a78f1ebad689c9940070a90f42fa02f1709b47b56",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/postcss.config.mjs",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "dfac7ac2d86d326a0e5adb024e7943c181393ed17a5fcb8f0315b24c7da6ddde",
+        "entry_digest": "6842d5a4bd8528101f5a6aedf8305fd780d8f8c30fdcf85477d09a18fdd10602",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/public/og.png",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "2b900bd0919dd32bdfc7633a3b827000d39726c0bf5861b687c8bf885ffe98aa",
+        "entry_digest": "8189442399bf4a80dd99913d59a9240414b07347cd1e4c05758da44f60b882ce",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/tests/pages-export.test.mjs",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "33e09d9292012369f3f60d8b3855151eba82c48f31761f8f9a0b454910f21443",
+        "entry_digest": "edb7309632a2102f43336a62c5f31bf9c34852c138cd470a0f2ac0a7dbf50caa",
+        "owners": [
+          "@exact:test"
+        ]
+      },
+      {
+        "path": "site/tests/rendered-html.test.mjs",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "b9b3a08a9fa2d432570b41ae304902fe46724827fc994ae33e7ca77d6a5d8ba6",
+        "entry_digest": "c3bcc7a14363a01c962a1022a4afbe439a1202214eec68910b7521c5f59d102e",
+        "owners": [
+          "@exact:test"
+        ]
+      },
+      {
+        "path": "site/tsconfig.json",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "d90e5fe7e588cdab7949d9ac45b7aa44645cdd1502c2529230279b61c019e581",
+        "entry_digest": "805dcb1c2bebcf8cb26d3c4aec5182b2c3244ec567e5bfce33ba34bbad54bf87",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/vite.config.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "f7c14b8a38546bb6a7ec93cba22f8e8f131da9fbfe8b39327422ed5bb98d4613",
+        "entry_digest": "04a060fd1a3742d582b7220bffff000a6d16df9a9530fa47ffc2304f343d3edc",
+        "owners": [
+          "@exact:delivery"
+        ]
+      },
+      {
+        "path": "site/worker/index.ts",
+        "kind": "file",
+        "mode": 33188,
+        "payload_digest": "2ed36d7fa996e946d9d7695c5925e7760246f6bf8fa35c06f1bc515c087dc450",
+        "entry_digest": "4a87a388be6ad6a3780d577c2582d00c331fd70659b9dd3be7094e8fec7ec40e",
+        "owners": [
+          "@exact:delivery"
+        ]
+      }
+    ]
+  },
+  "passed": true,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": []
+}

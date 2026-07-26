@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 45,
-  "id": "CHG-0045-refresh-project-documentation-and-add-the-swift-themed-aps-product-site",
+  "sequence": 46,
+  "id": "CHG-0046-publish-the-aps-product-site-through-github-pages",
   "acknowledged_collisions": []
 }
