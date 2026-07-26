@@ -22,3 +22,16 @@ cd aps-cli && swift build -c release
 # or via fledge (this repo is the plugin):
 fledge plugins install 0xLeif/aps-cli
 ```
+
+## Next
+
+The next release line is focused on safety and distribution hardening:
+
+- safe schema paths and destructive operations;
+- authoritative registry dispatch;
+- truthful reset and purge results;
+- portable Linux and Homebrew alignment;
+- password-hardening for passphrase secrets;
+- atomic version preparation and real artifact installation tests.
+
+See [`docs/release-readiness.md`](docs/release-readiness.md) for evidence and exit criteria.

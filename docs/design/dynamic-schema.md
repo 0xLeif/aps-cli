@@ -1,10 +1,12 @@
 # RFC: Dynamic schema (user-defined keys)
 
 Issue: [#39](https://github.com/0xLeif/aps-cli/issues/39)  
-Status: **Implemented in v1.0.0** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); this doc remains the design record  
+Status: **Implemented in v1.0.0, hardening in progress** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); this doc remains the design record
 Authors: agent:cursor (2026-07-19)  
 Depends on: error contract ([#31](https://github.com/0xLeif/aps-cli/issues/31)), `aps schema` ([#32](https://github.com/0xLeif/aps-cli/issues/32))  
 Milestone: v1.0.0
+
+> Release-readiness note: the current implementation does not yet fully enforce this RFC's path-safety, object-shape, Slice-reference, or single-source-of-truth requirements. Do not treat the implemented status as proof that every invariant below is enforced. Track the closure criteria in [release readiness](../release-readiness.md).
 
 ## Verdict
 
@@ -126,12 +128,12 @@ Rules:
 |------|--------|
 | `formatVersion` | Integer; bump only on breaking schema-file shape changes |
 | `name` | `[A-Za-z][A-Za-z0-9_]*`, unique within the file |
-| Reserved names | None beyond uniqueness; demo names are ordinary entries |
+| Reserved names | The design treats demo names as ordinary entries; the implementation must either honor that through registry-only dispatch or explicitly revise this decision and reserve them |
 | `storage` | Closed enum for 1.0: `State`, `StoredState`, `FileState`, `EncryptedFile`, `Slice` |
 | `type` | Closed enum for 1.0: `Int`, `String`, `Bool`, `object` |
 | `object` | Requires `objectShape` (flat string->primitive map for 1.0; nested objects deferred) |
 | `Slice` | Requires `sliceOf` + `sliceField` pointing at an `object` key |
-| `path` | Required for `FileState` / `EncryptedFile`; relative to state root; no `..` segments |
+| `path` | Required for `FileState` / `EncryptedFile`; canonical regular-file location contained below the state root, not reserved, shared, a directory, or reachable through a symlink escape |
 | `initial` | Required; used by `reset` and first read |
 
 Missing `schema.json` on an existing state root: **materialize the built-in default** (demo keys) on first mutating command or on `aps key` / `aps schema` that needs it, then continue. Never invent empty schemas for legacy roots that already have `note.json` / `profile.json` without a file.
@@ -241,6 +243,7 @@ Torn FileState files remain `corrupt_state` / 65.
 - `EncryptedFile` keys each get their own `path` (default `secret.enc` for the demo entry). Do not share one envelope across unrelated secrets without an explicit design follow-up.
 - `aps key remove --purge` is the only path that deletes ciphertext/key material; document it loudly.
 - Schema edits are not authenticated; anyone who can write the state root can change types. Same trust model as today's FileState files.
+- Purge must never recursively remove an arbitrary schema path. It may delete only a validated, unshared regular file below the canonical state root.
 
 ## Alternatives considered
 

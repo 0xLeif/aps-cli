@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 44,
-  "id": "CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes",
+  "sequence": 45,
+  "id": "CHG-0045-refresh-project-documentation-and-add-the-swift-themed-aps-product-site",
   "acknowledged_collisions": []
 }

@@ -1,10 +1,26 @@
 # aps
 
-A tiny Swift CLI that [dogfoods](https://github.com/0xLeif/AppState) **AppState** outside SwiftUI: declare typed app state, get/set/watch/dump it, and show dependency injection.
+**State you can see. Contracts you can trust.**
 
-Current release line: **1.0.0**. Targets **macOS**, **Linux**, and **Windows** where AppState allows. Keys come from `<state-root>/schema.json` (demo defaults materialize on first use); see the [dynamic schema RFC](docs/design/dynamic-schema.md).
+aps is a small Swift CLI that brings [AppState](https://github.com/0xLeif/AppState) outside SwiftUI. Declare typed state, read it, change it, watch it, and expose the same stable contract to humans, agents, and CI.
+
+Current release: **1.0.0**. The next release is a safety and distribution hardening release; see [release readiness](docs/release-readiness.md) before cutting a tag. The source and CI target **macOS**, **Linux**, and **Windows**, while published binary availability varies by platform.
+
+Keys live in `<state-root>/schema.json`, with demo defaults materialized on first use. Start with the [documentation map](docs/README.md) or the [dynamic schema design](docs/design/dynamic-schema.md).
 
 This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.xyz/integrate/) (fledge, spec-sync, augur, attest). See `AGENTS.md`.
+
+## Project status
+
+| Surface | Status |
+| --- | --- |
+| Swift package and 78-test verification lane | Passing |
+| macOS, Linux, and Windows source CI | Active |
+| Homebrew and release packaging | Hardening before the next tag |
+| Dynamic schema safety | Hardening path validation, purge semantics, and registry authority |
+| SpecSync contracts | Passing with 2 active module specs |
+
+The current release remains useful for local AppState exploration. Treat custom schema paths, `key remove --purge`, passphrase secrets, and production automation as advanced surfaces until the items in [release readiness](docs/release-readiness.md) are closed.
 
 ## Install
 
@@ -95,8 +111,8 @@ aps key list --json
 `secret` is backed by an age-style encrypted envelope under the state root (issue #35), not the Keychain: ephemeral X25519 ECDH + HKDF + ChaCha20-Poly1305 via [swift-crypto](https://github.com/apple/swift-crypto), the same construction as [AlgoChat](https://github.com/CorvidLabs/swift-algochat)'s message encryptor.
 
 - **`secret.enc`** holds the encrypted envelope (ephemeral public key, nonce, ciphertext, tag, base64 JSON). Nothing plaintext at rest.
-- **Key file mode (default):** a recipient key is generated on first use at `<state-root>/secret.key` (base64 X25519, mode 0600), like an SSH key. Zero prompts, works headless and in CI, on every OS.
-- **Passphrase mode:** set `APS_SECRET_PASSPHRASE` to derive the key from a passphrase via HKDF-SHA256 (no key file). Wrong passphrases fail loudly with `secretUnlockFailed` on both get and set.
+- **Key file mode (default):** a recipient key is generated on first use at `<state-root>/secret.key` (base64 X25519, requested mode 0600), like an SSH key. It works headlessly on every OS. The key and ciphertext share a state root, so this mode protects against casual plaintext inspection, not compromise of the whole root.
+- **Passphrase mode (experimental):** set `APS_SECRET_PASSPHRASE` to derive the key from a passphrase via HKDF-SHA256 (no key file). HKDF is not a password-hardening KDF, so use a high-entropy generated value until the versioned Argon2id/scrypt envelope work in [release readiness](docs/release-readiness.md) lands. Wrong passphrases fail loudly with `secretUnlockFailed` on both get and set.
 - **Stateful gating:** until `secret.enc` exists, the first write seals with whichever recipient is active (key file or passphrase). After that, set must unlock the existing envelope before rewrite; a wrong passphrase cannot silently re-key.
 - A corrupt `secret.enc` envelope blocks both get and set with `decoding_failed` until you run `aps reset secret` (or repair the file).
 - **Interactive opt-in:** with `APS_SECRET_USE_PASSPHRASE=1` on a TTY, aps prompts once itself (its own getpass prompt, not macOS Keychain's).
@@ -208,7 +224,7 @@ swift run aps key add agentNote --type String --storage FileState --path agent-n
 
 ### Multi-process FileState semantics
 
-`aps` expects **one writer per key** at a time. Concurrent `aps set` on the same FileState key (`note` / `profile`) is last-writer-wins and is not locked: AppState writes files non-atomically, so two writers can tear a JSON file.
+`aps` expects **one writer per key** unless a storage adapter documents stronger behavior. Profile and Slice read-modify-write operations use a lock. The seed `note` FileState path still relies on AppState's unlocked write behavior, so concurrent writers can tear that JSON file.
 
 When a FileState file **exists but is undecodable** (torn write), `aps` does **not** fall back to AppState's initial/cached value on the direct disk path:
 
@@ -293,7 +309,17 @@ LICENSE
 
 ## Next goal
 
-**1.0.0** is shipped and public: [release v1.0.0](https://github.com/0xLeif/aps-cli/releases/tag/v1.0.0), [`GOAL.md`](GOAL.md) record, go-public checklist [#40](https://github.com/0xLeif/aps-cli/issues/40). Next steps live in the [issue backlog](https://github.com/0xLeif/aps-cli/issues), starting with release binaries and the Homebrew tap formula ([#68](https://github.com/0xLeif/aps-cli/issues/68)).
+**1.0.0** is shipped and public: [release v1.0.0](https://github.com/0xLeif/aps-cli/releases/tag/v1.0.0) and [`GOAL.md`](GOAL.md) record.
+
+The next release will:
+
+- make dynamic schema paths and destructive operations safe by construction;
+- make the runtime registry authoritative for every key;
+- align portable Linux, Homebrew, and GitHub Action distribution;
+- harden passphrase secrets and reset failure reporting;
+- rehearse installation from real release artifacts on clean hosts.
+
+The full evidence, blockers, and exit criteria live in [docs/release-readiness.md](docs/release-readiness.md).
 
 
 ## AppState surface coverage
@@ -322,6 +348,8 @@ Audit findings and per-OS gaps live in [`docs/windows-readiness.md`](docs/window
 
 ## Design
 
+- Documentation map: [`docs/README.md`](docs/README.md)
+- Release readiness: [`docs/release-readiness.md`](docs/release-readiness.md)
 - Dynamic / user-defined keys: [`docs/design/dynamic-schema.md`](docs/design/dynamic-schema.md) (issues [#39](https://github.com/0xLeif/aps-cli/issues/39), [#62](https://github.com/0xLeif/aps-cli/issues/62)-[#64](https://github.com/0xLeif/aps-cli/issues/64))
 - Go-public checklist: [#40](https://github.com/0xLeif/aps-cli/issues/40)
 
