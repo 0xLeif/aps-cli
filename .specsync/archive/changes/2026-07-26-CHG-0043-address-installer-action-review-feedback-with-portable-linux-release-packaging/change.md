@@ -1,6 +1,6 @@
 ---
 id: CHG-0043-address-installer-action-review-feedback-with-portable-linux-release-packaging
-state: accepted
+state: archived
 type: bug_fix
 base_commit: 8e2108601b182584e59b3e534b67199247593a0a
 ---
