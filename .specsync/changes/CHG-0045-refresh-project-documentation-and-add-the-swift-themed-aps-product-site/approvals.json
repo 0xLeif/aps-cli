@@ -6,6 +6,20 @@
       "timestamp": 1785092085,
       "digest": "213d2ba6b5110da85478f9c5f1b561f3e11da31ca983204f9794468aabf67820",
       "note": "Documentation-only change accurately reflects the audited implementation and adds a non-normative project site."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785092153,
+      "digest": "2cc3580e05d6189fe3e07524b4f1b28f8e36281867d88aabce63f1d573b8eec5",
+      "note": "All documentation and site tasks are complete and locally verified."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785092215,
+      "digest": "d7f1a5bfeefa62f8edf1161cef77504db4965fc3e84e5fdecf0b7f419701ffa9",
+      "note": "Documentation and site outcomes are complete; all validation and publishing checks passed."
     }
   ],
   "reopenings": []

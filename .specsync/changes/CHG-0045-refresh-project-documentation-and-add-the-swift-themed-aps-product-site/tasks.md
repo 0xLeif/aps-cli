@@ -13,4 +13,4 @@ artifact: tasks
 - [x] Add rendered-output coverage, lint, and production dependency checks.
 - [x] Run the complete fledge verification lane.
 - [x] Publish a private production preview.
-- [ ] Pass the final SpecSync and trust gates.
+- [x] Pass the final SpecSync and trust gates.

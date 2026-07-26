@@ -5,10 +5,11 @@
   "title": "Refresh project documentation and add the Swift-themed aps product site",
   "description": "Refresh project documentation and add the Swift-themed aps product site",
   "kind": "documentation",
-  "state": "implementing",
+  "state": "accepted",
+  "canonical_applied": true,
   "base_commit": "c67ec6b717322741e16752bfdf0f2da1f0f45e23",
   "created_at": 1785092010,
-  "updated_at": 1785092089,
+  "updated_at": 1785092215,
   "affected_specs": [],
   "affected_paths": [
     "README.md",
