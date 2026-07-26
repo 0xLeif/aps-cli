@@ -55,7 +55,165 @@
       "timestamp": 1784820019,
       "digest": "1eb82ae7697e2ed92450ddafa6d60667ad9ecee5209de83e6f341e233d267f16",
       "note": "Verified restored REQ-020 contract and SecretStore behavior with the full native gate."
+    },
+    {
+      "gate": "definition",
+      "actor": "Cursor",
+      "timestamp": 1785085207,
+      "digest": "29510329218316da3a0b34d2a49e8daaa171e5d4d83eb9a94754fa79e9a4a865",
+      "note": "Re-approve definition after review-thread SecretStore and spec restores."
+    },
+    {
+      "gate": "definition",
+      "actor": "Cursor",
+      "timestamp": 1785085254,
+      "digest": "42e05585c928028ad6111cf3ea54352e93ff087d085e5fb59131e20bcb9a8b63",
+      "note": "Include REQ-aps-cli-026 in deltas and restored REQ-020 base contract after review threads."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Cursor",
+      "timestamp": 1785085326,
+      "digest": "042b41336ac60fb9fabfb3a4199dde774a561490c6ebb9e63d157d67205ed8af",
+      "note": "Accepted after review-thread fixes: unlock no longer truncates keys; REQ-020 base restored; REQ-026 in verification evidence."
+    },
+    {
+      "gate": "definition",
+      "actor": "Cursor",
+      "timestamp": 1785085605,
+      "digest": "42e05585c928028ad6111cf3ea54352e93ff087d085e5fb59131e20bcb9a8b63",
+      "note": "Refresh definition after sibling change evidence updates."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Cursor",
+      "timestamp": 1785085626,
+      "digest": "28b1f730e33ee96b493a6c6a5fd8db024d05c6c04e9fcfc2af898c07e88a2908",
+      "note": "Reverified after sibling SpecSync evidence refresh."
     }
   ],
-  "reopenings": []
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes",
+      "actor": "Cursor",
+      "reason": "Refresh after CHG-0038/0041 evidence re-acceptance touched delivery inputs.",
+      "timestamp": 1785085605,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "Cursor",
+        "timestamp": 1785085326,
+        "digest": "042b41336ac60fb9fabfb3a4199dde774a561490c6ebb9e63d157d67205ed8af",
+        "note": "Accepted after review-thread fixes: unlock no longer truncates keys; REQ-020 base restored; REQ-026 in verification evidence."
+      },
+      "prior_verification": {
+        "timestamp": 1785085318,
+        "commit": "ae70e3c86e017b6526207e473116e712c235d94c",
+        "contract_digest": "42e05585c928028ad6111cf3ea54352e93ff087d085e5fb59131e20bcb9a8b63",
+        "workspace_digest": "516356b9c8cd1902f863613c8406d36268199800c9a4f94b46d13da36e86fdbc",
+        "acceptance_input_digest": "a9ec95a1427bbf8487570cf291f7f7d92b9370e27ee22856fbc9169a42def631",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "360f2cdf924f0a3a066d5e6968a8eea2093f7d3e34b17a5f4a31b3942c627cff",
+              "entry_digest": "1179f1c2d5c65ac05d03ad42b6580bf6dfcfa9d878bc8b8c163c3a89244f5549",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/SecretStore.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ce382da8e00a82e3f629a4a1307655b22a5394c019f9b40050e980b7d9498207",
+              "entry_digest": "d21f02cde2895d028db61109b91a320b15c9ff9853c7c27e7e1da25e46e6e338",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "549f64fd89c3b3b212c6e59a9de9fc2515db411824bcc3d864bdc5fd0bc81a7a",
+              "entry_digest": "382857430f870afc60a832b3b89d832282458062464547cfce51d29d640ec523",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "38ba26b13c8f9860c8a817465ca1706fca6e7bef087bea6678f92db0411d4a79",
+              "entry_digest": "e1f4e470dcb47aa0b2724c1c711eb93e4b422efb461e14800e0631ef461f1965",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b2547603185329f8c0cd44433beffe904f79a95b8c02ab2fd85de59f114de57c",
+              "entry_digest": "6bb2d429ffccc00b8d1ccfb36b72829c7fc59fa30b4dfce1d15e3bd251dcb497",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ad8399d5228db453c12feb91e1999196a3b6cd9af4f5dd4d27ec862b588a6b5d",
+              "entry_digest": "85c6af9c8e9212b50019417d6d464105a2c6103cac8b996e04a99615bb426cfd",
+              "owners": [
+                "aps-cli"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-020",
+          "REQ-aps-cli-026"
+        ]
+      },
+      "stale_acceptance_input_digest": "a9ec95a1427bbf8487570cf291f7f7d92b9370e27ee22856fbc9169a42def631",
+      "current_acceptance_input_digest": "e36da1182b91af54c5e7c2f1bf8fd72d5bdea1f044979c67c6a6097d3d3b37b2"
+    }
+  ]
 }

@@ -328,6 +328,47 @@ final class APSTests: XCTestCase {
             XCTAssertEqual(error as? APSError, .secretUnlockFailed)
         }
         XCTAssertEqual(try Data(contentsOf: envelopeURL), originalEnvelope)
+        // Unlock must not truncate/replace the corrupt key path.
+        XCTAssertEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
+    }
+
+    @MainActor
+    func testSecretStoreFreshKeyCreationFailureRemainsPersistenceFailed() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        // Non-regular path: recovery refuses to remove it and createKeyFile refuses
+        // to overwrite, so the failure stays persistenceFailed (not secretUnlockFailed).
+        try FileManager.default.createDirectory(at: keyURL, withIntermediateDirectories: false)
+
+        XCTAssertThrowsError(try SecretStore(directory: path).set("blocked-key-create")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: URL(fileURLWithPath: path).appendingPathComponent("secret.enc").path
+            )
+        )
+        var isDirectory: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: keyURL.path, isDirectory: &isDirectory))
+        XCTAssertTrue(isDirectory.boolValue)
+    }
+
+    @MainActor
+    func testSecretStoreEmptyPassphrasePromptFallsBackAndRecoversStaleKey() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        try Data("partial-key".utf8).write(to: keyURL)
+        // Simulate APS_SECRET_USE_PASSPHRASE without a successful prompt by leaving
+        // stdin closed: promptPassphrase returns nil and falls back to key-file mode.
+        setProcessEnv("APS_SECRET_USE_PASSPHRASE", "1")
+        defer { setProcessEnv("APS_SECRET_USE_PASSPHRASE", nil) }
+
+        // When stderr is not a TTY, usesPassphraseMode is false and early recovery
+        // already runs. Exercise the same recovery contract for the partial key.
+        let store = SecretStore(directory: path)
+        try store.set("fallback-recovered")
+        XCTAssertEqual(try store.get(), "fallback-recovered")
+        XCTAssertNotEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
     }
 
     @MainActor

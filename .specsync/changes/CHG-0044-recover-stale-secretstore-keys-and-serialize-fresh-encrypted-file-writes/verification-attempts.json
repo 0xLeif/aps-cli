@@ -34,6 +34,77 @@
       "requirement_ids": [
         "REQ-aps-cli-020"
       ]
+    },
+    {
+      "timestamp": 1785085231,
+      "commit": "ae70e3c86e017b6526207e473116e712c235d94c",
+      "contract_digest": "29510329218316da3a0b34d2a49e8daaa171e5d4d83eb9a94754fa79e9a4a865",
+      "workspace_digest": "516356b9c8cd1902f863613c8406d36268199800c9a4f94b46d13da36e86fdbc",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-020"
+      ]
+    },
+    {
+      "timestamp": 1785085274,
+      "commit": "ae70e3c86e017b6526207e473116e712c235d94c",
+      "contract_digest": "42e05585c928028ad6111cf3ea54352e93ff087d085e5fb59131e20bcb9a8b63",
+      "workspace_digest": "516356b9c8cd1902f863613c8406d36268199800c9a4f94b46d13da36e86fdbc",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-020",
+        "REQ-aps-cli-026"
+      ]
+    },
+    {
+      "timestamp": 1785085318,
+      "commit": "ae70e3c86e017b6526207e473116e712c235d94c",
+      "contract_digest": "42e05585c928028ad6111cf3ea54352e93ff087d085e5fb59131e20bcb9a8b63",
+      "workspace_digest": "516356b9c8cd1902f863613c8406d36268199800c9a4f94b46d13da36e86fdbc",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-020",
+        "REQ-aps-cli-026"
+      ]
+    },
+    {
+      "timestamp": 1785085625,
+      "commit": "ae70e3c86e017b6526207e473116e712c235d94c",
+      "contract_digest": "42e05585c928028ad6111cf3ea54352e93ff087d085e5fb59131e20bcb9a8b63",
+      "workspace_digest": "2402caec5290c9c2173a89ae3cf8b45e44cfe8867195dd4557ba034d59314982",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-020",
+        "REQ-aps-cli-026"
+      ]
     }
   ]
 }

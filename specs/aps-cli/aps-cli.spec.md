@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 31
+version: 34
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -136,7 +136,12 @@ registry key.
 5. `keys` and `--help` do not mutate application state.
 6. State root: subcommand `--state-dir` > root `--state-dir` > `APS_HOME` > `~/.aps`.
 7. EncryptedFile SET never clobbers ciphertext without a successful unlock when a file exists.
-8. `watch` termination is observable in both channels: a terminal
+8. `watch` handles SIGINT/SIGTERM on a background dispatch queue, so termination
+   does not depend on the main thread servicing its run loop; polling waits are
+   capped to observe those signals promptly.
+9. `watch --timeout` bounds each polling wait by the remaining timeout so a large
+   `--interval` cannot delay timeout termination.
+10. `watch` termination is observable in both channels: a terminal
    `{"type":"end","reason":"count|timeout|sigint|sigterm"}` event in `--jsonl`
    mode or a stderr line in human mode, with exit codes 0 (count), 124
    (timeout), 128+signal (130 SIGINT, 143 SIGTERM). The `--jsonl` stream never
@@ -233,3 +238,5 @@ Exit codes (sysexits-aligned):
 | 2026-07-22 | CHG-0041-serialize-cross-process-filestate-and-slice-profile-read-modify-write-operations: Serialize cross-process FileState and Slice profile read-modify-write operations |
 | 2026-07-23 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |
 | 2026-07-23 | CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes: Recover stale SecretStore keys and serialize fresh encrypted-file writes |
+| 2026-07-26 | CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes: Recover stale SecretStore keys and serialize fresh encrypted-file writes |
+| 2026-07-26 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |

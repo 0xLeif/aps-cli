@@ -217,22 +217,23 @@ public struct SecretStore: Sendable {
         }
         #if !os(Windows)
         if ProcessInfo.processInfo.environment["APS_SECRET_USE_PASSPHRASE"] == "1",
-           isatty(FileHandle.standardError.fileDescriptor) == 1,
-           let passphrase = Self.promptPassphrase() {
-            return Self.keyFromPassphrase(passphrase)
+           isatty(FileHandle.standardError.fileDescriptor) == 1 {
+            if let passphrase = Self.promptPassphrase() {
+                return Self.keyFromPassphrase(passphrase)
+            }
+            // Empty/cancelled TTY prompt falls through to key-file mode.
+            if !hasSecret {
+                try removeInvalidKeyFileWithoutEnvelope()
+            }
         }
         #endif
         if lockKeyFile {
             return try loadOrCreateKeyFile()
         }
-        do {
-            return try loadOrCreateKeyFileUnlocked()
-        } catch let error as APSError {
-            if case .persistenceFailed = error {
-                throw APSError.secretUnlockFailed
-            }
-            throw error
-        }
+        // Do not remap persistenceFailed here: fresh key-creation disk failures
+        // must stay persistenceFailed. Existing-envelope invalid keys are mapped
+        // inside loadOrCreateKeyFileUnlocked before createFile runs.
+        return try loadOrCreateKeyFileUnlocked()
     }
 
     static func keyFromPassphrase(_ passphrase: String) -> Curve25519.KeyAgreement.PrivateKey {
@@ -274,15 +275,14 @@ public struct SecretStore: Sendable {
             return key
         }
 
-        let hasExistingKeyPath = FileManager.default.fileExists(atPath: keyFileURL.path)
-        do {
-            return try createKeyFile()
-        } catch let error as APSError {
-            if hasExistingKeyPath, case .persistenceFailed = error {
-                throw APSError.secretUnlockFailed
-            }
-            throw error
+        // Never create or truncate key material while unlocking an envelope.
+        // On Linux, FileManager.createFile truncates an existing regular file
+        // and returns true, which would destroy an unreadable key path.
+        if hasSecret {
+            throw APSError.secretUnlockFailed
         }
+
+        return try createKeyFile()
     }
 
     private func loadKeyFileIfValid() -> Curve25519.KeyAgreement.PrivateKey? {
@@ -318,6 +318,10 @@ public struct SecretStore: Sendable {
     }
 
     private func createKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {
+        // Refuse to overwrite an existing path (Linux createFile truncates).
+        if FileManager.default.fileExists(atPath: keyFileURL.path) {
+            throw APSError.persistenceFailed(key: keyName)
+        }
         let key = Curve25519.KeyAgreement.PrivateKey()
         let created = FileManager.default.createFile(
             atPath: keyFileURL.path,

@@ -1,9 +1,9 @@
 {
-  "timestamp": 1784848605,
-  "commit": "eb743cde050213ef4d8ed8a72c86dabceef22d0b",
-  "contract_digest": "410ab01ad68814d4e891e6fe95beb5c9a17b947458450a8647a0f5947660aedb",
-  "workspace_digest": "8748a92f991dbf6c8bd015b7afc903abcae14dcb4356e32fb5dde093b82b2a94",
-  "acceptance_input_digest": "497daf65a3648a283f2a3a7350a51a827b2d55c296ed5c49858257e6306bf142",
+  "timestamp": 1785085541,
+  "commit": "ae70e3c86e017b6526207e473116e712c235d94c",
+  "contract_digest": "5f16ace9dfb5ba77bae06c348c9f378c9152d0479363fb5475b738ae9e7bc8c4",
+  "workspace_digest": "7451be8d4ce53f22ae5ee6b63264cc1e01688d2ebd32bffb03c53085889f67b6",
+  "acceptance_input_digest": "e3500cc5e4dae7305cb13094681e601658b9f1ed9256649972555fec97758ca1",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -251,8 +251,8 @@
         "path": "Sources/aps/SecretStore.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "54b2c26e680621523c008880e6fa14c7c016f53aadc1f1d10fbc18354bedd832",
-        "entry_digest": "2ec377b808ca4a5f2eda42b60fcca9c941abe0a7770a7195c4255c916ec13d2a",
+        "payload_digest": "ce382da8e00a82e3f629a4a1307655b22a5394c019f9b40050e980b7d9498207",
+        "entry_digest": "d21f02cde2895d028db61109b91a320b15c9ff9853c7c27e7e1da25e46e6e338",
         "owners": [
           "aps-cli"
         ]
@@ -321,8 +321,8 @@
         "path": "Tests/apsTests/APSTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "e85eb82698baa4d8265a74c12a33df9818fc1fcd184688e61b7b9a85e95ce3fa",
-        "entry_digest": "c97a103f13da31057fd4e72e3a6c461c39484c71980043864207392cc6dab247",
+        "payload_digest": "549f64fd89c3b3b212c6e59a9de9fc2515db411824bcc3d864bdc5fd0bc81a7a",
+        "entry_digest": "382857430f870afc60a832b3b89d832282458062464547cfce51d29d640ec523",
         "owners": [
           "@exact:test"
         ]
@@ -361,8 +361,8 @@
         "path": "specs/aps-cli/aps-cli.spec.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "44bc72951b1da8f7fd2d8069f3c27bb3afc1d0f1d968e992f38c70410aa3cf88",
-        "entry_digest": "f5c333eaa19273c22bfe50b1927b7c6ca1a3a7d86c1a152a047ef2d53db3e5d8",
+        "payload_digest": "e592fed562304e649ce0babaca73ae77ae1b029b08eaf7d9c7629f6b837854e6",
+        "entry_digest": "be461ca575b67faf1523584e38be58dd0f74b5aab6325d5e6557806bc7415c7f",
         "owners": [
           "aps-cli"
         ]
@@ -381,8 +381,8 @@
         "path": "specs/aps-cli/requirements.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "a250cce777f209ea9c1e9854556315490b97a2aabc23317eac971436f573cedf",
-        "entry_digest": "baf03d66f96c00c9729e8080f1d554385bde050fa62b32721ce04bdfe9462506",
+        "payload_digest": "b2547603185329f8c0cd44433beffe904f79a95b8c02ab2fd85de59f114de57c",
+        "entry_digest": "6bb2d429ffccc00b8d1ccfb36b72829c7fc59fa30b4dfce1d15e3bd251dcb497",
         "owners": [
           "aps-cli"
         ]
@@ -401,8 +401,8 @@
         "path": "specs/aps-cli/testing.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "3753aaaa57da7be4a52d94e1307ffc32ee33a0992c4e0f8823d3cb96aa2596a4",
-        "entry_digest": "e9b9a4faff78cb25cb3aa634f2e4bdf53d39e0d87f81e9beb107aa1e5967d173",
+        "payload_digest": "ad8399d5228db453c12feb91e1999196a3b6cd9af4f5dd4d27ec862b588a6b5d",
+        "entry_digest": "85c6af9c8e9212b50019417d6d464105a2c6103cac8b996e04a99615bb426cfd",
         "owners": [
           "aps-cli"
         ]
@@ -431,8 +431,8 @@
         "path": "specs/state-store/state-store.spec.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "6f8ed0424a00ff71704184ec1aa0f8f82ef70665629116d93ea87dc5b9fc8ec1",
-        "entry_digest": "d94cb219527fcf3c82ffa3905fd1a49be82389703a838db7257ac5338a77cd32",
+        "payload_digest": "7343e9fa3ca67507d123b74daf6e995abc336b6839feba720ca866c501198c1c",
+        "entry_digest": "8c1988c5486e0106d7805ef9ddf90d117aec9839d18545a05f078dd03d5eb030",
         "owners": [
           "state-store"
         ]
@@ -471,6 +471,10 @@
     "REQ-aps-cli-011",
     "REQ-aps-cli-019",
     "REQ-aps-cli-020",
-    "REQ-state-store-016"
+    "REQ-aps-cli-023",
+    "REQ-aps-cli-024",
+    "REQ-state-store-016",
+    "REQ-state-store-017",
+    "REQ-state-store-018"
   ]
 }

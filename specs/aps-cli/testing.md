@@ -13,6 +13,8 @@
 
 - Encrypted-file `secret` round-trip / wrong-passphrase `secretUnlockFailed` / corrupt envelope `decodingFailed`.
 - Encrypted-file `secret` parallel fresh writes share one atomically created `0600` key file.
+- Fresh SET recovers a partial `secret.key` without envelope; existing-envelope corrupt keys stay unlock failures without truncating key material.
+- Fresh key-creation write failures remain `persistenceFailed`.
 - Secret SET with wrong passphrase leaves ciphertext unchanged; root `--state-dir` peel; safer reset; schema lock.
 
 - Slice `profileName` writes land in parent `profile` FileState.
