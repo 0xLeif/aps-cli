@@ -1574,7 +1574,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    internal func testDefaultFlagSetRollsBackCanonicalAndLegacyObjectsWhenLegacyWriteDrops() throws {
+    internal func testDefaultFlagSetRollsBackCanonicalAndLegacyObjectsWhenLegacyWriteDrops() async throws {
         let defaults = OneShotDroppingUserDefaults()
         let oldLegacy = try JSONEncoder().encode(false)
         defaults.seed(17, forKey: "aps.user.flag")
@@ -1592,7 +1592,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    internal func testDefaultFileStateResetAdapterPreservesNewerDiskWrites() throws {
+    internal func testDefaultFileStateResetAdapterPreservesNewerDiskWrites() async throws {
         let store = StateStore()
         try store.set(.note, value: "before-reset")
         let noteURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
