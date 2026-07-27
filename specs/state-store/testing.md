@@ -75,6 +75,13 @@
   keeps direct Slice writes on the replacement registry file and leaves the
   compiled profile file unchanged.
 - Default flag set tests drop the legacy adapter write and require exact
-  canonical and legacy rollback.
+  canonical and legacy rollback through typed and string-name entry points.
+- Schema removal tests drop the candidate write before purge and the original
+  write during rollback, requiring safe refusal and `rollback_failed`
+  respectively. Candidate verification mismatch and read-failure tests require
+  verified original restoration or a schema-specific `rollback_failed`; a
+  write-then-throw fault preserves its diagnostic after verified restoration.
+- Staged deletion tests drop or replace the rollback move and require a
+  regular-file original plus an absent staging leaf before restoration succeeds.
 - Default FileState reset tests inject newer note and profile writes before
   adapter synchronization and require both values to survive.

@@ -205,7 +205,9 @@ internal final class SchemaStoragePathTests: XCTestCase {
             let path = try SchemaStoragePath("value.json")
             let operations = SchemaStoragePath.DeletionOperations(
                 removeItem: { _ in throw InjectedFailure.delete },
-                isAbsent: { _ in false }
+                isAbsent: { url in
+                    !FileManager.default.fileExists(atPath: url.path)
+                }
             )
 
             XCTAssertThrowsError(
@@ -227,7 +229,9 @@ internal final class SchemaStoragePathTests: XCTestCase {
             let path = try SchemaStoragePath("value.json")
             let operations = SchemaStoragePath.DeletionOperations(
                 removeItem: { _ in },
-                isAbsent: { _ in false }
+                isAbsent: { url in
+                    !FileManager.default.fileExists(atPath: url.path)
+                }
             )
 
             XCTAssertThrowsError(
@@ -250,7 +254,7 @@ internal final class SchemaStoragePathTests: XCTestCase {
             let operations = SchemaStoragePath.DeletionOperations(
                 removeItem: { _ in },
                 isAbsent: { url in
-                    !url.lastPathComponent.hasPrefix(".aps-delete-")
+                    !FileManager.default.fileExists(atPath: url.path)
                 }
             )
 
@@ -266,6 +270,93 @@ internal final class SchemaStoragePathTests: XCTestCase {
         }
     }
 
+    internal func testSilentlyDroppedStagedRollbackReportsRollbackFailure() throws {
+        try withStateRoot { root in
+            let file = root.appendingPathComponent("value.json")
+            try Data("keep".utf8).write(to: file)
+            let path = try SchemaStoragePath("value.json")
+            let operations = SchemaStoragePath.DeletionOperations(
+                moveItem: { source, destination in
+                    guard !source.lastPathComponent.hasPrefix(".aps-delete-") else { return }
+                    try FileManager.default.moveItem(at: source, to: destination)
+                },
+                removeItem: { _ in throw InjectedFailure.delete },
+                isAbsent: { url in
+                    !FileManager.default.fileExists(atPath: url.path)
+                }
+            )
+
+            XCTAssertThrowsError(
+                try path.removeRegularFileIfPresent(
+                    stateRoot: root.path,
+                    operations: operations
+                )
+            ) { error in
+                XCTAssertEqual(
+                    error as? APSError,
+                    .rollbackFailed(
+                        context: .stagedFile(path: "value.json"),
+                        originalErrorCode: "persistence_failed",
+                        originalErrorDescription: "Failed to persist value.json"
+                    )
+                )
+            }
+            XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+            XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: root.path).contains {
+                $0.hasPrefix(".aps-delete-")
+            })
+        }
+    }
+
+    internal func testWrongKindStagedRollbackReportsRollbackFailure() throws {
+        try withStateRoot { root in
+            let file = root.appendingPathComponent("value.json")
+            try Data("keep".utf8).write(to: file)
+            let path = try SchemaStoragePath("value.json")
+            let operations = SchemaStoragePath.DeletionOperations(
+                moveItem: { source, destination in
+                    guard source.lastPathComponent.hasPrefix(".aps-delete-") else {
+                        try FileManager.default.moveItem(at: source, to: destination)
+                        return
+                    }
+                    try FileManager.default.removeItem(at: source)
+                    try FileManager.default.createDirectory(
+                        at: destination,
+                        withIntermediateDirectories: false
+                    )
+                },
+                removeItem: { _ in throw InjectedFailure.delete },
+                isAbsent: { url in
+                    !FileManager.default.fileExists(atPath: url.path)
+                }
+            )
+
+            XCTAssertThrowsError(
+                try path.removeRegularFileIfPresent(
+                    stateRoot: root.path,
+                    operations: operations
+                )
+            ) { error in
+                XCTAssertEqual(
+                    error as? APSError,
+                    .rollbackFailed(
+                        context: .stagedFile(path: "value.json"),
+                        originalErrorCode: "persistence_failed",
+                        originalErrorDescription: "Failed to persist value.json"
+                    )
+                )
+            }
+            var isDirectory = ObjCBool(false)
+            XCTAssertTrue(
+                FileManager.default.fileExists(
+                    atPath: file.path,
+                    isDirectory: &isDirectory
+                )
+            )
+            XCTAssertTrue(isDirectory.boolValue)
+        }
+    }
+
     internal func testInjectedPostconditionReadFailureIsPersistenceError() throws {
         try withStateRoot { root in
             let file = root.appendingPathComponent("value.json")
@@ -273,7 +364,13 @@ internal final class SchemaStoragePathTests: XCTestCase {
             let path = try SchemaStoragePath("value.json")
             let operations = SchemaStoragePath.DeletionOperations(
                 removeItem: { _ in },
-                isAbsent: { _ in throw InjectedFailure.postcondition }
+                isAbsent: { url in
+                    let isAbsent = !FileManager.default.fileExists(atPath: url.path)
+                    if url.lastPathComponent == "value.json", isAbsent {
+                        throw InjectedFailure.postcondition
+                    }
+                    return isAbsent
+                }
             )
 
             XCTAssertThrowsError(
@@ -332,7 +429,9 @@ internal final class SchemaStoragePathTests: XCTestCase {
             try keyData.write(to: key)
             let operations = SchemaStoragePath.DeletionOperations(
                 removeItem: { _ in throw InjectedFailure.delete },
-                isAbsent: { _ in false }
+                isAbsent: { url in
+                    !FileManager.default.fileExists(atPath: url.path)
+                }
             )
             let store = SecretStore(
                 directory: root.path,

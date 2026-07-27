@@ -177,6 +177,8 @@ internal struct SchemaStoragePath: Hashable, Sendable {
     ) throws {
         do {
             try operations.moveItem(stagedURL, originalURL)
+            try requireRegularFile(originalURL)
+            try requireAbsent(stagedURL, operations: operations)
         } catch {
             throw APSError.persistenceFailed(key: rawValue)
         }
@@ -200,6 +202,18 @@ internal struct SchemaStoragePath: Hashable, Sendable {
     ) throws {
         do {
             guard try operations.isAbsent(url) else {
+                throw APSError.persistenceFailed(key: rawValue)
+            }
+        } catch let error as APSError {
+            throw error
+        } catch {
+            throw APSError.persistenceFailed(key: rawValue)
+        }
+    }
+
+    private func requireRegularFile(_ url: URL) throws {
+        do {
+            guard try Self.itemKind(at: url) == .regularFile else {
                 throw APSError.persistenceFailed(key: rawValue)
             }
         } catch let error as APSError {

@@ -1655,6 +1655,24 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    internal func testDefaultFlagNameSetRollsBackCanonicalAndLegacyObjectsWhenLegacyWriteDrops() async throws {
+        let defaults = OneShotDroppingUserDefaults()
+        let oldLegacy = try JSONEncoder().encode(false)
+        defaults.seed(17, forKey: "aps.user.flag")
+        defaults.seed(oldLegacy, forKey: "App/aps.flag")
+        defaults.dropNextSet(forKey: "App/aps.flag")
+        let overrideToken = Application.override(\Application.userDefaults, with: defaults)
+        defer { _ = overrideToken }
+        let store = StateStore()
+
+        XCTAssertThrowsError(try store.set(name: "flag", value: "true")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "flag"))
+        }
+        XCTAssertEqual(defaults.object(forKey: "aps.user.flag") as? Int, 17)
+        XCTAssertEqual(defaults.object(forKey: "App/aps.flag") as? Data, oldLegacy)
+    }
+
+    @MainActor
     internal func testDefaultFileStateResetAdapterPreservesNewerDiskWrites() async throws {
         let store = StateStore()
         try store.set(.note, value: "before-reset")
@@ -2096,6 +2114,145 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    internal func testRemoveKeyRejectsDroppedCandidateSchemaWriteBeforePurge() async throws {
+        let store = StateStore()
+        let original = try store.loadSchema()
+        var purgeCalled = false
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    purgeCalled = true
+                },
+                schemaWriter: { _, _ in }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: UserSchema.fileName))
+        }
+
+        XCTAssertFalse(purgeCalled)
+        XCTAssertEqual(try store.loadSchema(), original)
+        XCTAssertNotNil(try store.resolve("note"))
+    }
+
+    @MainActor
+    internal func testRemoveKeyRestoresOriginalAfterCandidateVerificationMismatch() async throws {
+        let store = StateStore()
+        let original = try store.loadSchema()
+        var loadCount = 0
+        var purgeCalled = false
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    purgeCalled = true
+                },
+                schemaWriter: { document, root in
+                    try UserSchema.write(document, stateRoot: root)
+                },
+                schemaLoader: { root in
+                    loadCount += 1
+                    if loadCount == 1 {
+                        var divergent = try UserSchema.loadUnlocked(stateRoot: root)
+                        divergent.namespace = "divergent"
+                        try UserSchema.write(divergent, stateRoot: root)
+                        return divergent
+                    }
+                    return try UserSchema.loadUnlocked(stateRoot: root)
+                }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: UserSchema.fileName))
+        }
+
+        XCTAssertEqual(loadCount, 2)
+        XCTAssertFalse(purgeCalled)
+        XCTAssertEqual(try store.loadSchema(), original)
+        XCTAssertNotNil(try store.resolve("note"))
+    }
+
+    @MainActor
+    internal func testRemoveKeyRestoresOriginalWhenCandidateWriterPersistsThenThrows() async throws {
+        let store = StateStore()
+        let original = try store.loadSchema()
+        var schemaWriteCount = 0
+        var purgeCalled = false
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    purgeCalled = true
+                },
+                schemaWriter: { document, root in
+                    schemaWriteCount += 1
+                    try UserSchema.write(document, stateRoot: root)
+                    if schemaWriteCount == 1 {
+                        throw APSError.persistenceFailed(key: "candidate-write")
+                    }
+                }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "candidate-write"))
+        }
+
+        XCTAssertEqual(schemaWriteCount, 2)
+        XCTAssertFalse(purgeCalled)
+        XCTAssertEqual(try store.loadSchema(), original)
+        XCTAssertNotNil(try store.resolve("note"))
+    }
+
+    @MainActor
+    internal func testRemoveKeyReportsRollbackFailureWhenCandidateVerificationReadFails() async throws {
+        let store = StateStore()
+        _ = try store.loadSchema()
+        var schemaWriteCount = 0
+        var loadCount = 0
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    XCTFail("purge must not run before candidate verification")
+                },
+                schemaWriter: { document, root in
+                    schemaWriteCount += 1
+                    guard schemaWriteCount == 1 else { return }
+                    try UserSchema.write(document, stateRoot: root)
+                },
+                schemaLoader: { root in
+                    loadCount += 1
+                    if loadCount == 1 {
+                        throw APSError.schemaInvalid(reason: "injected candidate read failure")
+                    }
+                    return try UserSchema.loadUnlocked(stateRoot: root)
+                }
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .rollbackFailed(
+                    context: .schema(key: "note"),
+                    originalErrorCode: "persistence_failed",
+                    originalErrorDescription: "Failed to persist schema.json"
+                )
+            )
+        }
+
+        XCTAssertEqual(schemaWriteCount, 2)
+        XCTAssertEqual(loadCount, 2)
+        XCTAssertThrowsError(try store.resolve("note")) { error in
+            XCTAssertEqual(error as? APSError, .unknownKey(name: "note"))
+        }
+    }
+
+    @MainActor
     func testRemoveKeyReportsRollbackFailureWhenSchemaRestoreFails() async throws {
         let store = StateStore()
         _ = try store.loadSchema()
@@ -2127,6 +2284,42 @@ final class APSTests: XCTestCase {
             XCTAssertEqual(domainError?.code, "rollback_failed")
             XCTAssertEqual(domainError?.exitCode, 73)
             XCTAssertFalse(domainError?.hint.isEmpty == true)
+        }
+
+        XCTAssertEqual(schemaWriteCount, 2)
+        XCTAssertThrowsError(try store.resolve("note")) { error in
+            XCTAssertEqual(error as? APSError, .unknownKey(name: "note"))
+        }
+    }
+
+    @MainActor
+    internal func testRemoveKeyReportsRollbackFailureWhenSchemaRestoreWriteDrops() async throws {
+        let store = StateStore()
+        _ = try store.loadSchema()
+        var schemaWriteCount = 0
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    throw APSError.persistenceFailed(key: "note")
+                },
+                schemaWriter: { document, root in
+                    schemaWriteCount += 1
+                    guard schemaWriteCount == 1 else { return }
+                    try UserSchema.write(document, stateRoot: root)
+                }
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .rollbackFailed(
+                    context: .schema(key: "note"),
+                    originalErrorCode: "persistence_failed",
+                    originalErrorDescription: "Failed to persist note"
+                )
+            )
         }
 
         XCTAssertEqual(schemaWriteCount, 2)
@@ -3293,8 +3486,12 @@ extension APSTests {
                 removeItem: { url in
                     try FileManager.default.removeItem(at: url)
                 },
-                isAbsent: { _ in
-                    throw TransactionalDeletionFailure.postconditionRead
+                isAbsent: { url in
+                    let isAbsent = !FileManager.default.fileExists(atPath: url.path)
+                    if url.lastPathComponent == "value.json", isAbsent {
+                        throw TransactionalDeletionFailure.postconditionRead
+                    }
+                    return isAbsent
                 }
             )
 
@@ -3405,8 +3602,12 @@ extension APSTests {
                 removeItem: { url in
                     try FileManager.default.removeItem(at: url)
                 },
-                isAbsent: { _ in
-                    throw TransactionalDeletionFailure.postconditionRead
+                isAbsent: { url in
+                    let isAbsent = !FileManager.default.fileExists(atPath: url.path)
+                    if url.lastPathComponent == "custom.enc", isAbsent {
+                        throw TransactionalDeletionFailure.postconditionRead
+                    }
+                    return isAbsent
                 }
             )
             let store = SecretStore(

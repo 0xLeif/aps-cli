@@ -48,6 +48,13 @@ extension StateStore {
             name: name,
             value: value,
             storageOperation: { entry, rawValue, root, schema in
+                if
+                    entry.name == DemoKey.flag.rawValue,
+                    isDefaultDefinition(entry, for: .flag, in: schema)
+                {
+                    try setDefaultFlagAdapter(entry, value: rawValue)
+                    return
+                }
                 try DynamicKeyStorage.set(
                     entry: entry,
                     value: rawValue,
@@ -350,7 +357,10 @@ extension StateStore {
         name: String,
         purge: Bool,
         purgeOperation: (SchemaKeyEntry, String) throws -> Void,
-        schemaWriter: (UserSchemaDocument, String) throws -> Void
+        schemaWriter: (UserSchemaDocument, String) throws -> Void,
+        schemaLoader: (String) throws -> UserSchemaDocument = { root in
+            try UserSchema.loadUnlocked(stateRoot: root)
+        }
     ) throws {
         let root = stateRoot
         try SchemaFileLock.withExclusiveLock(stateRoot: root) {
@@ -366,7 +376,37 @@ extension StateStore {
             }
             var candidate = original
             candidate.keys.remove(at: index)
-            try schemaWriter(candidate, root)
+            let postconditionError = APSError.persistenceFailed(key: UserSchema.fileName)
+            do {
+                try schemaWriter(candidate, root)
+                do {
+                    guard try schemaLoader(root) == candidate else {
+                        throw postconditionError
+                    }
+                } catch {
+                    throw postconditionError
+                }
+            } catch {
+                let candidateError = (error as? APSError) ?? postconditionError
+                do {
+                    try schemaWriter(original, root)
+                } catch {
+                    // Verification below is authoritative when a writer persists
+                    // the requested document and then reports an error.
+                }
+                do {
+                    guard try schemaLoader(root) == original else {
+                        throw APSError.persistenceFailed(key: UserSchema.fileName)
+                    }
+                } catch {
+                    throw APSError.rollbackFailed(
+                        context: .schema(key: name),
+                        originalErrorCode: candidateError.code,
+                        originalErrorDescription: candidateError.description
+                    )
+                }
+                throw candidateError
+            }
             guard purge else { return }
 
             do {
@@ -375,6 +415,14 @@ extension StateStore {
                 let purgeError = (error as? APSError) ?? APSError.persistenceFailed(key: name)
                 do {
                     try schemaWriter(original, root)
+                } catch {
+                    // Verification below is authoritative when a writer persists
+                    // the requested document and then reports an error.
+                }
+                do {
+                    guard try schemaLoader(root) == original else {
+                        throw APSError.persistenceFailed(key: UserSchema.fileName)
+                    }
                 } catch {
                     throw APSError.rollbackFailed(
                         context: .schema(key: name),

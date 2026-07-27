@@ -98,8 +98,9 @@ and synchronize the default AppState dogfood surface before releasing the lock.
     holds `secret.store.lock`, deletes only the envelope, verifies absence, and
     preserves shared key material.
 13. Schema removal with purge holds the schema lock through storage deletion.
-    A detected purge failure restores the original schema before the lock is
-    released; rollback failure is reported distinctly.
+    The candidate schema is reloaded and compared before destructive purge. A
+    detected purge failure restores, reloads, and compares the original schema
+    before the lock is released; rollback failure is reported distinctly.
 14. Bulk reset runs in schema order, stops after the first failure, reports
     reset and not-attempted keys, and records stats only for verified successes
     after the outer schema lock is released.

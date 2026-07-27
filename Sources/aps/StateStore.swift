@@ -179,7 +179,7 @@ public final class StateStore {
 
     /// Persists the default flag through both registry and AppState keys as one
     /// verified operation, restoring their exact prior objects after failure.
-    private func setDefaultFlagAdapter(_ entry: SchemaKeyEntry, value: String) throws {
+    internal func setDefaultFlagAdapter(_ entry: SchemaKeyEntry, value: String) throws {
         guard let boolValue = Self.parseBool(value) else {
             throw APSError.invalidValue(key: entry.name, value: value)
         }
@@ -342,7 +342,7 @@ public final class StateStore {
         }) ?? false
     }
 
-    private func isDefaultDefinition(
+    internal func isDefaultDefinition(
         _ entry: SchemaKeyEntry,
         for key: DemoKey,
         in schema: UserSchemaDocument

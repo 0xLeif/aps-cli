@@ -231,6 +231,15 @@ Acceptance Criteria
   behaviorally matches the default parent; replacing the parent selects registry
   storage for the Slice.
 - Default flag writes synchronize and verify canonical and legacy values as one
-  operation, restoring both exact prior objects after detected failure.
+  operation through both typed and string-name entry points, restoring both
+  exact prior objects after detected failure.
+- Schema removal reloads and compares the candidate before destructive purge,
+  then reloads and compares the original after rollback. A dropped schema write
+  cannot delete registered storage or hide a failed rollback. Candidate
+  write or verification failure restores and verifies the original before
+  returning, including when a writer persists and then throws.
+- Failed staged deletion verifies that rollback restored a regular-file
+  original and removed the staging leaf before returning the deletion error;
+  otherwise it reports `rollback_failed`.
 - Default FileState reset adapter synchronization reloads the current disk value
   under the storage lock and cannot delete or replace a newer valid write.
