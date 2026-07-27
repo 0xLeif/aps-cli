@@ -199,13 +199,16 @@ internal struct SchemaStoragePath: Hashable, Sendable {
             "secret.store.lock",
             "secret.key.lock",
         ]
-        if topLevelReserved.contains(collisionKey) {
+        let components = collisionKey.split(separator: "/").map(String.init)
+        guard let first = components.first else {
             return true
         }
-        guard let leaf = collisionKey.split(separator: "/").last.map(String.init) else {
+        if topLevelReserved.contains(first) {
             return true
         }
-        return leaf.hasSuffix(".lock") || leaf.hasSuffix(".lock.held")
+        return components.contains {
+            $0.hasSuffix(".lock") || $0.hasSuffix(".lock.held")
+        }
     }
 
     private static func requireDirectory(_ url: URL, description: String) throws {
@@ -218,12 +221,6 @@ internal struct SchemaStoragePath: Hashable, Sendable {
     }
 
     private static func itemKind(at url: URL) throws -> ItemKind? {
-        if (try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)) != nil {
-            return .symbolicLink
-        }
-        guard FileManager.default.fileExists(atPath: url.path) else {
-            return nil
-        }
         do {
             let attributes = try FileManager.default.attributesOfItem(atPath: url.path)
             guard let type = attributes[.type] as? FileAttributeType else {

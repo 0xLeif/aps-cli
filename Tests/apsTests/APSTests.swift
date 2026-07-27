@@ -429,6 +429,27 @@ final class APSTests: XCTestCase {
     #endif
 
     @MainActor
+    func testSecretStoreRejectsUnsafeFilenameBeforeWrite() async throws {
+        let path = FileManager.defaultFileStatePath
+        let store = SecretStore(
+            directory: path,
+            storeFileName: "./custom.enc",
+            keyName: "custom"
+        )
+
+        XCTAssertThrowsError(try store.set("must-not-persist")) { error in
+            guard case .schemaInvalid = error as? APSError else {
+                return XCTFail("expected schemaInvalid, got \(error)")
+            }
+        }
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: URL(fileURLWithPath: path).appendingPathComponent("custom.enc").path
+            )
+        )
+    }
+
+    @MainActor
     func testSecretStoreCorruptEnvelopeThrowsDecodingFailed() async throws {
         let store = StateStore()
         try store.set(.secret, value: "ok")

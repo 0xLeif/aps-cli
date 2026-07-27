@@ -75,7 +75,8 @@ public struct SecretStore: Sendable {
     /// does not parse throws `APSError.decodingFailed`; a valid envelope that
     /// does not open throws `APSError.secretUnlockFailed` (wrong key).
     public func get() throws -> String {
-        try getUnlocked(lockKeyFile: true)
+        _ = try validatedStoragePath()
+        return try getUnlocked(lockKeyFile: true)
     }
 
     private func getUnlocked(lockKeyFile: Bool) throws -> String {
@@ -100,6 +101,7 @@ public struct SecretStore: Sendable {
     /// before rewriting. A wrong passphrase or key fails with
     /// `secretUnlockFailed` and leaves ciphertext unchanged (issue #89).
     public func set(_ value: String) throws {
+        _ = try validatedStoragePath()
         try SchemaFileLock.withExclusiveLock(
             stateRoot: directory,
             lockFileName: "secret.store.lock"
@@ -142,8 +144,12 @@ public struct SecretStore: Sendable {
 
     /// Reset to the initial value: the store file is deleted.
     public func reset() {
-        guard let storagePath = try? SchemaStoragePath(storeFileName) else { return }
+        guard let storagePath = try? validatedStoragePath() else { return }
         try? storagePath.removeRegularFileIfPresent(stateRoot: directory)
+    }
+
+    private func validatedStoragePath() throws -> SchemaStoragePath {
+        try SchemaStoragePath(storeFileName)
     }
 
     // MARK: - Envelope cryptography

@@ -45,9 +45,11 @@ internal final class SchemaStoragePathTests: XCTestCase {
             "SCHEMA.JSON",
             "secret.key",
             "SECRET.KEY",
+            "secret.key/child.json",
             "schema.json.lock",
             "nested/value.lock",
             "nested/value.lock.held",
+            "nested/value.lock/child.json",
             "CON",
             "nul.txt",
             "nested/COM1.json",
@@ -196,6 +198,21 @@ internal final class SchemaStoragePathTests: XCTestCase {
     }
 
     #if canImport(Darwin) || canImport(Glibc)
+    internal func testInaccessibleAncestorIsNotReportedAsMissing() throws {
+        try withStateRoot { root in
+            let directory = root.appendingPathComponent("blocked", isDirectory: true)
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
+            let file = directory.appendingPathComponent("value.json")
+            try Data("keep".utf8).write(to: file)
+            XCTAssertEqual(chmod(directory.path, 0), 0)
+            defer { _ = chmod(directory.path, 0o700) }
+
+            let path = try SchemaStoragePath("blocked/value.json")
+            XCTAssertThrowsError(try path.resolve(stateRoot: root.path))
+            XCTAssertThrowsError(try path.removeRegularFileIfPresent(stateRoot: root.path))
+        }
+    }
+
     internal func testSpecialFileIsRejected() throws {
         try withStateRoot { root in
             let fifo = root.appendingPathComponent("value.json")

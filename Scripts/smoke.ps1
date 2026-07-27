@@ -199,7 +199,9 @@ $unsafePaths = @(
     'nested\escape.json',
     'schema.json',
     'secret.key',
+    'secret.key/child.json',
     'unsafe.lock',
+    'nested/value.lock/child.json',
     'CON',
     'COM¹'
 )
