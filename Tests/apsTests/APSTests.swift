@@ -2887,7 +2887,7 @@ extension APSTests {
     }
 
     @MainActor
-    internal func testFileStateLockNamesUseFullPortableRelativePath() throws {
+    internal func testFileStateLockNamesUseFullPortableRelativePath() async throws {
         let nestedSchema = SchemaKeyEntry(
             name: "nestedSchema",
             type: "String",
