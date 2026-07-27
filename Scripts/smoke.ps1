@@ -185,6 +185,216 @@ $null = Invoke-ApsOk key add smokeNote --type String --storage FileState --path 
 Assert-Equal 'from-smoke' (Invoke-ApsOk set smokeNote from-smoke) 'set smokeNote'
 Assert-Equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'get smokeNote'
 Assert-Match (Invoke-ApsOk schema) '"name":"smokeNote"' 'schema lists smokeNote'
+
+# Schema-controlled paths cannot alias the state root or endanger unrelated files.
+$sentinel = Join-Path $env:APS_HOME 'path-safety-sentinel.txt'
+Set-Content -LiteralPath $sentinel -Value 'must-survive'
+$unsafePaths = @(
+    '.',
+    './',
+    '../escape.json',
+    'nested/../escape.json',
+    '/tmp/aps-escape.json',
+    'C:/escape.json',
+    'nested\escape.json',
+    'schema.json',
+    'secret.key',
+    'secret.key/child.json',
+    'unsafe.lock',
+    'nested/value.lock/child.json',
+    'CON',
+    'COM¹'
+)
+$unsafeIndex = 0
+foreach ($unsafePath in $unsafePaths) {
+    $unsafeIndex += 1
+    Invoke-ApsExpectFail key add "unsafePath$unsafeIndex" `
+        --type String `
+        --storage EncryptedFile `
+        --path $unsafePath `
+        --initial ''
+}
+if (-not (Test-Path -LiteralPath $sentinel -PathType Leaf)) {
+    throw 'unsafe schema path removed the state-root sentinel'
+}
+
+$unsafeDirectory = Join-Path $env:APS_HOME 'unsafe-directory'
+New-Item -ItemType Directory -Force -Path $unsafeDirectory | Out-Null
+$directorySentinel = Join-Path $unsafeDirectory 'sentinel.txt'
+Set-Content -LiteralPath $directorySentinel -Value 'directory-sentinel'
+Invoke-ApsExpectFail key add unsafeDirectory `
+    --type String `
+    --storage FileState `
+    --path unsafe-directory `
+    --initial ''
+if (-not (Test-Path -LiteralPath $directorySentinel -PathType Leaf)) {
+    throw 'directory path validation removed nested contents'
+}
+
+$null = Invoke-ApsOk key add collisionOne `
+    --type String `
+    --storage FileState `
+    --path collision.json `
+    --initial ''
+Invoke-ApsExpectFail key add collisionTwo `
+    --type String `
+    --storage EncryptedFile `
+    --path COLLISION.JSON `
+    --initial ''
+Invoke-ApsExpectFail key add collisionChild `
+    --type String `
+    --storage FileState `
+    --path collision.json/value.json `
+    --initial ''
+$null = Invoke-ApsOk key remove collisionOne --purge
+
+$null = Invoke-ApsOk key add sigmaOne `
+    --type String `
+    --storage FileState `
+    --path Σ.json `
+    --initial ''
+Invoke-ApsExpectFail key add sigmaTwo `
+    --type String `
+    --storage FileState `
+    --path ς.json `
+    --initial ''
+$null = Invoke-ApsOk key remove sigmaOne --purge
+
+$symlinkTarget = Join-Path ([System.IO.Path]::GetTempPath()) (
+    'aps-smoke-symlink-target-' + [guid]::NewGuid().ToString('N')
+)
+New-Item -ItemType Directory -Force -Path $symlinkTarget | Out-Null
+$externalLeaf = Join-Path $symlinkTarget 'leaf.json'
+Set-Content -LiteralPath $externalLeaf -Value 'external-leaf'
+$leafLinkCreated = $false
+try {
+    $unsafeLeaf = Join-Path $env:APS_HOME 'unsafe-leaf.json'
+    New-Item -ItemType SymbolicLink -Path $unsafeLeaf -Target $externalLeaf -ErrorAction Stop | Out-Null
+    $leafLinkCreated = $true
+} catch {
+    Write-Host "symlink leaf smoke skipped: $($_.Exception.Message)"
+}
+if ($leafLinkCreated) {
+    Invoke-ApsExpectFail key add unsafeLeaf `
+        --type String `
+        --storage FileState `
+        --path unsafe-leaf.json `
+        --initial ''
+    Assert-Equal 'external-leaf' (Get-Content -Raw $externalLeaf).Trim() 'symlink leaf target'
+}
+$parentLinkCreated = $false
+try {
+    $unsafeParent = Join-Path $env:APS_HOME 'unsafe-parent'
+    New-Item -ItemType SymbolicLink -Path $unsafeParent -Target $symlinkTarget -ErrorAction Stop | Out-Null
+    $parentLinkCreated = $true
+} catch {
+    Write-Host "symlink ancestor smoke skipped: $($_.Exception.Message)"
+}
+if ($parentLinkCreated) {
+    Invoke-ApsExpectFail key add unsafeParent `
+        --type String `
+        --storage FileState `
+        --path unsafe-parent/leaf.json `
+        --initial ''
+    Assert-Equal 'external-leaf' (Get-Content -Raw $externalLeaf).Trim() 'symlink ancestor target'
+}
+
+# Malicious hand-edits are rejected before reset or purge can touch a path.
+$schemaPath = Join-Path $env:APS_HOME 'schema.json'
+$null = Invoke-ApsOk key add blockedReset `
+    --type String `
+    --storage FileState `
+    --path blocked-reset.json `
+    --initial ''
+$null = Invoke-ApsOk set blockedReset changed
+$resetSchema = Get-Content -Raw -LiteralPath $schemaPath
+Set-Content -LiteralPath $schemaPath -NoNewline -Value (
+    $resetSchema.Replace('blocked-reset.json', 'unsafe-directory')
+)
+Invoke-ApsExpectFail reset blockedReset
+if (-not (Test-Path -LiteralPath $directorySentinel -PathType Leaf)) {
+    throw 'blocked reset removed directory contents'
+}
+if (-not (Test-Path -LiteralPath $sentinel -PathType Leaf)) {
+    throw 'blocked reset removed the state-root sentinel'
+}
+Set-Content -LiteralPath $schemaPath -NoNewline -Value $resetSchema
+$null = Invoke-ApsOk key remove blockedReset --purge
+
+$null = Invoke-ApsOk key add blockedPurge `
+    --type String `
+    --storage FileState `
+    --path blocked-purge.json `
+    --initial ''
+$null = Invoke-ApsOk set blockedPurge changed
+$purgeSchema = Get-Content -Raw -LiteralPath $schemaPath
+Set-Content -LiteralPath $schemaPath -NoNewline -Value (
+    $purgeSchema.Replace('blocked-purge.json', 'unsafe-directory')
+)
+Invoke-ApsExpectFail key remove blockedPurge --purge
+if (-not (Test-Path -LiteralPath $directorySentinel -PathType Leaf)) {
+    throw 'blocked purge removed directory contents'
+}
+if (-not (Test-Path -LiteralPath $sentinel -PathType Leaf)) {
+    throw 'blocked purge removed the state-root sentinel'
+}
+Set-Content -LiteralPath $schemaPath -NoNewline -Value $purgeSchema
+$null = Invoke-ApsOk key remove blockedPurge --purge
+
+# Reset and purge operate only on their verified regular leaf.
+$null = Invoke-ApsOk key add resetLeaf `
+    --type String `
+    --storage FileState `
+    --path reset-leaf.json `
+    --initial seed
+$null = Invoke-ApsOk set resetLeaf changed
+$null = Invoke-ApsOk reset resetLeaf
+Assert-Equal 'seed' (Invoke-ApsOk get resetLeaf) 'reset verified FileState leaf'
+if (-not (Test-Path -LiteralPath $sentinel -PathType Leaf)) {
+    throw 'FileState reset removed the state-root sentinel'
+}
+$null = Invoke-ApsOk key remove resetLeaf --purge
+if (Test-Path -LiteralPath (Join-Path $env:APS_HOME 'reset-leaf.json')) {
+    throw 'resetLeaf data survived purge'
+}
+
+$null = Invoke-ApsOk key add purgeLeaf `
+    --type String `
+    --storage FileState `
+    --path purge-leaf.json `
+    --initial ''
+$null = Invoke-ApsOk set purgeLeaf changed
+$null = Invoke-ApsOk key remove purgeLeaf --purge
+if (Test-Path -LiteralPath (Join-Path $env:APS_HOME 'purge-leaf.json')) {
+    throw 'purgeLeaf data survived purge'
+}
+
+$null = Invoke-ApsOk key add resetSecret `
+    --type String `
+    --storage EncryptedFile `
+    --path reset-secret.enc `
+    --initial ''
+$null = Invoke-ApsOk set resetSecret changed
+$null = Invoke-ApsOk reset resetSecret
+if (Test-Path -LiteralPath (Join-Path $env:APS_HOME 'reset-secret.enc')) {
+    throw 'resetSecret ciphertext survived reset'
+}
+$null = Invoke-ApsOk key remove resetSecret
+
+$null = Invoke-ApsOk key add purgeSecret `
+    --type String `
+    --storage EncryptedFile `
+    --path purge-secret.enc `
+    --initial ''
+$null = Invoke-ApsOk set purgeSecret changed
+$null = Invoke-ApsOk key remove purgeSecret --purge
+if (Test-Path -LiteralPath (Join-Path $env:APS_HOME 'purge-secret.enc')) {
+    throw 'purgeSecret ciphertext survived purge'
+}
+if (-not (Test-Path -LiteralPath $sentinel -PathType Leaf)) {
+    throw 'destructive schema operations removed the state-root sentinel'
+}
+
 $null = Invoke-ApsOk reset --all
 Assert-Equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'reset --all leaves user key'
 $null = Invoke-ApsOk reset --registered

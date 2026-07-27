@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 34
+version: 35
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -240,3 +240,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-23 | CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes: Recover stale SecretStore keys and serialize fresh encrypted-file writes |
 | 2026-07-26 | CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes: Recover stale SecretStore keys and serialize fresh encrypted-file writes |
 | 2026-07-26 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |
+| 2026-07-26 | CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for: Prevent schema-controlled paths from deleting or escaping the APS state root for issue 111 |

@@ -134,16 +134,12 @@ extension StateStore {
             switch entry.storage {
             case "FileState":
                 if let path = entry.path {
-                    let url = URL(fileURLWithPath: root).appendingPathComponent(path)
-                    try? FileManager.default.removeItem(at: url)
+                    try SchemaStoragePath(path).removeRegularFileIfPresent(stateRoot: root)
                 }
             case "EncryptedFile":
-                let store = SecretStore(
-                    directory: root,
-                    storeFileName: entry.path ?? "\(name).enc",
-                    keyName: name
-                )
-                store.reset()
+                if let path = entry.path {
+                    try SchemaStoragePath(path).removeRegularFileIfPresent(stateRoot: root)
+                }
             case "StoredState":
                 let store = Application.dependency(\Application.userDefaults)
                 store.removeObject(forKey: "aps.user.\(name)")

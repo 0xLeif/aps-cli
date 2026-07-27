@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for",
+  "slug": "prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for",
+  "title": "Prevent schema-controlled paths from deleting or escaping the APS state root for issue 111",
+  "description": "Prevent schema-controlled paths from deleting or escaping the APS state root for issue 111",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "d6bd453c7eeac1a686ffbd8bd299f5ca1033b801",
+  "created_at": 1785106870,
+  "updated_at": 1785113971,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/UserSchema.swift",
+    "Sources/aps/SchemaStoragePath.swift",
+    "Sources/aps/DynamicKeyStorage.swift",
+    "Sources/aps/StateStore+Registry.swift",
+    "Sources/aps/SecretStore.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Tests/apsTests/SchemaStoragePathTests.swift",
+    "Scripts/smoke.sh",
+    "Scripts/smoke.ps1",
+    "README.md",
+    "docs/design/dynamic-schema.md",
+    "docs/release-readiness.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Unsafe root, directory, reserved, colliding, and symlinked schema paths are rejected; valid nested paths continue to work; reset and purge never recursively delete directories or escape the state root; adversarial regression tests and all cross-platform gates pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

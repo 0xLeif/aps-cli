@@ -14,13 +14,13 @@ This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.
 
 | Surface | Status |
 | --- | --- |
-| Swift package and 78-test verification lane | Passing |
+| Swift package and 94-test verification lane | Passing |
 | macOS, Linux, and Windows source CI | Active |
 | Homebrew and release packaging | Hardening before the next tag |
-| Dynamic schema safety | Hardening path validation, purge semantics, and registry authority |
+| Dynamic schema safety | Safe paths enforced; purge truthfulness and registry authority still hardening |
 | SpecSync contracts | Passing with 2 active module specs |
 
-The current release remains useful for local AppState exploration. Treat custom schema paths, `key remove --purge`, passphrase secrets, and production automation as advanced surfaces until the items in [release readiness](docs/release-readiness.md) are closed.
+The current release remains useful for local AppState exploration. Treat `key remove --purge`, passphrase secrets, and production automation as advanced surfaces until the remaining items in [release readiness](docs/release-readiness.md) are closed.
 
 ## Install
 
@@ -105,6 +105,8 @@ aps set smokeNote hello
 aps key remove smokeNote --purge
 aps key list --json
 ```
+
+Persistent schema paths must be portable relative file paths below the state root. `aps` rejects absolute or traversing paths, reserved APS files, case or Unicode-equivalent collisions, directories, special files, and paths that traverse symbolic links. Reset and purge delete only a validated regular-file leaf.
 
 ### Encrypted-file secret store (`secret`)
 

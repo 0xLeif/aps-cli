@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 46,
-  "id": "CHG-0046-publish-the-aps-product-site-through-github-pages",
+  "sequence": 47,
+  "id": "CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for",
   "acknowledged_collisions": []
 }

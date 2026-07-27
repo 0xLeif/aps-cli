@@ -21,15 +21,7 @@ Measured in-process source line coverage is 53.42%. Subprocess CLI tests are not
 
 ### 1. Make schema paths safe by construction
 
-Current validation accepts `"."`, `"./"`, directories, reserved internal files, shared paths, and paths containing symlink escapes. A reproduced `EncryptedFile` key with path `"."`, followed by `key remove --purge`, deleted the entire state root.
-
-Required outcome:
-
-- canonicalize and prove containment under the state root;
-- reject the root itself, directories, reserved files, and symlink traversal;
-- reject storage-path collisions across registered keys;
-- delete only a verified regular leaf file;
-- cover every destructive path with adversarial subprocess tests.
+Implemented for v1.1.0 by [#111](https://github.com/0xLeif/aps-cli/issues/111). Persistent paths are lexically portable, canonicalized beneath the state root, collision-checked across the complete schema, and revalidated against the filesystem before every operation. Directories, special files, symbolic links, reserved APS files, and root or traversal aliases are rejected. Reset and purge delete only a verified regular-file leaf. Unit and cross-platform smoke regressions preserve a state-root sentinel during the original `"."` attack.
 
 ### 2. Make the registry authoritative
 

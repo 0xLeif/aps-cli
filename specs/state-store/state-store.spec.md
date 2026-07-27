@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 29
+version: 30
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -9,6 +9,7 @@ files:
   - Sources/aps/DemoState.swift
   - Sources/aps/Dependencies.swift
   - Sources/aps/DynamicKeyStorage.swift
+  - Sources/aps/SchemaStoragePath.swift
 db_tables: []
 depends_on: []
 ---
@@ -154,3 +155,4 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-22 | Issue-0097-linux-safe-watch-polling: Replace RunLoop limit-date polling with cancellation-safe sleeps. |
 | 2026-07-23 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |
 | 2026-07-26 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |
+| 2026-07-26 | CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for: Prevent schema-controlled paths from deleting or escaping the APS state root for issue 111 |
