@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+trap 'status=$?; printf "smoke failed at line %s (exit %s)\n" "$LINENO" "$status" >&2' ERR
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
