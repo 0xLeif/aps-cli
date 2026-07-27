@@ -177,7 +177,7 @@ internal final class SecretStoreSecurityTests: XCTestCase {
     }
 
     @MainActor
-    internal func testScryptFailuresMapByFreshWriteUnlockWatchAndMigrationOperation() throws {
+    internal func testScryptFailuresMapByFreshWriteUnlockWatchAndMigrationOperation() async throws {
         setSecretPassphrase("kdf-failure")
         let directory = try XCTUnwrap(directoryURL)
         let working = try makeFixture(directory: directory)
@@ -467,7 +467,7 @@ internal final class SecretStoreSecurityTests: XCTestCase {
     }
 
     @MainActor
-    internal func testWatchDoesNotPromptWhileEncryptedStoreIsMissing() throws {
+    internal func testWatchDoesNotPromptWhileEncryptedStoreIsMissing() async throws {
         let promptRecorder = PassphrasePromptRecorder(passphrase: "unused")
         setUsePassphrase("1")
         let fixture = try makeFixture(interactivePassphraseOperations: promptRecorder.operations)
