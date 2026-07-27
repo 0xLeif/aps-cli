@@ -186,7 +186,17 @@ Acceptance Criteria
   a distinct stable rollback error.
 - Bulk reset stops at the first failure, identifies reset, failed, and
   not-attempted keys, and records stats only for successful keys.
+- Parent/Slice compatibility treats an omitted parent initial field as the
+  Slice initial fallback.
 - StoredState resets restore canonical and legacy backing objects when
   replacement verification fails.
+- StoredState rollback verifies exact raw-object restoration and reports
+  `rollback_failed` if restoration cannot be synchronized or verified.
 - Destructive leaf removal stages the original regular file and restores it
   when post-delete verification fails.
+- Failed staged-leaf restoration reports `rollback_failed` instead of masking
+  data stranded under the staging name.
+- FileState and Slice storage locks derive from the full portable relative path
+  and cannot alias `schema.json.lock` or another same-basename storage path.
+- Documentation-only edits to a default entry preserve its default adapter
+  behavior, and default flag writes keep canonical and legacy values aligned.

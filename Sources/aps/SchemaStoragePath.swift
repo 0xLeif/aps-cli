@@ -153,8 +153,16 @@ internal struct SchemaStoragePath: Hashable, Sendable {
             try requireAbsent(url, operations: operations)
             try operations.removeItem(stagedURL)
         } catch {
-            try? restoreStagedFile(stagedURL, to: url, operations: operations)
-            throw APSError.persistenceFailed(key: rawValue)
+            let deletionFailure = error as? APSError ?? .persistenceFailed(key: rawValue)
+            do {
+                try restoreStagedFile(stagedURL, to: url, operations: operations)
+            } catch {
+                throw APSError.rollbackFailed(
+                    purgeErrorCode: deletionFailure.code,
+                    purgeErrorDescription: deletionFailure.description
+                )
+            }
+            throw deletionFailure
         }
         return true
     }

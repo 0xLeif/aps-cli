@@ -94,6 +94,14 @@ public final class StateStore {
                     )
                     return
                 }
+                if key == .flag {
+                    try DynamicKeyStorage.set(
+                        entry: entry,
+                        value: rawValue,
+                        stateRoot: root,
+                        schema: schema
+                    )
+                }
                 try setDefaultAdapter(key, value: rawValue)
             }
         )
@@ -229,7 +237,17 @@ public final class StateStore {
     }
 
     private func isDefaultDefinition(_ entry: SchemaKeyEntry, for key: DemoKey) -> Bool {
-        UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue }) == entry
+        guard let defaultEntry = UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue }) else {
+            return false
+        }
+        return entry.name == defaultEntry.name
+            && entry.type == defaultEntry.type
+            && entry.storage == defaultEntry.storage
+            && entry.initial == defaultEntry.initial
+            && entry.path == defaultEntry.path
+            && entry.objectShape == defaultEntry.objectShape
+            && entry.sliceOf == defaultEntry.sliceOf
+            && entry.sliceField == defaultEntry.sliceField
     }
 
     private func synchronizeDefaultAdapter(

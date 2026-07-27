@@ -31,11 +31,20 @@
   reclaimed.
 - Bulk reset rejects incompatible parent/Slice and sibling Slice initial values
   without falsely reporting overwritten outcomes as successful.
+- Bulk reset accepts an omitted parent field when the Slice initial provides
+  the observable fallback.
 - StoredState reset restores canonical and legacy raw objects after detected
   replacement or synchronization failure; Linux and Windows smoke verify
   cross-process `UserDefaults` persistence.
+- StoredState and staged-file rollback tests inject repeated synchronization,
+  dropped restoration-write, and move-back failures and require
+  `rollback_failed`.
+- Storage-lock name tests cover nested `schema.json`, same basenames, and
+  portable case-fold aliases.
 - Bool Slice verification uses the declared parent object shape.
 - Staged deletion restores FileState and secret envelope data when
   postcondition inspection fails.
 - Legacy default-flag fixtures use AppState's JSON-encoded `App/aps.flag`
   representation and verify canonical reset behavior.
+- Documentation-only default edits still synchronize the AppState adapter, and
+  reset-then-write flag tests require canonical and legacy reads to agree.

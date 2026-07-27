@@ -200,12 +200,17 @@ A FileState reset with an initial value atomically overwrites that value under
 the per-file lock instead of deleting first. EncryptedFile reset uses
 `secret.store.lock`, removes only the envelope, verifies its absence, and
 preserves `secret.key`.
+FileState and Slice lock names are derived from the full portable relative path,
+so nested `schema.json` files and same-basename files cannot alias the registry
+lock or each other.
 
 `key remove --purge` keeps the schema lock while it writes the candidate schema
 and deletes the old storage. If deletion reports an error, it restores the
 original schema before releasing the lock. If restoration fails, aps reports
 `rollback_failed`. This is transactional for detected errors before return; it
 does not claim crash, power-loss, or distributed-filesystem atomicity.
+StoredState and staged-file rollback paths verify restoration and also report
+`rollback_failed` when the original data cannot be restored.
 
 Bulk reset runs in schema order and fails fast. Its report identifies reset,
 failed, and not-attempted keys. Mutation statistics advance only for resets

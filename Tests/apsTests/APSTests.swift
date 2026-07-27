@@ -2452,6 +2452,68 @@ extension APSTests {
     }
 
     @MainActor
+    internal func testBulkResetAcceptsMissingParentFieldUsingSliceInitialFallback() async throws {
+        let parent = SchemaKeyEntry(
+            name: "parent",
+            type: "object",
+            storage: "FileState",
+            initial: .object([:]),
+            path: "parent.json",
+            doc: "parent",
+            objectShape: ["name": "String"]
+        )
+        let slice = SchemaKeyEntry(
+            name: "childName",
+            type: "String",
+            storage: "Slice",
+            initial: .string("slice-initial"),
+            doc: "child",
+            sliceOf: "parent",
+            sliceField: "name"
+        )
+        let root = FileManager.defaultFileStatePath
+        try UserSchema.write(UserSchemaDocument(keys: [parent, slice]), stateRoot: root)
+        let store = StateStore()
+        try store.set(name: "parent", value: #"{"name":"current"}"#)
+
+        let report = try store.resetAllRegistered()
+
+        XCTAssertEqual(report, .success(reset: ["parent", "childName"]))
+        XCTAssertEqual(try store.get(name: "parent"), #"{"name":"slice-initial"}"#)
+        XCTAssertEqual(try store.get(name: "childName"), "slice-initial")
+    }
+
+    @MainActor
+    internal func testDocumentationOnlyDefaultChangeStillUsesDemoAdapter() async throws {
+        var schema = UserSchema.defaultDocument()
+        let flagIndex = try XCTUnwrap(schema.keys.firstIndex(where: { $0.name == "flag" }))
+        schema.keys[flagIndex].doc = "Updated documentation without a behavior change."
+        try UserSchema.write(schema, stateRoot: FileManager.defaultFileStatePath)
+        let store = StateStore()
+
+        try store.set(.flag, value: "true")
+
+        XCTAssertEqual(store.get(.flag), "true")
+        XCTAssertEqual(try store.get(name: "flag"), "true")
+        XCTAssertNotNil(hermeticDefaults?.object(forKey: "App/aps.flag"))
+        XCTAssertEqual(hermeticDefaults?.object(forKey: "aps.user.flag") as? Bool, true)
+    }
+
+    @MainActor
+    internal func testDefaultFlagWriteAfterResetAlignsCanonicalAndLegacyStorage() async throws {
+        let store = StateStore()
+        _ = try store.reset(.flag)
+
+        try store.set(.flag, value: "true")
+
+        let legacyData = try XCTUnwrap(hermeticDefaults?.object(forKey: "App/aps.flag") as? Data)
+        XCTAssertEqual(try JSONDecoder().decode(Bool.self, from: legacyData), true)
+        XCTAssertEqual(hermeticDefaults?.object(forKey: "aps.user.flag") as? Bool, true)
+        XCTAssertEqual(store.get(.flag), "true")
+        XCTAssertEqual(try store.get(name: "flag"), "true")
+    }
+
+    @MainActor
     internal func testRollbackFailureRetainsOriginalPurgeDiagnostic() async throws {
         let store = StateStore()
         _ = try store.loadSchema()
@@ -2655,6 +2717,68 @@ extension APSTests {
     }
 
     @MainActor
+    internal func testStoredStateResetReportsRollbackFailureWhenRestorationCannotSynchronize() async throws {
+        let defaults = OneShotFailingSynchronizationUserDefaults()
+        let canonicalKey = "aps.user.doubleSyncFailure"
+        defaults.set("before", forKey: canonicalKey)
+        defaults.failNextSynchronizations(count: 2)
+
+        let overrideToken = Application.override(\Application.userDefaults, with: defaults)
+        defer { _ = overrideToken }
+        let entry = SchemaKeyEntry(
+            name: "doubleSyncFailure",
+            type: "String",
+            storage: "StoredState",
+            initial: .string("after"),
+            doc: "Failed rollback synchronization"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.reset(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .rollbackFailed(
+                    purgeErrorCode: "persistence_failed",
+                    purgeErrorDescription: "Failed to persist \(entry.name)"
+                )
+            )
+        }
+    }
+
+    @MainActor
+    internal func testStoredStateResetReportsRollbackFailureWhenRestorationWriteIsDropped() async throws {
+        let defaults = DroppedRollbackUserDefaults()
+        let canonicalKey = "aps.user.droppedRollback"
+        defaults.seed("before", forKey: canonicalKey)
+
+        let overrideToken = Application.override(\Application.userDefaults, with: defaults)
+        defer { _ = overrideToken }
+        let entry = SchemaKeyEntry(
+            name: "droppedRollback",
+            type: "String",
+            storage: "StoredState",
+            initial: .string("after"),
+            doc: "Dropped rollback write"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.reset(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .rollbackFailed(
+                    purgeErrorCode: "persistence_failed",
+                    purgeErrorDescription: "Failed to persist \(entry.name)"
+                )
+            )
+        }
+        XCTAssertEqual(defaults.object(forKey: canonicalKey) as? String, "after")
+    }
+
+    @MainActor
     internal func testBoolSliceResetVerifiesJSONBooleanUsingDeclaredShape() async throws {
         let parent = SchemaKeyEntry(
             name: "preferences",
@@ -2721,6 +2845,88 @@ extension APSTests {
                 !$0.contains(".aps-delete-")
             })
         }
+    }
+
+    internal func testStagedLeafMoveBackFailureReportsRollbackFailure() throws {
+        try withTransactionalDeletionStateRoot { root in
+            let file = root.appendingPathComponent("value.json")
+            try Data("keep".utf8).write(to: file)
+            let path = try SchemaStoragePath("value.json")
+            let mover = MoveBackFailingDeletionMover()
+            let operations = SchemaStoragePath.DeletionOperations(
+                moveItem: { source, destination in
+                    try mover.move(source, to: destination)
+                },
+                removeItem: { url in
+                    try FileManager.default.removeItem(at: url)
+                },
+                isAbsent: { _ in
+                    throw TransactionalDeletionFailure.postconditionRead
+                }
+            )
+
+            XCTAssertThrowsError(
+                try path.removeRegularFileIfPresent(
+                    stateRoot: root.path,
+                    operations: operations
+                )
+            ) { error in
+                XCTAssertEqual(
+                    error as? APSError,
+                    .rollbackFailed(
+                        purgeErrorCode: "persistence_failed",
+                        purgeErrorDescription: "Failed to persist value.json"
+                    )
+                )
+            }
+            XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+            XCTAssertTrue(try FileManager.default.contentsOfDirectory(atPath: root.path).contains {
+                $0.contains(".aps-delete-")
+            })
+        }
+    }
+
+    @MainActor
+    internal func testFileStateLockNamesUseFullPortableRelativePath() throws {
+        let nestedSchema = SchemaKeyEntry(
+            name: "nestedSchema",
+            type: "String",
+            storage: "FileState",
+            initial: .string(""),
+            path: "nested/schema.json",
+            doc: "Nested schema leaf"
+        )
+        let otherSchema = SchemaKeyEntry(
+            name: "otherSchema",
+            type: "String",
+            storage: "FileState",
+            initial: .string(""),
+            path: "other/schema.json",
+            doc: "Other schema leaf"
+        )
+        let portableAlias = SchemaKeyEntry(
+            name: "portableAlias",
+            type: "String",
+            storage: "FileState",
+            initial: .string(""),
+            path: "NESTED/SCHEMA.JSON",
+            doc: "Portable spelling alias"
+        )
+
+        let nestedLock = try DynamicKeyStorage.fileLockName(nestedSchema)
+        XCTAssertEqual(nestedLock, try DynamicKeyStorage.fileLockName(nestedSchema))
+        XCTAssertNotEqual(nestedLock, "schema.json.lock")
+        XCTAssertNotEqual(nestedLock, try DynamicKeyStorage.fileLockName(otherSchema))
+        XCTAssertEqual(nestedLock, try DynamicKeyStorage.fileLockName(portableAlias))
+        XCTAssertTrue(nestedLock.hasPrefix("storage-"))
+        XCTAssertTrue(nestedLock.hasSuffix(".lock"))
+        let profile = try XCTUnwrap(
+            UserSchema.defaultDocument().keys.first { $0.name == "profile" }
+        )
+        XCTAssertEqual(
+            try DynamicKeyStorage.fileLockName(profile),
+            "profile.json.lock"
+        )
     }
 
     internal func testSecretResetPostconditionReadFailureRestoresEnvelope() throws {
@@ -2802,6 +3008,23 @@ extension APSTests {
 
 private enum TransactionalDeletionFailure: Error, Sendable {
     case postconditionRead
+    case moveBack
+}
+
+private final class MoveBackFailingDeletionMover: @unchecked Sendable {
+    private let lock = NSLock()
+    private var moveCount = 0
+
+    fileprivate func move(_ source: URL, to destination: URL) throws {
+        lock.lock()
+        moveCount += 1
+        let currentMove = moveCount
+        lock.unlock()
+        guard currentMove == 1 else {
+            throw TransactionalDeletionFailure.moveBack
+        }
+        try FileManager.default.moveItem(at: source, to: destination)
+    }
 }
 
 /// UserDefaults test double that loses exactly one selected write.
@@ -2852,7 +3075,7 @@ private final class OneShotFailingSynchronizationUserDefaults:
 {
     private let lock = NSLock()
     private var storage: [String: Any] = [:]
-    private var shouldFailSynchronization = false
+    private var remainingSynchronizationFailures = 0
 
     fileprivate func object(forKey key: String) -> Any? {
         lock.lock()
@@ -2873,16 +3096,60 @@ private final class OneShotFailingSynchronizationUserDefaults:
     }
 
     fileprivate func failNextSynchronization() {
+        failNextSynchronizations(count: 1)
+    }
+
+    fileprivate func failNextSynchronizations(count: Int) {
         lock.lock()
         defer { lock.unlock() }
-        shouldFailSynchronization = true
+        remainingSynchronizationFailures = count
     }
 
     fileprivate func synchronize() -> Bool {
         lock.lock()
         defer { lock.unlock() }
-        let shouldFail = shouldFailSynchronization
-        shouldFailSynchronization = false
-        return !shouldFail
+        guard remainingSynchronizationFailures > 0 else { return true }
+        remainingSynchronizationFailures -= 1
+        return false
+    }
+}
+
+/// StoredState double that fails the forward sync and silently drops the rollback write.
+private final class DroppedRollbackUserDefaults: UserDefaultsSynchronizing, @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [String: Any] = [:]
+    private var failedForwardSynchronization = false
+
+    fileprivate func object(forKey key: String) -> Any? {
+        lock.lock()
+        defer { lock.unlock() }
+        return storage[key]
+    }
+
+    fileprivate func removeObject(forKey key: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        storage.removeValue(forKey: key)
+    }
+
+    fileprivate func set(_ value: Any?, forKey key: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !failedForwardSynchronization else { return }
+        storage[key] = value
+    }
+
+    fileprivate func seed(_ value: Any, forKey key: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        storage[key] = value
+    }
+
+    fileprivate func synchronize() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !failedForwardSynchronization else { return true }
+        failedForwardSynchronization = true
+        return false
     }
 }
