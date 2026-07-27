@@ -1,6 +1,6 @@
 ---
 id: CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for
-state: accepted
+state: archived
 type: bug_fix
 base_commit: d6bd453c7eeac1a686ffbd8bd299f5ca1033b801
 ---
