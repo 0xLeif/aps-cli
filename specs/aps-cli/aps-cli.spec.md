@@ -1,11 +1,12 @@
 ---
 module: aps-cli
-version: 36
+version: 37
 status: active
 files:
   - Sources/aps/Aps.swift
   - Sources/aps/CLIOutput.swift
   - Sources/aps/DemoKey.swift
+  - Sources/aps/ResetReport.swift
   - Sources/aps/TTY.swift
   - Sources/aps/WatchTermination.swift
   - Sources/aps/SecretStore.swift
@@ -50,7 +51,17 @@ self-describes that contract for agents through the `schema` command.
 | `hasSecret` | True when a store file exists (missing means initial value). |
 | `get` | Decrypt the stored secret; loud corrupt/unlock failures. |
 | `set` | Unlock existing envelope when present, then seal and verify. |
-| `reset` | Delete `secret.enc`, restoring the initial value. |
+| `reset` | Throwing, locked, postcondition-verified deletion of `secret.enc` that preserves shared key material. |
+| `ResetOutcome` | Verified single-key reset result. |
+| `ResetFailure` | Stable first-failure details for bulk reset. |
+| `BulkResetReport` | Explicit reset, failed, and not-attempted key lists. |
+| `BulkResetError` | Throwable partial-progress bulk reset result. |
+| `key` | Name associated with a verified reset outcome or failure. |
+| `failed` | First stable failure in a bulk reset, or nil on success. |
+| `notAttempted` | Selected keys skipped after the first bulk reset failure. |
+| `success` | Creates a successful bulk reset report. |
+| `report` | Partial-progress report carried by a bulk reset error. |
+| `underlying` | Stable APSError that caused a bulk reset failure. |
 | `profileName` | String Slice over `ProfileDocument.name`. |
 | `UserSchemaDocument` | On-disk schema.json document model. |
 | `SchemaKeyEntry` | One registry key entry (name/type/storage/initial/path/slice). |
@@ -102,6 +113,15 @@ self-describes that contract for agents through the `schema` command.
 | `schemaInvalid` | schema.json undecodable or fails validation. |
 | `unknownKey` | Name not present in the active registry. |
 | `schemaConflict` | key add would overwrite without `--force`. |
+| `RollbackContext` | Identifies the adapter or backing resource whose restoration failed. |
+| `adapter` | Rollback context for a compiled AppState adapter restoration failure. |
+| `schema` | Rollback context for a schema registry restoration failure. |
+| `schemaCandidate` | Rollback context for restoration after a candidate schema update failed before purge. |
+| `storedState` | Rollback context for a StoredState restoration failure. |
+| `fileState` | Rollback context for a FileState or Slice-parent reset restoration failure. |
+| `stagedFile` | Rollback context for a staged-file restoration failure. |
+| `failureDescription` | Context-specific human description of a rollback failure. |
+| `rollbackFailed` | An operation failed and its context-specific resource could not be restored. |
 | `corruptStateExitCode` | Exit code 65 (`EX_DATAERR`) for corrupt/invalid data. |
 | `valueType` | Human value type (`Int` / `String` / `Bool` / `object`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |
@@ -119,10 +139,12 @@ Command tree (informational): `APSEntrypoint` peels root `--state-dir` then
 dispatches to `Aps` with get, set, watch, dump, keys, key, stats, reset, and
 schema. `schema` prints one cacheable JSON document (`SchemaDocument`):
 cliVersion, integer schemaVersion (bumped when the document shape changes;
-currently 4), state-root precedence, live registry keys, userSchema meta,
+currently 5), state-root precedence, live registry keys, userSchema meta,
 commands, payload shapes, and the error table. Live state stays in `dump`.
 `reset --all` restores seed names that remain registered through their current
-entries; `reset --registered` restores every registry key.
+entries; `reset --registered` restores every registry key. Bulk resets execute
+in schema order and fail fast with an explicit reset, failed, and not-attempted
+report.
 
 ## Invariants
 
@@ -151,6 +173,12 @@ entries; `reset --registered` restores every registry key.
    suggesting `--count` / `--timeout`.
 11. Registry commands never select type, storage, path, initial value, Slice
     metadata, or output typing from a `DemoKey` name match.
+12. Detected reset and purge failures never emit success. Storage postconditions
+    are verified under the storage lock; schema removal with purge holds the
+    schema lock through deletion and restores the original schema on a detected
+    failure.
+13. Bulk reset records stats only for verified successes and reports the first
+    failure plus every remaining not-attempted key.
 
 ## Behavioral Examples
 
@@ -191,15 +219,15 @@ Exit codes (sysexits-aligned):
 | 64 | EX_USAGE | caller-fixable: bad key/flags, `invalidValue`, `unknownKey`, `schemaConflict`, reset arg conflicts |
 | 65 | EX_DATAERR | corrupt persisted state (`corruptState`), undecodable data (`decodingFailed`), or invalid schema (`schemaInvalid`) |
 | 70 | EX_SOFTWARE | internal bug: `encodingFailed` |
-| 73 | EX_CANTCREAT | write did not persist: `persistenceFailed` |
+| 73 | EX_CANTCREAT | persistence or schema rollback did not complete: `persistenceFailed`, `rollbackFailed` |
 | 66 | EX_NOINPUT | reserved for future explicit-file operations |
 
 - Missing state files are not errors: they mean the initial value.
 - A disk-backed file that exists but does not decode fails loudly (65) via
   `StateStore.requireDecodableDiskState` before `get` / `watch` output.
-- With `--json` / `--jsonl`, or when `APS_ERROR_JSON=1`, stderr additionally
-  gets one `{"error":{"code","message","hint"}}` envelope; stdout stays empty
-  on error in every mode.
+- With `--json` / `--jsonl`, or when `APS_ERROR_JSON=1`, stderr gets one
+  `{"error":{"code","message","hint"}}` envelope. Bulk reset failures add a
+  `report` to that envelope. stdout stays empty on error in every mode.
 - Unknown registry names fail in `run()` with `unknown_key` (64).
 
 ## Dependencies
@@ -246,3 +274,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-26 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |
 | 2026-07-26 | CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for: Prevent schema-controlled paths from deleting or escaping the APS state root for issue 111 |
 | 2026-07-27 | CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112: Make schema.json authoritative for built-in and dynamic key names for issue 112 |
+| 2026-07-27 | CHG-0049-make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113: Make reset and purge transactional and truthfully report failures for issue 113 |

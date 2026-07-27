@@ -1,12 +1,12 @@
 # RFC: Dynamic schema (user-defined keys)
 
 Issue: [#39](https://github.com/0xLeif/aps-cli/issues/39)  
-Status: **Implemented in v1.0.0, hardening in progress** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); path safety implemented for v1.1.0; this doc remains the design record
+Status: **Implemented in v1.0.0, hardened for v1.1.0** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); path safety, registry authority, and detected-error transactional reset/purge are implemented; this doc remains the design record
 Authors: agent:cursor (2026-07-19)  
 Depends on: error contract ([#31](https://github.com/0xLeif/aps-cli/issues/31)), `aps schema` ([#32](https://github.com/0xLeif/aps-cli/issues/32))  
 Milestone: v1.0.0
 
-> Release-readiness note: the current implementation enforces the path-safety invariants below. Object-shape, Slice-reference, and single-source-of-truth hardening remain open. Track the remaining closure criteria in [release readiness](../release-readiness.md).
+> Release-readiness note: the current implementation enforces the path-safety, Slice-reference, registry-authority, and destructive-operation invariants below. Recursive arbitrary object values remain a separate extension. Track remaining release closure criteria in [release readiness](../release-readiness.md).
 
 ## Verdict
 
@@ -167,19 +167,80 @@ Replace compile-time-only dispatch with a loaded registry:
 | Storage | Adapter idea |
 |---------|----------------|
 | `State` | Process-local map in `Application` / in-memory box keyed by name |
-| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
+| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; writes synchronize, type-check the canonical object, and restore its exact prior value after detected failure; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
 | `FileState` | JSON file at `path` (string or object document) |
 | `EncryptedFile` | Reuse #35 envelope helpers with configurable filename |
 | `Slice` | Read/write parent object field |
 
+Slice reads decode the parent field against the type declared by
+`objectShape`. When the parent shape omits the field, the Slice entry's `type`
+is authoritative. A JSON integer is therefore never accepted as a Bool through
+Foundation numeric bridging. Slice set and reset use the same fallback and
+encode String, Int, Bool, and object fields as their declared JSON types.
+
 `get` / `set` / `watch` / `reset` / `dump` take **string key names** resolved
 through the registry. `DemoKey` is seed inventory and a low-level AppState
 dogfood surface only; it is not a registry dispatch mechanism.
+The compiled adapter for a default Slice is eligible only when both the Slice
+and its resolved parent behaviorally match their default definitions.
+Replacing the parent therefore routes the unchanged Slice through registry
+storage instead of the hard-coded AppState parent.
 
 `key add --force` replaces metadata without migrating or deleting data.
 Changing storage or path takes effect on the next command, while former adapter
 data remains untouched unless an explicit purge removes it. Changing `initial`
 affects missing reads and later reset, not an existing value.
+
+Reset and purge use one global lock order:
+
+1. schema lock before resolving any registered storage mutation or changing
+   the registry;
+2. storage lock for FileState or EncryptedFile;
+3. secret key lock only when cryptographic access requires it.
+
+Registered set and reset operations reload the entry under the schema lock and
+retain that lock through verified persistence. Direct `DemoKey` adapters enter
+the same transaction before using the AppState dogfood surface. This prevents a
+writer that resolved an entry before removal from recreating purged data.
+On Windows, stale-lock recovery never steals a valid lock from an owner that is
+alive or cannot be proven dead, even when the lock is older than the normal
+operation duration.
+
+A FileState or Slice reset snapshots the exact prior file bytes under the
+per-file lock before atomically overwriting its initial value. If write
+verification fails, aps restores the exact present bytes or prior absence and
+verifies that rollback before returning. EncryptedFile reset uses
+`secret.store.lock`, removes only the envelope, verifies its absence, and
+preserves `secret.key`.
+Parent and Slice reset initials compare as typed `SchemaJSON` values when the
+parent field is present. Only an omitted parent field selects the Slice initial
+as its fallback.
+Default FileState adapters then reload the current disk value under the same
+storage lock. They update the AppState cache without deleting or replacing a
+valid write that arrived after the registry reset.
+FileState and Slice lock names are derived from the full portable relative path,
+so nested `schema.json` files and same-basename files cannot alias the registry
+lock or each other. If a storage lock cannot be acquired, the persistence error
+names the selected FileState, Slice, or encrypted key, not `schema.json`.
+
+`key remove --purge` keeps the schema lock while it writes the candidate schema
+and deletes the old storage. If deletion reports an error, it restores the
+original schema before releasing the lock. If restoration fails, aps reports
+`rollback_failed`. This is transactional for detected errors before return; it
+does not claim crash, power-loss, or distributed-filesystem atomicity.
+Staged deletion reports success only after verifying that both the original
+path and its bounded temporary staging leaf are absent.
+StoredState, FileState reset, and staged-file rollback paths verify restoration
+and also report `rollback_failed` when the original data cannot be restored.
+The error identifies the schema, StoredState key, reset file, or staged file
+that needs inspection rather than describing every rollback as a `schema.json`
+failure.
+
+Bulk reset runs in schema order and fails fast. Its report identifies reset,
+failed, and not-attempted keys. Mutation statistics advance only for resets
+whose storage postcondition was verified. Those stats publish after the outer
+schema lock is released on both success and partial-failure paths, allowing
+synchronous subscribers to perform schema operations without deadlocking.
 
 Unknown key: exit **64** (`invalid_value` or a dedicated `unknown_key` code added in the same implementation change; prefer extending the #31 table once rather than inventing ad hoc messages).
 
@@ -239,7 +300,9 @@ Deferred: arrays, nested objects, enums, decimals, timestamps as first-class typ
 Data files (`note.json`, `profile.json`, `secret.enc`) keep their current paths.
 The default flag reads the legacy AppState `App/aps.flag` encoding when no
 canonical `aps.user.flag` value exists. Reset clears the legacy key before
-writing the current initial value so old data cannot reappear.
+writing the current initial value so old data cannot reappear. Set synchronizes
+and verifies both keys as one operation, restoring their exact prior objects
+when either write cannot be persisted.
 
 ### 8. Errors and exits
 
@@ -256,7 +319,9 @@ Torn FileState files remain `corrupt_state` / 65.
 ### 9. Security notes
 
 - `EncryptedFile` keys each get their own `path` (default `secret.enc` for the demo entry). Do not share one envelope across unrelated secrets without an explicit design follow-up.
-- `aps key remove --purge` is the only path that deletes ciphertext/key material; document it loudly.
+- `aps key remove --purge` deletes the registered data leaf when requested.
+  EncryptedFile purge deletes only its ciphertext envelope and preserves shared
+  `secret.key` material.
 - Schema edits are not authenticated; anyone who can write the state root can change types. Same trust model as today's FileState files.
 - Purge must never recursively remove an arbitrary schema path. It may delete only a validated, unshared regular file below the canonical state root.
 - Every persistent operation revalidates containment, ancestors, and the regular-file leaf immediately before use. The state root is a same-user trust boundary: hostile processes running as the same identity can already rewrite `schema.json` and state data, so concurrent hostile directory renames are outside the CLI's security model. Keep shared state roots owner-only and coordinate legitimate writers through APS locks.

@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 31
+version: 33
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -22,7 +22,8 @@ depends_on: []
 all string-key registry entries through `DynamicKeyStorage`, including default
 seed names, injects real dependencies with `@AppDependency`, and provides dump,
 watch, and reset helpers suitable for non-UI use. Direct `DemoKey` adapters
-remain a low-level AppState dogfood surface and do not drive registry commands.
+delegate writes and resets through the same schema-locked registry transaction
+and synchronize the default AppState dogfood surface before releasing the lock.
 
 ## Public API
 
@@ -31,10 +32,10 @@ remain a low-level AppState dogfood surface and do not drive registry commands.
 | `StateStore` | MainActor facade over registry-backed AppState keys. |
 | `init` | Loads clock/jsonCoding/stats dependencies without forcing `~/.aps`. |
 | `get` | Returns the current string rendering for a demo or registry key. |
-| `set` | Parses and writes a demo or registry key value; records a stats mutation. |
-| `reset` | Restores one demo or registry key to its initial value; records a stats mutation. |
-| `resetAll` | Restores every demo seed key through the direct AppState dogfood surface. |
-| `resetAllRegistered` | Restores every key in the active schema.json registry. |
+| `set` | Schema-locked demo or registry write with one stats mutation. |
+| `reset` | Schema-locked reset that verifies storage before recording stats. |
+| `resetAll` | Deterministic fail-fast reset of every currently registered demo seed name. |
+| `resetAllRegistered` | Deterministic fail-fast reset of every active registry key with an explicit report. |
 | `dump` | JSON snapshot of demo seed adapters (pretty on TTY, compact when piped). |
 | `dumpRegistered` | JSON snapshot of every registry key. |
 | `watchBlocking` | Direct DemoKey observation or uniform string-entry polling, bounded by an optional deadline. |
@@ -44,7 +45,7 @@ remain a low-level AppState dogfood surface and do not drive registry commands.
 | `loadSchema` | Load or materialize schema.json for the active state root. |
 | `resolve` | Resolve a SchemaKeyEntry by name or throw `unknownKey`. |
 | `addKey` | Persist a new or forced-replaced schema entry under SchemaFileLock. |
-| `removeKey` | Remove a schema entry under SchemaFileLock; optional purge of persisted data. |
+| `removeKey` | Remove a schema entry and optional persisted data in one detected-error transaction under SchemaFileLock. |
 | `stateRoot` | Active FileState / schema.json directory. |
 | `APSPaths` | State-root resolution; peels root `--state-dir` before ArgumentParser. |
 | `peelRootStateDir` | Removes leading `--state-dir` tokens from argv before the subcommand. |
@@ -91,6 +92,25 @@ remain a low-level AppState dogfood surface and do not drive registry commands.
 11. The default Bool/StoredState flag can read JSON-encoded legacy
     `App/aps.flag` data only when `aps.user.flag` is absent; reset clears the
     legacy key before writing the current initial value.
+12. FileState and Slice reset snapshot exact prior file bytes and atomically
+    overwrite a nonnil initial value under the per-file lock, restoring absent
+    or present state after detected verification failure. EncryptedFile reset
+    holds `secret.store.lock`, deletes only the envelope, verifies absence, and
+    preserves shared key material.
+13. Schema removal with purge holds the schema lock through storage deletion.
+    The candidate schema is reloaded and compared before destructive purge. A
+    detected purge failure restores, reloads, and compares the original schema
+    before the lock is released; rollback failure is reported distinctly.
+14. Bulk reset runs in schema order, stops after the first failure, reports
+    reset and not-attempted keys, and records stats only for verified successes
+    after the outer schema lock is released.
+15. The removal guarantee covers errors detected before return. It does not
+    claim crash or power-loss atomicity.
+16. Default adapter synchronization participates in single and bulk reset
+    transactions. Failure restores the exact backing checkpoint and compiled
+    adapter cache, reports no mutation for the failed key, and reports
+    `rollbackFailed` if restoration cannot be proven. Bulk checkpoints are
+    captured per key immediately before mutation.
 
 ## Behavioral Examples
 
@@ -113,9 +133,10 @@ Then seen equals ["1", "2"].
 ```
 
 ```
-Given dump() after set(name: "message", value: "hi")
+Given dump() after set(.counter, value: "41") and set(.message, value: "hi")
 When decoding the JSON
-Then keys include message with value "hi" and a timestamp field exists.
+Then the default State entries expose the live AppState adapter values 41 and "hi",
+preserve registry type and storage metadata, and include a timestamp field.
 ```
 
 ## Error Cases
@@ -124,6 +145,8 @@ Then keys include message with value "hi" and a timestamp field exists.
 - `set(.flag, value: "maybe")` throws `APSError.invalidValue`.
 - JSONCoding encode failures surface as `APSError.encodingFailed` when UTF-8
   conversion fails. Profile JSON parse failures surface as `APSError.invalidValue`.
+- Reset and purge persistence failures surface as `persistenceFailed`. If purge
+  fails and schema restoration also fails, removal surfaces `rollbackFailed`.
 
 ## Dependencies
 
@@ -163,3 +186,4 @@ Then keys include message with value "hi" and a timestamp field exists.
 | 2026-07-26 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |
 | 2026-07-26 | CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for: Prevent schema-controlled paths from deleting or escaping the APS state root for issue 111 |
 | 2026-07-27 | CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112: Make schema.json authoritative for built-in and dynamic key names for issue 112 |
+| 2026-07-27 | CHG-0049-make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113: Make reset and purge transactional and truthfully report failures for issue 113 |

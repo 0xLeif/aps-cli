@@ -194,10 +194,11 @@ Acceptance Criteria
 
 ### REQ-aps-cli-024
 
-`aps schema` SHALL advertise root-or-subcommand `--state-dir`, reset `--registered`, and bump integer `schemaVersion` to 4 for this contract shape change.
+`aps schema` SHALL advertise root-or-subcommand `--state-dir`, reset `--registered`,
+bulk reset report payloads, and integer `schemaVersion` 5 for this contract shape.
 
 Acceptance Criteria
-- `aps schema` emits `"schemaVersion":4`.
+- `aps schema` emits `"schemaVersion":5`.
 - The `reset` command entry lists flags including `--registered`.
 
 ### REQ-aps-cli-019
@@ -205,7 +206,7 @@ Acceptance Criteria
 `aps schema` SHALL emit one cacheable JSON document describing the CLI contract: cliVersion, integer schemaVersion (bumped when the document shape changes), state-root precedence, live registered keys, `userSchema` meta (formatVersion, keyCount, hash), commands, payload shapes, and the error table.
 
 Acceptance Criteria
-- Output is valid JSON with top-level integer `schemaVersion` equal to 4 after this change.
+- Output is valid JSON with top-level integer `schemaVersion` equal to 5 after this change.
 - Keys cover every entry in the active `schema.json`; commands cover every subcommand including `key`.
 - `cliVersion` equals `aps --version`.
 - `userSchema.hash` changes when the registry changes.
@@ -262,3 +263,19 @@ Acceptance Criteria
   does not recreate removed seed names.
 - Storage or path replacement does not implicitly migrate or delete old data.
 - Default seeded behavior remains compatible after schema materialization.
+
+### REQ-aps-cli-029
+
+Reset and purge commands SHALL report every detected persistence failure
+through the stable error contract and SHALL NOT emit success output after a
+failure. Bulk reset SHALL fail fast in schema order and report successfully
+reset, first-failed, and not-attempted keys.
+
+Acceptance Criteria
+- Wrong-kind, deletion, replacement, postcondition, and rollback failures exit
+  nonzero with stable machine codes.
+- Machine failures keep stdout empty and emit one structured error on stderr.
+- A partial bulk result contains `reset`, `failed`, and `notAttempted`.
+- Mutation statistics count only keys whose reset postcondition succeeded.
+- Documentation limits transaction guarantees to errors detected before API
+  return and does not claim crash or power-loss atomicity.

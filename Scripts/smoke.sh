@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+trap 'status=$?; printf "smoke failed at line %s (exit %s)\n" "$LINENO" "$status" >&2' ERR
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$root"
@@ -98,7 +99,8 @@ test -z "$("$bin" get note)"
 
 "$bin" reset profile --json | grep -q '"reset":"key"'
 
-"$bin" reset --all >/dev/null
+"$bin" reset --all --json | grep -q '"report"'
+"$bin" reset --all --json | grep -q '"notAttempted":\[\]'
 test "$("$bin" get flag)" = "false"
 test -z "$("$bin" get note)"
 
@@ -191,7 +193,7 @@ if grep -vq '^{' "$APS_HOME/watch.out"; then
 fi
 
 # aps schema emits the self-describing contract (compact JSON when piped).
-"$bin" schema | grep -q '"schemaVersion":4'
+"$bin" schema | grep -q '"schemaVersion":5'
 "$bin" schema | grep -q '"userSchema"'
 "$bin" schema | grep -q '"name":"profile"'
 "$bin" schema | grep -q '"name":"secret"'

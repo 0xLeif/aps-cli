@@ -25,6 +25,31 @@ enum CLIOutput {
         let reset: String
         let key: String?
         let value: JSONValue?
+        let report: BulkResetReport?
+
+        init(
+            reset: String,
+            key: String?,
+            value: JSONValue?,
+            report: BulkResetReport? = nil
+        ) {
+            self.reset = reset
+            self.key = key
+            self.value = value
+            self.report = report
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encode(reset, forKey: .reset)
+            try container.encodeIfPresent(key, forKey: .key)
+            try container.encodeIfPresent(value, forKey: .value)
+            try container.encodeIfPresent(report, forKey: .report)
+        }
+
+        private enum CodingKeys: String, CodingKey {
+            case reset, key, value, report
+        }
     }
 
     struct WatchEvent: Encodable {
@@ -149,6 +174,31 @@ enum CLIOutput {
             let code: String
             let message: String
             let hint: String
+            let report: BulkResetReport?
+
+            init(
+                code: String,
+                message: String,
+                hint: String,
+                report: BulkResetReport? = nil
+            ) {
+                self.code = code
+                self.message = message
+                self.hint = hint
+                self.report = report
+            }
+
+            func encode(to encoder: Encoder) throws {
+                var container = encoder.container(keyedBy: CodingKeys.self)
+                try container.encode(code, forKey: .code)
+                try container.encode(message, forKey: .message)
+                try container.encode(hint, forKey: .hint)
+                try container.encodeIfPresent(report, forKey: .report)
+            }
+
+            private enum CodingKeys: String, CodingKey {
+                case code, message, hint, report
+            }
         }
         let error: Body
     }
@@ -183,6 +233,54 @@ enum CLIOutput {
             writeError(envelope)
         }
         throw ExitCode(error.exitCode)
+    }
+
+    /// Failure path for a fail-fast bulk reset. The report is included in the
+    /// optional structured stderr envelope and stdout remains untouched.
+    static func fail(_ error: BulkResetError, json: Bool) throws -> Never {
+        for line in bulkFailureOutputLines(
+            error,
+            structuredErrors: structuredErrorsEnabled(json: json)
+        ) {
+            writeError(line)
+        }
+        throw ExitCode(error.exitCode)
+    }
+
+    internal static func bulkFailureOutputLines(
+        _ error: BulkResetError,
+        structuredErrors: Bool
+    ) -> [String] {
+        var lines = ["Error: \(error.description)"]
+        if structuredErrors {
+            if let envelope = try? encodeLine(
+                ErrorEnvelope(
+                    error: .init(
+                        code: error.code,
+                        message: error.description,
+                        hint: error.hint,
+                        report: error.report
+                    )
+                )
+            ) {
+                lines.append(envelope)
+            }
+        } else {
+            lines.append(contentsOf: bulkFailureHumanLines(error.report))
+        }
+        return lines
+    }
+
+    internal static func bulkFailureHumanLines(_ report: BulkResetReport) -> [String] {
+        [
+            "Reset: \(renderedKeys(report.reset))",
+            "Failed: \(report.failed?.key ?? "(unknown)")",
+            "Not attempted: \(renderedKeys(report.notAttempted))",
+        ]
+    }
+
+    private static func renderedKeys(_ keys: [String]) -> String {
+        keys.isEmpty ? "(none)" : keys.joined(separator: ", ")
     }
 
     static func writeLine(_ line: String) {

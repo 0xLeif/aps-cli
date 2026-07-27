@@ -15,6 +15,16 @@ import Observation
 /// `StateStore` does not call `APSPaths.configure()`, so injected test paths stay put.
 @MainActor
 public final class StateStore {
+    private enum DefaultAdapterSnapshot: Equatable {
+        case counter(Int)
+        case message(String)
+        case flag(Bool)
+        case note(String)
+        case profile(ProfileDocument)
+        case secret
+        case profileName(ProfileDocument)
+    }
+
     @AppDependency(\.clock) var clock: any APSClock
     @AppDependency(\.jsonCoding) var jsonCoding: JSONCoding
     #if !os(Linux) && !os(Windows)
@@ -49,6 +59,9 @@ public final class StateStore {
     }
 
     public func get(_ key: DemoKey) -> String {
+        if !usesDefaultDefinition(key) {
+            return (try? get(name: key.rawValue)) ?? ""
+        }
         switch key {
         case .counter:
             return String(Application.state(\.counter).value)
@@ -78,6 +91,29 @@ public final class StateStore {
     }
 
     public func set(_ key: DemoKey, value: String) throws {
+        try set(
+            name: key.rawValue,
+            value: value,
+            storageOperation: { entry, rawValue, root, schema in
+                guard isDefaultDefinition(entry, for: key, in: schema) else {
+                    try DynamicKeyStorage.set(
+                        entry: entry,
+                        value: rawValue,
+                        stateRoot: root,
+                        schema: schema
+                    )
+                    return
+                }
+                if key == .flag {
+                    try setDefaultFlagAdapter(entry, value: rawValue)
+                    return
+                }
+                try setDefaultAdapter(key, value: rawValue)
+            }
+        )
+    }
+
+    private func setDefaultAdapter(_ key: DemoKey, value: String) throws {
         switch key {
         case .counter:
             guard let intValue = Int(value) else {
@@ -89,13 +125,12 @@ public final class StateStore {
             var state = Application.state(\.message)
             state.value = value
         case .flag:
-            guard let boolValue = Self.parseBool(value) else {
-                throw APSError.invalidValue(key: key.rawValue, value: value)
+            guard
+                let entry = UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue })
+            else {
+                throw APSError.schemaInvalid(reason: "default flag definition is missing")
             }
-            var state = Application.state(\.flag)
-            state.value = boolValue
-            // Linux Foundation does not always flush UserDefaults on process exit.
-            UserDefaults.standard.synchronize()
+            try setDefaultFlagAdapter(entry, value: value)
         case .note:
             var state = Application.fileState(\.note)
             state.value = value
@@ -115,9 +150,10 @@ public final class StateStore {
             } catch {
                 throw APSError.invalidValue(key: key.rawValue, value: value)
             }
-            try SchemaFileLock.withExclusiveLock(
+            try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: FileManager.defaultFileStatePath,
-                lockFileName: "profile.json.lock"
+                lockFileName: "profile.json.lock",
+                resourceKey: DemoKey.profile.rawValue
             ) {
                 try Self.refreshProfileFileStateFromDisk()
                 var state = Application.fileState(\.profile)
@@ -134,9 +170,10 @@ public final class StateStore {
         case .profileName:
             // Refresh FileState from disk before Slice write so a stale cached
             // ProfileDocument cannot clobber a newer on-disk version.
-            try SchemaFileLock.withExclusiveLock(
+            try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: FileManager.defaultFileStatePath,
-                lockFileName: "profile.json.lock"
+                lockFileName: "profile.json.lock",
+                resourceKey: DemoKey.profileName.rawValue
             ) {
                 try Self.refreshProfileFileStateFromDisk()
                 let expectedVersion = (try? Self.readProfileFromDisk())?.version ?? 0
@@ -148,51 +185,502 @@ public final class StateStore {
                 }
             }
         }
-        stats.recordMutation(key: key.rawValue)
     }
 
-    public func reset(_ key: DemoKey) {
+    /// Persists the default flag through both registry and AppState keys as one
+    /// verified operation, restoring their exact prior objects after failure.
+    internal func setDefaultFlagAdapter(_ entry: SchemaKeyEntry, value: String) throws {
+        guard let boolValue = Self.parseBool(value) else {
+            throw APSError.invalidValue(key: entry.name, value: value)
+        }
+        let store = Application.dependency(\Application.userDefaults)
+        let canonicalKey = "aps.user.flag"
+        let legacyKey = "App/aps.flag"
+        let oldCanonical = store.object(forKey: canonicalKey)
+        let oldLegacy = store.object(forKey: legacyKey)
+        let oldAdapterValue = Self.decodeStoredBool(oldLegacy) ?? false
+
+        do {
+            store.set(boolValue, forKey: canonicalKey)
+            var state = Application.state(\.flag)
+            state.value = boolValue
+            guard
+                Self.synchronize(store),
+                store.object(forKey: canonicalKey) as? Bool == boolValue,
+                Self.decodeLegacyFlag(store.object(forKey: legacyKey)) == boolValue
+            else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+        } catch {
+            var state = Application.state(\.flag)
+            state.value = oldAdapterValue
+            Self.restoreStoredObject(oldCanonical, forKey: canonicalKey, in: store)
+            Self.restoreStoredObject(oldLegacy, forKey: legacyKey, in: store)
+            guard
+                Self.synchronize(store),
+                Self.storedObjectsEqual(store.object(forKey: canonicalKey), oldCanonical),
+                Self.storedObjectsEqual(store.object(forKey: legacyKey), oldLegacy)
+            else {
+                let failure = error as? APSError ?? .persistenceFailed(key: entry.name)
+                throw APSError.rollbackFailed(
+                    context: .storedState(key: entry.name),
+                    originalErrorCode: failure.code,
+                    originalErrorDescription: failure.description
+                )
+            }
+            throw error
+        }
+    }
+
+    private static func decodeStoredBool(_ object: Any?) -> Bool? {
+        if let data = object as? Data {
+            return try? JSONDecoder().decode(Bool.self, from: data)
+        }
+        if let boolValue = object as? Bool {
+            return boolValue
+        }
+        if let stringValue = object as? String {
+            return parseBool(stringValue)
+        }
+        return nil
+    }
+
+    private static func decodeLegacyFlag(_ object: Any?) -> Bool? {
+        guard let data = object as? Data else { return nil }
+        return try? JSONDecoder().decode(Bool.self, from: data)
+    }
+
+    private static func synchronize(_ store: any UserDefaultsManaging) -> Bool {
+        if let synchronizingStore = store as? any UserDefaultsSynchronizing {
+            return synchronizingStore.synchronize()
+        }
+        if let defaults = store as? UserDefaults {
+            return defaults.synchronize()
+        }
+        if store is Application.SendableUserDefaults {
+            return UserDefaults.standard.synchronize()
+        }
+        return true
+    }
+
+    private static func restoreStoredObject(
+        _ object: Any?,
+        forKey key: String,
+        in store: any UserDefaultsManaging
+    ) {
+        if let object {
+            store.set(object, forKey: key)
+        } else {
+            store.removeObject(forKey: key)
+        }
+    }
+
+    private static func storedObjectsEqual(_ left: Any?, _ right: Any?) -> Bool {
+        switch (left, right) {
+        case (.none, .none):
+            return true
+        case (.some(let leftObject), .some(let rightObject)):
+            guard
+                String(reflecting: type(of: leftObject)) == String(reflecting: type(of: rightObject)),
+                let leftValue = leftObject as? NSObject,
+                let rightValue = rightObject as? NSObject
+            else { return false }
+            return leftValue.isEqual(rightValue)
+        default:
+            return false
+        }
+    }
+
+    @discardableResult
+    public func reset(_ key: DemoKey) throws -> ResetOutcome {
+        try reset(key, afterAcquiringProfileStorageLock: {})
+    }
+
+    /// Reset seam used to prove profile adapter synchronization stays inside its storage lock.
+    @discardableResult
+    internal func reset(
+        _ key: DemoKey,
+        afterAcquiringProfileStorageLock: () -> Void,
+        fileOperations: DynamicKeyStorage.FileOperations = .live,
+        afterSynchronizingDefaultAdapter: () throws -> Void = {}
+    ) throws -> ResetOutcome {
+        let adapterSnapshot = defaultAdapterSnapshot(for: key)
+        return try reset(
+            name: key.rawValue,
+            recordMutation: true,
+            fileOperations: fileOperations,
+            afterReset: { entry in
+                let schema = try UserSchema.loadUnlocked(stateRoot: stateRoot)
+                if isDefaultDefinition(entry, for: key, in: schema) {
+                    try synchronizeDefaultAdapterTransaction(
+                        afterResetting: key,
+                        snapshot: adapterSnapshot,
+                        storageLockAlreadyHeld: entry.storage == "FileState" || entry.storage == "Slice",
+                        afterAcquiringProfileStorageLock: afterAcquiringProfileStorageLock,
+                        afterSynchronizingDefaultAdapter: afterSynchronizingDefaultAdapter
+                    )
+                }
+            }
+        )
+    }
+
+    @discardableResult
+    public func resetAll() throws -> BulkResetReport {
+        try resetAll(afterSynchronizingDefaultAdapter: { _ in })
+    }
+
+    @discardableResult
+    internal func resetAll(
+        afterSynchronizingDefaultAdapter: (DemoKey) throws -> Void
+    ) throws -> BulkResetReport {
+        let root = stateRoot
+        return try publishingBulkResetStats {
+            try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+                let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+                let entries = schema.keys.filter { DemoKey(rawValue: $0.name) != nil }
+                var adapterSnapshots: [DemoKey: DefaultAdapterSnapshot] = [:]
+                return try reset(
+                    entries: entries,
+                    schema: schema,
+                    beforeReset: { entry in
+                        guard
+                            let key = DemoKey(rawValue: entry.name),
+                            isDefaultDefinition(entry, for: key, in: schema)
+                        else {
+                            return
+                        }
+                        adapterSnapshots[key] = defaultAdapterSnapshot(for: key)
+                    },
+                    afterReset: { entry in
+                        guard
+                            let key = DemoKey(rawValue: entry.name),
+                            isDefaultDefinition(entry, for: key, in: schema)
+                        else {
+                            return
+                        }
+                        guard let snapshot = adapterSnapshots[key] else {
+                            throw APSError.persistenceFailed(key: key.rawValue)
+                        }
+                        try synchronizeDefaultAdapterTransaction(
+                            afterResetting: key,
+                            snapshot: snapshot,
+                            storageLockAlreadyHeld: entry.storage == "FileState" || entry.storage == "Slice",
+                            afterSynchronizingDefaultAdapter: {
+                                try afterSynchronizingDefaultAdapter(key)
+                            }
+                        )
+                    }
+                )
+            }
+        }
+    }
+
+    private func usesDefaultDefinition(_ key: DemoKey) -> Bool {
+        let root = stateRoot
+        return (try? SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            guard let current = UserSchema.entry(named: key.rawValue, in: schema) else {
+                return false
+            }
+            return isDefaultDefinition(current, for: key, in: schema)
+        }) ?? false
+    }
+
+    internal func isDefaultDefinition(
+        _ entry: SchemaKeyEntry,
+        for key: DemoKey,
+        in schema: UserSchemaDocument
+    ) -> Bool {
+        let defaults = UserSchema.defaultDocument()
+        guard
+            let defaultEntry = UserSchema.entry(named: key.rawValue, in: defaults),
+            behaviorallyMatchesDefault(entry, defaultEntry)
+        else {
+            return false
+        }
+        guard entry.storage == "Slice" else { return true }
+        guard
+            let parentName = entry.sliceOf,
+            let defaultParentName = defaultEntry.sliceOf,
+            let parent = UserSchema.entry(named: parentName, in: schema),
+            let defaultParent = UserSchema.entry(named: defaultParentName, in: defaults)
+        else {
+            return false
+        }
+        return behaviorallyMatchesDefault(parent, defaultParent)
+    }
+
+    private func behaviorallyMatchesDefault(
+        _ entry: SchemaKeyEntry,
+        _ defaultEntry: SchemaKeyEntry
+    ) -> Bool {
+        entry.name == defaultEntry.name
+            && entry.type == defaultEntry.type
+            && entry.storage == defaultEntry.storage
+            && entry.initial == defaultEntry.initial
+            && entry.path == defaultEntry.path
+            && entry.objectShape == defaultEntry.objectShape
+            && entry.sliceOf == defaultEntry.sliceOf
+            && entry.sliceField == defaultEntry.sliceField
+    }
+
+    internal func synchronizeDefaultAdapter(
+        afterResetting key: DemoKey,
+        storageLockAlreadyHeld: Bool = false,
+        afterAcquiringProfileStorageLock: () -> Void = {}
+    ) throws {
         switch key {
         case .counter:
             Application.reset(\.counter)
+            guard Application.state(\.counter).value == 0 else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         case .message:
             Application.reset(\.message)
+            guard Application.state(\.message).value.isEmpty else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         case .flag:
             Application.reset(storedState: \.flag)
-            UserDefaults.standard.synchronize()
+            guard Application.state(\.flag).value == false else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         case .note:
-            Application.reset(fileState: \.note)
+            if storageLockAlreadyHeld {
+                try synchronizeNoteAdapterUnlocked()
+            } else {
+                try synchronizeNoteAdapter()
+            }
         case .profile:
-            Application.reset(fileState: \.profile)
+            if storageLockAlreadyHeld {
+                try synchronizeProfileAdapterUnlocked()
+            } else {
+                try synchronizeProfileAdapter()
+            }
         case .secret:
-            SecretStore().reset()
+            break
         case .profileName:
-            try? Self.refreshProfileFileStateFromDisk()
-            var slice = Application.slice(\.profile, \.name)
-            slice.value = ""
+            if storageLockAlreadyHeld {
+                try synchronizeProfileNameAdapterUnlocked(
+                    afterAcquiringStorageLock: afterAcquiringProfileStorageLock
+                )
+            } else {
+                try synchronizeProfileNameAdapter(
+                    afterAcquiringStorageLock: afterAcquiringProfileStorageLock
+                )
+            }
         }
-        stats.recordMutation(key: key.rawValue)
     }
 
-    public func resetAll() {
-        for key in DemoKey.allCases {
-            reset(key)
+    private func defaultAdapterSnapshot(for key: DemoKey) -> DefaultAdapterSnapshot {
+        switch key {
+        case .counter:
+            return .counter(Application.state(\.counter).value)
+        case .message:
+            return .message(Application.state(\.message).value)
+        case .flag:
+            return .flag(Application.state(\.flag).value)
+        case .note:
+            return .note(Application.fileState(\.note).value)
+        case .profile:
+            return .profile(Application.fileState(\.profile).value)
+        case .secret:
+            return .secret
+        case .profileName:
+            return .profileName(Application.fileState(\.profile).value)
+        }
+    }
+
+    private func synchronizeDefaultAdapterTransaction(
+        afterResetting key: DemoKey,
+        snapshot: DefaultAdapterSnapshot,
+        storageLockAlreadyHeld: Bool,
+        afterAcquiringProfileStorageLock: () -> Void = {},
+        afterSynchronizingDefaultAdapter: () throws -> Void
+    ) throws {
+        do {
+            try synchronizeDefaultAdapter(
+                afterResetting: key,
+                storageLockAlreadyHeld: storageLockAlreadyHeld,
+                afterAcquiringProfileStorageLock: afterAcquiringProfileStorageLock
+            )
+            try afterSynchronizingDefaultAdapter()
+        } catch {
+            let originalError = error
+            try restoreDefaultAdapter(snapshot, for: key, after: originalError)
+            throw originalError
+        }
+    }
+
+    private func restoreDefaultAdapter(
+        _ snapshot: DefaultAdapterSnapshot,
+        for key: DemoKey,
+        after originalError: Error
+    ) throws {
+        switch snapshot {
+        case .counter(let value):
+            var state = Application.state(\.counter)
+            state.value = value
+            guard Application.state(\.counter).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .message(let value):
+            var state = Application.state(\.message)
+            state.value = value
+            guard Application.state(\.message).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .flag(let value):
+            var state = Application.state(\.flag)
+            state.value = value
+            guard Application.state(\.flag).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .note(let value):
+            var state = Application.fileState(\.note)
+            state.value = value
+            guard Application.fileState(\.note).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .profile(let value), .profileName(let value):
+            var state = Application.fileState(\.profile)
+            state.value = value
+            guard Application.fileState(\.profile).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .secret:
+            break
+        }
+    }
+
+    private func adapterRollbackFailure(for key: DemoKey, after originalError: Error) -> APSError {
+        let failure = originalError as? APSError ?? .persistenceFailed(key: key.rawValue)
+        return .rollbackFailed(
+            context: .adapter(key: key.rawValue),
+            originalErrorCode: failure.code,
+            originalErrorDescription: failure.description
+        )
+    }
+
+    /// Synchronizes the default note cache to the current disk value without
+    /// replacing a valid write that arrived after the registry reset.
+    private func synchronizeNoteAdapter() throws {
+        try SchemaFileLock.withExclusiveStorageLock(
+            stateRoot: stateRoot,
+            lockFileName: "note.json.lock",
+            resourceKey: DemoKey.note.rawValue
+        ) {
+            try synchronizeNoteAdapterUnlocked()
+        }
+    }
+
+    private func synchronizeNoteAdapterUnlocked() throws {
+        let fresh = try Self.readNoteFromDiskIfPresent() ?? ""
+        var state = Application.fileState(\.note)
+        state.value = fresh
+        guard try Self.readNoteFromDisk() == fresh else {
+            throw APSError.persistenceFailed(key: DemoKey.note.rawValue)
+        }
+    }
+
+    /// Synchronizes the default profile cache to the current disk value without
+    /// replacing a valid write that arrived after the registry reset.
+    private func synchronizeProfileAdapter() throws {
+        try SchemaFileLock.withExclusiveStorageLock(
+            stateRoot: stateRoot,
+            lockFileName: "profile.json.lock",
+            resourceKey: DemoKey.profile.rawValue
+        ) {
+            try synchronizeProfileAdapterUnlocked()
+        }
+    }
+
+    private func synchronizeProfileAdapterUnlocked() throws {
+        let fresh = try Self.readProfileFromDiskIfPresent() ?? ProfileDocument()
+        var state = Application.fileState(\.profile)
+        state.value = fresh
+        guard try Self.readProfileFromDisk() == fresh else {
+            throw APSError.persistenceFailed(key: DemoKey.profile.rawValue)
+        }
+    }
+
+    /// Synchronizes the AppState profile-name adapter while holding the parent storage lock.
+    ///
+    /// The caller already holds the schema lock during public reset operations, preserving
+    /// the supported schema-then-storage lock order. The test seam runs after storage locking
+    /// and before the parent refresh so regression tests can prove the full read-modify-write
+    /// remains serialized.
+    internal func synchronizeProfileNameAdapter(
+        afterAcquiringStorageLock: () -> Void = {}
+    ) throws {
+        try SchemaFileLock.withExclusiveStorageLock(
+            stateRoot: stateRoot,
+            lockFileName: "profile.json.lock",
+            resourceKey: DemoKey.profileName.rawValue
+        ) {
+            try synchronizeProfileNameAdapterUnlocked(
+                afterAcquiringStorageLock: afterAcquiringStorageLock
+            )
+        }
+    }
+
+    private func synchronizeProfileNameAdapterUnlocked(
+        afterAcquiringStorageLock: () -> Void
+    ) throws {
+        afterAcquiringStorageLock()
+        try Self.refreshProfileFileStateFromDisk()
+        var slice = Application.slice(\.profile, \.name)
+        slice.value = ""
+        guard try Self.readProfileFromDisk().name.isEmpty else {
+            throw APSError.persistenceFailed(key: DemoKey.profileName.rawValue)
         }
     }
 
     public func dump() throws -> String {
-        let snapshot = DumpSnapshot(
-            timestamp: clock.now,
-            keys: try DemoKey.allCases.map { key in
-                DumpEntry(
-                    key: key.rawValue,
-                    storage: key.storage,
-                    type: key.valueType,
-                    value: try CLIOutput.typedValue(for: key, store: self)
-                )
+        let schema = try loadSchema()
+        let entries = try DemoKey.allCases.map { key in
+            guard let entry = UserSchema.entry(named: key.rawValue, in: schema) else {
+                throw APSError.unknownKey(name: key.rawValue)
+            }
+            return entry
+        }
+        return try dumpRegistered(
+            entries: entries,
+            schema: schema,
+            rawValueForEntry: { entry in
+                try dumpRawValue(for: entry, in: schema)
             }
         )
-        return try jsonCoding.encodeAuto(snapshot)
+    }
+
+    /// Uses compiled AppState adapters only when the active State entry still has default behavior.
+    private func dumpRawValue(
+        for entry: SchemaKeyEntry,
+        in schema: UserSchemaDocument
+    ) throws -> String {
+        guard
+            entry.storage == "State",
+            let key = DemoKey(rawValue: entry.name),
+            isDefaultDefinition(entry, for: key, in: schema)
+        else {
+            return try DynamicKeyStorage.get(
+                entry: entry,
+                stateRoot: stateRoot,
+                schema: schema
+            )
+        }
+        switch key {
+        case .counter:
+            return String(Application.state(\.counter).value)
+        case .message:
+            return Application.state(\.message).value
+        case .flag, .note, .profile, .secret, .profileName:
+            return try DynamicKeyStorage.get(
+                entry: entry,
+                stateRoot: stateRoot,
+                schema: schema
+            )
+        }
     }
 
     /// Blocking watch over the `@ObservedDependency` stats service.
@@ -456,16 +944,4 @@ private final class ChangeFlag: @unchecked Sendable {
         defer { lock.unlock() }
         return value
     }
-}
-
-private struct DumpSnapshot: Encodable {
-    let timestamp: Date
-    let keys: [DumpEntry]
-}
-
-private struct DumpEntry: Encodable {
-    let key: String
-    let storage: String
-    let type: String
-    let value: CLIOutput.JSONValue
 }

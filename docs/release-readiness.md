@@ -9,7 +9,7 @@ Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable ins
 ## What is already strong
 
 - The fledge verification lane passes all seven steps.
-- 78 Swift tests pass, including four-worker isolation.
+- 156 Swift tests pass, including four-worker isolation.
 - SpecSync passes with 2 specs, 0 errors, and 0 warnings.
 - macOS, Ubuntu, Linux smoke, Windows smoke, and Trust workflows run on main.
 - The repository has no active SpecSync changes after the latest archive housekeeping.
@@ -25,25 +25,26 @@ Implemented for v1.1.0 by [#111](https://github.com/0xLeif/aps-cli/issues/111). 
 
 ### 2. Make the registry authoritative
 
-Built-in names still select hard-coded adapters even after `key add --force` changes their schema entries. Either reserve built-in entries and make them immutable, or route every name through the same registry adapters.
+Implemented for v1.1.0 by [#112](https://github.com/0xLeif/aps-cli/issues/112). Every registered name, including seed names replaced with `key add --force`, now uses its current schema entry for type, storage, path, initial value, Slice metadata, watch behavior, dump behavior, and output typing. Registry snapshots are coherent and legacy flag fallback is limited to the unchanged default seed definition.
 
-Required outcome:
-
-- one source of truth for type, storage, path, initial value, and output shape;
-- strict validation for initial values, object shapes, and Slice targets;
-- recursive JSON values for arbitrary dynamic objects;
-- `userSchema.keyCount` included as required by the published contract.
+Recursive arbitrary object values remain tracked separately and do not weaken authority over the object shapes currently supported by the schema.
 
 ### 3. Make reset and purge report the truth
 
-Some persistence deletion failures are discarded with `try?`, allowing reset to print success while state remains.
+Implemented for v1.1.0 by
+[#113](https://github.com/0xLeif/aps-cli/issues/113). Reset APIs throw,
+destructive filesystem operations stage recoverable leaves before verification,
+FileState reset atomically overwrites its initial value under the storage lock,
+StoredState restores its prior raw objects after detected replacement failure,
+and SecretStore reset removes only the envelope under `secret.store.lock`.
 
-Required outcome:
-
-- throwing reset APIs;
-- lock and transaction semantics for schema removal plus purge;
-- verified postconditions;
-- atomic or explicit per-key results for bulk reset.
+Schema removal plus purge holds the schema lock through storage deletion and
+restores the original schema on a detected purge failure. Registered writers
+resolve and persist under that same schema lock, so stale writers cannot
+recreate purged data. This guarantee is transactional for detected errors, not
+for process crashes or power loss. Bulk reset remains deterministic and
+fail-fast while returning an explicit report of reset, failed, and
+not-attempted keys; mutation stats count only verified successes.
 
 ### 4. Repair Linux and Homebrew distribution
 

@@ -8,7 +8,7 @@ import Foundation
 enum Schema {
 
     static let cliVersion = "1.0.0"
-    static let schemaVersion = 4
+    static let schemaVersion = 5
 
     // MARK: - Document model
 
@@ -260,6 +260,18 @@ enum Schema {
 
     private static func payloadNodes() -> [String: Node] {
         let jsonValue = Node.prim("string | integer | boolean | object")
+        let resetFailure = Node.obj([
+            prop("key", .prim("string")),
+            prop("code", .prim("string")),
+            prop("message", .prim("string")),
+            prop("hint", .prim("string")),
+            prop("exitCode", .prim("integer")),
+        ])
+        let bulkResetReport = Node.obj([
+            prop("reset", .arr(.prim("string"))),
+            prop("failed", .prim("ResetFailure"), required: false),
+            prop("notAttempted", .arr(.prim("string"))),
+        ])
         return [
             "KeyValuePayload": .obj([
                 prop("key", .prim("string")),
@@ -299,7 +311,10 @@ enum Schema {
                 prop("reset", .prim("string (\"all\" | \"registered\" | \"key\")")),
                 prop("key", .prim("string?"), required: false),
                 prop("value", jsonValue, required: false),
+                prop("report", bulkResetReport, required: false),
             ]),
+            "BulkResetReport": bulkResetReport,
+            "ResetFailure": resetFailure,
             "StatsPayload": .obj([
                 prop("mutationCount", .prim("integer")),
                 prop("lastMutatedKey", .prim("string")),
@@ -310,6 +325,7 @@ enum Schema {
                     prop("code", .prim("string")),
                     prop("message", .prim("string")),
                     prop("hint", .prim("string")),
+                    prop("report", bulkResetReport, required: false),
                 ])),
             ]),
         ]
@@ -370,6 +386,13 @@ enum Schema {
                 exitCode: 73,
                 meaning: "write did not persist (unwritable state root)",
                 hint: "Check that the state root exists and is writable."
+            ),
+            ErrorEntry(
+                code: "rollback_failed",
+                exitCode: 73,
+                meaning: "an operation failed and its adapter, schema, StoredState value, "
+                    + "or staged file could not be restored",
+                hint: "Inspect the resource named in the error and its retained or staged data before retrying."
             ),
         ]
     }

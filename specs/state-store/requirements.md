@@ -154,8 +154,105 @@ behavior.
 
 Acceptance Criteria
 - A seed name forced to another supported type or adapter uses only the forced
-  definition.
+  definition, including its type and storage metadata in both seed and
+  registered dumps.
+- An unchanged default State seed uses its compiled AppState adapter value in
+  the seed dump while retaining type and storage metadata from the registry.
 - FileState and EncryptedFile paths come from the current entry.
 - Slice reads and writes use the current parent and field.
 - The unchanged default flag remains readable from legacy AppState StoredState
   data when no canonical dynamic value exists, and reset prevents resurrection.
+
+### REQ-state-store-022
+
+StateStore reset and purge operations SHALL be transactional for errors
+detected before return. Schema purge SHALL acquire the schema lock before the
+storage lock, restore the original schema on detected purge failure, and report
+rollback failure distinctly. Storage resets SHALL verify their postconditions
+before recording success.
+
+Acceptance Criteria
+- FileState reset atomically overwrites the initial value under its per-file
+  lock without deleting the old file first.
+- Secret reset throws, holds `secret.store.lock`, removes and verifies only the
+  envelope leaf, and preserves shared `secret.key` material.
+- Schema removal plus purge holds `schema.json.lock` through candidate write,
+  storage deletion, verification, and any original-schema rollback.
+- Registered set and reset operations reload their entry under
+  `schema.json.lock` and retain that lock through verified persistence, so a
+  stale writer cannot recreate data after successful purge.
+- Windows stale-lock recovery never reclaims a valid lock whose owner process
+  is alive or cannot be proven dead, regardless of lock age.
+- Concurrent APS schema mutation cannot reuse a purged path during the
+  transaction.
+- Successful rollback rethrows the original operation error; failed rollback
+  emits a distinct stable rollback error that truthfully identifies the schema,
+  StoredState value, reset FileState file, or staged file that could not be
+  restored.
+- Bulk reset stops at the first failure, identifies reset, failed, and
+  not-attempted keys, and records stats only for successful keys.
+- Bulk-reset stats publish only after the outer schema lock is released, on
+  both full success and partial-success error paths, so synchronous subscribers
+  can safely perform schema operations.
+- Parent/Slice compatibility compares an explicitly present parent field and
+  Slice initial with type-sensitive `SchemaJSON` equality, while an omitted
+  parent field uses the Slice initial fallback.
+- Sibling Slice compatibility also compares each Slice's effective field type,
+  using the parent object shape when declared and the Slice type otherwise, so
+  identical initial JSON cannot hide incompatible reset types.
+- StoredState resets restore canonical and legacy backing objects when
+  replacement verification fails.
+- StoredState rollback verifies exact raw-object restoration and reports
+  `rollback_failed` if restoration cannot be synchronized or verified.
+- FileState and Slice reset snapshot the exact prior file bytes under the
+  storage lock, restore absent or present state after detected write
+  verification failure, and report `rollback_failed` if exact restoration
+  cannot be verified.
+- Registered StoredState set synchronizes and type-checks the canonical object,
+  treating a dropped or mistyped write as persistence failure and restoring
+  the exact prior object.
+- Destructive leaf removal stages the original regular file and restores it
+  when post-delete verification fails. Success requires verified absence of
+  both the original and staging leaves. The staging leaf uses a bounded,
+  hash-based component independent of the original leaf length.
+- Failed staged-leaf restoration reports `rollback_failed` instead of masking
+  data stranded under the staging name.
+- FileState and Slice storage locks derive from the full portable relative path
+  and cannot alias `schema.json.lock` or another same-basename storage path.
+- Storage-lock acquisition failures report the affected FileState, Slice, or
+  encrypted key rather than misidentifying the failure as `schema.json`.
+- Slice reads use the Slice entry type when the parent object shape omits the
+  field and reject JSON values of another primitive type.
+- Slice set and reset use the same declared-type fallback, preserving
+  String, Int, Bool, and object values without string coercion.
+- Documentation-only edits to a default entry preserve its default adapter
+  behavior.
+- A default Slice uses its compiled adapter only while its resolved parent also
+  behaviorally matches the default parent; replacing the parent selects registry
+  storage for the Slice.
+- Default flag writes synchronize and verify canonical and legacy values as one
+  operation through both typed and string-name entry points, restoring both
+  exact prior objects after detected failure.
+- Schema removal reloads and compares the candidate before destructive purge,
+  then reloads and compares the original after rollback. A dropped schema write
+  cannot delete registered storage or hide a failed rollback. Candidate
+  write or verification failure restores and verifies the original before
+  returning, including when a writer persists and then throws. If that
+  restoration fails, the rollback context states that no data purge was
+  attempted; rollback after an actual purge failure retains its purge-specific
+  context.
+- Failed staged deletion verifies that rollback restored a regular-file
+  original and removed the staging leaf before returning the deletion error;
+  otherwise it reports `rollback_failed`.
+- Default FileState reset adapter synchronization reloads the current disk value
+  under the storage lock and cannot delete or replace a newer valid write.
+- Default adapter synchronization is part of the reset transaction. A
+  synchronization failure restores and verifies both the compiled AppState
+  adapter cache and the exact pre-reset backing state before returning the
+  original error. Bulk reset captures this checkpoint immediately before each
+  key so rollback cannot undo an earlier successful key, and stats include only
+  those earlier verified successes.
+- A failed compiled-adapter restoration reports `rollback_failed` with an
+  adapter-specific context that preserves the original synchronization error.
+- The default encrypted adapter is a no-op and runs before envelope deletion,
+  so an injected adapter failure leaves the exact existing envelope untouched.

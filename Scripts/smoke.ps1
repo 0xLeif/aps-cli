@@ -144,7 +144,9 @@ if (-not [string]::IsNullOrEmpty($noteAfter)) {
 
 Assert-Match (Invoke-ApsOk reset profile --json) '"reset":"key"' 'reset profile json'
 
-$null = Invoke-ApsOk reset --all
+$bulkReset = Invoke-ApsOk reset --all --json
+Assert-Match $bulkReset '"report"' 'reset all json report'
+Assert-Match $bulkReset '"notAttempted":\[\]' 'reset all json not-attempted list'
 Assert-Equal 'false' (Invoke-ApsOk get flag) 'reset all flag'
 $noteAll = Invoke-ApsOk get note
 if (-not [string]::IsNullOrEmpty($noteAll)) {
@@ -173,7 +175,7 @@ Invoke-ApsExpectFail set counter nope
 
 # Schema contract + dynamic key round-trip
 $schema = Invoke-ApsOk schema
-Assert-Match $schema '"schemaVersion":4' 'schema version'
+Assert-Match $schema '"schemaVersion":5' 'schema version'
 Assert-Match $schema '"userSchema"' 'userSchema meta'
 Assert-Match $schema '"code":"unknown_key"' 'unknown_key error'
 Assert-Match $schema '"--registered"' 'reset registered flag'

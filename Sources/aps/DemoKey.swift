@@ -69,7 +69,65 @@ public struct ProfileDocument: Codable, Equatable, Sendable {
     }
 }
 
-public enum APSError: Error, CustomStringConvertible, Equatable {
+/// Resource whose restoration failed during a transactional operation.
+public enum RollbackContext: Equatable, Sendable {
+    /// A compiled AppState adapter could not be restored after synchronization failed.
+    case adapter(key: String)
+    /// The schema registry could not be restored after purging a key.
+    case schema(key: String)
+    /// The schema registry could not be restored after a candidate update failed.
+    case schemaCandidate(key: String)
+    /// A StoredState value could not be restored after a failed reset.
+    case storedState(key: String)
+    /// A FileState file could not be restored after a failed reset.
+    case fileState(path: String)
+    /// A staged file could not be moved back after a failed deletion.
+    case stagedFile(path: String)
+
+    /// Human-readable rollback failure without the original error.
+    public var failureDescription: String {
+        switch self {
+        case .adapter(let key):
+            return "Failed to restore AppState adapter '\(key)' after reset synchronization failed; "
+                + "the compiled adapter may no longer match its backing storage."
+        case .schema(let key):
+            return "Failed to restore schema.json after purging '\(key)' failed; "
+                + "the retained data may no longer match the registry."
+        case .schemaCandidate(let key):
+            return "The candidate registry update for removing '\(key)' failed, "
+                + "and schema.json could not be restored; no data purge was attempted."
+        case .storedState(let key):
+            return "Failed to restore StoredState value '\(key)' after reset failed; "
+                + "the stored value may be partially updated."
+        case .fileState(let path):
+            return "Failed to restore state file '\(path)' after reset failed; "
+                + "the file may be partially updated."
+        case .stagedFile(let path):
+            return "Failed to restore state file '\(path)' after deletion failed; "
+                + "the original data may remain only in a staged deletion file."
+        }
+    }
+
+    /// Actionable recovery guidance for the affected resource.
+    public var hint: String {
+        switch self {
+        case .adapter(let key):
+            return "Inspect the AppState adapter and backing storage for '\(key)' before retrying the reset."
+        case .schema:
+            return "Inspect schema.json and the retained data under the state root before retrying."
+        case .schemaCandidate:
+            return "Inspect schema.json before retrying; retained key data was not purged."
+        case .storedState(let key):
+            return "Inspect the StoredState value for '\(key)' before retrying the reset."
+        case .fileState(let path):
+            return "Inspect '\(path)' under the state root before retrying the reset."
+        case .stagedFile(let path):
+            return "Inspect '\(path)' and its neighboring .aps-delete file under the state root before retrying."
+        }
+    }
+}
+
+public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
     case invalidValue(key: String, value: String)
     case encodingFailed
     case decodingFailed
@@ -83,6 +141,12 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
     case unknownKey(name: String)
     /// `key add` would overwrite an existing entry without force.
     case schemaConflict(name: String)
+    /// An operation failed and its affected resource could not be restored.
+    case rollbackFailed(
+        context: RollbackContext,
+        originalErrorCode: String,
+        originalErrorDescription: String
+    )
 
     /// sysexits `EX_DATAERR` (65): input/state data was present but unusable.
     public static let corruptStateExitCode: Int32 = 65
@@ -107,6 +171,9 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "Unknown key '\(name)'"
         case .schemaConflict(let name):
             return "Key '\(name)' already exists in schema.json"
+        case .rollbackFailed(let context, let originalErrorCode, let originalErrorDescription):
+            return "\(context.failureDescription) "
+                + "Original failure [\(originalErrorCode)]: \(originalErrorDescription)"
         }
     }
 
@@ -122,6 +189,7 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
         case .schemaInvalid: return "schema_invalid"
         case .unknownKey: return "unknown_key"
         case .schemaConflict: return "schema_conflict"
+        case .rollbackFailed: return "rollback_failed"
         }
     }
 
@@ -133,7 +201,7 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
         case .decodingFailed, .corruptState, .schemaInvalid: return APSError.corruptStateExitCode
         case .secretUnlockFailed: return 69 // EX_UNAVAILABLE
         case .encodingFailed: return 70 // EX_SOFTWARE
-        case .persistenceFailed: return 73 // EX_CANTCREAT
+        case .persistenceFailed, .rollbackFailed: return 73 // EX_CANTCREAT
         }
     }
 
@@ -158,6 +226,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "Run `aps keys` or `aps key list`; add the key with `aps key add` if needed."
         case .schemaConflict:
             return "Choose a new name or pass --force to replace the existing schema entry."
+        case .rollbackFailed(let context, _, _):
+            return context.hint
         }
     }
 }

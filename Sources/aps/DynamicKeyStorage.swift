@@ -1,9 +1,45 @@
-import AppState
 import Foundation
+import AppState
+import Crypto
+
+internal protocol UserDefaultsSynchronizing: UserDefaultsManaging {
+    func synchronize() -> Bool
+}
 
 /// Process-local and file-backed storage for user-defined schema keys.
 @MainActor
 enum DynamicKeyStorage {
+    internal struct FileOperations: Sendable {
+        internal let fileExists: @Sendable (URL) -> Bool
+        internal let read: @Sendable (URL) throws -> Data
+        internal let write: @Sendable (Data, URL) throws -> Void
+        internal let remove: @Sendable (URL) throws -> Void
+
+        internal init(
+            fileExists: @escaping @Sendable (URL) -> Bool,
+            read: @escaping @Sendable (URL) throws -> Data,
+            write: @escaping @Sendable (Data, URL) throws -> Void,
+            remove: @escaping @Sendable (URL) throws -> Void
+        ) {
+            self.fileExists = fileExists
+            self.read = read
+            self.write = write
+            self.remove = remove
+        }
+
+        internal static let live = FileOperations(
+            fileExists: { FileManager.default.fileExists(atPath: $0.path) },
+            read: { try Data(contentsOf: $0) },
+            write: { try $0.write(to: $1, options: .atomic) },
+            remove: { try FileManager.default.removeItem(at: $0) }
+        )
+    }
+
+    private enum FileSnapshot: Equatable {
+        case absent
+        case present(Data)
+    }
+
     private static var memoryStrings: [String: String] = [:]
     private static var memoryInts: [String: Int] = [:]
     private static var memoryBools: [String: Bool] = [:]
@@ -59,30 +95,145 @@ enum DynamicKeyStorage {
         }
     }
 
-    static func reset(entry: SchemaKeyEntry, stateRoot: String, schema: UserSchemaDocument) throws {
+    @discardableResult
+    static func reset(
+        entry: SchemaKeyEntry,
+        stateRoot: String,
+        schema: UserSchemaDocument,
+        fileOperations: FileOperations = .live,
+        afterReset: () throws -> Void = {}
+    ) throws -> ResetOutcome {
         let initial = entry.initial?.wireString ?? ""
         switch entry.storage {
         case "State":
-            memoryStrings.removeValue(forKey: entry.name)
-            memoryInts.removeValue(forKey: entry.name)
-            memoryBools.removeValue(forKey: entry.name)
-            if entry.initial != nil {
-                try memorySet(entry, value: initial)
+            let oldString = memoryStrings[entry.name]
+            let oldInt = memoryInts[entry.name]
+            let oldBool = memoryBools[entry.name]
+            do {
+                memoryStrings.removeValue(forKey: entry.name)
+                memoryInts.removeValue(forKey: entry.name)
+                memoryBools.removeValue(forKey: entry.name)
+                if entry.initial != nil {
+                    try memorySet(entry, value: initial)
+                }
+                try afterReset()
+            } catch {
+                restoreMemoryValue(oldString, forKey: entry.name, in: &memoryStrings)
+                restoreMemoryValue(oldInt, forKey: entry.name, in: &memoryInts)
+                restoreMemoryValue(oldBool, forKey: entry.name, in: &memoryBools)
+                throw error
             }
         case "StoredState":
-            removeStoredValue(entry)
-            if entry.initial != nil {
-                try storedSet(entry, value: initial)
-            }
+            let store = userDefaults
+            try resetStoredValue(
+                entry,
+                initial: entry.initial == nil ? nil : initial,
+                in: store,
+                afterReset: afterReset
+            )
         case "FileState":
-            try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
-            if entry.initial != nil {
-                try fileSet(entry, value: initial, stateRoot: stateRoot)
+            try SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: stateRoot,
+                lockFileName: try fileLockName(entry),
+                resourceKey: entry.name
+            ) {
+                try resetFileTransaction(
+                    entry: entry,
+                    stateRoot: stateRoot,
+                    operations: fileOperations
+                ) {
+                    if entry.initial != nil {
+                        try fileSetUnlocked(
+                            entry,
+                            value: initial,
+                            stateRoot: stateRoot,
+                            operations: fileOperations
+                        )
+                        guard try fileGet(
+                            entry,
+                            stateRoot: stateRoot,
+                            operations: fileOperations
+                        ) == initial else {
+                            throw APSError.persistenceFailed(key: entry.name)
+                        }
+                    } else {
+                        _ = try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
+                    }
+                    try afterReset()
+                }
             }
         case "EncryptedFile":
-            try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
+            // The default encrypted adapter is intentionally a no-op. Run the
+            // callback first so a future injected adapter failure cannot delete
+            // an existing envelope without a rollback-capable secret transaction.
+            try afterReset()
+            _ = try encryptedStore(entry, stateRoot: stateRoot).reset()
         case "Slice":
-            try sliceSet(entry: entry, value: initial, stateRoot: stateRoot, schema: schema)
+            let parent = try sliceParent(entry: entry, schema: schema)
+            try SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: stateRoot,
+                lockFileName: try fileLockName(parent),
+                resourceKey: entry.name
+            ) {
+                try resetFileTransaction(
+                    entry: parent,
+                    stateRoot: stateRoot,
+                    operations: fileOperations
+                ) {
+                    try sliceSetUnlocked(
+                        entry: entry,
+                        parent: parent,
+                        value: initial,
+                        stateRoot: stateRoot,
+                        operations: fileOperations
+                    )
+                    guard try sliceGetUnlocked(
+                        entry: entry,
+                        parent: parent,
+                        stateRoot: stateRoot,
+                        operations: fileOperations
+                    ) == initial else {
+                        throw APSError.persistenceFailed(key: entry.name)
+                    }
+                    try afterReset()
+                }
+            }
+        default:
+            throw APSError.schemaInvalid(reason: "unsupported storage \(entry.storage)")
+        }
+        return ResetOutcome(key: entry.name)
+    }
+
+    private static func restoreMemoryValue<Value>(
+        _ value: Value?,
+        forKey key: String,
+        in storage: inout [String: Value]
+    ) {
+        if let value {
+            storage[key] = value
+        } else {
+            storage.removeValue(forKey: key)
+        }
+    }
+
+    static func purge(entry: SchemaKeyEntry, stateRoot: String) throws {
+        switch entry.storage {
+        case "FileState":
+            _ = try SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: stateRoot,
+                lockFileName: try fileLockName(entry),
+                resourceKey: entry.name
+            ) {
+                try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
+            }
+        case "EncryptedFile":
+            _ = try encryptedStore(entry, stateRoot: stateRoot).reset()
+        case "StoredState":
+            try removeStoredValue(entry)
+        case "State":
+            clearMemory(named: entry.name)
+        case "Slice":
+            break
         default:
             throw APSError.schemaInvalid(reason: "unsupported storage \(entry.storage)")
         }
@@ -147,14 +298,39 @@ enum DynamicKeyStorage {
         "aps.user.\(name)"
     }
 
-    internal static func removeStoredValue(_ entry: SchemaKeyEntry) {
-        let store = userDefaults
-        store.removeObject(forKey: storedDefaultsKey(entry.name))
-        if usesLegacyFlagStorage(entry) {
-            store.removeObject(forKey: legacyFlagDefaultsKey)
+    internal static func removeStoredValue(_ entry: SchemaKeyEntry) throws {
+        try removeStoredValue(entry, from: userDefaults)
+    }
+
+    private static func removeStoredValue(
+        _ entry: SchemaKeyEntry,
+        from store: any UserDefaultsManaging
+    ) throws {
+        let canonicalKey = storedDefaultsKey(entry.name)
+        let oldCanonical = store.object(forKey: canonicalKey)
+        let oldLegacy = usesLegacyFlagStorage(entry) ? store.object(forKey: legacyFlagDefaultsKey) : nil
+
+        do {
+            store.removeObject(forKey: canonicalKey)
+            if usesLegacyFlagStorage(entry) {
+                store.removeObject(forKey: legacyFlagDefaultsKey)
+            }
+            guard synchronize(store),
+                  store.object(forKey: canonicalKey) == nil,
+                  !usesLegacyFlagStorage(entry) || store.object(forKey: legacyFlagDefaultsKey) == nil
+            else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+        } catch {
+            try restoreStoredObjects(
+                canonical: oldCanonical,
+                legacy: oldLegacy,
+                entry: entry,
+                in: store,
+                after: error
+            )
+            throw error
         }
-        (store as? UserDefaults)?.synchronize()
-        UserDefaults.standard.synchronize()
     }
 
     private static let legacyFlagDefaultsKey = "App/aps.flag"
@@ -163,8 +339,10 @@ enum DynamicKeyStorage {
         entry.name == "flag" && entry.type == "Bool" && entry.storage == "StoredState"
     }
 
-    private static func storedObject(_ entry: SchemaKeyEntry) -> Any? {
-        let store = userDefaults
+    private static func storedObject(
+        _ entry: SchemaKeyEntry,
+        in store: any UserDefaultsManaging
+    ) -> Any? {
         if let object = store.object(forKey: storedDefaultsKey(entry.name)) {
             return object
         }
@@ -206,28 +384,222 @@ enum DynamicKeyStorage {
     }
 
     private static func storedGet(_ entry: SchemaKeyEntry) -> String {
+        storedPersistedValue(entry, in: userDefaults)
+            ?? entry.initial?.wireString
+            ?? storedFallbackValue(entry)
+    }
+
+    private static func resetStoredValue(
+        _ entry: SchemaKeyEntry,
+        initial: String?,
+        in store: any UserDefaultsManaging,
+        afterReset: () throws -> Void
+    ) throws {
+        let canonicalKey = storedDefaultsKey(entry.name)
+        let oldCanonical = store.object(forKey: canonicalKey)
+        let oldLegacy = usesLegacyFlagStorage(entry) ? store.object(forKey: legacyFlagDefaultsKey) : nil
+
+        do {
+            store.removeObject(forKey: canonicalKey)
+            if usesLegacyFlagStorage(entry) {
+                store.removeObject(forKey: legacyFlagDefaultsKey)
+            }
+            if let initial {
+                try storedSet(entry, value: initial, in: store)
+            }
+            guard synchronize(store),
+                  storedPersistedValue(entry, in: store) == initial,
+                  !usesLegacyFlagStorage(entry) || store.object(forKey: legacyFlagDefaultsKey) == nil
+            else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+            try afterReset()
+        } catch {
+            try restoreStoredObjects(
+                canonical: oldCanonical,
+                legacy: oldLegacy,
+                entry: entry,
+                in: store,
+                after: error
+            )
+            throw error
+        }
+    }
+
+    private static func restoreStoredObjects(
+        canonical: Any?,
+        legacy: Any?,
+        entry: SchemaKeyEntry,
+        in store: any UserDefaultsManaging,
+        after originalError: Error
+    ) throws {
+        let canonicalKey = storedDefaultsKey(entry.name)
+        restoreStoredObject(canonical, forKey: canonicalKey, in: store)
+        if usesLegacyFlagStorage(entry) {
+            restoreStoredObject(legacy, forKey: legacyFlagDefaultsKey, in: store)
+        }
+        guard synchronize(store),
+              storedObjectsEqual(store.object(forKey: canonicalKey), canonical),
+              !usesLegacyFlagStorage(entry)
+                || storedObjectsEqual(store.object(forKey: legacyFlagDefaultsKey), legacy)
+        else {
+            throw rollbackFailure(after: originalError, key: entry.name)
+        }
+    }
+
+    private static func storedObjectsEqual(_ left: Any?, _ right: Any?) -> Bool {
+        switch (left, right) {
+        case (.none, .none):
+            return true
+        case (.some(let leftObject), .some(let rightObject)):
+            guard
+                String(reflecting: type(of: leftObject)) == String(reflecting: type(of: rightObject)),
+                let leftValue = leftObject as? NSObject,
+                let rightValue = rightObject as? NSObject
+            else { return false }
+            return leftValue.isEqual(rightValue)
+        default:
+            return false
+        }
+    }
+
+    private static func rollbackFailure(after originalError: Error, key: String) -> APSError {
+        let failure = originalError as? APSError ?? .persistenceFailed(key: "StoredState")
+        return .rollbackFailed(
+            context: .storedState(key: key),
+            originalErrorCode: failure.code,
+            originalErrorDescription: failure.description
+        )
+    }
+
+    private static func restoreStoredObject(
+        _ object: Any?,
+        forKey key: String,
+        in store: any UserDefaultsManaging
+    ) {
+        if let object {
+            store.set(object, forKey: key)
+        } else {
+            store.removeObject(forKey: key)
+        }
+    }
+
+    private static func storedFallbackValue(_ entry: SchemaKeyEntry) -> String {
+        switch entry.type {
+        case "Int": return "0"
+        case "Bool": return "false"
+        default: return ""
+        }
+    }
+
+    private static func storedPersistedValue(
+        _ entry: SchemaKeyEntry,
+        in store: any UserDefaultsManaging
+    ) -> String? {
         switch entry.type {
         case "Int":
-            if let object = storedObject(entry), let intValue = decodeStoredInt(object) {
+            if let object = storedObject(entry, in: store), let intValue = decodeStoredInt(object) {
                 return String(intValue)
             }
-            return entry.initial?.wireString ?? "0"
+            return nil
         case "Bool":
-            if let object = storedObject(entry), let boolValue = decodeStoredBool(object) {
+            if let object = storedObject(entry, in: store), let boolValue = decodeStoredBool(object) {
                 return boolValue ? "true" : "false"
             }
-            return entry.initial?.wireString ?? "false"
+            return nil
         default:
-            if let object = storedObject(entry), let stringValue = decodeStoredString(object) {
+            if let object = storedObject(entry, in: store), let stringValue = decodeStoredString(object) {
                 return stringValue
             }
-            return entry.initial?.wireString ?? ""
+            return nil
         }
     }
 
     private static func storedSet(_ entry: SchemaKeyEntry, value: String) throws {
-        let key = storedDefaultsKey(entry.name)
+        try validateStoredValue(entry, value: value)
         let store = userDefaults
+        let canonicalKey = storedDefaultsKey(entry.name)
+        let oldCanonical = store.object(forKey: canonicalKey)
+        let oldLegacy = usesLegacyFlagStorage(entry) ? store.object(forKey: legacyFlagDefaultsKey) : nil
+
+        do {
+            try storedSet(entry, value: value, in: store)
+            guard
+                synchronize(store),
+                storedCanonicalValueMatches(entry, value: value, in: store)
+            else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+        } catch {
+            try restoreStoredObjects(
+                canonical: oldCanonical,
+                legacy: oldLegacy,
+                entry: entry,
+                in: store,
+                after: error
+            )
+            throw error
+        }
+    }
+
+    private static func validateStoredValue(_ entry: SchemaKeyEntry, value: String) throws {
+        switch entry.type {
+        case "Int":
+            guard Int(value) != nil else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+        case "Bool":
+            guard StateStore.parseBool(value) != nil else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+        default:
+            break
+        }
+    }
+
+    private static func storedCanonicalValueMatches(
+        _ entry: SchemaKeyEntry,
+        value: String,
+        in store: any UserDefaultsManaging
+    ) -> Bool {
+        guard
+            let object = store.object(forKey: storedDefaultsKey(entry.name)),
+            JSONSerialization.isValidJSONObject([object]),
+            let data = try? JSONSerialization.data(withJSONObject: [object])
+        else {
+            return false
+        }
+        switch entry.type {
+        case "Int":
+            guard
+                let expected = Int(value),
+                let persisted = try? JSONDecoder().decode([Int].self, from: data)
+            else {
+                return false
+            }
+            return persisted == [expected]
+        case "Bool":
+            guard
+                let expected = StateStore.parseBool(value),
+                let persisted = try? JSONDecoder().decode([Bool].self, from: data)
+            else {
+                return false
+            }
+            return persisted == [expected]
+        default:
+            guard let persisted = try? JSONDecoder().decode([String].self, from: data) else {
+                return false
+            }
+            return persisted == [value]
+        }
+    }
+
+    private static func storedSet(
+        _ entry: SchemaKeyEntry,
+        value: String,
+        in store: any UserDefaultsManaging
+    ) throws {
+        let key = storedDefaultsKey(entry.name)
         switch entry.type {
         case "Int":
             guard let intValue = Int(value) else {
@@ -242,8 +614,19 @@ enum DynamicKeyStorage {
         default:
             store.set(value, forKey: key)
         }
-        (store as? UserDefaults)?.synchronize()
-        UserDefaults.standard.synchronize()
+    }
+
+    private static func synchronize(_ store: any UserDefaultsManaging) -> Bool {
+        if let synchronizingStore = store as? any UserDefaultsSynchronizing {
+            return synchronizingStore.synchronize()
+        }
+        if let defaults = store as? UserDefaults {
+            return defaults.synchronize()
+        }
+        if store is Application.SendableUserDefaults {
+            return UserDefaults.standard.synchronize()
+        }
+        return true
     }
 
     // MARK: - FileState
@@ -261,19 +644,34 @@ enum DynamicKeyStorage {
         try storagePath(for: entry).resolve(stateRoot: stateRoot)
     }
 
-    private static func fileLockName(_ entry: SchemaKeyEntry) -> String {
-        let filename = URL(fileURLWithPath: entry.path ?? "\(entry.name).json").lastPathComponent
-        return "\(filename).lock"
+    internal static func fileLockName(_ entry: SchemaKeyEntry) throws -> String {
+        let path = try storagePath(for: entry)
+        guard path.collisionKey.contains("/") else {
+            return "\(path.collisionKey).lock"
+        }
+        let digest = SHA256.hash(data: Data(path.collisionKey.utf8))
+        let digits = Array("0123456789abcdef".utf8)
+        var encoded: [UInt8] = []
+        encoded.reserveCapacity(SHA256.byteCount * 2)
+        for byte in digest {
+            encoded.append(digits[Int(byte >> 4)])
+            encoded.append(digits[Int(byte & 0x0f)])
+        }
+        return "storage-\(String(decoding: encoded, as: UTF8.self)).lock"
     }
 
-    private static func fileGet(_ entry: SchemaKeyEntry, stateRoot: String) throws -> String {
+    private static func fileGet(
+        _ entry: SchemaKeyEntry,
+        stateRoot: String,
+        operations: FileOperations = .live
+    ) throws -> String {
         let url = try fileURL(entry, stateRoot: stateRoot)
-        guard FileManager.default.fileExists(atPath: url.path) else {
+        guard operations.fileExists(url) else {
             return entry.initial?.wireString ?? (entry.type == "object" ? "{}" : "")
         }
         let data: Data
         do {
-            data = try Data(contentsOf: url)
+            data = try operations.read(url)
         } catch {
             throw APSError.corruptState(key: entry.name)
         }
@@ -291,15 +689,21 @@ enum DynamicKeyStorage {
     }
 
     private static func fileSet(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
-        try SchemaFileLock.withExclusiveLock(
+        try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
-            lockFileName: fileLockName(entry)
+            lockFileName: try fileLockName(entry),
+            resourceKey: entry.name
         ) {
             try fileSetUnlocked(entry, value: value, stateRoot: stateRoot)
         }
     }
 
-    private static func fileSetUnlocked(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
+    private static func fileSetUnlocked(
+        _ entry: SchemaKeyEntry,
+        value: String,
+        stateRoot: String,
+        operations: FileOperations = .live
+    ) throws {
         let url = try fileURL(entry, stateRoot: stateRoot)
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
@@ -329,9 +733,82 @@ enum DynamicKeyStorage {
             throw APSError.invalidValue(key: entry.name, value: value)
         }
         do {
-            try data.write(to: url, options: .atomic)
+            try operations.write(data, url)
         } catch {
             throw APSError.persistenceFailed(key: entry.name)
+        }
+    }
+
+    private static func resetFileTransaction(
+        entry: SchemaKeyEntry,
+        stateRoot: String,
+        operations: FileOperations,
+        mutation: () throws -> Void
+    ) throws {
+        let url = try fileURL(entry, stateRoot: stateRoot)
+        let snapshot = try fileSnapshot(at: url, operations: operations, key: entry.name)
+        do {
+            try mutation()
+        } catch {
+            let originalError = error
+            do {
+                try restoreFileSnapshot(
+                    snapshot,
+                    entry: entry,
+                    stateRoot: stateRoot,
+                    operations: operations
+                )
+            } catch {
+                let failure = originalError as? APSError ?? .persistenceFailed(key: entry.name)
+                throw APSError.rollbackFailed(
+                    context: .fileState(path: entry.path ?? entry.name),
+                    originalErrorCode: failure.code,
+                    originalErrorDescription: failure.description
+                )
+            }
+            throw originalError
+        }
+    }
+
+    private static func fileSnapshot(
+        at url: URL,
+        operations: FileOperations,
+        key: String
+    ) throws -> FileSnapshot {
+        guard operations.fileExists(url) else { return .absent }
+        do {
+            return .present(try operations.read(url))
+        } catch {
+            throw APSError.persistenceFailed(key: key)
+        }
+    }
+
+    private static func restoreFileSnapshot(
+        _ snapshot: FileSnapshot,
+        entry: SchemaKeyEntry,
+        stateRoot: String,
+        operations: FileOperations
+    ) throws {
+        let key = entry.name
+        let url = try fileURL(entry, stateRoot: stateRoot)
+        do {
+            switch snapshot {
+            case .absent:
+                if operations.fileExists(url) {
+                    let checkedURL = try storagePath(for: entry).resolve(stateRoot: stateRoot)
+                    guard checkedURL == url else {
+                        throw APSError.persistenceFailed(key: key)
+                    }
+                    try operations.remove(checkedURL)
+                }
+            case .present(let data):
+                try operations.write(data, url)
+            }
+        } catch {
+            throw APSError.persistenceFailed(key: key)
+        }
+        guard try fileSnapshot(at: url, operations: operations, key: key) == snapshot else {
+            throw APSError.persistenceFailed(key: key)
         }
     }
 
@@ -367,26 +844,42 @@ enum DynamicKeyStorage {
         stateRoot: String,
         schema: UserSchemaDocument
     ) throws -> String {
-        guard
-            let parentName = entry.sliceOf,
-            let field = entry.sliceField,
-            let parent = UserSchema.entry(named: parentName, in: schema)
-        else {
+        let parent = try sliceParent(entry: entry, schema: schema)
+        return try sliceGetUnlocked(entry: entry, parent: parent, stateRoot: stateRoot)
+    }
+
+    private static func sliceGetUnlocked(
+        entry: SchemaKeyEntry,
+        parent: SchemaKeyEntry,
+        stateRoot: String,
+        operations: FileOperations = .live
+    ) throws -> String {
+        guard let parentName = entry.sliceOf, let field = entry.sliceField else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
-        let raw = try fileGet(parent, stateRoot: stateRoot)
-        guard let data = raw.data(using: .utf8),
-              let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let raw = try fileGet(parent, stateRoot: stateRoot, operations: operations)
+        guard
+            let data = raw.data(using: .utf8),
+            let object = try? JSONDecoder().decode([String: SchemaJSON].self, from: data)
         else {
             throw APSError.corruptState(key: parentName)
         }
         guard let value = object[field] else {
             return entry.initial?.wireString ?? ""
         }
-        if let string = value as? String { return string }
-        if let intValue = value as? Int { return String(intValue) }
-        if let boolValue = value as? Bool { return boolValue ? "true" : "false" }
-        return "\(value)"
+        let declaredType = parent.objectShape?[field] ?? entry.type
+        switch (declaredType, value) {
+        case ("String", .string(let stringValue)):
+            return stringValue
+        case ("Int", .int(let intValue)):
+            return String(intValue)
+        case ("Bool", .bool(let boolValue)):
+            return boolValue ? "true" : "false"
+        case ("object", .object):
+            return value.wireString
+        default:
+            throw APSError.corruptState(key: parentName)
+        }
     }
 
     private static func sliceSet(
@@ -395,49 +888,76 @@ enum DynamicKeyStorage {
         stateRoot: String,
         schema: UserSchemaDocument
     ) throws {
+        let parent = try sliceParent(entry: entry, schema: schema)
+        try SchemaFileLock.withExclusiveStorageLock(
+            stateRoot: stateRoot,
+            lockFileName: try fileLockName(parent),
+            resourceKey: entry.name
+        ) {
+            try sliceSetUnlocked(entry: entry, parent: parent, value: value, stateRoot: stateRoot)
+        }
+    }
+
+    private static func sliceParent(
+        entry: SchemaKeyEntry,
+        schema: UserSchemaDocument
+    ) throws -> SchemaKeyEntry {
         guard
             let parentName = entry.sliceOf,
-            let field = entry.sliceField,
             let parent = UserSchema.entry(named: parentName, in: schema)
         else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
-        try SchemaFileLock.withExclusiveLock(
-            stateRoot: stateRoot,
-            lockFileName: fileLockName(parent)
-        ) {
-            let raw = try fileGet(parent, stateRoot: stateRoot)
-            var object: [String: Any]
-            if let data = raw.data(using: .utf8),
-               let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                object = parsed
-            } else {
-                object = [:]
-            }
-            if let shape = parent.objectShape?[field] {
-                switch shape {
-                case "Int":
-                    guard let intValue = Int(value) else {
-                        throw APSError.invalidValue(key: entry.name, value: value)
-                    }
-                    object[field] = intValue
-                case "Bool":
-                    guard let boolValue = StateStore.parseBool(value) else {
-                        throw APSError.invalidValue(key: entry.name, value: value)
-                    }
-                    object[field] = boolValue
-                default:
-                    object[field] = value
-                }
-            } else {
-                object[field] = value
-            }
-            // Avoid `.sortedKeys`: not available on all Linux Foundation builds we smoke.
-            let data = try JSONSerialization.data(withJSONObject: object)
-            guard let encoded = String(data: data, encoding: .utf8) else {
-                throw APSError.encodingFailed
-            }
-            try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot)
+        return parent
+    }
+
+    private static func sliceSetUnlocked(
+        entry: SchemaKeyEntry,
+        parent: SchemaKeyEntry,
+        value: String,
+        stateRoot: String,
+        operations: FileOperations = .live
+    ) throws {
+        guard let parentName = entry.sliceOf, let field = entry.sliceField else {
+            throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
+        let raw = try fileGet(parent, stateRoot: stateRoot, operations: operations)
+        guard let inputData = raw.data(using: .utf8) else {
+            throw APSError.corruptState(key: parentName)
+        }
+        guard var object = try? JSONDecoder().decode([String: SchemaJSON].self, from: inputData) else {
+            throw APSError.corruptState(key: parentName)
+        }
+        let declaredType = parent.objectShape?[field] ?? entry.type
+        switch declaredType {
+        case "Int":
+            guard let intValue = Int(value) else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+            object[field] = .int(intValue)
+        case "Bool":
+            guard let boolValue = StateStore.parseBool(value) else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+            object[field] = .bool(boolValue)
+        case "object":
+            guard
+                let valueData = value.data(using: .utf8),
+                let objectValue = try? JSONDecoder().decode(SchemaJSON.self, from: valueData),
+                case .object = objectValue
+            else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+            object[field] = objectValue
+        case "String":
+            object[field] = .string(value)
+        default:
+            throw APSError.invalidValue(key: entry.name, value: value)
+        }
+        let outputData = try JSONEncoder().encode(object)
+        guard let encoded = String(data: outputData, encoding: .utf8) else {
+            throw APSError.encodingFailed
+        }
+        try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot, operations: operations)
     }
 }

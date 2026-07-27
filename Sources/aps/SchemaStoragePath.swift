@@ -1,4 +1,5 @@
 import Foundation
+import Crypto
 
 /// A portable, relative path used by a schema-controlled persistent store.
 ///
@@ -6,6 +7,40 @@ import Foundation
 /// Filesystem validation is intentionally repeated for every operation because
 /// the state-root contents may have changed since the schema was loaded.
 internal struct SchemaStoragePath: Hashable, Sendable {
+    /// Instance-scoped filesystem operations used by verified deletion.
+    ///
+    /// Tests can inject deterministic failures without process-global mutable
+    /// state. Production callers use `live`.
+    internal struct DeletionOperations: Sendable {
+        internal let moveItem: @Sendable (URL, URL) throws -> Void
+        internal let removeItem: @Sendable (URL) throws -> Void
+        internal let isAbsent: @Sendable (URL) throws -> Bool
+
+        internal init(
+            moveItem: @escaping @Sendable (URL, URL) throws -> Void = { source, destination in
+                try FileManager.default.moveItem(at: source, to: destination)
+            },
+            removeItem: @escaping @Sendable (URL) throws -> Void,
+            isAbsent: @escaping @Sendable (URL) throws -> Bool
+        ) {
+            self.moveItem = moveItem
+            self.removeItem = removeItem
+            self.isAbsent = isAbsent
+        }
+
+        internal static let live = DeletionOperations(
+            moveItem: { source, destination in
+                try FileManager.default.moveItem(at: source, to: destination)
+            },
+            removeItem: { url in
+                try FileManager.default.removeItem(at: url)
+            },
+            isAbsent: { url in
+                try SchemaStoragePath.itemKind(at: url) == nil
+            }
+        )
+    }
+
     internal let rawValue: String
     internal let collisionKey: String
 
@@ -85,18 +120,104 @@ internal struct SchemaStoragePath: Hashable, Sendable {
     ///
     /// A missing leaf is a successful no-op. This method never asks
     /// `FileManager` to recursively remove a directory.
-    /// - Parameter stateRoot: The active APS state-root path.
-    internal func removeRegularFileIfPresent(stateRoot: String) throws {
+    /// - Parameters:
+    ///   - stateRoot: The active APS state-root path.
+    ///   - operations: The filesystem operations used for deletion and
+    ///     postcondition verification.
+    /// - Returns: `true` when a regular file was removed, or `false` when the
+    ///   leaf was already missing.
+    @discardableResult
+    internal func removeRegularFileIfPresent(
+        stateRoot: String,
+        operations: DeletionOperations = .live
+    ) throws -> Bool {
         let url = try resolve(stateRoot: stateRoot)
-        guard let kind = try Self.itemKind(at: url) else { return }
+        guard let kind = try Self.itemKind(at: url) else { return false }
         guard kind == .regularFile else {
             throw Self.invalid("\(rawValue) is not a regular file")
         }
+
+        let stagedURL = url
+            .deletingLastPathComponent()
+            .appendingPathComponent(stagedDeletionComponent())
         do {
-            try FileManager.default.removeItem(at: url)
+            try operations.moveItem(url, stagedURL)
         } catch let error as CocoaError
             where error.code == .fileNoSuchFile || error.code == .fileReadNoSuchFile {
-            return
+            try requireAbsent(url, operations: operations)
+            return false
+        } catch {
+            throw APSError.persistenceFailed(key: rawValue)
+        }
+
+        do {
+            try requireAbsent(url, operations: operations)
+            try operations.removeItem(stagedURL)
+            try requireAbsent(stagedURL, operations: operations)
+        } catch {
+            let deletionFailure = error as? APSError ?? .persistenceFailed(key: rawValue)
+            do {
+                try restoreStagedFile(stagedURL, to: url, operations: operations)
+            } catch {
+                throw APSError.rollbackFailed(
+                    context: .stagedFile(path: rawValue),
+                    originalErrorCode: deletionFailure.code,
+                    originalErrorDescription: deletionFailure.description
+                )
+            }
+            throw deletionFailure
+        }
+        return true
+    }
+
+    private func restoreStagedFile(
+        _ stagedURL: URL,
+        to originalURL: URL,
+        operations: DeletionOperations
+    ) throws {
+        do {
+            try operations.moveItem(stagedURL, originalURL)
+            try requireRegularFile(originalURL)
+            try requireAbsent(stagedURL, operations: operations)
+        } catch {
+            throw APSError.persistenceFailed(key: rawValue)
+        }
+    }
+
+    private func stagedDeletionComponent() -> String {
+        let digest = SHA256.hash(data: Data(collisionKey.utf8))
+        let digits = Array("0123456789abcdef".utf8)
+        var encoded: [UInt8] = []
+        encoded.reserveCapacity(SHA256.byteCount * 2)
+        for byte in digest {
+            encoded.append(digits[Int(byte >> 4)])
+            encoded.append(digits[Int(byte & 0x0f)])
+        }
+        return ".aps-delete-\(String(decoding: encoded, as: UTF8.self))-\(UUID().uuidString)"
+    }
+
+    private func requireAbsent(
+        _ url: URL,
+        operations: DeletionOperations
+    ) throws {
+        do {
+            guard try operations.isAbsent(url) else {
+                throw APSError.persistenceFailed(key: rawValue)
+            }
+        } catch let error as APSError {
+            throw error
+        } catch {
+            throw APSError.persistenceFailed(key: rawValue)
+        }
+    }
+
+    private func requireRegularFile(_ url: URL) throws {
+        do {
+            guard try Self.itemKind(at: url) == .regularFile else {
+                throw APSError.persistenceFailed(key: rawValue)
+            }
+        } catch let error as APSError {
+            throw error
         } catch {
             throw APSError.persistenceFailed(key: rawValue)
         }
