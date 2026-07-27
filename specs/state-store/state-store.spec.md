@@ -19,9 +19,10 @@ depends_on: []
 ## Purpose
 
 `StateStore` is the AppState-facing service used by the CLI. It reads and writes
-registry-backed keys (DemoKey seed bindings plus DynamicKeyStorage for user keys),
-injects real dependencies with `@AppDependency`, and provides dump / watch / reset
-helpers suitable for non-UI use.
+all string-key registry entries through `DynamicKeyStorage`, including default
+seed names, injects real dependencies with `@AppDependency`, and provides dump,
+watch, and reset helpers suitable for non-UI use. Direct `DemoKey` adapters
+remain a low-level AppState dogfood surface and do not drive registry commands.
 
 ## Public API
 
@@ -32,11 +33,11 @@ helpers suitable for non-UI use.
 | `get` | Returns the current string rendering for a demo or registry key. |
 | `set` | Parses and writes a demo or registry key value; records a stats mutation. |
 | `reset` | Restores one demo or registry key to its initial value; records a stats mutation. |
-| `resetAll` | Restores every demo seed key. |
+| `resetAll` | Restores every demo seed key through the direct AppState dogfood surface. |
 | `resetAllRegistered` | Restores every key in the active schema.json registry. |
-| `dump` | JSON snapshot of demo seed keys (pretty on TTY, compact when piped). |
+| `dump` | JSON snapshot of demo seed adapters (pretty on TTY, compact when piped). |
 | `dumpRegistered` | JSON snapshot of every registry key. |
-| `watchBlocking` | Observation + polling watch loop for demo or string registry keys, bounded by an optional deadline. |
+| `watchBlocking` | Direct DemoKey observation or uniform string-entry polling, bounded by an optional deadline. |
 | `watchStatsBlocking` | Combine + polling watch loop for ObservedDependency stats, bounded by an optional deadline. |
 | `statsSnapshot` | Immutable view of DemoStats counters. |
 | `resetStats` | Clears process-local DemoStats counters. |
@@ -85,6 +86,11 @@ helpers suitable for non-UI use.
 7. `schema.json` write failures surface as `APSError.persistenceFailed`.
 8. Schema RMW (add/remove/materialize-on-missing) is serialized by `SchemaFileLock`.
 9. `SecretStore.set` never replaces an existing envelope without a successful unlock.
+10. Every string-key operation uses the current resolved `SchemaKeyEntry`; a
+    seed-name match does not select a compiled adapter.
+11. The default Bool/StoredState flag can read JSON-encoded legacy
+    `App/aps.flag` data only when `aps.user.flag` is absent; reset clears the
+    legacy key before writing the current initial value.
 
 ## Behavioral Examples
 
@@ -107,7 +113,7 @@ Then seen equals ["1", "2"].
 ```
 
 ```
-Given dump() after setting message to "hi"
+Given dump() after set(name: "message", value: "hi")
 When decoding the JSON
 Then keys include message with value "hi" and a timestamp field exists.
 ```

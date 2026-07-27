@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112",
+  "slug": "make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112",
+  "title": "Make schema.json authoritative for built-in and dynamic key names for issue 112",
+  "description": "Make schema.json authoritative for built-in and dynamic key names for issue 112",
+  "kind": "bug_fix",
+  "state": "implementing",
+  "base_commit": "512c307a71c1d84e4ddf60eea34de3dc221ec903",
+  "created_at": 1785115559,
+  "updated_at": 1785115832,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/StateStore+Registry.swift",
+    "Sources/aps/CLIOutput.swift",
+    "Sources/aps/Aps.swift",
+    "Sources/aps/DynamicKeyStorage.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Scripts/smoke.sh",
+    "Scripts/smoke.ps1",
+    "docs/design/dynamic-schema.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "All CLI string-key operations dispatch through the resolved schema entry even when its name matches a DemoKey seed; forced overrides of type, storage, path, initial value, object shape, slice metadata, and output typing are honored by get, set, reset, watch, dump, and seed bulk reset; schema projection and runtime output agree; default seeded behavior remains compatible; StoredState compatibility is explicitly tested and documented; shell and PowerShell smoke plus unit tests cover overridden built-in names."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

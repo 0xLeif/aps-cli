@@ -27,6 +27,8 @@ It exposes a registry-backed schema (`schema.json` under the state root, seeded 
 DemoKey defaults) through ArgumentParser subcommands so humans and agents can get,
 set, watch, dump, list, reset, and mutate typed application state, and it
 self-describes that contract for agents through the `schema` command.
+`schema.json` is authoritative at runtime for default and user-added names;
+`DemoKey` defines seed inventory, not CLI dispatch.
 
 ## Public API
 
@@ -119,8 +121,8 @@ schema. `schema` prints one cacheable JSON document (`SchemaDocument`):
 cliVersion, integer schemaVersion (bumped when the document shape changes;
 currently 4), state-root precedence, live registry keys, userSchema meta,
 commands, payload shapes, and the error table. Live state stays in `dump`.
-`reset --all` restores seed keys only; `reset --registered` restores every
-registry key.
+`reset --all` restores seed names that remain registered through their current
+entries; `reset --registered` restores every registry key.
 
 ## Invariants
 
@@ -147,6 +149,8 @@ registry key.
    (timeout), 128+signal (130 SIGINT, 143 SIGTERM). The `--jsonl` stream never
    contains non-JSON lines. An unbounded watch prints a one-time stderr hint
    suggesting `--count` / `--timeout`.
+11. Registry commands never select type, storage, path, initial value, Slice
+    metadata, or output typing from a `DemoKey` name match.
 
 ## Behavioral Examples
 

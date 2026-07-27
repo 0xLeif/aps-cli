@@ -1,0 +1,12 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785115827,
+      "digest": "62c1e0b954dd8554797a43704063e0f1c3cf371404afeafcc87fb3a35c1b5f03",
+      "note": "Approved uniform registry dispatch with explicit legacy flag compatibility and issue 114 scope boundary"
+    }
+  ],
+  "reopenings": []
+}

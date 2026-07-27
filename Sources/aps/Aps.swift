@@ -460,7 +460,7 @@ extension Aps {
                 let store = StateStore()
                 do {
                     if all {
-                        store.resetAll()
+                        try store.resetAllSeedKeys()
                         if options.json {
                             let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
                             print(try CLIOutput.encodeJSON(payload))

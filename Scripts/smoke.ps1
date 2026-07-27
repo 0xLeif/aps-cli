@@ -186,6 +186,31 @@ Assert-Equal 'from-smoke' (Invoke-ApsOk set smokeNote from-smoke) 'set smokeNote
 Assert-Equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'get smokeNote'
 Assert-Match (Invoke-ApsOk schema) '"name":"smokeNote"' 'schema lists smokeNote'
 
+# A forced seed entry is governed by schema.json, not its compiled DemoKey.
+$null = Invoke-ApsOk key add counter `
+    --type String `
+    --storage FileState `
+    --path forced-counter.json `
+    --initial forced-initial `
+    --force
+Assert-Equal 'forced-initial' (Invoke-ApsOk get counter) 'forced counter initial'
+Assert-Equal 'from-registry' (Invoke-ApsOk set counter from-registry) 'forced counter set'
+$forcedCounter = Invoke-ApsOk get counter --json
+Assert-Match $forcedCounter '"storage":"FileState"' 'forced counter storage'
+Assert-Match $forcedCounter '"type":"String"' 'forced counter type'
+Assert-Match $forcedCounter '"value":"from-registry"' 'forced counter value'
+Assert-Match (Invoke-ApsOk dump --json) '"value":"from-registry"' 'forced counter dump'
+Assert-Match (Invoke-ApsOk watch counter --count 1 --jsonl) `
+    '"storage":"FileState"' `
+    'forced counter watch'
+Assert-Match (Invoke-ApsOk reset counter --json) `
+    '"value":"forced-initial"' `
+    'forced counter reset'
+Assert-Equal 'forced-initial' (Invoke-ApsOk get counter) 'forced counter reset value'
+if (-not (Test-Path (Join-Path $env:APS_HOME 'forced-counter.json') -PathType Leaf)) {
+    throw 'forced seed did not use the registered FileState path'
+}
+
 # Schema-controlled paths cannot alias the state root or endanger unrelated files.
 $sentinel = Join-Path $env:APS_HOME 'path-safety-sentinel.txt'
 Set-Content -LiteralPath $sentinel -Value 'must-survive'

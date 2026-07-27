@@ -19,3 +19,10 @@
 - `watchBlocking` throws `corruptState` when a FileState file becomes undecodable.
 - Subprocess safety suites reject malicious schema paths before reset/purge and
   verify FileState/EncryptedFile deletion touches only the registered leaf.
+- Forced seed registry tests cover uniform get, set, reset, disk validation,
+  watch polling, dump typing, FileState paths, StoredState types, and Slice
+  parent/field selection.
+- Seed bulk reset intersects `DemoKey` names with current registry entries,
+  skips removed seeds, and preserves non-seed values.
+- Legacy default-flag fixtures use AppState's JSON-encoded `App/aps.flag`
+  representation and verify canonical reset behavior.
