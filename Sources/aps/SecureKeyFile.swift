@@ -25,7 +25,6 @@ internal enum SecureKeyFileError: Error, Equatable, Sendable {
     case invalidSize(actual: Int64)
     case insecurePermissions
     case io(operation: String, code: Int32)
-    case regenerationNotAllowed
     case securityUnproven
     case unsafeFileType
     case wrongOwner
@@ -34,14 +33,17 @@ internal enum SecureKeyFileError: Error, Equatable, Sendable {
 /// Test-only synchronization points for deterministic pathname race coverage.
 internal struct SecureKeyFileRaceHooks: Sendable {
     internal let beforeCreatePathVerification: @Sendable () -> Void
-    internal let beforeQuarantineRename: @Sendable () -> Void
+    internal let beforeUnreadableQuarantineRename: @Sendable () -> Void
+    internal let beforeUnreadablePermissionRepair: @Sendable () throws -> Void
 
     internal init(
         beforeCreatePathVerification: @escaping @Sendable () -> Void = {},
-        beforeQuarantineRename: @escaping @Sendable () -> Void = {}
+        beforeUnreadableQuarantineRename: @escaping @Sendable () -> Void = {},
+        beforeUnreadablePermissionRepair: @escaping @Sendable () throws -> Void = {}
     ) {
         self.beforeCreatePathVerification = beforeCreatePathVerification
-        self.beforeQuarantineRename = beforeQuarantineRename
+        self.beforeUnreadableQuarantineRename = beforeUnreadableQuarantineRename
+        self.beforeUnreadablePermissionRepair = beforeUnreadablePermissionRepair
     }
 
     internal static let inactive = SecureKeyFileRaceHooks()
@@ -87,41 +89,18 @@ internal struct SecureKeyFile: Sendable {
         #endif
     }
 
-    /// Removes a corrupt file only when the caller proves no envelope exists.
-    ///
-    /// - Parameter noEnvelope: Explicit authorization to regenerate the key.
-    /// - Returns: `true` if an owned regular file was removed, or `false` if
-    ///   the path was already absent.
-    @discardableResult
-    internal func removeForRegeneration(noEnvelope: Bool) throws -> Bool {
-        guard noEnvelope else {
-            throw SecureKeyFileError.regenerationNotAllowed
-        }
-        #if os(Windows)
-        return try removeWindows()
-        #else
-        return try removePOSIX()
-        #endif
-    }
 }
 
 #if !os(Windows)
 internal extension SecureKeyFile {
     private func loadPOSIX() throws -> Data? {
         try withPOSIXParent { parentDescriptor, fileName in
-            let descriptor = openat(
-                parentDescriptor,
-                fileName,
-                O_RDONLY | O_NONBLOCK | O_NOFOLLOW | O_CLOEXEC
+            let descriptor = try openReadablePOSIX(
+                parentDescriptor: parentDescriptor,
+                fileName: fileName
             )
             guard descriptor >= 0 else {
-                if errno == ENOENT {
-                    return nil
-                }
-                if errno == ELOOP {
-                    throw SecureKeyFileError.unsafeFileType
-                }
-                throw posixError(operation: "openat")
+                return nil
             }
             defer { _ = close(descriptor) }
 
@@ -129,6 +108,203 @@ internal extension SecureKeyFile {
             try validateSizePOSIX(descriptor)
             return try readAllPOSIX(descriptor)
         }
+    }
+
+    private func openReadablePOSIX(
+        parentDescriptor: Int32,
+        fileName: String
+    ) throws -> Int32 {
+        let descriptor = openat(
+            parentDescriptor,
+            fileName,
+            O_RDONLY | O_NONBLOCK | O_NOFOLLOW | O_CLOEXEC
+        )
+        if descriptor >= 0 {
+            return descriptor
+        }
+        if errno == ENOENT {
+            return -1
+        }
+        if errno == ELOOP {
+            throw SecureKeyFileError.unsafeFileType
+        }
+        guard errno == EACCES else {
+            throw posixError(operation: "openat")
+        }
+
+        return try repairAndOpenUnreadablePOSIX(
+            parentDescriptor: parentDescriptor,
+            fileName: fileName
+        )
+    }
+
+    private func repairAndOpenUnreadablePOSIX(
+        parentDescriptor: Int32,
+        fileName: String
+    ) throws -> Int32 {
+        var before = stat()
+        guard fstatat(parentDescriptor, fileName, &before, AT_SYMLINK_NOFOLLOW) == 0 else {
+            if errno == ELOOP {
+                throw SecureKeyFileError.unsafeFileType
+            }
+            throw posixError(operation: "fstatat-before-permission-repair")
+        }
+        guard before.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG) else {
+            throw SecureKeyFileError.unsafeFileType
+        }
+        guard before.st_uid == geteuid() else {
+            throw SecureKeyFileError.wrongOwner
+        }
+        let quarantineName = ".aps-key-permission-repair-\(UUID().uuidString)"
+        raceHooks.beforeUnreadableQuarantineRename()
+        guard noReplaceRenamePOSIX(
+            parentDescriptor: parentDescriptor,
+            oldName: fileName,
+            newName: quarantineName
+        ) == 0 else {
+            throw posixError(operation: "renameat-permission-repair")
+        }
+
+        var moved = stat()
+        guard fstatat(parentDescriptor, quarantineName, &moved, AT_SYMLINK_NOFOLLOW) == 0 else {
+            _ = noReplaceRenamePOSIX(
+                parentDescriptor: parentDescriptor,
+                oldName: quarantineName,
+                newName: fileName
+            )
+            throw posixError(operation: "fstatat-permission-repair")
+        }
+        guard before.st_dev == moved.st_dev,
+              before.st_ino == moved.st_ino,
+              moved.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG),
+              moved.st_uid == geteuid() else {
+            _ = noReplaceRenamePOSIX(
+                parentDescriptor: parentDescriptor,
+                oldName: quarantineName,
+                newName: fileName
+            )
+            throw SecureKeyFileError.securityUnproven
+        }
+
+        do {
+            try raceHooks.beforeUnreadablePermissionRepair()
+            try repairQuarantinedPermissionsPOSIX(
+                parentDescriptor: parentDescriptor,
+                quarantineName: quarantineName,
+                expectedStatus: moved
+            )
+        } catch {
+            _ = noReplaceRenamePOSIX(
+                parentDescriptor: parentDescriptor,
+                oldName: quarantineName,
+                newName: fileName
+            )
+            throw error
+        }
+
+        let descriptor = openat(
+            parentDescriptor,
+            quarantineName,
+            O_RDONLY | O_NONBLOCK | O_NOFOLLOW | O_CLOEXEC
+        )
+        guard descriptor >= 0 else {
+            _ = noReplaceRenamePOSIX(
+                parentDescriptor: parentDescriptor,
+                oldName: quarantineName,
+                newName: fileName
+            )
+            throw posixError(operation: "openat-permission-repair")
+        }
+        do {
+            try validateAndRepairPOSIX(descriptor)
+            var opened = stat()
+            guard fstat(descriptor, &opened) == 0,
+                  moved.st_dev == opened.st_dev,
+                  moved.st_ino == opened.st_ino else {
+                throw SecureKeyFileError.securityUnproven
+            }
+            guard noReplaceRenamePOSIX(
+                parentDescriptor: parentDescriptor,
+                oldName: quarantineName,
+                newName: fileName
+            ) == 0 else {
+                throw posixError(operation: "renameat-permission-restore")
+            }
+            return descriptor
+        } catch {
+            _ = close(descriptor)
+            _ = noReplaceRenamePOSIX(
+                parentDescriptor: parentDescriptor,
+                oldName: quarantineName,
+                newName: fileName
+            )
+            throw error
+        }
+    }
+
+    private func repairQuarantinedPermissionsPOSIX(
+        parentDescriptor: Int32,
+        quarantineName: String,
+        expectedStatus: stat
+    ) throws {
+        #if canImport(Glibc)
+        let repairDescriptor = openat(
+            parentDescriptor,
+            quarantineName,
+            O_PATH | O_NOFOLLOW | O_CLOEXEC
+        )
+        guard repairDescriptor >= 0 else {
+            throw posixError(operation: "openat-permission-handle")
+        }
+        defer { _ = close(repairDescriptor) }
+        var repairStatus = stat()
+        guard fstat(repairDescriptor, &repairStatus) == 0,
+              expectedStatus.st_dev == repairStatus.st_dev,
+              expectedStatus.st_ino == repairStatus.st_ino,
+              repairStatus.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG),
+              repairStatus.st_uid == geteuid() else {
+            throw SecureKeyFileError.securityUnproven
+        }
+        let descriptorPath = "/proc/self/fd/\(repairDescriptor)"
+        while chmod(descriptorPath, mode_t(0o600)) != 0 {
+            if errno == EINTR {
+                continue
+            }
+            throw posixError(operation: "chmod-permission-handle")
+        }
+        guard fstat(repairDescriptor, &repairStatus) == 0,
+              repairStatus.st_mode & mode_t(0o7777) == mode_t(0o600) else {
+            throw SecureKeyFileError.insecurePermissions
+        }
+        #else
+        let repairDescriptor = openat(
+            parentDescriptor,
+            quarantineName,
+            O_WRONLY | O_NOFOLLOW | O_CLOEXEC
+        )
+        guard repairDescriptor >= 0 else {
+            throw posixError(operation: "openat-permission-handle")
+        }
+        defer { _ = close(repairDescriptor) }
+        var repairStatus = stat()
+        guard fstat(repairDescriptor, &repairStatus) == 0,
+              expectedStatus.st_dev == repairStatus.st_dev,
+              expectedStatus.st_ino == repairStatus.st_ino,
+              repairStatus.st_mode & mode_t(S_IFMT) == mode_t(S_IFREG),
+              repairStatus.st_uid == geteuid() else {
+            throw SecureKeyFileError.securityUnproven
+        }
+        while fchmod(repairDescriptor, mode_t(0o600)) != 0 {
+            if errno == EINTR {
+                continue
+            }
+            throw posixError(operation: "fchmod-permission-handle")
+        }
+        guard fstat(repairDescriptor, &repairStatus) == 0,
+              repairStatus.st_mode & mode_t(0o7777) == mode_t(0o600) else {
+            throw SecureKeyFileError.insecurePermissions
+        }
+        #endif
     }
 
     private func createPOSIX(_ data: Data) throws {
@@ -175,34 +351,6 @@ internal extension SecureKeyFile {
                 )
                 throw error
             }
-        }
-    }
-
-    private func removePOSIX() throws -> Bool {
-        try withPOSIXParent { parentDescriptor, fileName in
-            let descriptor = openat(
-                parentDescriptor,
-                fileName,
-                O_RDONLY | O_NONBLOCK | O_NOFOLLOW | O_CLOEXEC
-            )
-            guard descriptor >= 0 else {
-                if errno == ENOENT {
-                    return false
-                }
-                if errno == ELOOP {
-                    throw SecureKeyFileError.unsafeFileType
-                }
-                throw posixError(operation: "openat-remove")
-            }
-            defer { _ = close(descriptor) }
-
-            try validateAndRepairPOSIX(descriptor)
-            raceHooks.beforeQuarantineRename()
-            return try quarantineAndRemovePOSIX(
-                parentDescriptor: parentDescriptor,
-                fileName: fileName,
-                expectedDescriptor: descriptor
-            )
         }
     }
 
@@ -529,32 +677,6 @@ internal extension SecureKeyFile {
             removeCreatedWindows(handle)
             throw error
         }
-    }
-
-    private func removeWindows() throws -> Bool {
-        let handle = try openWindows(
-            access: Self.readAccess | DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(DELETE),
-            disposition: DWORD(OPEN_EXISTING)
-        )
-        guard let handle else {
-            return false
-        }
-        defer { _ = CloseHandle(handle) }
-        try validateAndRepairWindows(handle)
-
-        var disposition = FILE_DISPOSITION_INFO()
-        withUnsafeMutableBytes(of: &disposition) { bytes in
-            bytes[0] = 1
-        }
-        guard SetFileInformationByHandle(
-            handle,
-            FileDispositionInfo,
-            &disposition,
-            DWORD(MemoryLayout<FILE_DISPOSITION_INFO>.size)
-        ) else {
-            throw windowsError(operation: "SetFileInformationByHandle")
-        }
-        return true
     }
 
     private func openWindows(

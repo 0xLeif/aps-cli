@@ -797,7 +797,17 @@ public final class StateStore {
         onChange: (String) -> Void
     ) throws {
         var lastEnvelope = try store.encryptedSnapshot()
-        var lastValue = try lastEnvelope.map(store.value(forEncryptedSnapshot:)) ?? initialValue
+        var session: SecretStore.EncryptedWatchSession?
+        var lastValue: String
+        if let snapshotData = lastEnvelope {
+            var activeSession = try store.makeEncryptedWatchSession()
+            let opened = try store.value(forEncryptedSnapshot: snapshotData, session: &activeSession)
+            session = activeSession
+            lastValue = opened.value
+            lastEnvelope = opened.snapshot
+        } else {
+            lastValue = initialValue
+        }
         onChange(lastValue)
         let slice = max(pollInterval / 5.0, 0.05)
 
@@ -807,8 +817,20 @@ public final class StateStore {
             guard currentEnvelope != lastEnvelope else {
                 continue
             }
-            let currentValue = try currentEnvelope.map(store.value(forEncryptedSnapshot:)) ?? initialValue
-            lastEnvelope = currentEnvelope
+            let currentValue: String
+            if let currentEnvelope {
+                var activeSession = try session ?? store.makeEncryptedWatchSession()
+                let opened = try store.value(
+                    forEncryptedSnapshot: currentEnvelope,
+                    session: &activeSession
+                )
+                session = activeSession
+                currentValue = opened.value
+                lastEnvelope = opened.snapshot
+            } else {
+                currentValue = initialValue
+                lastEnvelope = nil
+            }
             if currentValue != lastValue {
                 lastValue = currentValue
                 onChange(currentValue)

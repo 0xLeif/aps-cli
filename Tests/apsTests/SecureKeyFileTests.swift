@@ -12,6 +12,8 @@ import Darwin
 import WinSDK
 #endif
 
+private struct PermissionRepairFailure: Error, Sendable {}
+
 internal final class SecureKeyFileTests: XCTestCase {
     #if !os(Windows)
     internal func testLoadRepairsOwnedRegularFilePermissions() throws {
@@ -27,6 +29,44 @@ internal final class SecureKeyFileTests: XCTestCase {
         XCTAssertEqual(stat(fixture.file.path, &status), 0)
         XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o600))
     }
+
+    internal func testLoadRepairsOwnedRegularFileWithoutReadPermission() throws {
+        #if canImport(Glibc)
+        let repairablePermissions: [mode_t] = [0o000, 0o200]
+        #else
+        let repairablePermissions: [mode_t] = [0o200]
+        #endif
+        for permissions in repairablePermissions {
+            let fixture = try makeFixture()
+            defer { try? FileManager.default.removeItem(at: fixture.directory) }
+            let expected = keyData(UInt8(permissions + 1))
+            try expected.write(to: fixture.file)
+            XCTAssertEqual(chmod(fixture.file.path, permissions), 0)
+
+            XCTAssertEqual(try fixture.secureFile.load(), expected)
+
+            var status = stat()
+            XCTAssertEqual(stat(fixture.file.path, &status), 0)
+            XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o600))
+        }
+    }
+
+    #if canImport(Darwin)
+    internal func testLoadFailsClosedAndRestoresMode000File() throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let expected = keyData(14)
+        try expected.write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o000)), 0)
+
+        XCTAssertThrowsError(try fixture.secureFile.load())
+        var status = stat()
+        XCTAssertEqual(stat(fixture.file.path, &status), 0)
+        XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o000))
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o600)), 0)
+        XCTAssertEqual(try Data(contentsOf: fixture.file), expected)
+    }
+    #endif
 
     internal func testLoadRepairsOwnedParentDirectoryPermissions() throws {
         let fixture = try makeFixture()
@@ -142,36 +182,6 @@ internal final class SecureKeyFileTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: fixture.file), existing)
     }
 
-    internal func testRemoveForRegenerationRequiresExplicitAuthorization() throws {
-        let fixture = try makeFixture()
-        defer { try? FileManager.default.removeItem(at: fixture.directory) }
-        let corrupt = Data("corrupt-key".utf8)
-        try corrupt.write(to: fixture.file)
-
-        XCTAssertThrowsError(try fixture.secureFile.removeForRegeneration(noEnvelope: false)) { error in
-            XCTAssertEqual(error as? SecureKeyFileError, .regenerationNotAllowed)
-        }
-        XCTAssertEqual(try Data(contentsOf: fixture.file), corrupt)
-
-        XCTAssertTrue(try fixture.secureFile.removeForRegeneration(noEnvelope: true))
-        XCTAssertFalse(FileManager.default.fileExists(atPath: fixture.file.path))
-        XCTAssertFalse(try fixture.secureFile.removeForRegeneration(noEnvelope: true))
-    }
-
-    internal func testRemoveForRegenerationRejectsSpecialPaths() throws {
-        let fixture = try makeFixture()
-        defer { try? FileManager.default.removeItem(at: fixture.directory) }
-        let target = fixture.directory.appendingPathComponent("target")
-        let expected = Data("unchanged".utf8)
-        try expected.write(to: target)
-        XCTAssertEqual(symlink(target.path, fixture.file.path), 0)
-
-        XCTAssertThrowsError(try fixture.secureFile.removeForRegeneration(noEnvelope: true)) { error in
-            XCTAssertEqual(error as? SecureKeyFileError, .unsafeFileType)
-        }
-        XCTAssertEqual(try Data(contentsOf: target), expected)
-    }
-
     internal func testCreateRaceNeverDeletesSwappedEntry() throws {
         let fixture = try makeFixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
@@ -200,33 +210,143 @@ internal final class SecureKeyFileTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: displaced), created)
     }
 
-    internal func testRemoveRaceNeverDeletesSwappedEntry() throws {
+    internal func testUnreadableRepairRaceNeverChangesSwappedSymlinkTarget() throws {
         let fixture = try makeFixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
-        let original = Data("original-key".utf8)
-        let replacement = keyData(8)
-        let displaced = fixture.directory.appendingPathComponent("displaced-original-key")
+        try keyData(9).write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o000)), 0)
+        let target = fixture.directory.appendingPathComponent("permission-target")
+        try Data("target".utf8).write(to: target)
+        XCTAssertEqual(chmod(target.path, mode_t(0o644)), 0)
+        let displaced = fixture.directory.appendingPathComponent("displaced-unreadable")
+        let filePath = fixture.file.path
+        let targetPath = target.path
+        let displacedPath = displaced.path
+        let secureFile = SecureKeyFile(
+            path: filePath,
+            raceHooks: SecureKeyFileRaceHooks(
+                beforeUnreadableQuarantineRename: {
+                    _ = rename(filePath, displacedPath)
+                    _ = symlink(targetPath, filePath)
+                }
+            )
+        )
+
+        XCTAssertThrowsError(try secureFile.load()) { error in
+            XCTAssertEqual(error as? SecureKeyFileError, .securityUnproven)
+        }
+        var status = stat()
+        XCTAssertEqual(stat(target.path, &status), 0)
+        XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o644))
+        XCTAssertEqual(try Data(contentsOf: target), Data("target".utf8))
+    }
+
+    internal func testUnreadableChmodNeverFollowsSwappedQuarantineSymlink() throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        try keyData(10).write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o000)), 0)
+        let target = fixture.directory.appendingPathComponent("chmod-target")
+        try Data("target".utf8).write(to: target)
+        XCTAssertEqual(chmod(target.path, mode_t(0o644)), 0)
+        let displaced = fixture.directory.appendingPathComponent("displaced-quarantine")
+        let directory = fixture.directory
+        let targetPath = target.path
+        let displacedPath = displaced.path
+        let secureFile = SecureKeyFile(
+            path: fixture.file.path,
+            raceHooks: SecureKeyFileRaceHooks(
+                beforeUnreadablePermissionRepair: {
+                    guard
+                        let quarantine = try? FileManager.default.contentsOfDirectory(
+                            at: directory,
+                            includingPropertiesForKeys: nil
+                        ).first(where: {
+                            $0.lastPathComponent.hasPrefix(".aps-key-permission-repair-")
+                        })
+                    else {
+                        return
+                    }
+                    _ = rename(quarantine.path, displacedPath)
+                    _ = symlink(targetPath, quarantine.path)
+                }
+            )
+        )
+
+        XCTAssertThrowsError(try secureFile.load())
+        var status = stat()
+        XCTAssertEqual(stat(target.path, &status), 0)
+        XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o644))
+        XCTAssertEqual(try Data(contentsOf: target), Data("target".utf8))
+    }
+
+    internal func testUnreadableRepairFailureRestoresExactOriginalEntry() throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let original = keyData(11)
         try original.write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o000)), 0)
+        let secureFile = SecureKeyFile(
+            path: fixture.file.path,
+            raceHooks: SecureKeyFileRaceHooks(
+                beforeUnreadablePermissionRepair: {
+                    throw PermissionRepairFailure()
+                }
+            )
+        )
+
+        XCTAssertThrowsError(try secureFile.load()) { error in
+            XCTAssertTrue(error is PermissionRepairFailure)
+        }
+        XCTAssertTrue(FileManager.default.fileExists(atPath: fixture.file.path))
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o600)), 0)
+        XCTAssertEqual(try Data(contentsOf: fixture.file), original)
+        let entries = try FileManager.default.contentsOfDirectory(atPath: fixture.directory.path)
+        XCTAssertFalse(entries.contains { $0.hasPrefix(".aps-key-permission-repair-") })
+    }
+
+    internal func testUnreadableRepairNeverChmodsSwappedRegularFile() throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let original = keyData(12)
+        let replacement = keyData(13)
+        try original.write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o000)), 0)
+        let displaced = fixture.directory.appendingPathComponent("displaced-unreadable-regular")
+        let directory = fixture.directory
         let filePath = fixture.file.path
         let displacedPath = displaced.path
         let secureFile = SecureKeyFile(
             path: filePath,
             raceHooks: SecureKeyFileRaceHooks(
-                beforeQuarantineRename: {
-                    _ = rename(filePath, displacedPath)
-                    _ = FileManager.default.createFile(
-                        atPath: filePath,
-                        contents: replacement
-                    )
+                beforeUnreadablePermissionRepair: {
+                    guard
+                        let quarantine = try? FileManager.default.contentsOfDirectory(
+                            at: directory,
+                            includingPropertiesForKeys: nil
+                        ).first(where: {
+                            $0.lastPathComponent.hasPrefix(".aps-key-permission-repair-")
+                        })
+                    else {
+                        return
+                    }
+                    _ = rename(quarantine.path, displacedPath)
+                    _ = FileManager.default.createFile(atPath: quarantine.path, contents: replacement)
+                    _ = chmod(quarantine.path, mode_t(0o644))
                 }
             )
         )
 
-        XCTAssertThrowsError(try secureFile.removeForRegeneration(noEnvelope: true)) { error in
+        XCTAssertThrowsError(try secureFile.load()) { error in
             XCTAssertEqual(error as? SecureKeyFileError, .securityUnproven)
         }
-        XCTAssertTrue(try directoryContains(data: replacement, directory: fixture.directory))
-        XCTAssertEqual(try Data(contentsOf: displaced), original)
+        var replacementStatus = stat()
+        XCTAssertEqual(stat(filePath, &replacementStatus), 0)
+        XCTAssertEqual(replacementStatus.st_mode & mode_t(0o777), mode_t(0o644))
+        XCTAssertEqual(try Data(contentsOf: fixture.file), replacement)
+        var originalStatus = stat()
+        XCTAssertEqual(stat(displacedPath, &originalStatus), 0)
+        XCTAssertEqual(originalStatus.st_mode & mode_t(0o777), mode_t(0o000))
     }
 
     private func makeFixture() throws -> Fixture {
@@ -280,8 +400,6 @@ internal final class SecureKeyFileTests: XCTestCase {
         try secureFile.create(expected)
 
         XCTAssertEqual(try secureFile.load(), expected)
-        XCTAssertTrue(try secureFile.removeForRegeneration(noEnvelope: true))
-        XCTAssertNil(try secureFile.load())
     }
 
     internal func testWindowsLoadRepairsCurrentUserFileACL() throws {

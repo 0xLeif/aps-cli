@@ -33,11 +33,10 @@ Path-based `Data(contentsOf:)`, attribute checks, and later reads contain a
 time-of-check/time-of-use gap. The key object must be opened once and all type,
 ownership, permission, and data checks performed through that handle:
 
-- macOS and Linux use `lstat` as an early rejection, `open` with
-  `O_NOFOLLOW | O_CLOEXEC`, then `fstat`. The handle must identify a regular
-  file owned by the effective user. Group and other permission bits are
-  repaired to mode `0600` with `fchmod` only after ownership and type are
-  proven, then verified again with `fstat`.
+- macOS and Linux use no-follow opens and `fstat`. Unreadable repair first
+  quarantines the exact inode. Linux pins it with `O_PATH` and repairs through
+  `/proc/self/fd`; macOS pins owner-writable files with `O_WRONLY`. macOS mode
+  `0000` fails closed because no safe chmod-capable descriptor can be acquired.
 - Windows uses `CreateFileW` with `FILE_FLAG_OPEN_REPARSE_POINT`, rejects the
   reparse attribute and non-disk or directory handles, verifies the owner SID
   equals the current process user, and inspects the DACL. A safely owned

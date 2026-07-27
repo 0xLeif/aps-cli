@@ -299,16 +299,21 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testSecretStoreFreshSetRecoversInvalidKeyWithoutEnvelope() async throws {
+    func testSecretStoreFreshSetPreservesInvalidKeyWithoutEnvelope() async throws {
         let path = FileManager.defaultFileStatePath
         let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
         try Data("partial-key".utf8).write(to: keyURL)
 
         let store = SecretStore(directory: path)
-        try store.set("recovered-secret")
-
-        XCTAssertEqual(try store.get(), "recovered-secret")
-        XCTAssertNotEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
+        XCTAssertThrowsError(try store.set("recovered-secret")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+        XCTAssertEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: URL(fileURLWithPath: path).appendingPathComponent("secret.enc").path
+            )
+        )
     }
 
     @MainActor
@@ -330,6 +335,26 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: envelopeURL), originalEnvelope)
         // Unlock must not truncate/replace the corrupt key path.
         XCTAssertEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
+    }
+
+    @MainActor
+    func testSecretStoreExistingEnvelopeWithMissingKeyDoesNotCreateReplacement() async throws {
+        let path = FileManager.defaultFileStatePath
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        let envelopeURL = URL(fileURLWithPath: path).appendingPathComponent("secret.enc")
+        let store = SecretStore(directory: path)
+        try store.set("existing-secret")
+        let originalEnvelope = try Data(contentsOf: envelopeURL)
+        try FileManager.default.removeItem(at: keyURL)
+
+        XCTAssertThrowsError(try store.get()) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+        XCTAssertThrowsError(try store.set("replacement-secret")) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+        XCTAssertEqual(try Data(contentsOf: envelopeURL), originalEnvelope)
+        XCTAssertFalse(FileManager.default.fileExists(atPath: keyURL.path))
     }
 
     @MainActor
@@ -356,7 +381,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testSecretStoreEmptyPassphrasePromptFallsBackAndRecoversStaleKey() async throws {
+    func testSecretStoreEmptyPassphrasePromptFallbackPreservesStaleKey() async throws {
         let path = FileManager.defaultFileStatePath
         let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
         try Data("partial-key".utf8).write(to: keyURL)
@@ -365,12 +390,13 @@ final class APSTests: XCTestCase {
         setProcessEnv("APS_SECRET_USE_PASSPHRASE", "1")
         defer { setProcessEnv("APS_SECRET_USE_PASSPHRASE", nil) }
 
-        // When stderr is not a TTY, usesPassphraseMode is false and early recovery
-        // already runs. Exercise the same recovery contract for the partial key.
+        // When stderr is not a TTY, key-file mode is selected. Invalid key
+        // bytes remain available for explicit user recovery.
         let store = SecretStore(directory: path)
-        try store.set("fallback-recovered")
-        XCTAssertEqual(try store.get(), "fallback-recovered")
-        XCTAssertNotEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
+        XCTAssertThrowsError(try store.set("fallback-recovered")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+        XCTAssertEqual(try Data(contentsOf: keyURL), Data("partial-key".utf8))
     }
 
     @MainActor

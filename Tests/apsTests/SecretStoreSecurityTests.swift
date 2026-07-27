@@ -160,6 +160,82 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         XCTAssertTrue(recorder.snapshot().isEmpty)
     }
 
+    internal func testLowOrderEphemeralPointMapsKeyAgreementFailureToDecodingFailed() throws {
+        setSecretPassphrase("low-order-point")
+        let fixture = try makeFixture()
+        try fixture.store.set("protected")
+        let envelope = try readEnvelope(from: fixture.envelopeURL)
+        let hostile = replacingPayload(
+            in: envelope,
+            ephemeralPublicKey: Data(repeating: 0, count: 32).base64EncodedString()
+        )
+        try JSONEncoder().encode(hostile).write(to: fixture.envelopeURL, options: .atomic)
+
+        XCTAssertThrowsError(try fixture.store.get()) { error in
+            XCTAssertEqual(error as? APSError, .decodingFailed)
+        }
+    }
+
+    @MainActor
+    internal func testScryptFailuresMapByFreshWriteUnlockWatchAndMigrationOperation() throws {
+        setSecretPassphrase("kdf-failure")
+        let directory = try XCTUnwrap(directoryURL)
+        let working = try makeFixture(directory: directory)
+        try working.store.set("existing")
+
+        let failure = PasswordKDFFailure()
+        let failingKDF = PasswordKDF(
+            operations: PasswordKDF.Operations { _, _, _ in throw failure }
+        )
+        let failing = try makeFixture(passwordKDF: failingKDF, directory: directory)
+        XCTAssertThrowsError(try failing.store.get()) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+        XCTAssertThrowsError(try failing.store.set("replacement")) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+        XCTAssertThrowsError(
+            try StateStore().watchEncryptedStore(
+                failing.store,
+                initialValue: "",
+                pollInterval: 0,
+                pollDeadline: nil,
+                shouldContinue: { false },
+                onChange: { _ in }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .secretUnlockFailed)
+        }
+
+        let freshDirectory = directory.appendingPathComponent("fresh", isDirectory: true)
+        try FileManager.default.createDirectory(at: freshDirectory, withIntermediateDirectories: true)
+        let fresh = try makeFixture(passwordKDF: failingKDF, directory: freshDirectory)
+        XCTAssertThrowsError(try fresh.store.set("fresh")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+
+        let legacyDirectory = directory.appendingPathComponent("legacy-kdf", isDirectory: true)
+        try FileManager.default.createDirectory(at: legacyDirectory, withIntermediateDirectories: true)
+        let legacy = try makeLegacyEnvelope(value: "legacy", passphrase: "kdf-failure")
+        try JSONEncoder().encode(legacy).write(
+            to: legacyDirectory.appendingPathComponent("secret.enc"),
+            options: .atomic
+        )
+        let failingLegacy = try makeFixture(passwordKDF: failingKDF, directory: legacyDirectory)
+        XCTAssertThrowsError(
+            try StateStore().watchEncryptedStore(
+                failingLegacy.store,
+                initialValue: "",
+                pollInterval: 0,
+                pollDeadline: nil,
+                shouldContinue: { false },
+                onChange: { _ in }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+    }
+
     internal func testDuplicateSecurityFieldsAreRejectedBeforeKDF() throws {
         setSecretPassphrase("duplicate-validation")
         let recorder = KDFCallRecorder()
@@ -354,6 +430,120 @@ internal final class SecretStoreSecurityTests: XCTestCase {
     }
 
     @MainActor
+    internal func testWatchReusesOneInteractivePassphrasePromptAcrossChanges() async throws {
+        let promptRecorder = PassphrasePromptRecorder(passphrase: "interactive-watch")
+        setUsePassphrase("1")
+        let fixture = try makeFixture(interactivePassphraseOperations: promptRecorder.operations)
+        setSecretPassphrase("interactive-watch")
+        try fixture.store.set("initial")
+
+        let root = try XCTUnwrap(directoryURL)
+        let replacementDirectory = root.appendingPathComponent("interactive-replacement", isDirectory: true)
+        try FileManager.default.createDirectory(at: replacementDirectory, withIntermediateDirectories: true)
+        let replacementFixture = try makeFixture(directory: replacementDirectory)
+        try replacementFixture.store.set("changed")
+        let replacement = try Data(contentsOf: replacementFixture.envelopeURL)
+        setSecretPassphrase(nil)
+
+        var iteration = 0
+        var observed: [String] = []
+        try StateStore().watchEncryptedStore(
+            fixture.store,
+            initialValue: "",
+            pollInterval: 0,
+            pollDeadline: nil,
+            shouldContinue: {
+                iteration += 1
+                if iteration == 2 {
+                    try? replacement.write(to: fixture.envelopeURL, options: .atomic)
+                }
+                return iteration <= 3
+            },
+            onChange: { observed.append($0) }
+        )
+
+        XCTAssertEqual(observed, ["initial", "changed"])
+        XCTAssertEqual(promptRecorder.count, 1)
+    }
+
+    @MainActor
+    internal func testWatchDoesNotPromptWhileEncryptedStoreIsMissing() throws {
+        let promptRecorder = PassphrasePromptRecorder(passphrase: "unused")
+        setUsePassphrase("1")
+        let fixture = try makeFixture(interactivePassphraseOperations: promptRecorder.operations)
+        var observed: [String] = []
+
+        try StateStore().watchEncryptedStore(
+            fixture.store,
+            initialValue: "initial",
+            pollInterval: 0,
+            pollDeadline: nil,
+            shouldContinue: { false },
+            onChange: { observed.append($0) }
+        )
+
+        XCTAssertEqual(observed, ["initial"])
+        XCTAssertEqual(promptRecorder.count, 0)
+    }
+
+    @MainActor
+    internal func testWatchMigratesLegacyPassphraseEnvelopeAfterExactSnapshotUnlock() async throws {
+        setSecretPassphrase("legacy-watch")
+        let fixture = try makeFixture()
+        let legacy = try JSONEncoder().encode(
+            makeLegacyEnvelope(value: "legacy-watched", passphrase: "legacy-watch")
+        )
+        try legacy.write(to: fixture.envelopeURL, options: .atomic)
+
+        var iterations = 0
+        var observed: [String] = []
+        try StateStore().watchEncryptedStore(
+            fixture.store,
+            initialValue: "",
+            pollInterval: 0,
+            pollDeadline: nil,
+            shouldContinue: {
+                iterations += 1
+                return iterations <= 1
+            },
+            onChange: { observed.append($0) }
+        )
+
+        XCTAssertEqual(observed, ["legacy-watched"])
+        let migrated = try readEnvelope(from: fixture.envelopeURL)
+        XCTAssertEqual(migrated.version, 2)
+        XCTAssertEqual(migrated.recipientMode, SecretStore.RecipientMode.passphrase.rawValue)
+        XCTAssertNotEqual(try Data(contentsOf: fixture.envelopeURL), legacy)
+    }
+
+    @MainActor
+    internal func testWatchDoesNotMigrateWhenLegacyBackingBytesChangedBeforeLock() async throws {
+        setSecretPassphrase("legacy-race")
+        let first = try JSONEncoder().encode(
+            makeLegacyEnvelope(value: "first", passphrase: "legacy-race")
+        )
+        let changed = try JSONEncoder().encode(
+            makeLegacyEnvelope(value: "changed", passphrase: "legacy-race")
+        )
+        let sequence = EnvelopeReadSequence(values: [first, changed])
+        let fixture = try makeFixture(envelopeOperations: sequence.operations)
+        var observed: [String] = []
+
+        try StateStore().watchEncryptedStore(
+            fixture.store,
+            initialValue: "",
+            pollInterval: 0,
+            pollDeadline: nil,
+            shouldContinue: { false },
+            onChange: { observed.append($0) }
+        )
+
+        XCTAssertEqual(observed, ["first"])
+        XCTAssertEqual(sequence.readCount, 2)
+        XCTAssertEqual(sequence.writeCount, 0)
+    }
+
+    @MainActor
     internal func testWatchDecryptsTheExactComparedEnvelopeSnapshot() async throws {
         setSecretPassphrase("snapshot-owner")
         let firstFixture = try makeFixture()
@@ -420,6 +610,22 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: fixture.envelopeURL), original)
     }
 
+    internal func testLegacyMigrationLateRestoreErrorUsesVerifiedOriginalBytes() throws {
+        setSecretPassphrase("migration-owner")
+        let controller = EnvelopeWriteController(behavior: .persistThenFailFirstAndLateRestore)
+        let fixture = try makeFixture(envelopeOperations: controller.operations)
+        let original = try JSONEncoder().encode(
+            makeLegacyEnvelope(value: "legacy-value", passphrase: "migration-owner")
+        )
+        try original.write(to: fixture.envelopeURL, options: .atomic)
+
+        XCTAssertThrowsError(try fixture.store.get()) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+        }
+        XCTAssertEqual(controller.writeCount, 2)
+        XCTAssertEqual(try Data(contentsOf: fixture.envelopeURL), original)
+    }
+
     internal func testLegacyMigrationRestoreFailureReportsSecretEnvelopeRollback() throws {
         setSecretPassphrase("migration-owner")
         let controller = EnvelopeWriteController(behavior: .persistThenFailFirstAndRestore)
@@ -453,6 +659,8 @@ internal final class SecretStoreSecurityTests: XCTestCase {
     private func makeFixture(
         recorder: KDFCallRecorder = KDFCallRecorder(),
         envelopeOperations: SecretStore.EnvelopeOperations = .live,
+        passwordKDF explicitPasswordKDF: PasswordKDF? = nil,
+        interactivePassphraseOperations: SecretStore.InteractivePassphraseOperations = .live,
         directory explicitDirectory: URL? = nil
     ) throws -> SecretFixture {
         let directory = try explicitDirectory ?? XCTUnwrap(directoryURL)
@@ -463,11 +671,13 @@ internal final class SecretStoreSecurityTests: XCTestCase {
             material.append(salt)
             return SymmetricKey(data: Data(SHA256.hash(data: material)))
         }
+        let passwordKDF = explicitPasswordKDF ?? PasswordKDF(operations: operations)
         let store = SecretStore(
             directory: directory.path,
             deletionOperations: .live,
-            passwordKDF: PasswordKDF(operations: operations),
-            envelopeOperations: envelopeOperations
+            passwordKDF: passwordKDF,
+            envelopeOperations: envelopeOperations,
+            interactivePassphraseOperations: interactivePassphraseOperations
         )
         return SecretFixture(
             store: store,
@@ -617,6 +827,7 @@ private enum EnvelopeWriteBehavior: Sendable {
     case failBeforeFirstWrite
     case persistThenFailFirstWrite
     case persistThenFailFirstAndRestore
+    case persistThenFailFirstAndLateRestore
 }
 
 private struct EnvelopeWriteFailure: Error, Sendable {}
@@ -657,9 +868,43 @@ private final class EnvelopeWriteController: @unchecked Sendable {
             throw EnvelopeWriteFailure()
         case (.persistThenFailFirstAndRestore, 2):
             throw EnvelopeWriteFailure()
+        case (.persistThenFailFirstAndLateRestore, 1),
+             (.persistThenFailFirstAndLateRestore, 2):
+            try data.write(to: url, options: .atomic)
+            throw EnvelopeWriteFailure()
         default:
             try data.write(to: url, options: .atomic)
         }
+    }
+}
+
+private struct PasswordKDFFailure: Error, Sendable {}
+
+private final class PassphrasePromptRecorder: @unchecked Sendable {
+    private let lock = NSLock()
+    private let passphrase: String
+    private var prompts = 0
+
+    fileprivate init(passphrase: String) {
+        self.passphrase = passphrase
+    }
+
+    fileprivate var operations: SecretStore.InteractivePassphraseOperations {
+        SecretStore.InteractivePassphraseOperations(
+            isTerminal: { true },
+            prompt: { [self] in
+                lock.lock()
+                defer { lock.unlock() }
+                prompts += 1
+                return passphrase
+            }
+        )
+    }
+
+    fileprivate var count: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return prompts
     }
 }
 
@@ -667,6 +912,7 @@ private final class EnvelopeReadSequence: @unchecked Sendable {
     private let lock = NSLock()
     private let values: [Data]
     private var reads = 0
+    private var writes = 0
 
     fileprivate init(values: [Data]) {
         self.values = values
@@ -675,7 +921,7 @@ private final class EnvelopeReadSequence: @unchecked Sendable {
     fileprivate var operations: SecretStore.EnvelopeOperations {
         SecretStore.EnvelopeOperations(
             read: { [self] _ in try next() },
-            write: { data, url in try data.write(to: url, options: .atomic) }
+            write: { [self] data, url in try write(data, to: url) }
         )
     }
 
@@ -683,6 +929,12 @@ private final class EnvelopeReadSequence: @unchecked Sendable {
         lock.lock()
         defer { lock.unlock() }
         return reads
+    }
+
+    fileprivate var writeCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return writes
     }
 
     private func next() throws -> Data {
@@ -694,6 +946,13 @@ private final class EnvelopeReadSequence: @unchecked Sendable {
         let index = min(reads, values.count - 1)
         reads += 1
         return values[index]
+    }
+
+    private func write(_ data: Data, to url: URL) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        writes += 1
+        try data.write(to: url, options: .atomic)
     }
 }
 

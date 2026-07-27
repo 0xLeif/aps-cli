@@ -35,6 +35,38 @@ public struct SecretStore: Sendable {
         )
     }
 
+    /// Instance-scoped interactive passphrase operations for deterministic
+    /// one-prompt watch tests.
+    internal struct InteractivePassphraseOperations: Sendable {
+        internal let isTerminal: @Sendable () -> Bool
+        internal let prompt: @Sendable () -> String?
+
+        internal init(
+            isTerminal: @escaping @Sendable () -> Bool,
+            prompt: @escaping @Sendable () -> String?
+        ) {
+            self.isTerminal = isTerminal
+            self.prompt = prompt
+        }
+
+        internal static let live = InteractivePassphraseOperations(
+            isTerminal: {
+                #if os(Windows)
+                false
+                #else
+                isatty(FileHandle.standardError.fileDescriptor) == 1
+                #endif
+            },
+            prompt: {
+                #if os(Windows)
+                nil
+                #else
+                SecretStore.promptPassphrase()
+                #endif
+            }
+        )
+    }
+
     /// Recipient modes persisted by the version 2 envelope.
     internal enum RecipientMode: String, Codable, Sendable {
         case keyFile
@@ -62,7 +94,7 @@ public struct SecretStore: Sendable {
         internal let tag: String
     }
 
-    private struct RecipientOperation {
+    fileprivate struct RecipientOperation: Sendable {
         private(set) var mode: RecipientMode
         fileprivate let lockKeyFile: Bool
         private let passphrase: Data?
@@ -121,6 +153,17 @@ public struct SecretStore: Sendable {
             keyFileKey = key
             return key
         }
+    }
+
+    /// Recipient state retained for the lifetime of one encrypted watch.
+    internal struct EncryptedWatchSession: Sendable {
+        fileprivate var operation: RecipientOperation
+    }
+
+    /// Decrypted value plus the exact snapshot that produced it.
+    internal struct EncryptedWatchValue: Sendable {
+        internal let value: String
+        internal let snapshot: Data
     }
 
     private struct DuplicateKeyJSONValidator {
@@ -284,6 +327,7 @@ public struct SecretStore: Sendable {
     private let deletionOperations: SchemaStoragePath.DeletionOperations
     private let passwordKDF: PasswordKDF
     private let envelopeOperations: EnvelopeOperations
+    private let interactivePassphraseOperations: InteractivePassphraseOperations
 
     /// Store rooted at the configured FileState path (`secret.enc`).
     @MainActor
@@ -294,6 +338,7 @@ public struct SecretStore: Sendable {
         self.deletionOperations = .live
         self.passwordKDF = PasswordKDF()
         self.envelopeOperations = .live
+        self.interactivePassphraseOperations = .live
     }
 
     /// Store rooted at an explicit directory (tests, tooling).
@@ -304,6 +349,7 @@ public struct SecretStore: Sendable {
         self.deletionOperations = .live
         self.passwordKDF = PasswordKDF()
         self.envelopeOperations = .live
+        self.interactivePassphraseOperations = .live
     }
 
     /// Store with instance-scoped deletion operations for deterministic tests.
@@ -313,7 +359,8 @@ public struct SecretStore: Sendable {
         keyName: String = "secret",
         deletionOperations: SchemaStoragePath.DeletionOperations,
         passwordKDF: PasswordKDF = PasswordKDF(),
-        envelopeOperations: EnvelopeOperations = .live
+        envelopeOperations: EnvelopeOperations = .live,
+        interactivePassphraseOperations: InteractivePassphraseOperations = .live
     ) {
         self.directory = directory
         self.storeFileName = storeFileName
@@ -321,6 +368,7 @@ public struct SecretStore: Sendable {
         self.deletionOperations = deletionOperations
         self.passwordKDF = passwordKDF
         self.envelopeOperations = envelopeOperations
+        self.interactivePassphraseOperations = interactivePassphraseOperations
     }
 
     private var storeURL: URL {
@@ -360,7 +408,7 @@ public struct SecretStore: Sendable {
                 }
                 let value = try open(currentEnvelope, operation: &operation)
                 let migrated = try seal(value, operation: &operation)
-                try writeAndVerify(
+                _ = try writeAndVerify(
                     migrated,
                     expectedValue: value,
                     rollbackData: currentData,
@@ -372,11 +420,48 @@ public struct SecretStore: Sendable {
         return try open(envelope, operation: &operation)
     }
 
-    /// Decrypts an exact encrypted snapshot without rereading the backing path.
-    internal func value(forEncryptedSnapshot data: Data) throws -> String {
+    /// Captures one recipient operation for an encrypted watch command.
+    internal func makeEncryptedWatchSession() throws -> EncryptedWatchSession {
+        EncryptedWatchSession(operation: try makeRecipientOperation(lockKeyFile: true))
+    }
+
+    /// Decrypts an exact encrypted snapshot, retaining recipient state across
+    /// changes and transactionally migrating an observed legacy passphrase
+    /// envelope only when the backing bytes still match that snapshot.
+    internal func value(
+        forEncryptedSnapshot data: Data,
+        session: inout EncryptedWatchSession
+    ) throws -> EncryptedWatchValue {
         _ = try validatedStoragePath()
-        var operation = try makeRecipientOperation(lockKeyFile: true)
-        return try open(decodeEnvelope(data), operation: &operation)
+        let envelope = try decodeEnvelope(data)
+        guard
+            try envelopeKind(envelope) == .legacy,
+            session.operation.mode == .passphrase
+        else {
+            return EncryptedWatchValue(
+                value: try open(envelope, operation: &session.operation),
+                snapshot: data
+            )
+        }
+        return try SchemaFileLock.withExclusiveStorageLock(
+            stateRoot: directory,
+            lockFileName: "secret.store.lock",
+            resourceKey: keyName
+        ) {
+            let value = try open(envelope, operation: &session.operation)
+            let currentData = try readStoreData()
+            guard currentData == data else {
+                return EncryptedWatchValue(value: value, snapshot: data)
+            }
+            let migrated = try seal(value, operation: &session.operation)
+            let migratedData = try writeAndVerify(
+                migrated,
+                expectedValue: value,
+                rollbackData: data,
+                operation: &session.operation
+            )
+            return EncryptedWatchValue(value: value, snapshot: migratedData)
+        }
     }
 
     /// Encrypt and store the value, then verify by decrypting the file back.
@@ -412,7 +497,7 @@ public struct SecretStore: Sendable {
             _ = try open(existing, operation: &operation)
         }
         let envelope = try seal(value, operation: &operation)
-        try writeAndVerify(
+        _ = try writeAndVerify(
             envelope,
             expectedValue: value,
             rollbackData: rollbackData,
@@ -481,11 +566,19 @@ public struct SecretStore: Sendable {
                 parallelism: PasswordKDF.profile.parallelism,
                 outputByteCount: PasswordKDF.profile.outputByteCount
             )
-            recipientKey = try scryptRecipientKey(salt: salt, operation: &operation)
+            recipientKey = try scryptRecipientKey(
+                salt: salt,
+                operation: &operation,
+                failure: .persistenceFailed(key: keyName)
+            )
         }
         let recipientPublic = recipientKey.publicKey
         let ephemeral = Curve25519.KeyAgreement.PrivateKey()
-        let symmetric = try deriveSymmetricKey(privateKey: ephemeral, publicKey: recipientPublic)
+        let symmetric = try deriveSymmetricKey(
+            privateKey: ephemeral,
+            publicKey: recipientPublic,
+            failure: .persistenceFailed(key: keyName)
+        )
         let nonce = ChaChaPoly.Nonce()
         let sealedBox = try ChaChaPoly.seal(
             Data(value.utf8),
@@ -529,13 +622,18 @@ public struct SecretStore: Sendable {
                 guard let salt else {
                     throw APSError.decodingFailed
                 }
-                privateKey = try scryptRecipientKey(salt: salt, operation: &operation)
+                privateKey = try scryptRecipientKey(
+                    salt: salt,
+                    operation: &operation,
+                    failure: .secretUnlockFailed
+                )
             }
         }
 
         let symmetric = try deriveSymmetricKey(
             privateKey: privateKey,
-            publicKey: payload.ephemeralPublic
+            publicKey: payload.ephemeralPublic,
+            failure: .decodingFailed
         )
         let plaintext: Data
         do {
@@ -703,7 +801,7 @@ public struct SecretStore: Sendable {
         expectedValue: String,
         rollbackData: Data?,
         operation: inout RecipientOperation
-    ) throws {
+    ) throws -> Data {
         let replacement: Data
         do {
             replacement = try JSONEncoder().encode(envelope)
@@ -715,6 +813,7 @@ public struct SecretStore: Sendable {
             guard try open(persisted, operation: &operation) == expectedValue else {
                 throw APSError.persistenceFailed(key: keyName)
             }
+            return replacement
         } catch {
             let originalError = (error as? APSError) ?? APSError.persistenceFailed(key: keyName)
             do {
@@ -732,8 +831,14 @@ public struct SecretStore: Sendable {
 
     private func restoreEnvelope(_ rollbackData: Data?) throws {
         if let rollbackData {
-            try envelopeOperations.write(rollbackData, storeURL)
-            guard try readStoreData() == rollbackData else {
+            do {
+                try envelopeOperations.write(rollbackData, storeURL)
+            } catch {
+                // A writer can report a late flush or close error after the
+                // bytes reached storage. Verification, not the write result,
+                // determines whether rollback succeeded.
+            }
+            guard (try? readStoreData()) == rollbackData else {
                 throw APSError.persistenceFailed(key: keyName)
             }
             return
@@ -750,9 +855,15 @@ public struct SecretStore: Sendable {
 
     private func deriveSymmetricKey(
         privateKey: Curve25519.KeyAgreement.PrivateKey,
-        publicKey: Curve25519.KeyAgreement.PublicKey
+        publicKey: Curve25519.KeyAgreement.PublicKey,
+        failure: APSError
     ) throws -> SymmetricKey {
-        let sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: publicKey)
+        let sharedSecret: SharedSecret
+        do {
+            sharedSecret = try privateKey.sharedSecretFromKeyAgreement(with: publicKey)
+        } catch {
+            throw failure
+        }
         return sharedSecret.hkdfDerivedSymmetricKey(
             using: SHA256.self,
             salt: Data("aps-secret-store-v1".utf8),
@@ -776,10 +887,9 @@ public struct SecretStore: Sendable {
                 passphrase: Data(passphrase.utf8)
             )
         }
-        #if !os(Windows)
         if ProcessInfo.processInfo.environment["APS_SECRET_USE_PASSPHRASE"] == "1",
-           isatty(FileHandle.standardError.fileDescriptor) == 1 {
-            if let passphrase = Self.promptPassphrase() {
+           interactivePassphraseOperations.isTerminal() {
+            if let passphrase = interactivePassphraseOperations.prompt() {
                 return RecipientOperation(
                     mode: .passphrase,
                     lockKeyFile: lockKeyFile,
@@ -787,7 +897,6 @@ public struct SecretStore: Sendable {
                 )
             }
         }
-        #endif
         return RecipientOperation(mode: .keyFile, lockKeyFile: lockKeyFile)
     }
 
@@ -809,13 +918,18 @@ public struct SecretStore: Sendable {
 
     private func scryptRecipientKey(
         salt: Data,
-        operation: inout RecipientOperation
+        operation: inout RecipientOperation,
+        failure: APSError
     ) throws -> Curve25519.KeyAgreement.PrivateKey {
-        try operation.cachedScryptKey(salt: salt) { passphrase, salt in
-            let derived = try passwordKDF.deriveKey(from: passphrase, salt: salt)
-            return try Curve25519.KeyAgreement.PrivateKey(
-                rawRepresentation: derived.withUnsafeBytes { Data($0) }
-            )
+        do {
+            return try operation.cachedScryptKey(salt: salt) { passphrase, salt in
+                let derived = try passwordKDF.deriveKey(from: passphrase, salt: salt)
+                return try Curve25519.KeyAgreement.PrivateKey(
+                    rawRepresentation: derived.withUnsafeBytes { Data($0) }
+                )
+            }
+        } catch {
+            throw failure
         }
     }
 
@@ -843,7 +957,8 @@ public struct SecretStore: Sendable {
     }
 
     private func loadOrCreateKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {
-        if let key = try loadKeyFileIfValid() {
+        let invalidError = invalidKeyMaterialError()
+        if let key = try loadKeyFileIfValid(invalidError: invalidError) {
             return key
         }
 
@@ -857,17 +972,12 @@ public struct SecretStore: Sendable {
     }
 
     private func loadOrCreateKeyFileUnlocked() throws -> Curve25519.KeyAgreement.PrivateKey {
-        if let key = try loadKeyFileIfValid() {
+        if let key = try loadKeyFileIfValid(invalidError: invalidKeyMaterialError()) {
             return key
         }
 
         if hasSecret {
             throw APSError.secretUnlockFailed
-        }
-        do {
-            _ = try secureKeyFile.removeForRegeneration(noEnvelope: true)
-        } catch {
-            throw mapSecureKeyFileError(error)
         }
         return try createKeyFile()
     }
@@ -881,7 +991,9 @@ public struct SecretStore: Sendable {
                 throw APSError.persistenceFailed(key: keyName)
             }
         } catch SecureKeyFileError.alreadyExists {
-            if let racedKey = try loadKeyFileIfValid() {
+            if let racedKey = try loadKeyFileIfValid(
+                invalidError: .persistenceFailed(key: keyName)
+            ) {
                 return racedKey
             }
             throw APSError.persistenceFailed(key: keyName)
@@ -898,26 +1010,32 @@ public struct SecretStore: Sendable {
         SecureKeyFile(path: keyFileURL.path)
     }
 
-    private func loadKeyFileIfValid() throws -> Curve25519.KeyAgreement.PrivateKey? {
+    private func loadKeyFileIfValid(
+        invalidError: APSError
+    ) throws -> Curve25519.KeyAgreement.PrivateKey? {
         let encoded: Data?
         do {
             encoded = try secureKeyFile.load()
         } catch SecureKeyFileError.invalidSize {
-            return nil
+            throw invalidError
         } catch {
             throw mapSecureKeyFileError(error)
         }
         guard let encoded else {
             return nil
         }
-        guard
-            let raw = Data(base64Encoded: encoded),
-            raw.base64EncodedData() == encoded,
-            let key = try? Curve25519.KeyAgreement.PrivateKey(rawRepresentation: raw)
-        else {
-            return nil
+        guard let raw = Data(base64Encoded: encoded), raw.base64EncodedData() == encoded else {
+            throw invalidError
         }
-        return key
+        do {
+            return try Curve25519.KeyAgreement.PrivateKey(rawRepresentation: raw)
+        } catch {
+            throw invalidError
+        }
+    }
+
+    private func invalidKeyMaterialError() -> APSError {
+        hasSecret ? .secretUnlockFailed : .persistenceFailed(key: keyName)
     }
 
     private func mapSecureKeyFileError(_ error: Error) -> APSError {
@@ -935,8 +1053,6 @@ public struct SecretStore: Sendable {
             return APSError.insecureSecretKeyFile(reason: "unexpected size \(actual) bytes")
         case .securityUnproven:
             return APSError.insecureSecretKeyFile(reason: "file privacy could not be proven")
-        case .regenerationNotAllowed:
-            return APSError.insecureSecretKeyFile(reason: "unsafe key regeneration was refused")
         case .alreadyExists, .io:
             return APSError.persistenceFailed(key: keyName)
         }

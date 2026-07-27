@@ -86,14 +86,14 @@ Validation occurs while `secret.key.lock` or the containing store transaction
 is held when mutation or repair may occur.
 
 On POSIX, opening uses `O_RDONLY | O_NOFOLLOW | O_CLOEXEC`; creation uses
-`O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC` with `0600`. `fstat` must prove a
-regular file whose UID equals `geteuid()`. An owned regular file with any group
-or other bits, or missing owner read/write bits, is repaired through `fchmod`
-on the handle to exactly `0600` and verified again. Data is read from that
-handle. A symlink, foreign owner, non-regular object, failed repair, changed
-identity, or invalid base64/X25519 key is rejected. Existing-envelope unlock
-maps invalid recipient material to `secretUnlockFailed`; fresh key recovery
-retains the established persistence mapping and never removes an unsafe path.
+`O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC` with `0600`. Permission repair
+moves an unreadable file to a random quarantine name and pins its identity to a
+native descriptor before chmod. Linux uses `O_PATH` plus `/proc/self/fd`;
+Darwin uses an `O_WRONLY | O_NOFOLLOW` descriptor. Darwin mode `0000` cannot
+produce a safe descriptor and fails closed after restoring the exact entry;
+mode `0200` repairs to `0600`. Any repair failure restores the quarantine
+before returning. A symlink, foreign owner, non-regular object, failed repair,
+changed identity, or invalid key is rejected.
 
 On Windows, opening and exclusive creation use `CreateFileW` and
 `FILE_FLAG_OPEN_REPARSE_POINT`. Handle metadata must prove a non-directory disk

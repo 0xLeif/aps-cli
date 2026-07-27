@@ -147,15 +147,12 @@ file unchanged and surface `APSError.secretUnlockFailed`. Passphrase vs key-file
 mode remains stateful: a fresh or reset store seals with whichever recipient is
 active on first write.
 
-The encrypted-file SecretStore SHALL serialize fresh `set` key recovery or
-creation, sealing, atomic envelope persistence, and read-back verification
-through `secret.store.lock`. If no `secret.enc` exists, an invalid stale
-`secret.key` SHALL be removed before creating a replacement. Direct missing or
-invalid key access SHALL use `secret.key.lock`, while valid existing-key reads
-SHALL not require that lock. Passphrase-mode writes SHALL ignore stale
-`secret.key` paths. Existing-envelope SET SHALL preserve persistence failures
-from unreadable or missing envelopes while translating invalid-key failures to
-`secretUnlockFailed`. Fresh key-creation disk failures SHALL remain
+The encrypted-file SecretStore SHALL serialize fresh `set` key creation,
+sealing, atomic envelope persistence, and read-back verification through
+`secret.store.lock`. Invalid key material SHALL never be deleted or replaced:
+fresh writes map it to `persistenceFailed`, while existing-envelope unlock maps
+it to `secretUnlockFailed`. Passphrase-mode writes SHALL ignore stale
+`secret.key` paths. Fresh key-creation disk failures SHALL remain
 `persistenceFailed`. When an envelope exists, unlock paths SHALL NOT create or
 truncate `secret.key`.
 
@@ -167,7 +164,8 @@ Acceptance Criteria
 - Wrong passphrase on `set` against an existing envelope fails with `secretUnlockFailed` and does not change ciphertext.
 - Passphrase entry is env-var based; an optional TTY getpass prompt exists when `APS_SECRET_USE_PASSPHRASE=1`.
 - Fresh and parallel SecretStore SET operations remain serialized and leave a decryptable envelope.
-- Invalid stale key material is recovered only when no envelope exists (including after empty TTY passphrase fallback).
+- Invalid stale key material is preserved byte-for-byte with a stable
+  operation-specific error.
 - Existing-envelope persistence failures remain `persistenceFailed`; invalid keys surface `secretUnlockFailed`.
 - Fresh key-creation write failures remain `persistenceFailed`; unlock never truncates an existing key path.
 
@@ -230,16 +228,16 @@ Acceptance Criteria
 
 ### REQ-aps-cli-026
 
-When no `secret.enc` envelope exists, a fresh SecretStore SET SHALL recover an
-invalid stale `secret.key` before creating replacement key material. The fresh
-SET operation SHALL remain serialized by `secret.store.lock`.
+When no `secret.enc` envelope exists, a fresh SecretStore SET SHALL create key
+material only when `secret.key` is absent. Invalid existing key material SHALL
+remain unchanged and fail as `persistenceFailed`. The fresh SET operation SHALL
+remain serialized by `secret.store.lock`.
 
 Acceptance Criteria
-- A partial `secret.key` does not make the first fresh SET fail with
-  `persistenceFailed`.
-- A successful recovery leaves a valid key and decryptable envelope.
-- A `secret.key` directory is never removed during recovery, and a corrupt
-  existing key with an envelope surfaces `secretUnlockFailed`.
+- A partial, malformed, or invalid `secret.key` is never removed or replaced.
+- An absent key path is exclusively created with a valid private key.
+- Invalid material without an envelope fails as `persistenceFailed`; invalid
+  material with an envelope fails as `secretUnlockFailed`.
 
 ### REQ-aps-cli-027
 

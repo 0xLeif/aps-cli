@@ -26,10 +26,14 @@
   KDF work during unchanged encrypted-watch polls.
 - Encrypted-file parallel fresh writes share one exclusively created private
   key file: exact `0600` on POSIX and a protected current-user DACL on Windows.
-- Secure key-file tests cover POSIX permission repair, symlink, directory, FIFO,
-  hostile umask, exclusive creation, and regeneration refusal. Windows covers
-  private create/load/remove, ACL repair, and directory rejection.
-- Fresh SET recovers a partial `secret.key` without envelope; existing-envelope corrupt keys stay unlock failures without truncating key material.
+- Secure key-file tests cover POSIX descriptor-pinned unreadable and permissive
+  repair, Darwin mode `0000` fail-closed restoration, injected repair errors,
+  regular-file and symlink swaps, directory, FIFO, hostile umask, and exclusive
+  creation. Windows covers private create/load, ACL repair, and directory
+  rejection.
+- Fresh SET preserves a partial `secret.key` and fails with
+  `persistenceFailed`; existing-envelope corrupt keys stay unlock failures
+  without truncating key material.
 - Fresh key-creation write failures remain `persistenceFailed`.
 - Error and schema-table tests cover `unsupported_secret_envelope` at exit 65
   and `insecure_secret_key_file` at exit 77.

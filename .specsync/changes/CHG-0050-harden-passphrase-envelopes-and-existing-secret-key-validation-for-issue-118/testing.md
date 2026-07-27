@@ -54,17 +54,16 @@ artifact: testing
 
 ## Key-file validation
 
-- POSIX tests cover an owned regular `0600` file, safe repair from permissive or
-  incomplete owner mode to exact `0600`, symbolic links, directories, FIFOs,
-  foreign-owner injection, failed `fchmod`, identity-change injection, invalid
-  base64, invalid X25519 bytes, and exclusive-create races.
-- Windows tests cover private create/load/remove, safe DACL repair, oversized
+- POSIX tests cover descriptor-pinned repair, Darwin mode `0000` fail-closed
+  restoration, injected repair failure restoration, regular-file and symlink
+  swaps before chmod, symbolic links, directories, FIFOs, invalid base64,
+  invalid X25519 bytes, and exclusive-create races.
+- Windows tests cover private create/load, safe DACL repair, oversized
   input, and directory rejection. Hosted compilation and focused review cover
   the native reparse, non-disk, foreign-owner, protected-DACL, and
   `CREATE_NEW` fail-closed branches until deterministic Windows seams land.
 - Unsafe or failed validation preserves exact contents and does not truncate,
-  replace, follow, or delete the path. Fresh recovery only replaces invalid
-  material after the same safe-handle proof required by the existing contract.
+  replace, follow, or delete the path. Invalid material is never regenerated.
 - New files are private at creation, then reread and revalidated through their
   handles. POSIX asserts exact `0600`; Windows asserts the canonical protected
   owner-only ACL.
