@@ -372,6 +372,13 @@ public struct SecretStore: Sendable {
         return try open(envelope, operation: &operation)
     }
 
+    /// Decrypts an exact encrypted snapshot without rereading the backing path.
+    internal func value(forEncryptedSnapshot data: Data) throws -> String {
+        _ = try validatedStoragePath()
+        var operation = try makeRecipientOperation(lockKeyFile: true)
+        return try open(decodeEnvelope(data), operation: &operation)
+    }
+
     /// Encrypt and store the value, then verify by decrypting the file back.
     ///
     /// When an envelope already exists, unlock it with the current recipient key
@@ -895,6 +902,8 @@ public struct SecretStore: Sendable {
         let encoded: Data?
         do {
             encoded = try secureKeyFile.load()
+        } catch SecureKeyFileError.invalidSize {
+            return nil
         } catch {
             throw mapSecureKeyFileError(error)
         }

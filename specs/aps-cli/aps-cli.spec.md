@@ -119,6 +119,7 @@ self-describes that contract for agents through the `schema` command.
 | `schemaConflict` | key add would overwrite without `--force`. |
 | `RollbackContext` | Identifies the adapter or backing resource whose restoration failed. |
 | `adapter` | Rollback context for a compiled AppState adapter restoration failure. |
+| `secretEnvelope` | Rollback context for restoration of an encrypted secret envelope. |
 | `schema` | Rollback context for a schema registry restoration failure. |
 | `schemaCandidate` | Rollback context for restoration after a candidate schema update failed before purge. |
 | `storedState` | Rollback context for a StoredState restoration failure. |

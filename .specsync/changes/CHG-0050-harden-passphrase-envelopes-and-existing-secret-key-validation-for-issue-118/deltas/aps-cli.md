@@ -13,8 +13,9 @@ password-KDF descriptor.
 
 APS SHALL validate the complete JSON shape, mode, KDF name and parameters,
 base64 data, and cryptographic field lengths before invoking scrypt, key
-agreement, or decryption. Unsupported versions, unknown or duplicate fields,
-invalid mode/KDF combinations, and noncanonical KDF values SHALL fail as
+agreement, or decryption. Unsupported versions or recipient modes SHALL fail
+as `APSError.unsupportedSecretEnvelope`. Unknown or duplicate fields, invalid
+mode/KDF combinations, and noncanonical KDF values SHALL fail as
 `APSError.decodingFailed` without attacker-selected KDF work. APS SHALL never
 fall back between v2 recipient modes.
 
@@ -36,4 +37,3 @@ Acceptance Criteria
   approximately 128 MiB memory cost, compatibility behavior, and key-file
   ownership and privacy requirements without claiming crash atomicity or
   guaranteed memory zeroization.
-

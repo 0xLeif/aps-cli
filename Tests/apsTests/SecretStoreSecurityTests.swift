@@ -273,6 +273,30 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         XCTAssertEqual(try fixture.store.get(), "legacy-secret")
     }
 
+    internal func testLegacyKeyFileReadsUnchangedAndUpgradesOnSet() throws {
+        let fixture = try makeFixture()
+        let recipient = Curve25519.KeyAgreement.PrivateKey()
+        let encodedKey = recipient.rawRepresentation.base64EncodedData()
+        try encodedKey.write(to: fixture.keyFileURL, options: .atomic)
+        let legacyData = try JSONEncoder().encode(
+            makeLegacyEnvelope(value: "legacy-key-file", recipient: recipient)
+        )
+        try legacyData.write(to: fixture.envelopeURL, options: .atomic)
+
+        XCTAssertEqual(try fixture.store.get(), "legacy-key-file")
+        XCTAssertEqual(try Data(contentsOf: fixture.envelopeURL), legacyData)
+        XCTAssertEqual(try Data(contentsOf: fixture.keyFileURL), encodedKey)
+
+        try fixture.store.set("upgraded-key-file")
+
+        let upgraded = try readEnvelope(from: fixture.envelopeURL)
+        XCTAssertEqual(upgraded.version, 2)
+        XCTAssertEqual(upgraded.recipientMode, SecretStore.RecipientMode.keyFile.rawValue)
+        XCTAssertNil(upgraded.kdf)
+        XCTAssertEqual(try fixture.store.get(), "upgraded-key-file")
+        XCTAssertEqual(try Data(contentsOf: fixture.keyFileURL), encodedKey)
+    }
+
     internal func testEncryptedSnapshotDoesNotInvokeKDF() throws {
         setSecretPassphrase("snapshot-passphrase")
         let recorder = KDFCallRecorder()
@@ -327,6 +351,41 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         XCTAssertEqual(observedValues, ["initial-watch-value", "changed-watch-value"])
         XCTAssertEqual(derivationCountsAtPollStart, [1, 1, 1, 2, 2, 2])
         XCTAssertEqual(recorder.snapshot().count, 2)
+    }
+
+    @MainActor
+    internal func testWatchDecryptsTheExactComparedEnvelopeSnapshot() throws {
+        setSecretPassphrase("snapshot-owner")
+        let firstFixture = try makeFixture()
+        try firstFixture.store.set("snapshot-a")
+        let firstBytes = try Data(contentsOf: firstFixture.envelopeURL)
+
+        let root = try XCTUnwrap(directoryURL)
+        let secondDirectory = root.appendingPathComponent("snapshot-b", isDirectory: true)
+        try FileManager.default.createDirectory(at: secondDirectory, withIntermediateDirectories: true)
+        let secondFixture = try makeFixture(directory: secondDirectory)
+        try secondFixture.store.set("snapshot-b")
+        let secondBytes = try Data(contentsOf: secondFixture.envelopeURL)
+
+        let sequence = EnvelopeReadSequence(values: [firstBytes, secondBytes, firstBytes])
+        let watchedFixture = try makeFixture(envelopeOperations: sequence.operations)
+        var iterations = 0
+        var observedValues: [String] = []
+
+        try StateStore().watchEncryptedStore(
+            watchedFixture.store,
+            initialValue: "",
+            pollInterval: 0,
+            pollDeadline: nil,
+            shouldContinue: {
+                iterations += 1
+                return iterations <= 2
+            },
+            onChange: { observedValues.append($0) }
+        )
+
+        XCTAssertEqual(observedValues, ["snapshot-a", "snapshot-b", "snapshot-a"])
+        XCTAssertEqual(sequence.readCount, 3)
     }
 
     internal func testLegacyMigrationFirstReplacementWriteFailurePreservesOriginalBytes() throws {
@@ -412,7 +471,8 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         )
         return SecretFixture(
             store: store,
-            envelopeURL: directory.appendingPathComponent("secret.enc")
+            envelopeURL: directory.appendingPathComponent("secret.enc"),
+            keyFileURL: directory.appendingPathComponent("secret.key")
         )
     }
 
@@ -485,6 +545,13 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         let recipient = try Curve25519.KeyAgreement.PrivateKey(
             rawRepresentation: recipientMaterial.withUnsafeBytes { Data($0) }
         )
+        return try makeLegacyEnvelope(value: value, recipient: recipient)
+    }
+
+    private func makeLegacyEnvelope(
+        value: String,
+        recipient: Curve25519.KeyAgreement.PrivateKey
+    ) throws -> SecretStore.Envelope {
         let ephemeral = Curve25519.KeyAgreement.PrivateKey()
         let sharedSecret = try ephemeral.sharedSecretFromKeyAgreement(with: recipient.publicKey)
         let symmetric = sharedSecret.hkdfDerivedSymmetricKey(
@@ -510,6 +577,7 @@ internal final class SecretStoreSecurityTests: XCTestCase {
 private struct SecretFixture {
     fileprivate let store: SecretStore
     fileprivate let envelopeURL: URL
+    fileprivate let keyFileURL: URL
 }
 
 private struct KDFCall: Sendable {
@@ -592,6 +660,40 @@ private final class EnvelopeWriteController: @unchecked Sendable {
         default:
             try data.write(to: url, options: .atomic)
         }
+    }
+}
+
+private final class EnvelopeReadSequence: @unchecked Sendable {
+    private let lock = NSLock()
+    private let values: [Data]
+    private var reads = 0
+
+    fileprivate init(values: [Data]) {
+        self.values = values
+    }
+
+    fileprivate var operations: SecretStore.EnvelopeOperations {
+        SecretStore.EnvelopeOperations(
+            read: { [self] _ in try next() },
+            write: { data, url in try data.write(to: url, options: .atomic) }
+        )
+    }
+
+    fileprivate var readCount: Int {
+        lock.lock()
+        defer { lock.unlock() }
+        return reads
+    }
+
+    private func next() throws -> Data {
+        lock.lock()
+        defer { lock.unlock() }
+        guard !values.isEmpty else {
+            throw CocoaError(.fileReadNoSuchFile)
+        }
+        let index = min(reads, values.count - 1)
+        reads += 1
+        return values[index]
     }
 }
 

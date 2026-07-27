@@ -6,6 +6,27 @@
       "timestamp": 1785152917,
       "digest": "0a5f92b5cc532b8ed9d377937f99f9250b5c4f3020e8ac752e0c9f8fdcab175d",
       "note": "Definition approved from three independent security, dependency, and migration audits for claimed issue 118."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785154748,
+      "digest": "06fff6b7af0840d0131e98787874523835a63201725ad165865cc17d6e1570ed",
+      "note": "Reapproved after explicitly covering all affected Sources/aps paths and adding requirement evidence."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785155258,
+      "digest": "755dd80dbf4e053661a3f8ad0e93e1c63c197ef6812381ca6c129c3e5e1c161a",
+      "note": "Reapproved after final adversarial audit fixes: exact watch snapshots, legacy key-file coverage, and evidence corrections."
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785155380,
+      "digest": "a3e8234dd54aeede0552fbf5cd44f02424295868c39d570d03f0b33f609a5783",
+      "note": "Final local definition approval after completing implementation and local evidence tasks; hosted cross-platform gate remains open."
     }
   ],
   "reopenings": []

@@ -2,17 +2,19 @@
 
 Status: **not ready to tag**
 
-Audited commit: `5a05e38a85975c4fba1aec2f916a1ab1764d52b8`
+Audit basis: current `origin/main` plus active issue #118 security hardening in
+SpecSync change `CHG-0050`.
 
 Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable installer Action, portable Linux packaging, dynamic schema behavior, concurrency fixes, and watch improvements.
 
 ## What is already strong
 
 - The fledge verification lane passes all seven steps.
-- 156 Swift tests pass, including four-worker isolation.
+- 213 Swift tests pass locally, including the issue #118 security regressions.
 - SpecSync passes with 2 specs, 0 errors, and 0 warnings.
 - macOS, Ubuntu, Linux smoke, Windows smoke, and Trust workflows run on main.
-- The repository has no active SpecSync changes after the latest archive housekeeping.
+- CHG-0050 is the only active SpecSync change and must be verified, accepted,
+  merged, and archived before the release tag.
 - Human, JSON, and JSONL output contracts are broadly exercised.
 
 Measured in-process source line coverage is 53.42%. Subprocess CLI tests are not attributed back to the instrumented test process, so that number understates command-path coverage. It still shows that registry, dynamic storage, command dispatch, and termination behavior need more direct tests.

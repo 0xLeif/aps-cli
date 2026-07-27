@@ -797,7 +797,7 @@ public final class StateStore {
         onChange: (String) -> Void
     ) throws {
         var lastEnvelope = try store.encryptedSnapshot()
-        var lastValue = lastEnvelope == nil ? initialValue : try store.get()
+        var lastValue = try lastEnvelope.map(store.value(forEncryptedSnapshot:)) ?? initialValue
         onChange(lastValue)
         let slice = max(pollInterval / 5.0, 0.05)
 
@@ -807,7 +807,7 @@ public final class StateStore {
             guard currentEnvelope != lastEnvelope else {
                 continue
             }
-            let currentValue = currentEnvelope == nil ? initialValue : try store.get()
+            let currentValue = try currentEnvelope.map(store.value(forEncryptedSnapshot:)) ?? initialValue
             lastEnvelope = currentEnvelope
             if currentValue != lastValue {
                 lastValue = currentValue

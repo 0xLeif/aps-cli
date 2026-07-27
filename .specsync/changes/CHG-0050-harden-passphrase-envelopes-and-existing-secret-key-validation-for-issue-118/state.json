@@ -8,7 +8,7 @@
   "state": "implementing",
   "base_commit": "c365187d9f2baadf097aaedafcb144f60a7a0fa8",
   "created_at": 1785152498,
-  "updated_at": 1785152918,
+  "updated_at": 1785155380,
   "affected_specs": [
     "aps-cli",
     "state-store"
@@ -16,6 +16,7 @@
   "affected_paths": [
     "Package.swift",
     "Package.resolved",
+    "Sources/aps",
     "Sources/aps/SecretStore.swift",
     "Sources/aps/PasswordKDF.swift",
     "Sources/aps/SecureKeyFile.swift",

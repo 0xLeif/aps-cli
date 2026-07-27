@@ -27,16 +27,18 @@ aps builds and tests on GitHub-hosted macOS, Ubuntu, and Windows runners. That d
 - SecretStore tests cover strict v2 recipient metadata, fixed-parameter scrypt,
   legacy compatibility, recipient-mode mismatch, and unchanged encrypted-watch
   polling across the test matrix.
-- Windows key-file tests use native handles to reject reparse points,
-  directories, non-disk objects, and foreign owners. They require the
-  current-user owner SID and canonical protected private DACL, including
-  handle-based repair and revalidation for safely owned files.
+- Windows key-file tests exercise private creation and loading, directory and
+  oversized-file rejection, and handle-based private-DACL repair. The
+  implementation also fails closed for reparse points, non-disk objects, and
+  foreign owners through native-handle validation.
 
 ## What CI does not yet prove
 
 - Windows error-exit parity for every domain error.
 - Full PowerShell smoke parity for legacy passphrase migration, hostile
   envelopes, and unchanged encrypted-watch cost.
+- Deterministic Windows adversarial tests for reparse points, non-disk objects,
+  foreign owners, unexpected access entries, and create/delete races.
 - Console control handling for JSONL terminal events.
 - Schema mutation races, destructive path rejection, and lock ownership under Windows semantics.
 - A downloadable Windows binary or installer Action.

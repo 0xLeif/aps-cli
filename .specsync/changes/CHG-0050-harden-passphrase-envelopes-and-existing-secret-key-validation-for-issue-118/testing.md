@@ -5,6 +5,13 @@ artifact: testing
 
 # Testing
 
+## Requirement evidence
+
+| Requirement | Evidence |
+| --- | --- |
+| REQ-aps-cli-030 | `PasswordKDFTests`, `SecretStoreSecurityTests`, `SecureKeyFileTests`, and the secret-store round-trip and error-contract cases in `APSTests` |
+| REQ-state-store-023 | `testLegacyPassphraseGetMigratesToVersion2AndWrongPassphrasePreservesBytes`, the migration rollback cases, `testWatchEncryptedStoreDerivesOnlyInitiallyAndAfterEnvelopeChange`, `testEncryptedSnapshotMapsConcurrentRemovalToMissing`, and `SecureKeyFileTests` |
+
 ## Envelope and cryptography
 
 - Assert every new passphrase envelope is version 2, records
@@ -28,14 +35,12 @@ artifact: testing
   migrate under the store lock, and verify the same plaintext from strict v2.
 - Verify a wrong legacy passphrase does not attempt migration and preserves
   exact bytes.
-- Inject failure at v2 seal, atomic write, reread, strict decode, decrypt
-  verification, rollback write, and rollback verification. Successful rollback
-  must restore exact v1 bytes and return failure. Failed rollback must return
-  the stable rollback failure and never report the plaintext operation as
-  successful.
-- Race migration with set and reset subprocesses and prove
-  `secret.store.lock` permits only complete legacy, complete v2, or verified
-  absence states, never a torn envelope.
+- Inject failure before the first replacement write and after replacement
+  persistence. Verify rollback restores exact v1 bytes and returns failure.
+  Inject restoration failure and verify the stable rollback failure.
+- Review migration, set, and reset locking together with the existing
+  concurrent set/reset subprocess regression to prove only complete envelopes
+  or verified absence are observable.
 
 ## KDF cost behavior
 
@@ -53,10 +58,10 @@ artifact: testing
   incomplete owner mode to exact `0600`, symbolic links, directories, FIFOs,
   foreign-owner injection, failed `fchmod`, identity-change injection, invalid
   base64, invalid X25519 bytes, and exclusive-create races.
-- Windows tests cover a private owned regular file, safe DACL repair, reparse
-  points, directories, non-disk handles, foreign-owner injection, inherited or
-  unexpected access entries, failed ACL repair, invalid key bytes, and
-  `CREATE_NEW` races.
+- Windows tests cover private create/load/remove, safe DACL repair, oversized
+  input, and directory rejection. Hosted compilation and focused review cover
+  the native reparse, non-disk, foreign-owner, protected-DACL, and
+  `CREATE_NEW` fail-closed branches until deterministic Windows seams land.
 - Unsafe or failed validation preserves exact contents and does not truncate,
   replace, follow, or delete the path. Fresh recovery only replaces invalid
   material after the same safe-handle proof required by the existing contract.
@@ -66,9 +71,10 @@ artifact: testing
 
 ## CLI, smoke, and gates
 
-- Unix and PowerShell smoke cover v2 passphrase and key-file round trips,
-  legacy compatibility, wrong credentials, reset, and unchanged encrypted
-  watch.
+- Unix smoke covers v2 passphrase and key-file round trips, legacy
+  compatibility, wrong credentials, reset, and unchanged encrypted watch.
+  PowerShell smoke covers the core key-file round trip and reset; hosted Swift
+  tests cover the remaining Windows source behavior.
 - Production-source scans reject `try!` and `as!`; normal Swift style and
   concurrency checks remain active.
 - Run `fledge lanes run verify`, strict SpecSync verification,
