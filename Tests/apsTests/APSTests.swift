@@ -1110,6 +1110,35 @@ final class APSTests: XCTestCase {
         XCTAssertTrue(corrupt.description.contains("note"))
         XCTAssertTrue(corrupt.description.contains("torn") || corrupt.description.contains("Corrupt"))
         XCTAssertEqual(APSError.corruptStateExitCode, 65)
+
+        let storedRollback = APSError.rollbackFailed(
+            context: .storedState(key: "profile"),
+            originalErrorCode: "persistence_failed",
+            originalErrorDescription: "Failed to persist profile"
+        )
+        XCTAssertTrue(storedRollback.description.contains("StoredState"))
+        XCTAssertTrue(storedRollback.description.contains("profile"))
+        XCTAssertFalse(storedRollback.description.contains("schema.json"))
+        XCTAssertTrue(storedRollback.hint.contains("profile"))
+
+        let stagedRollback = APSError.rollbackFailed(
+            context: .stagedFile(path: "nested/value.json"),
+            originalErrorCode: "persistence_failed",
+            originalErrorDescription: "Failed to persist nested/value.json"
+        )
+        XCTAssertTrue(stagedRollback.description.contains("nested/value.json"))
+        XCTAssertTrue(stagedRollback.description.contains("staged deletion file"))
+        XCTAssertFalse(stagedRollback.description.contains("schema.json"))
+        XCTAssertTrue(stagedRollback.hint.contains(".aps-delete"))
+
+        let schemaRollback = APSError.rollbackFailed(
+            context: .schema(key: "note"),
+            originalErrorCode: "persistence_failed",
+            originalErrorDescription: "Failed to persist note"
+        )
+        XCTAssertTrue(schemaRollback.description.contains("schema.json"))
+        XCTAssertTrue(schemaRollback.description.contains("note"))
+        XCTAssertTrue(schemaRollback.hint.contains("retained data"))
     }
 
     func testAPSErrorContractCodesAndExitCodes() {
@@ -1135,8 +1164,9 @@ final class APSTests: XCTestCase {
             .secretUnlockFailed,
             .corruptState(key: "profile"),
             .rollbackFailed(
-                purgeErrorCode: "persistence_failed",
-                purgeErrorDescription: "Failed to persist note"
+                context: .schema(key: "note"),
+                originalErrorCode: "persistence_failed",
+                originalErrorDescription: "Failed to persist note"
             ),
         ]
         for error in errors {
@@ -1541,6 +1571,53 @@ final class APSTests: XCTestCase {
             false
         )
         XCTAssertEqual(try store.get(name: "flag"), "false")
+    }
+
+    @MainActor
+    internal func testDefaultFlagSetRollsBackCanonicalAndLegacyObjectsWhenLegacyWriteDrops() throws {
+        let defaults = OneShotDroppingUserDefaults()
+        let oldLegacy = try JSONEncoder().encode(false)
+        defaults.seed(17, forKey: "aps.user.flag")
+        defaults.seed(oldLegacy, forKey: "App/aps.flag")
+        defaults.dropNextSet(forKey: "App/aps.flag")
+        let overrideToken = Application.override(\Application.userDefaults, with: defaults)
+        defer { _ = overrideToken }
+        let store = StateStore()
+
+        XCTAssertThrowsError(try store.set(.flag, value: "true")) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "flag"))
+        }
+        XCTAssertEqual(defaults.object(forKey: "aps.user.flag") as? Int, 17)
+        XCTAssertEqual(defaults.object(forKey: "App/aps.flag") as? Data, oldLegacy)
+    }
+
+    @MainActor
+    internal func testDefaultFileStateResetAdapterPreservesNewerDiskWrites() throws {
+        let store = StateStore()
+        try store.set(.note, value: "before-reset")
+        let noteURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("note.json")
+
+        _ = try store.reset(name: "note", recordMutation: false) { entry in
+            try JSONEncoder().encode("newer-note").write(to: noteURL)
+            try store.synchronizeDefaultAdapter(afterResetting: try XCTUnwrap(DemoKey(rawValue: entry.name)))
+        }
+
+        XCTAssertEqual(try StateStore.readNoteFromDisk(), "newer-note")
+        XCTAssertEqual(store.get(.note), "newer-note")
+
+        try store.set(.profile, value: #"{"name":"before-reset","version":1}"#)
+        let profileURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("profile.json")
+        let newerProfile = ProfileDocument(name: "newer-profile", version: 9)
+
+        _ = try store.reset(name: "profile", recordMutation: false) { entry in
+            try JSONEncoder().encode(newerProfile).write(to: profileURL)
+            try store.synchronizeDefaultAdapter(afterResetting: try XCTUnwrap(DemoKey(rawValue: entry.name)))
+        }
+
+        XCTAssertEqual(try StateStore.readProfileFromDisk(), newerProfile)
+        XCTAssertEqual(try store.profileDocument(), newerProfile)
     }
 
     @MainActor
@@ -1958,9 +2035,10 @@ final class APSTests: XCTestCase {
             )
         ) { error in
             let domainError = error as? APSError
-            guard case .rollbackFailed(let purgeCode, let purgeDescription) = domainError else {
+            guard case .rollbackFailed(let context, let purgeCode, let purgeDescription) = domainError else {
                 return XCTFail("Expected rollbackFailed, got \(error)")
             }
+            XCTAssertEqual(context, .schema(key: "note"))
             XCTAssertEqual(purgeCode, "persistence_failed")
             XCTAssertEqual(purgeDescription, "Failed to persist note")
             XCTAssertEqual(domainError?.code, "rollback_failed")
@@ -2537,10 +2615,11 @@ extension APSTests {
         ) { error in
             guard
                 let domainError = error as? APSError,
-                case .rollbackFailed(let purgeCode, let purgeDescription) = domainError
+                case .rollbackFailed(let context, let purgeCode, let purgeDescription) = domainError
             else {
                 return XCTFail("Expected rollbackFailed, got \(error)")
             }
+            XCTAssertEqual(context, .schema(key: "note"))
             XCTAssertEqual(purgeCode, "persistence_failed")
             XCTAssertEqual(purgeDescription, "Failed to persist note-data")
             XCTAssertTrue(domainError.description.contains("note-data"))
@@ -2740,8 +2819,9 @@ extension APSTests {
             XCTAssertEqual(
                 error as? APSError,
                 .rollbackFailed(
-                    purgeErrorCode: "persistence_failed",
-                    purgeErrorDescription: "Failed to persist \(entry.name)"
+                    context: .storedState(key: entry.name),
+                    originalErrorCode: "persistence_failed",
+                    originalErrorDescription: "Failed to persist \(entry.name)"
                 )
             )
         }
@@ -2770,8 +2850,9 @@ extension APSTests {
             XCTAssertEqual(
                 error as? APSError,
                 .rollbackFailed(
-                    purgeErrorCode: "persistence_failed",
-                    purgeErrorDescription: "Failed to persist \(entry.name)"
+                    context: .storedState(key: entry.name),
+                    originalErrorCode: "persistence_failed",
+                    originalErrorDescription: "Failed to persist \(entry.name)"
                 )
             )
         }
@@ -2815,6 +2896,43 @@ extension APSTests {
             try DynamicKeyStorage.get(entry: slice, stateRoot: root, schema: schema),
             "false"
         )
+    }
+
+    @MainActor
+    internal func testUnshapedBoolSliceRejectsJSONInteger() async throws {
+        let parent = SchemaKeyEntry(
+            name: "preferences",
+            type: "object",
+            storage: "FileState",
+            initial: .object(["enabled": .bool(true)]),
+            path: "preferences.json",
+            doc: "Unshaped Boolean slice parent",
+            objectShape: [:]
+        )
+        let slice = SchemaKeyEntry(
+            name: "enabled",
+            type: "Bool",
+            storage: "Slice",
+            initial: .bool(false),
+            doc: "Unshaped Boolean slice",
+            sliceOf: parent.name,
+            sliceField: "enabled"
+        )
+        let schema = UserSchemaDocument(keys: [parent, slice])
+        let root = FileManager.defaultFileStatePath
+
+        try DynamicKeyStorage.set(
+            entry: parent,
+            value: #"{"enabled":1}"#,
+            stateRoot: root,
+            schema: schema
+        )
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: slice, stateRoot: root, schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: parent.name))
+        }
     }
 
     internal func testPostconditionReadFailureRestoresStagedLeaf() throws {
@@ -2874,8 +2992,9 @@ extension APSTests {
                 XCTAssertEqual(
                     error as? APSError,
                     .rollbackFailed(
-                        purgeErrorCode: "persistence_failed",
-                        purgeErrorDescription: "Failed to persist value.json"
+                        context: .stagedFile(path: "value.json"),
+                        originalErrorCode: "persistence_failed",
+                        originalErrorDescription: "Failed to persist value.json"
                     )
                 )
             }

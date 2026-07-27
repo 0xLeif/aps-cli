@@ -113,7 +113,12 @@ self-describes that contract for agents through the `schema` command.
 | `schemaInvalid` | schema.json undecodable or fails validation. |
 | `unknownKey` | Name not present in the active registry. |
 | `schemaConflict` | key add would overwrite without `--force`. |
-| `rollbackFailed` | Purge failed and the original schema could not be restored. |
+| `RollbackContext` | Identifies the schema, StoredState value, or staged file whose restoration failed. |
+| `schema` | Rollback context for a schema registry restoration failure. |
+| `storedState` | Rollback context for a StoredState restoration failure. |
+| `stagedFile` | Rollback context for a staged-file restoration failure. |
+| `failureDescription` | Context-specific human description of a rollback failure. |
+| `rollbackFailed` | An operation failed and its context-specific resource could not be restored. |
 | `corruptStateExitCode` | Exit code 65 (`EX_DATAERR`) for corrupt/invalid data. |
 | `valueType` | Human value type (`Int` / `String` / `Bool` / `object`). |
 | `helpSummary` | Tab-separated key/type/storage columns for `keys`. |

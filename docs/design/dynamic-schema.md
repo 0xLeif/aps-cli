@@ -172,6 +172,11 @@ Replace compile-time-only dispatch with a loaded registry:
 | `EncryptedFile` | Reuse #35 envelope helpers with configurable filename |
 | `Slice` | Read/write parent object field |
 
+Slice reads decode the parent field against the type declared by
+`objectShape`. When the parent shape omits the field, the Slice entry's `type`
+is authoritative. A JSON integer is therefore never accepted as a Bool through
+Foundation numeric bridging.
+
 `get` / `set` / `watch` / `reset` / `dump` take **string key names** resolved
 through the registry. `DemoKey` is seed inventory and a low-level AppState
 dogfood surface only; it is not a registry dispatch mechanism.
@@ -200,6 +205,9 @@ A FileState reset with an initial value atomically overwrites that value under
 the per-file lock instead of deleting first. EncryptedFile reset uses
 `secret.store.lock`, removes only the envelope, verifies its absence, and
 preserves `secret.key`.
+Default FileState adapters then reload the current disk value under the same
+storage lock. They update the AppState cache without deleting or replacing a
+valid write that arrived after the registry reset.
 FileState and Slice lock names are derived from the full portable relative path,
 so nested `schema.json` files and same-basename files cannot alias the registry
 lock or each other.
@@ -210,7 +218,9 @@ original schema before releasing the lock. If restoration fails, aps reports
 `rollback_failed`. This is transactional for detected errors before return; it
 does not claim crash, power-loss, or distributed-filesystem atomicity.
 StoredState and staged-file rollback paths verify restoration and also report
-`rollback_failed` when the original data cannot be restored.
+`rollback_failed` when the original data cannot be restored. The error identifies
+the schema, StoredState key, or staged file that needs inspection rather than
+describing every rollback as a `schema.json` failure.
 
 Bulk reset runs in schema order and fails fast. Its report identifies reset,
 failed, and not-attempted keys. Mutation statistics advance only for resets
@@ -274,7 +284,9 @@ Deferred: arrays, nested objects, enums, decimals, timestamps as first-class typ
 Data files (`note.json`, `profile.json`, `secret.enc`) keep their current paths.
 The default flag reads the legacy AppState `App/aps.flag` encoding when no
 canonical `aps.user.flag` value exists. Reset clears the legacy key before
-writing the current initial value so old data cannot reappear.
+writing the current initial value so old data cannot reappear. Set synchronizes
+and verifies both keys as one operation, restoring their exact prior objects
+when either write cannot be persisted.
 
 ### 8. Errors and exits
 

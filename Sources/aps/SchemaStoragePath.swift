@@ -158,8 +158,9 @@ internal struct SchemaStoragePath: Hashable, Sendable {
                 try restoreStagedFile(stagedURL, to: url, operations: operations)
             } catch {
                 throw APSError.rollbackFailed(
-                    purgeErrorCode: deletionFailure.code,
-                    purgeErrorDescription: deletionFailure.description
+                    context: .stagedFile(path: rawValue),
+                    originalErrorCode: deletionFailure.code,
+                    originalErrorDescription: deletionFailure.description
                 )
             }
             throw deletionFailure

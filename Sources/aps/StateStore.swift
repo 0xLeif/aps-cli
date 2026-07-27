@@ -95,12 +95,8 @@ public final class StateStore {
                     return
                 }
                 if key == .flag {
-                    try DynamicKeyStorage.set(
-                        entry: entry,
-                        value: rawValue,
-                        stateRoot: root,
-                        schema: schema
-                    )
+                    try setDefaultFlagAdapter(entry, value: rawValue)
+                    return
                 }
                 try setDefaultAdapter(key, value: rawValue)
             }
@@ -119,13 +115,12 @@ public final class StateStore {
             var state = Application.state(\.message)
             state.value = value
         case .flag:
-            guard let boolValue = Self.parseBool(value) else {
-                throw APSError.invalidValue(key: key.rawValue, value: value)
+            guard
+                let entry = UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue })
+            else {
+                throw APSError.schemaInvalid(reason: "default flag definition is missing")
             }
-            var state = Application.state(\.flag)
-            state.value = boolValue
-            // Linux Foundation does not always flush UserDefaults on process exit.
-            UserDefaults.standard.synchronize()
+            try setDefaultFlagAdapter(entry, value: value)
         case .note:
             var state = Application.fileState(\.note)
             state.value = value
@@ -177,6 +172,110 @@ public final class StateStore {
                     throw APSError.persistenceFailed(key: "profileName")
                 }
             }
+        }
+    }
+
+    /// Persists the default flag through both registry and AppState keys as one
+    /// verified operation, restoring their exact prior objects after failure.
+    private func setDefaultFlagAdapter(_ entry: SchemaKeyEntry, value: String) throws {
+        guard let boolValue = Self.parseBool(value) else {
+            throw APSError.invalidValue(key: entry.name, value: value)
+        }
+        let store = Application.dependency(\Application.userDefaults)
+        let canonicalKey = "aps.user.flag"
+        let legacyKey = "App/aps.flag"
+        let oldCanonical = store.object(forKey: canonicalKey)
+        let oldLegacy = store.object(forKey: legacyKey)
+        let oldAdapterValue = Self.decodeStoredBool(oldLegacy) ?? false
+
+        do {
+            store.set(boolValue, forKey: canonicalKey)
+            var state = Application.state(\.flag)
+            state.value = boolValue
+            guard
+                Self.synchronize(store),
+                store.object(forKey: canonicalKey) as? Bool == boolValue,
+                Self.decodeLegacyFlag(store.object(forKey: legacyKey)) == boolValue
+            else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+        } catch {
+            var state = Application.state(\.flag)
+            state.value = oldAdapterValue
+            Self.restoreStoredObject(oldCanonical, forKey: canonicalKey, in: store)
+            Self.restoreStoredObject(oldLegacy, forKey: legacyKey, in: store)
+            guard
+                Self.synchronize(store),
+                Self.storedObjectsEqual(store.object(forKey: canonicalKey), oldCanonical),
+                Self.storedObjectsEqual(store.object(forKey: legacyKey), oldLegacy)
+            else {
+                let failure = error as? APSError ?? .persistenceFailed(key: entry.name)
+                throw APSError.rollbackFailed(
+                    context: .storedState(key: entry.name),
+                    originalErrorCode: failure.code,
+                    originalErrorDescription: failure.description
+                )
+            }
+            throw error
+        }
+    }
+
+    private static func decodeStoredBool(_ object: Any?) -> Bool? {
+        if let data = object as? Data {
+            return try? JSONDecoder().decode(Bool.self, from: data)
+        }
+        if let boolValue = object as? Bool {
+            return boolValue
+        }
+        if let stringValue = object as? String {
+            return parseBool(stringValue)
+        }
+        return nil
+    }
+
+    private static func decodeLegacyFlag(_ object: Any?) -> Bool? {
+        guard let data = object as? Data else { return nil }
+        return try? JSONDecoder().decode(Bool.self, from: data)
+    }
+
+    private static func synchronize(_ store: any UserDefaultsManaging) -> Bool {
+        if let synchronizingStore = store as? any UserDefaultsSynchronizing {
+            return synchronizingStore.synchronize()
+        }
+        if let defaults = store as? UserDefaults {
+            return defaults.synchronize()
+        }
+        if store is Application.SendableUserDefaults {
+            return UserDefaults.standard.synchronize()
+        }
+        return true
+    }
+
+    private static func restoreStoredObject(
+        _ object: Any?,
+        forKey key: String,
+        in store: any UserDefaultsManaging
+    ) {
+        if let object {
+            store.set(object, forKey: key)
+        } else {
+            store.removeObject(forKey: key)
+        }
+    }
+
+    private static func storedObjectsEqual(_ left: Any?, _ right: Any?) -> Bool {
+        switch (left, right) {
+        case (.none, .none):
+            return true
+        case (.some(let leftObject), .some(let rightObject)):
+            guard
+                String(reflecting: type(of: leftObject)) == String(reflecting: type(of: rightObject)),
+                let leftValue = leftObject as? NSObject,
+                let rightValue = rightObject as? NSObject
+            else { return false }
+            return leftValue.isEqual(rightValue)
+        default:
+            return false
         }
     }
 
@@ -250,7 +349,7 @@ public final class StateStore {
             && entry.sliceField == defaultEntry.sliceField
     }
 
-    private func synchronizeDefaultAdapter(
+    internal func synchronizeDefaultAdapter(
         afterResetting key: DemoKey,
         afterAcquiringProfileStorageLock: () -> Void = {}
     ) throws {
@@ -271,21 +370,47 @@ public final class StateStore {
                 throw APSError.persistenceFailed(key: key.rawValue)
             }
         case .note:
-            Application.reset(fileState: \.note)
-            guard try Self.readNoteFromDisk() == "" else {
-                throw APSError.persistenceFailed(key: key.rawValue)
-            }
+            try synchronizeNoteAdapter()
         case .profile:
-            Application.reset(fileState: \.profile)
-            guard try Self.readProfileFromDisk() == ProfileDocument() else {
-                throw APSError.persistenceFailed(key: key.rawValue)
-            }
+            try synchronizeProfileAdapter()
         case .secret:
             break
         case .profileName:
             try synchronizeProfileNameAdapter(
                 afterAcquiringStorageLock: afterAcquiringProfileStorageLock
             )
+        }
+    }
+
+    /// Synchronizes the default note cache to the current disk value without
+    /// replacing a valid write that arrived after the registry reset.
+    private func synchronizeNoteAdapter() throws {
+        try SchemaFileLock.withExclusiveStorageLock(
+            stateRoot: stateRoot,
+            lockFileName: "note.json.lock"
+        ) {
+            let fresh = try Self.readNoteFromDiskIfPresent() ?? ""
+            var state = Application.fileState(\.note)
+            state.value = fresh
+            guard try Self.readNoteFromDisk() == fresh else {
+                throw APSError.persistenceFailed(key: DemoKey.note.rawValue)
+            }
+        }
+    }
+
+    /// Synchronizes the default profile cache to the current disk value without
+    /// replacing a valid write that arrived after the registry reset.
+    private func synchronizeProfileAdapter() throws {
+        try SchemaFileLock.withExclusiveStorageLock(
+            stateRoot: stateRoot,
+            lockFileName: "profile.json.lock"
+        ) {
+            let fresh = try Self.readProfileFromDiskIfPresent() ?? ProfileDocument()
+            var state = Application.fileState(\.profile)
+            state.value = fresh
+            guard try Self.readProfileFromDisk() == fresh else {
+                throw APSError.persistenceFailed(key: DemoKey.profile.rawValue)
+            }
         }
     }
 

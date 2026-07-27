@@ -390,8 +390,8 @@ enum Schema {
             ErrorEntry(
                 code: "rollback_failed",
                 exitCode: 73,
-                meaning: "purge failed and the original schema.json could not be restored",
-                hint: "Inspect schema.json and the retained data under the state root before retrying."
+                meaning: "an operation failed and its schema, StoredState value, or staged file could not be restored",
+                hint: "Inspect the resource named in the error and its retained or staged data before retrying."
             ),
         ]
     }

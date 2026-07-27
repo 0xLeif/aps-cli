@@ -38,13 +38,19 @@
   cross-process `UserDefaults` persistence.
 - StoredState and staged-file rollback tests inject repeated synchronization,
   dropped restoration-write, and move-back failures and require
-  `rollback_failed`.
+  `rollback_failed` with a truthful resource-specific description and hint.
 - Storage-lock name tests cover nested `schema.json`, same basenames, and
   portable case-fold aliases.
 - Bool Slice verification uses the declared parent object shape.
+- Unshaped Bool Slice reads use the Slice entry type and reject JSON integer
+  values instead of accepting Foundation numeric bridging.
 - Staged deletion restores FileState and secret envelope data when
   postcondition inspection fails.
 - Legacy default-flag fixtures use AppState's JSON-encoded `App/aps.flag`
   representation and verify canonical reset behavior.
 - Documentation-only default edits still synchronize the AppState adapter, and
   reset-then-write flag tests require canonical and legacy reads to agree.
+- Default flag set tests drop the legacy adapter write and require exact
+  canonical and legacy rollback.
+- Default FileState reset tests inject newer note and profile writes before
+  adapter synchronization and require both values to survive.

@@ -182,8 +182,9 @@ Acceptance Criteria
   is alive or cannot be proven dead, regardless of lock age.
 - Concurrent APS schema mutation cannot reuse a purged path during the
   transaction.
-- Successful rollback rethrows the original purge error; failed rollback emits
-  a distinct stable rollback error.
+- Successful rollback rethrows the original operation error; failed rollback
+  emits a distinct stable rollback error that truthfully identifies the schema,
+  StoredState value, or staged file that could not be restored.
 - Bulk reset stops at the first failure, identifies reset, failed, and
   not-attempted keys, and records stats only for successful keys.
 - Parent/Slice compatibility treats an omitted parent initial field as the
@@ -198,5 +199,11 @@ Acceptance Criteria
   data stranded under the staging name.
 - FileState and Slice storage locks derive from the full portable relative path
   and cannot alias `schema.json.lock` or another same-basename storage path.
+- Slice reads use the Slice entry type when the parent object shape omits the
+  field and reject JSON values of another primitive type.
 - Documentation-only edits to a default entry preserve its default adapter
-  behavior, and default flag writes keep canonical and legacy values aligned.
+  behavior.
+- Default flag writes synchronize and verify canonical and legacy values as one
+  operation, restoring both exact prior objects after detected failure.
+- Default FileState reset adapter synchronization reloads the current disk value
+  under the storage lock and cannot delete or replace a newer valid write.

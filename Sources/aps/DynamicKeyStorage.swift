@@ -349,7 +349,7 @@ enum DynamicKeyStorage {
               !usesLegacyFlagStorage(entry)
                 || storedObjectsEqual(store.object(forKey: legacyFlagDefaultsKey), legacy)
         else {
-            throw rollbackFailure(after: originalError)
+            throw rollbackFailure(after: originalError, key: entry.name)
         }
     }
 
@@ -369,11 +369,12 @@ enum DynamicKeyStorage {
         }
     }
 
-    private static func rollbackFailure(after originalError: Error) -> APSError {
+    private static func rollbackFailure(after originalError: Error, key: String) -> APSError {
         let failure = originalError as? APSError ?? .persistenceFailed(key: "StoredState")
         return .rollbackFailed(
-            purgeErrorCode: failure.code,
-            purgeErrorDescription: failure.description
+            context: .storedState(key: key),
+            originalErrorCode: failure.code,
+            originalErrorDescription: failure.description
         )
     }
 
@@ -608,30 +609,28 @@ enum DynamicKeyStorage {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
         let raw = try fileGet(parent, stateRoot: stateRoot)
-        guard let data = raw.data(using: .utf8),
-              let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        guard
+            let data = raw.data(using: .utf8),
+            let object = try? JSONDecoder().decode([String: SchemaJSON].self, from: data)
         else {
             throw APSError.corruptState(key: parentName)
         }
         guard let value = object[field] else {
             return entry.initial?.wireString ?? ""
         }
-        if parent.objectShape?[field] == "Bool" {
-            guard let boolValue = value as? Bool else {
-                throw APSError.corruptState(key: parentName)
-            }
-            return boolValue ? "true" : "false"
-        }
-        if parent.objectShape?[field] == "Int" {
-            guard let intValue = value as? Int else {
-                throw APSError.corruptState(key: parentName)
-            }
+        let declaredType = parent.objectShape?[field] ?? entry.type
+        switch (declaredType, value) {
+        case ("String", .string(let stringValue)):
+            return stringValue
+        case ("Int", .int(let intValue)):
             return String(intValue)
+        case ("Bool", .bool(let boolValue)):
+            return boolValue ? "true" : "false"
+        case ("object", .object):
+            return value.wireString
+        default:
+            throw APSError.corruptState(key: parentName)
         }
-        if let string = value as? String { return string }
-        if let boolValue = value as? Bool { return boolValue ? "true" : "false" }
-        if let intValue = value as? Int { return String(intValue) }
-        return "\(value)"
     }
 
     private static func sliceSet(

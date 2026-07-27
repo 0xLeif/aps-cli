@@ -69,6 +69,43 @@ public struct ProfileDocument: Codable, Equatable, Sendable {
     }
 }
 
+/// Resource whose restoration failed during a transactional operation.
+public enum RollbackContext: Equatable, Sendable {
+    /// The schema registry could not be restored after purging a key.
+    case schema(key: String)
+    /// A StoredState value could not be restored after a failed reset.
+    case storedState(key: String)
+    /// A staged file could not be moved back after a failed deletion.
+    case stagedFile(path: String)
+
+    /// Human-readable rollback failure without the original error.
+    public var failureDescription: String {
+        switch self {
+        case .schema(let key):
+            return "Failed to restore schema.json after purging '\(key)' failed; "
+                + "the retained data may no longer match the registry."
+        case .storedState(let key):
+            return "Failed to restore StoredState value '\(key)' after reset persistence failed; "
+                + "the stored value may be partially updated."
+        case .stagedFile(let path):
+            return "Failed to restore state file '\(path)' after deletion failed; "
+                + "the original data may remain only in a staged deletion file."
+        }
+    }
+
+    /// Actionable recovery guidance for the affected resource.
+    public var hint: String {
+        switch self {
+        case .schema:
+            return "Inspect schema.json and the retained data under the state root before retrying."
+        case .storedState(let key):
+            return "Inspect the StoredState value for '\(key)' before retrying the reset."
+        case .stagedFile(let path):
+            return "Inspect '\(path)' and its neighboring .aps-delete file under the state root before retrying."
+        }
+    }
+}
+
 public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
     case invalidValue(key: String, value: String)
     case encodingFailed
@@ -83,8 +120,12 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
     case unknownKey(name: String)
     /// `key add` would overwrite an existing entry without force.
     case schemaConflict(name: String)
-    /// Purge failed and the original schema could not be restored.
-    case rollbackFailed(purgeErrorCode: String, purgeErrorDescription: String)
+    /// An operation failed and its affected resource could not be restored.
+    case rollbackFailed(
+        context: RollbackContext,
+        originalErrorCode: String,
+        originalErrorDescription: String
+    )
 
     /// sysexits `EX_DATAERR` (65): input/state data was present but unusable.
     public static let corruptStateExitCode: Int32 = 65
@@ -109,10 +150,9 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
             return "Unknown key '\(name)'"
         case .schemaConflict(let name):
             return "Key '\(name)' already exists in schema.json"
-        case .rollbackFailed(let purgeErrorCode, let purgeErrorDescription):
-            return "Failed to restore schema.json after purge failed; "
-                + "the retained data may no longer match the registry. "
-                + "Original purge failure [\(purgeErrorCode)]: \(purgeErrorDescription)"
+        case .rollbackFailed(let context, let originalErrorCode, let originalErrorDescription):
+            return "\(context.failureDescription) "
+                + "Original failure [\(originalErrorCode)]: \(originalErrorDescription)"
         }
     }
 
@@ -165,8 +205,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
             return "Run `aps keys` or `aps key list`; add the key with `aps key add` if needed."
         case .schemaConflict:
             return "Choose a new name or pass --force to replace the existing schema entry."
-        case .rollbackFailed:
-            return "Inspect schema.json and the retained data under the state root before retrying."
+        case .rollbackFailed(let context, _, _):
+            return context.hint
         }
     }
 }

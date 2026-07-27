@@ -336,8 +336,9 @@ extension StateStore {
                     try schemaWriter(original, root)
                 } catch {
                     throw APSError.rollbackFailed(
-                        purgeErrorCode: purgeError.code,
-                        purgeErrorDescription: purgeError.description
+                        context: .schema(key: name),
+                        originalErrorCode: purgeError.code,
+                        originalErrorDescription: purgeError.description
                     )
                 }
                 throw purgeError
