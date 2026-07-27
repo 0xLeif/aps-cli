@@ -579,6 +579,28 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    internal func testSeedDumpUsesLiveDefaultStateAdapterValues() async throws {
+        let store = StateStore()
+        try store.set(.counter, value: "41")
+        try store.set(.message, value: "adapter-message")
+
+        let dumpData = Data(try store.dump().utf8)
+        let dump = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: dumpData) as? [String: Any]
+        )
+        let entries = try XCTUnwrap(dump["keys"] as? [[String: Any]])
+        XCTAssertEqual(entries.compactMap { $0["key"] as? String }, DemoKey.allCases.map(\.rawValue))
+        let counter = try XCTUnwrap(entries.first { $0["key"] as? String == "counter" })
+        let message = try XCTUnwrap(entries.first { $0["key"] as? String == "message" })
+        XCTAssertEqual(counter["storage"] as? String, "State")
+        XCTAssertEqual(counter["type"] as? String, "Int")
+        XCTAssertEqual(counter["value"] as? Int, 41)
+        XCTAssertEqual(message["storage"] as? String, "State")
+        XCTAssertEqual(message["type"] as? String, "String")
+        XCTAssertEqual(message["value"] as? String, "adapter-message")
+    }
+
+    @MainActor
     func testJSONCodingDependency() async throws {
         let coding = Application.dependency(\.jsonCoding)
         let encoded = try coding.encodePretty(["ok": true])
@@ -2652,6 +2674,53 @@ extension APSTests {
     }
 
     @MainActor
+    internal func testBulkResetRejectsDifferentEffectiveSiblingSliceTypesWithEqualInitials() async throws {
+        let first = SchemaKeyEntry(
+            name: "firstValue",
+            type: "Int",
+            storage: "Slice",
+            initial: .string("1"),
+            doc: "integer child",
+            sliceOf: "parent",
+            sliceField: "value"
+        )
+        let second = SchemaKeyEntry(
+            name: "secondValue",
+            type: "String",
+            storage: "Slice",
+            initial: .string("1"),
+            doc: "string child",
+            sliceOf: "parent",
+            sliceField: "value"
+        )
+        let parent = SchemaKeyEntry(
+            name: "parent",
+            type: "object",
+            storage: "FileState",
+            initial: .object(["value": .string("current")]),
+            path: "parent.json",
+            doc: "unshaped parent",
+            objectShape: [:]
+        )
+        let root = FileManager.defaultFileStatePath
+        try UserSchema.write(UserSchemaDocument(keys: [first, second, parent]), stateRoot: root)
+        let store = StateStore()
+
+        XCTAssertThrowsError(try store.resetAllRegistered()) { error in
+            guard let bulkError = error as? BulkResetError else {
+                return XCTFail("Expected BulkResetError, got \(error)")
+            }
+            XCTAssertEqual(bulkError.report.reset, [])
+            XCTAssertEqual(bulkError.report.failed?.key, first.name)
+            XCTAssertEqual(bulkError.report.failed?.code, "schema_invalid")
+            XCTAssertEqual(bulkError.report.notAttempted, [second.name, parent.name])
+        }
+
+        XCTAssertEqual(try store.get(name: "parent"), #"{"value":"current"}"#)
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
+    }
+
+    @MainActor
     internal func testBulkResetAcceptsMissingParentFieldUsingSliceInitialFallback() async throws {
         let parent = SchemaKeyEntry(
             name: "parent",
@@ -3591,6 +3660,25 @@ private final class ResetFileFaults: @unchecked Sendable {
     }
 }
 
+/// Replaces a newly written rollback target with a directory before failing verification.
+private struct DirectoryReplacingReadFaults: Sendable {
+    fileprivate let sentinel: Data
+
+    fileprivate var operations: DynamicKeyStorage.FileOperations {
+        DynamicKeyStorage.FileOperations(
+            fileExists: { FileManager.default.fileExists(atPath: $0.path) },
+            read: { [sentinel] url in
+                try FileManager.default.removeItem(at: url)
+                try FileManager.default.createDirectory(at: url, withIntermediateDirectories: false)
+                try sentinel.write(to: url.appendingPathComponent("sentinel.txt"))
+                throw APSError.persistenceFailed(key: url.lastPathComponent)
+            },
+            write: { try $0.write(to: $1, options: .atomic) },
+            remove: { try FileManager.default.removeItem(at: $0) }
+        )
+    }
+}
+
 extension APSTests {
     @MainActor
     internal func testFileStateResetRestoresExactPriorBytesAfterVerificationFailure() async throws {
@@ -3648,6 +3736,45 @@ extension APSTests {
             XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
         }
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+    }
+
+    @MainActor
+    internal func testAbsentFileRollbackRefusesReplacementDirectoryAndPreservesItsContents() async throws {
+        let entry = SchemaKeyEntry(
+            name: "hostileAbsentRollback",
+            type: "String",
+            storage: "FileState",
+            initial: .string("after"),
+            path: "hostile-absent-rollback.json",
+            doc: "Hostile replacement during absent rollback"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("hostile-absent-rollback.json")
+        let sentinel = Data("must survive".utf8)
+        let faults = DirectoryReplacingReadFaults(sentinel: sentinel)
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.reset(
+                entry: entry,
+                stateRoot: FileManager.defaultFileStatePath,
+                schema: schema,
+                fileOperations: faults.operations
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .rollbackFailed(
+                    context: .fileState(path: "hostile-absent-rollback.json"),
+                    originalErrorCode: "corrupt_state",
+                    originalErrorDescription: APSError.corruptState(key: entry.name).description
+                )
+            )
+        }
+        var isDirectory: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory))
+        XCTAssertTrue(isDirectory.boolValue)
+        XCTAssertEqual(try Data(contentsOf: url.appendingPathComponent("sentinel.txt")), sentinel)
     }
 
     @MainActor

@@ -479,7 +479,43 @@ public final class StateStore {
             }
             return entry
         }
-        return try dumpRegistered(entries: entries, schema: schema)
+        return try dumpRegistered(
+            entries: entries,
+            schema: schema,
+            rawValueForEntry: { entry in
+                try dumpRawValue(for: entry, in: schema)
+            }
+        )
+    }
+
+    /// Uses compiled AppState adapters only when the active State entry still has default behavior.
+    private func dumpRawValue(
+        for entry: SchemaKeyEntry,
+        in schema: UserSchemaDocument
+    ) throws -> String {
+        guard
+            entry.storage == "State",
+            let key = DemoKey(rawValue: entry.name),
+            isDefaultDefinition(entry, for: key, in: schema)
+        else {
+            return try DynamicKeyStorage.get(
+                entry: entry,
+                stateRoot: stateRoot,
+                schema: schema
+            )
+        }
+        switch key {
+        case .counter:
+            return String(Application.state(\.counter).value)
+        case .message:
+            return Application.state(\.message).value
+        case .flag, .note, .profile, .secret, .profileName:
+            return try DynamicKeyStorage.get(
+                entry: entry,
+                stateRoot: stateRoot,
+                schema: schema
+            )
+        }
     }
 
     /// Blocking watch over the `@ObservedDependency` stats service.

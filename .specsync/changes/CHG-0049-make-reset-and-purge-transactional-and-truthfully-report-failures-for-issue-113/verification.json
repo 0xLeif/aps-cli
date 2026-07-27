@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785145436,
-  "commit": "bfb0b90379fdb3150cf6706085e56854eda534ef",
+  "timestamp": 1785146746,
+  "commit": "34b27b533834066eb294dbf94f7eb9a377964e25",
   "contract_digest": "d0f15d22269bf78ef1de261c85b45ec82540d284f5b3f0cf06bcd78b7bc18a6b",
-  "workspace_digest": "4e8e9a6eb83b53f23ec29e3bf544399238e173e7acfc36408c7f94d3162b3e8f",
-  "acceptance_input_digest": "b1f4e1ebba15d71b601b2983d256aae80506a4e0c70960369c98e6a58f7efef7",
+  "workspace_digest": "2f8eba91a0f4196aeb771cdef7ce0b5b51ca1d2a7c01992f42ba0de4f736eb57",
+  "acceptance_input_digest": "f16ba377e3f6e98ccc5f8daa553789b1aba19af521700b517ab7d93c17c68860",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -81,8 +81,8 @@
         "path": "Sources/aps/DynamicKeyStorage.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "703ab26190fb337c0b73b79f26cd224bf98349bd461ca796d6beba1e74cbf429",
-        "entry_digest": "81ca999fc4457e92b649972b0fc894aed4d1ac103da4d832ea63bde15073f8ac",
+        "payload_digest": "a6f3f3c87003dfffff35fe965128357ede0b603bdaef936cebe41a49fdbd1984",
+        "entry_digest": "181e898b2b65d6e53865efc110324b03972cf3310eb52451ccc3b4ea4164e5a8",
         "owners": [
           "state-store"
         ]
@@ -151,8 +151,8 @@
         "path": "Sources/aps/StateStore+Registry.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "2913c81133f2743bebbea9adf36a200fcaedba9211122777cc7877b1ebfe6fad",
-        "entry_digest": "ec6d4005b3673393a548c167ab9e1ccd6b64e051b5aa375021dd1c312cd9e7db",
+        "payload_digest": "b1a89795f576b5cfeddf9a19baf205ad604fb30309dc608a61c62cc361ef60bf",
+        "entry_digest": "82c8d07ceb72bb6d32f59dfbf9f4831bd88d04fd672d334da707745dcc9ebaf4",
         "owners": [
           "state-store"
         ]
@@ -161,8 +161,8 @@
         "path": "Sources/aps/StateStore.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "282fba41e536a2fc7f2ea308d4d881d9c323e718c294e7cb6ac5758a383f60f3",
-        "entry_digest": "455daf6b5f264a20cb60a1d9878cc3e0bd778cdcc47bbe1b52717af00326fd5b",
+        "payload_digest": "3dabc18e303e60a0d8a9daddaf8fa33334f8c8560806db52c1ec3a91b1352ffb",
+        "entry_digest": "523c3837f98888974e4c6ace71c15641f6b5fecf92dea2d97a6353efb7ff9fa7",
         "owners": [
           "state-store"
         ]
@@ -181,8 +181,8 @@
         "path": "Tests/apsTests/APSTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "3b72bf9081cf374a2a9e6cc724ce65207f8a2c441104429301fa80bd09942c7b",
-        "entry_digest": "5fda5db6fe5d866e19d4124e752afc187e145d035ef9cb61c3706a6f0cd4ad97",
+        "payload_digest": "1bd576a940beb345388685300f312784db976e6cc8321ff5a6b16f728550f09d",
+        "entry_digest": "f17a0871289d80c79e028b18141a45e2a0aa7dd7b2240522425a4e346c9591c9",
         "owners": [
           "@exact:test"
         ]
@@ -281,8 +281,8 @@
         "path": "specs/state-store/requirements.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "03372ba0cc492574e261f52eec10bfffd61ec6dde2deee8887761472bf8cd734",
-        "entry_digest": "61479e2472f0257028447900c6c74f2db9c96dd4b3f5bbba6e3c6de0cd14cf4b",
+        "payload_digest": "4648d91ae669467f360346657d2e73c0f1eca9a93e0016d4f737e1eb04e9e481",
+        "entry_digest": "f32dd74b811b32d7a109ce3a97ad4f452633eb36dd593b76059b54df8d45c4f5",
         "owners": [
           "state-store"
         ]
@@ -291,8 +291,8 @@
         "path": "specs/state-store/state-store.spec.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "ecf8b2784f8867147ba92127e612ed4e69f8bf1b0e5af29ff8f0f498c8228127",
-        "entry_digest": "3414c1de27dfa3d59aed15184a29f88875d325263719990ca105774717f9244c",
+        "payload_digest": "46117e28143d6b5b4cf120a53c7f5b2cc12eef468329a04381170efe497cad48",
+        "entry_digest": "4a5f58bd618baef1ac9d9eaa142ee21e9fcf230a8e7b7e37be5be0b0f3d0c448",
         "owners": [
           "state-store"
         ]
@@ -311,8 +311,8 @@
         "path": "specs/state-store/testing.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "9ea13f4a7ba2f9f9146922bc1db6f202a1c9e90e50026607f297a8142072ed8a",
-        "entry_digest": "81bf3491410e7884e0d32af490a132320e319f575bdb0e3a577da9cf7010af05",
+        "payload_digest": "b2dd6b2b73fff6cbd3835f9337768083489f1917ae856d75ff95c44b4516e15f",
+        "entry_digest": "64e3390bff2bdd07fa50c367bc26ed5011e4451c9fae95c6b50d1ab525d976ea",
         "owners": [
           "state-store"
         ]

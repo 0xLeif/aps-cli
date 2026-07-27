@@ -127,9 +127,10 @@ Then seen equals ["1", "2"].
 ```
 
 ```
-Given dump() after set(name: "message", value: "hi")
+Given dump() after set(.counter, value: "41") and set(.message, value: "hi")
 When decoding the JSON
-Then keys include message with value "hi" and a timestamp field exists.
+Then the default State entries expose the live AppState adapter values 41 and "hi",
+preserve registry type and storage metadata, and include a timestamp field.
 ```
 
 ## Error Cases

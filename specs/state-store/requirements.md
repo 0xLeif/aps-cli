@@ -156,6 +156,8 @@ Acceptance Criteria
 - A seed name forced to another supported type or adapter uses only the forced
   definition, including its type and storage metadata in both seed and
   registered dumps.
+- An unchanged default State seed uses its compiled AppState adapter value in
+  the seed dump while retaining type and storage metadata from the registry.
 - FileState and EncryptedFile paths come from the current entry.
 - Slice reads and writes use the current parent and field.
 - The unchanged default flag remains readable from legacy AppState StoredState
@@ -195,6 +197,9 @@ Acceptance Criteria
 - Parent/Slice compatibility compares an explicitly present parent field and
   Slice initial with type-sensitive `SchemaJSON` equality, while an omitted
   parent field uses the Slice initial fallback.
+- Sibling Slice compatibility also compares each Slice's effective field type,
+  using the parent object shape when declared and the Slice type otherwise, so
+  identical initial JSON cannot hide incompatible reset types.
 - StoredState resets restore canonical and legacy backing objects when
   replacement verification fails.
 - StoredState rollback verifies exact raw-object restoration and reports

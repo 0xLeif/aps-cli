@@ -32,12 +32,15 @@
   same-process-orphan owners; only proven-dead or safely orphaned locks are
   reclaimed.
 - Bulk reset rejects incompatible parent/Slice and sibling Slice initial values,
-  including sibling values with identical wire text but distinct SchemaJSON
-  types, without falsely reporting overwritten outcomes as successful.
+  including sibling values with identical SchemaJSON initials but different
+  effective types on an unshaped parent field, without falsely reporting
+  overwritten outcomes as successful.
 - Bulk reset accepts an omitted parent field when the Slice initial provides
   the observable fallback.
 - The seed dump preserves seed ordering while typing forced seed values and
   reporting storage metadata from the resolved registry entry.
+- The seed dump reads unchanged default State values from their live AppState
+  adapters after typed `set` operations.
 - Bulk reset rejects a present integer parent initial when the Slice initial is
   the same wire text represented as a string.
 - StoredState reset restores canonical and legacy raw objects after detected

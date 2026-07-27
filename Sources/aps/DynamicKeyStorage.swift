@@ -723,9 +723,9 @@ enum DynamicKeyStorage {
             do {
                 try restoreFileSnapshot(
                     snapshot,
-                    at: url,
-                    operations: operations,
-                    key: entry.name
+                    entry: entry,
+                    stateRoot: stateRoot,
+                    operations: operations
                 )
             } catch {
                 let failure = originalError as? APSError ?? .persistenceFailed(key: entry.name)
@@ -754,15 +754,21 @@ enum DynamicKeyStorage {
 
     private static func restoreFileSnapshot(
         _ snapshot: FileSnapshot,
-        at url: URL,
-        operations: FileOperations,
-        key: String
+        entry: SchemaKeyEntry,
+        stateRoot: String,
+        operations: FileOperations
     ) throws {
+        let key = entry.name
+        let url = try fileURL(entry, stateRoot: stateRoot)
         do {
             switch snapshot {
             case .absent:
                 if operations.fileExists(url) {
-                    try operations.remove(url)
+                    let checkedURL = try storagePath(for: entry).resolve(stateRoot: stateRoot)
+                    guard checkedURL == url else {
+                        throw APSError.persistenceFailed(key: key)
+                    }
+                    try operations.remove(checkedURL)
                 }
             case .present(let data):
                 try operations.write(data, url)

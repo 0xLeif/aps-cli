@@ -232,7 +232,7 @@ extension StateStore {
             guard let later = UserSchema.entry(named: laterName, in: schema) else {
                 continue
             }
-            if let error = incompatibleResetPair(first: entry, second: later) {
+            if let error = incompatibleResetPair(first: entry, second: later, schema: schema) {
                 return error
             }
         }
@@ -242,13 +242,15 @@ extension StateStore {
     @MainActor
     private func incompatibleResetPair(
         first: SchemaKeyEntry,
-        second: SchemaKeyEntry
+        second: SchemaKeyEntry,
+        schema: UserSchemaDocument
     ) -> APSError? {
         if first.storage == "Slice", second.storage == "Slice" {
             guard
                 first.sliceOf == second.sliceOf,
                 first.sliceField == second.sliceField,
                 first.initial != second.initial
+                    || effectiveSliceType(first, schema: schema) != effectiveSliceType(second, schema: schema)
             else {
                 return nil
             }
@@ -279,6 +281,21 @@ extension StateStore {
             )
         }
         return nil
+    }
+
+    @MainActor
+    private func effectiveSliceType(
+        _ slice: SchemaKeyEntry,
+        schema: UserSchemaDocument
+    ) -> String {
+        guard
+            let parentName = slice.sliceOf,
+            let field = slice.sliceField,
+            let parent = UserSchema.entry(named: parentName, in: schema)
+        else {
+            return slice.type
+        }
+        return parent.objectShape?[field] ?? slice.type
     }
 
     @MainActor
@@ -415,14 +432,30 @@ extension StateStore {
         entries: [SchemaKeyEntry],
         schema: UserSchemaDocument
     ) throws -> String {
-        let snapshot = RegistryDumpSnapshot(
-            timestamp: now,
-            keys: try entries.map { entry in
-                let raw = try DynamicKeyStorage.get(
+        try dumpRegistered(
+            entries: entries,
+            schema: schema,
+            rawValueForEntry: { entry in
+                try DynamicKeyStorage.get(
                     entry: entry,
                     stateRoot: stateRoot,
                     schema: schema
                 )
+            }
+        )
+    }
+
+    /// Encodes selected entries while allowing seed adapters to supply their live values.
+    @MainActor
+    internal func dumpRegistered(
+        entries: [SchemaKeyEntry],
+        schema: UserSchemaDocument,
+        rawValueForEntry: (SchemaKeyEntry) throws -> String
+    ) throws -> String {
+        let snapshot = RegistryDumpSnapshot(
+            timestamp: now,
+            keys: try entries.map { entry in
+                let raw = try rawValueForEntry(entry)
                 return DumpEntry(
                     key: entry.name,
                     storage: entry.storage,
