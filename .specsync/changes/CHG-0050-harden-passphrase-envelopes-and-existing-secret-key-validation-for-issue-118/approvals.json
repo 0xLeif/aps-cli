@@ -76,6 +76,20 @@
       "timestamp": 1785169811,
       "digest": "d6b7a251696f83cfa7364a03a31088f27db4826c61b5bcf90cd0129559e75910",
       "note": "Approve final review artifacts for fail-closed missing-key and descriptor-pinned unreadable-key repair"
+    },
+    {
+      "gate": "definition",
+      "actor": "leif",
+      "timestamp": 1785170052,
+      "digest": "d8b4cb593b5fdfa4b3959d16663da909d8084ae14ac29be3e21d378440178bdd",
+      "note": "Restore immutable applied definition and approve final delivery verification"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "leif",
+      "timestamp": 1785170131,
+      "digest": "60fa03930dc6a6dec0219b20f1ce3afc76e5288c2a071e144ec11b8b04da2a79",
+      "note": "Final audit verified: missing existing key fails closed without replacement; unreadable-key repair is descriptor pinned or restores and fails closed; 224 serial and parallel tests plus full trust lane pass"
     }
   ],
   "reopenings": [
