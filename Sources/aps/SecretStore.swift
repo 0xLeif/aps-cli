@@ -864,6 +864,14 @@ public struct SecretStore: Sendable {
         } catch {
             throw failure
         }
+        let isAllZero = sharedSecret.withUnsafeBytes { bytes in
+            bytes.reduce(UInt8(0)) { partialResult, byte in
+                partialResult | byte
+            } == 0
+        }
+        guard !isAllZero else {
+            throw failure
+        }
         return sharedSecret.hkdfDerivedSymmetricKey(
             using: SHA256.self,
             salt: Data("aps-secret-store-v1".utf8),
