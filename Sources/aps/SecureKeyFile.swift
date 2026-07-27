@@ -11,6 +11,9 @@ private func linuxRenameAt2(
     _ newPath: UnsafePointer<CChar>,
     _ flags: UInt32
 ) -> Int32
+
+// Swift's Glibc module does not expose Linux's stable O_PATH UAPI flag.
+private let linuxOpenPathFlag = Int32(0o10000000)
 #elseif canImport(Darwin)
 import Darwin
 #endif
@@ -251,7 +254,7 @@ internal extension SecureKeyFile {
         let repairDescriptor = openat(
             parentDescriptor,
             quarantineName,
-            O_PATH | O_NOFOLLOW | O_CLOEXEC
+            linuxOpenPathFlag | O_NOFOLLOW | O_CLOEXEC
         )
         guard repairDescriptor >= 0 else {
             throw posixError(operation: "openat-permission-handle")
