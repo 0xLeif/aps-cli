@@ -5,10 +5,11 @@
   "title": "Enforce recursive dynamic object and Slice typing and restore schema metadata for issue 114",
   "description": "Enforce recursive dynamic object and Slice typing and restore schema metadata for issue 114",
   "kind": "bug_fix",
-  "state": "verifying",
+  "state": "accepted",
+  "canonical_applied": true,
   "base_commit": "ebedc5994e59454ef688f7206236207a9f6f9ac3",
   "created_at": 1785160610,
-  "updated_at": 1785164032,
+  "updated_at": 1785164701,
   "affected_specs": [
     "aps-cli",
     "state-store"

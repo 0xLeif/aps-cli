@@ -2,7 +2,7 @@
 
 ## ADDED
 
-### REQUIREMENT REQ-state-store-024
+### REQUIREMENT REQ-state-store-026
 
 Dynamic storage SHALL parse and validate registered values against their
 declared schema type before mutation and after persistence reads. One recursive

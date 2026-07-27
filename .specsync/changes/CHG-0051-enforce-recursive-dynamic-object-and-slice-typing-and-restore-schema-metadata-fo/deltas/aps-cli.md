@@ -2,7 +2,7 @@
 
 ## ADDED
 
-### REQUIREMENT REQ-aps-cli-031
+### REQUIREMENT REQ-aps-cli-033
 
 APS SHALL preserve registered object values as recursive structural JSON in
 every machine-output path. Get, set, dump, watch, and reset SHALL retain all

@@ -34,6 +34,13 @@
       "timestamp": 1785162804,
       "digest": "4a6e6392c344b4cc1008f3203c8a41afd0e4d86d2440120ad7f7ff3b7dec25ac",
       "note": "Re-approved after binding exact requirement IDs to their unit and smoke evidence in testing.md."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785164701,
+      "digest": "3c34a28b6240b380f8587842d999fb8e7f68c83f5ba49e27c592960bcd1e0b68",
+      "note": "Accepted after local 222-test serial and parallel verification plus green macOS, Ubuntu, Linux smoke, and Windows hosted gates; stacked predecessor lifecycle conflict remains external to CHG-0051."
     }
   ],
   "reopenings": []

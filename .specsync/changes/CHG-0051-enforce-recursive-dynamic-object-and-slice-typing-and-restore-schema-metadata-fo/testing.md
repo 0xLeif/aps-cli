@@ -11,9 +11,9 @@ artifact: testing
 | --- | --- |
 | REQ-aps-cli-019 | `APSTests` schema contract cases and both smoke scripts |
 | REQ-aps-cli-024 | `APSTests` version, keyCount, and flag cases plus both smoke scripts |
-| REQ-aps-cli-031 | `DynamicObjectTypingTests` plus shaped object and Slice smoke round trips |
+| REQ-aps-cli-033 | `DynamicObjectTypingTests` plus shaped object and Slice smoke round trips |
 | REQ-state-store-022 | `APSTests` transactional reset, purge, rollback, lock, and adapter cases |
-| REQ-state-store-024 | `DynamicObjectTypingTests` plus shaped Slice unit and smoke cases |
+| REQ-state-store-026 | `DynamicObjectTypingTests` plus shaped Slice unit and smoke cases |
 
 The complete local gate is `fledge lanes run verify`. Strict SpecSync verification
 must record exact evidence for both `aps-cli` and `state-store`.
