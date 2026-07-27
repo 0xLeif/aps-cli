@@ -302,9 +302,9 @@ internal final class SecureKeyFileTests: XCTestCase {
         let secureFile = SecureKeyFile(path: file.path)
         try secureFile.create(Data(repeating: 3, count: SecureKeyFile.expectedByteCount))
         let handle = try FileHandle(forWritingTo: file)
-        defer { try? handle.close() }
         _ = try handle.seekToEnd()
         try handle.write(contentsOf: Data([3]))
+        try handle.close()
         defer { try? FileManager.default.removeItem(at: file) }
 
         XCTAssertThrowsError(try secureFile.load()) { error in
