@@ -467,6 +467,7 @@ internal extension SecureKeyFile {
 
 #if os(Windows)
 internal extension SecureKeyFile {
+    private static let fileAllAccess = DWORD(0x001F01FF)
     private static let readAccess: DWORD = DWORD(GENERIC_READ)
     private static let writeAccess: DWORD = DWORD(GENERIC_WRITE)
     private static let shareNone: DWORD = 0
@@ -542,7 +543,9 @@ internal extension SecureKeyFile {
         try validateAndRepairWindows(handle)
 
         var disposition = FILE_DISPOSITION_INFO()
-        disposition.DeleteFile = true
+        withUnsafeMutableBytes(of: &disposition) { bytes in
+            bytes[0] = 1
+        }
         guard SetFileInformationByHandle(
             handle,
             FileDispositionInfo,
@@ -666,7 +669,8 @@ internal extension SecureKeyFile {
                 handle,
                 SE_FILE_OBJECT,
                 SECURITY_INFORMATION(
-                    UInt32(OWNER_SECURITY_INFORMATION) | DACL_SECURITY_INFORMATION
+                    UInt32(bitPattern: OWNER_SECURITY_INFORMATION)
+                        | UInt32(bitPattern: DACL_SECURITY_INFORMATION)
                 ),
                 &owner,
                 nil,
@@ -724,7 +728,7 @@ internal extension SecureKeyFile {
             guard EqualSid(aceSID, userSID) else {
                 return false
             }
-            let requiredAccess = DWORD(FILE_ALL_ACCESS)
+            let requiredAccess = Self.fileAllAccess
             return allowedACE.pointee.Mask & requiredAccess == requiredAccess
         }
     }
@@ -788,7 +792,7 @@ internal extension SecureKeyFile {
                   acl,
                   DWORD(ACL_REVISION),
                   0,
-                  DWORD(FILE_ALL_ACCESS),
+                  Self.fileAllAccess,
                   userSID
               ) else {
             throw windowsError(operation: "initialize-private-acl")
@@ -875,7 +879,9 @@ internal extension SecureKeyFile {
             return
         }
         var disposition = FILE_DISPOSITION_INFO()
-        disposition.DeleteFile = true
+        withUnsafeMutableBytes(of: &disposition) { bytes in
+            bytes[0] = 1
+        }
         _ = SetFileInformationByHandle(
             handle,
             FileDispositionInfo,
