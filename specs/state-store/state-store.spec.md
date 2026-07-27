@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 37
+version: 38
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -123,6 +123,15 @@ and synchronize the default AppState dogfood surface before releasing the lock.
     requires current-user ownership, regular-file type, no link following, and
     exact `0600`; Windows requires a current-user owner SID, non-reparse disk
     file, and protected private DACL.
+21. Dynamic storage validates a value against its declared type and open object
+    shape before mutation and after persistence reads. FileState object roots
+    that are scalar, arrays, or shape-invalid surface as `corruptState`.
+22. Object shapes require every declared field while preserving undeclared
+    recursive JSON fields. Supported recursive values are null, Bool, Int,
+    finite Double, String, array, and object.
+23. Slice entries have typed initials and resolve only to explicitly declared,
+    type-compatible fields on FileState object parents. Validation supports
+    forward references and rejects invalid schemas before storage mutation.
 
 ## Behavioral Examples
 
@@ -149,6 +158,12 @@ Given dump() after set(.counter, value: "41") and set(.message, value: "hi")
 When decoding the JSON
 Then the default State entries expose the live AppState adapter values 41 and "hi",
 preserve registry type and storage metadata, and include a timestamp field.
+```
+
+```
+Given a FileState object with declared fields and additional recursive fields
+When it is set and read through DynamicKeyStorage
+Then declared fields are validated and all undeclared fields are preserved.
 ```
 
 ## Error Cases

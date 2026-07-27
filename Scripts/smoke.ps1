@@ -175,10 +175,15 @@ Invoke-ApsExpectFail set counter nope
 
 # Schema contract + dynamic key round-trip
 $schema = Invoke-ApsOk schema
-Assert-Match $schema '"schemaVersion":5' 'schema version'
+Assert-Match $schema '"schemaVersion":6' 'schema version'
 Assert-Match $schema '"userSchema"' 'userSchema meta'
 Assert-Match $schema '"code":"unknown_key"' 'unknown_key error'
 Assert-Match $schema '"--registered"' 'reset registered flag'
+$schemaDocument = $schema | ConvertFrom-Json
+Assert-Equal `
+    ([string]$schemaDocument.keys.Count) `
+    ([string]$schemaDocument.userSchema.keyCount) `
+    'userSchema keyCount'
 Assert-Equal '1.0.0' (Invoke-ApsOk --version) 'cli version'
 if (-not (Test-Path (Join-Path $env:APS_HOME 'schema.json'))) {
     throw 'expected schema.json to materialize under APS_HOME'
@@ -187,6 +192,47 @@ $null = Invoke-ApsOk key add smokeNote --type String --storage FileState --path 
 Assert-Equal 'from-smoke' (Invoke-ApsOk set smokeNote from-smoke) 'set smokeNote'
 Assert-Equal 'from-smoke' (Invoke-ApsOk get smokeNote) 'get smokeNote'
 Assert-Match (Invoke-ApsOk schema) '"name":"smokeNote"' 'schema lists smokeNote'
+
+# Open object shapes validate declared fields while preserving recursive extras.
+$null = Invoke-ApsOk key add smokeSettings `
+    --type object `
+    --storage FileState `
+    --path smoke-settings.json `
+    --field name=String `
+    --field revision=Int `
+    --field alias=String `
+    --initial '{"name":"seed","revision":1,"alias":"seed-alias"}'
+$null = Invoke-ApsOk set smokeSettings `
+    '{"name":"agent","revision":2,"alias":"live","extra":{"tags":["swift",null,3],"ratio":1.5}}'
+$settingsJson = Invoke-ApsOk get smokeSettings --json
+Assert-Match $settingsJson '"value":\{' 'structural object value'
+Assert-Match $settingsJson '"tags":\["swift",null,3\]' 'recursive object array'
+Assert-Match $settingsJson '"ratio":1\.5' 'recursive object double'
+
+# Slice keys require an explicitly declared parent field of the same type.
+$null = Invoke-ApsOk key add smokeAlias `
+    --type String `
+    --storage Slice `
+    --initial seed-alias `
+    --slice-of smokeSettings `
+    --slice-field alias
+Assert-Equal 'slice-value' (Invoke-ApsOk set smokeAlias slice-value) 'set smokeAlias'
+Assert-Equal 'slice-value' (Invoke-ApsOk get smokeAlias) 'get smokeAlias'
+Assert-Match (Invoke-ApsOk get smokeSettings --json) `
+    '"alias":"slice-value"' `
+    'Slice writes parent field'
+$null = Invoke-ApsOk reset smokeAlias
+Assert-Equal 'seed-alias' (Invoke-ApsOk get smokeAlias) 'reset smokeAlias'
+Assert-Match (Invoke-ApsOk get smokeSettings --json) `
+    '"alias":"seed-alias"' `
+    'Slice reset restores initial'
+
+# userSchema.keyCount stays synchronized with the emitted keys array.
+$schemaDocument = (Invoke-ApsOk schema) | ConvertFrom-Json
+Assert-Equal `
+    ([string]$schemaDocument.keys.Count) `
+    ([string]$schemaDocument.userSchema.keyCount) `
+    'updated userSchema keyCount'
 
 # A forced seed entry is governed by schema.json, not its compiled DemoKey.
 $null = Invoke-ApsOk key add counter `

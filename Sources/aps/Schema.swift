@@ -5,76 +5,77 @@ import Foundation
 /// Static fields describe CLI contract shape. `keys` project the active
 /// `schema.json` registry. `schemaVersion` bumps when the document shape
 /// changes; `userSchema.hash` tracks key-set drift.
-enum Schema {
+internal enum Schema {
 
-    static let cliVersion = "1.0.0"
-    static let schemaVersion = 5
+    internal static let cliVersion = "1.0.0"
+    internal static let schemaVersion = 6
 
     // MARK: - Document model
 
-    struct Document: Encodable {
-        let cliVersion: String
-        let schemaVersion: Int
-        let stateRoot: StateRootDoc
-        let userSchema: UserSchemaMeta
-        let keys: [KeyEntry]
-        let commands: [CommandEntry]
-        let payloads: [String: Node]
-        let errors: [ErrorEntry]
+    internal struct Document: Encodable {
+        internal let cliVersion: String
+        internal let schemaVersion: Int
+        internal let stateRoot: StateRootDoc
+        internal let userSchema: UserSchemaMeta
+        internal let keys: [KeyEntry]
+        internal let commands: [CommandEntry]
+        internal let payloads: [String: Node]
+        internal let errors: [ErrorEntry]
     }
 
-    struct UserSchemaMeta: Encodable {
-        let formatVersion: Int
-        let hash: String
-        let path: String
+    internal struct UserSchemaMeta: Encodable {
+        internal let formatVersion: Int
+        internal let keyCount: Int
+        internal let hash: String
+        internal let path: String
     }
 
-    struct StateRootDoc: Encodable {
-        let precedence: [String]
-        let env: String
-        let flag: String
-        let defaultPath: String
+    internal struct StateRootDoc: Encodable {
+        internal let precedence: [String]
+        internal let env: String
+        internal let flag: String
+        internal let defaultPath: String
     }
 
-    struct KeyEntry: Encodable {
-        let name: String
-        let type: String
-        let storage: String
-        let lifetime: String
-        let path: String?
-        let keychainAccount: String?
+    internal struct KeyEntry: Encodable {
+        internal let name: String
+        internal let type: String
+        internal let storage: String
+        internal let lifetime: String
+        internal let path: String?
+        internal let keychainAccount: String?
     }
 
-    struct CommandEntry: Encodable {
-        let name: String
-        let summary: String
-        let arguments: [String]
-        let flags: [String]
-        let payload: String?
-        let streaming: Bool
+    internal struct CommandEntry: Encodable {
+        internal let name: String
+        internal let summary: String
+        internal let arguments: [String]
+        internal let flags: [String]
+        internal let payload: String?
+        internal let streaming: Bool
     }
 
-    struct ErrorEntry: Encodable {
-        let code: String
-        let exitCode: Int
-        let meaning: String
-        let hint: String
+    internal struct ErrorEntry: Encodable {
+        internal let code: String
+        internal let exitCode: Int
+        internal let meaning: String
+        internal let hint: String
     }
 
     // MARK: - Minimal JSON Schema subset
 
-    struct Property: Encodable {
-        let name: String
-        let node: Node
-        let required: Bool
+    internal struct Property: Encodable {
+        internal let name: String
+        internal let node: Node
+        internal let required: Bool
     }
 
-    indirect enum Node: Encodable {
+    internal indirect enum Node: Encodable {
         case prim(String)
         case obj([Property])
         case arr(Node)
 
-        func encode(to encoder: Encoder) throws {
+        internal func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
             switch self {
             case .prim(let type):
@@ -107,7 +108,7 @@ enum Schema {
     }
 
     @MainActor
-    static func document(stateDir: String? = nil) throws -> Document {
+    internal static func document(stateDir: String? = nil) throws -> Document {
         APSPaths.configure(stateDir: stateDir)
         let root = FileManager.defaultFileStatePath
         let schema = try UserSchema.loadOrMaterialize(stateRoot: root)
@@ -123,6 +124,7 @@ enum Schema {
             ),
             userSchema: UserSchemaMeta(
                 formatVersion: schema.formatVersion,
+                keyCount: schema.keys.count,
                 hash: hash,
                 path: "<state-root>/schema.json"
             ),
@@ -134,7 +136,7 @@ enum Schema {
     }
 
     /// Static fallback used by tests that do not touch the state root.
-    static func staticDocument() -> Document {
+    internal static func staticDocument() -> Document {
         let schema = UserSchema.defaultDocument()
         let hash = (try? UserSchema.hash(schema)) ?? ""
         return Document(
@@ -148,6 +150,7 @@ enum Schema {
             ),
             userSchema: UserSchemaMeta(
                 formatVersion: schema.formatVersion,
+                keyCount: schema.keys.count,
                 hash: hash,
                 path: "<state-root>/schema.json"
             ),
@@ -227,7 +230,7 @@ enum Schema {
                 name: "key",
                 summary: "Add, remove, or list schema.json entries.",
                 arguments: ["add|remove|list"],
-                flags: ["--json", "--state-dir", "--force", "--purge"],
+                flags: ["--json", "--state-dir", "--field", "--force", "--purge"],
                 payload: "KeysPayload",
                 streaming: false
             ),

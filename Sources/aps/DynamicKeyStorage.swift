@@ -57,20 +57,23 @@ enum DynamicKeyStorage {
     }
 
     static func get(entry: SchemaKeyEntry, stateRoot: String, schema: UserSchemaDocument) throws -> String {
+        let value: String
         switch entry.storage {
         case "State":
-            return memoryGet(entry)
+            value = memoryGet(entry)
         case "StoredState":
-            return storedGet(entry)
+            value = storedGet(entry)
         case "FileState":
-            return try fileGet(entry, stateRoot: stateRoot)
+            value = try fileGet(entry, stateRoot: stateRoot)
         case "EncryptedFile":
-            return try encryptedGet(entry, stateRoot: stateRoot)
+            value = try encryptedGet(entry, stateRoot: stateRoot)
         case "Slice":
-            return try sliceGet(entry: entry, stateRoot: stateRoot, schema: schema)
+            value = try sliceGet(entry: entry, stateRoot: stateRoot, schema: schema)
         default:
             throw APSError.schemaInvalid(reason: "unsupported storage \(entry.storage)")
         }
+        try validateReadValue(value, for: entry)
+        return value
     }
 
     static func set(
@@ -79,6 +82,7 @@ enum DynamicKeyStorage {
         stateRoot: String,
         schema: UserSchemaDocument
     ) throws {
+        _ = try requestedValue(value, for: entry)
         switch entry.storage {
         case "State":
             try memorySet(entry, value: value)
@@ -103,7 +107,13 @@ enum DynamicKeyStorage {
         fileOperations: FileOperations = .live,
         afterReset: () throws -> Void = {}
     ) throws -> ResetOutcome {
-        let initial = entry.initial?.wireString ?? ""
+        guard
+            let initialValue = entry.initial,
+            initialValue.matches(type: entry.type, objectShape: entry.objectShape)
+        else {
+            throw APSError.schemaInvalid(reason: "\(entry.name) initial does not match \(entry.type)")
+        }
+        let initial = initialValue.wireString
         switch entry.storage {
         case "State":
             let oldString = memoryStrings[entry.name]
@@ -113,9 +123,7 @@ enum DynamicKeyStorage {
                 memoryStrings.removeValue(forKey: entry.name)
                 memoryInts.removeValue(forKey: entry.name)
                 memoryBools.removeValue(forKey: entry.name)
-                if entry.initial != nil {
-                    try memorySet(entry, value: initial)
-                }
+                try memorySet(entry, value: initial)
                 try afterReset()
             } catch {
                 restoreMemoryValue(oldString, forKey: entry.name, in: &memoryStrings)
@@ -127,7 +135,7 @@ enum DynamicKeyStorage {
             let store = userDefaults
             try resetStoredValue(
                 entry,
-                initial: entry.initial == nil ? nil : initial,
+                initial: initial,
                 in: store,
                 afterReset: afterReset
             )
@@ -142,22 +150,18 @@ enum DynamicKeyStorage {
                     stateRoot: stateRoot,
                     operations: fileOperations
                 ) {
-                    if entry.initial != nil {
-                        try fileSetUnlocked(
-                            entry,
-                            value: initial,
-                            stateRoot: stateRoot,
-                            operations: fileOperations
-                        )
-                        guard try fileGet(
-                            entry,
-                            stateRoot: stateRoot,
-                            operations: fileOperations
-                        ) == initial else {
-                            throw APSError.persistenceFailed(key: entry.name)
-                        }
-                    } else {
-                        _ = try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
+                    try fileSetUnlocked(
+                        entry,
+                        value: initial,
+                        stateRoot: stateRoot,
+                        operations: fileOperations
+                    )
+                    guard try fileGet(
+                        entry,
+                        stateRoot: stateRoot,
+                        operations: fileOperations
+                    ) == initial else {
+                        throw APSError.persistenceFailed(key: entry.name)
                     }
                     try afterReset()
                 }
@@ -204,6 +208,31 @@ enum DynamicKeyStorage {
         return ResetOutcome(key: entry.name)
     }
 
+    private static func requestedValue(
+        _ rawValue: String,
+        for entry: SchemaKeyEntry
+    ) throws -> SchemaJSON {
+        guard
+            let value = SchemaJSON.parse(rawValue, as: entry.type),
+            value.matches(type: entry.type, objectShape: entry.objectShape)
+        else {
+            throw APSError.invalidValue(key: entry.name, value: rawValue)
+        }
+        return value
+    }
+
+    private static func validateReadValue(
+        _ rawValue: String,
+        for entry: SchemaKeyEntry
+    ) throws {
+        guard
+            let value = SchemaJSON.parse(rawValue, as: entry.type),
+            value.matches(type: entry.type, objectShape: entry.objectShape)
+        else {
+            throw APSError.corruptState(key: entry.name)
+        }
+    }
+
     private static func restoreMemoryValue<Value>(
         _ value: Value?,
         forKey key: String,
@@ -242,10 +271,7 @@ enum DynamicKeyStorage {
     static func requireDecodable(entry: SchemaKeyEntry, stateRoot: String) throws {
         switch entry.storage {
         case "FileState":
-            let url = try fileURL(entry, stateRoot: stateRoot)
-            guard FileManager.default.fileExists(atPath: url.path) else { return }
-            _ = try Data(contentsOf: url)
-            // Presence is enough; typed decode happens on get.
+            _ = try fileGet(entry, stateRoot: stateRoot)
         case "EncryptedFile":
             let store = try encryptedStore(entry, stateRoot: stateRoot)
             if store.hasSecret {
@@ -675,17 +701,13 @@ enum DynamicKeyStorage {
         } catch {
             throw APSError.corruptState(key: entry.name)
         }
-        if entry.type == "String" {
-            do {
-                return try JSONDecoder().decode(String.self, from: data)
-            } catch {
-                throw APSError.corruptState(key: entry.name)
-            }
-        }
-        guard let string = String(data: data, encoding: .utf8) else {
+        guard
+            let value = try? JSONDecoder().decode(SchemaJSON.self, from: data),
+            value.matches(type: entry.type, objectShape: entry.objectShape)
+        else {
             throw APSError.corruptState(key: entry.name)
         }
-        return string
+        return value.wireString
     }
 
     private static func fileSet(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
@@ -704,34 +726,13 @@ enum DynamicKeyStorage {
         stateRoot: String,
         operations: FileOperations = .live
     ) throws {
+        let requested = try requestedValue(value, for: entry)
         let url = try fileURL(entry, stateRoot: stateRoot)
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        let data: Data
-        if entry.type == "String" {
-            data = try JSONEncoder().encode(value)
-        } else if entry.type == "object" {
-            guard let valueData = value.data(using: .utf8),
-                  (try? JSONSerialization.jsonObject(with: valueData)) != nil
-            else {
-                throw APSError.invalidValue(key: entry.name, value: value)
-            }
-            data = valueData
-        } else if entry.type == "Int" {
-            guard let intValue = Int(value) else {
-                throw APSError.invalidValue(key: entry.name, value: value)
-            }
-            data = try JSONEncoder().encode(intValue)
-        } else if entry.type == "Bool" {
-            guard let boolValue = StateStore.parseBool(value) else {
-                throw APSError.invalidValue(key: entry.name, value: value)
-            }
-            data = try JSONEncoder().encode(boolValue)
-        } else {
-            throw APSError.invalidValue(key: entry.name, value: value)
-        }
+        let data = try JSONEncoder().encode(requested)
         do {
             try operations.write(data, url)
         } catch {
@@ -857,29 +858,22 @@ enum DynamicKeyStorage {
         guard let parentName = entry.sliceOf, let field = entry.sliceField else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
+        let declaredType = try sliceFieldType(entry: entry, parent: parent)
         let raw = try fileGet(parent, stateRoot: stateRoot, operations: operations)
         guard
             let data = raw.data(using: .utf8),
-            let object = try? JSONDecoder().decode([String: SchemaJSON].self, from: data)
+            let parentValue = try? JSONDecoder().decode(SchemaJSON.self, from: data),
+            case .object(let object) = parentValue
         else {
             throw APSError.corruptState(key: parentName)
         }
         guard let value = object[field] else {
             return entry.initial?.wireString ?? ""
         }
-        let declaredType = parent.objectShape?[field] ?? entry.type
-        switch (declaredType, value) {
-        case ("String", .string(let stringValue)):
-            return stringValue
-        case ("Int", .int(let intValue)):
-            return String(intValue)
-        case ("Bool", .bool(let boolValue)):
-            return boolValue ? "true" : "false"
-        case ("object", .object):
-            return value.wireString
-        default:
+        guard value.matches(type: declaredType, objectShape: entry.objectShape) else {
             throw APSError.corruptState(key: parentName)
         }
+        return value.wireString
     }
 
     private static func sliceSet(
@@ -904,11 +898,31 @@ enum DynamicKeyStorage {
     ) throws -> SchemaKeyEntry {
         guard
             let parentName = entry.sliceOf,
-            let parent = UserSchema.entry(named: parentName, in: schema)
+            let parent = UserSchema.entry(named: parentName, in: schema),
+            parent.type == "object",
+            parent.storage == "FileState"
         else {
-            throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
+            throw APSError.schemaInvalid(
+                reason: "slice \(entry.name) requires a FileState object parent"
+            )
         }
         return parent
+    }
+
+    private static func sliceFieldType(
+        entry: SchemaKeyEntry,
+        parent: SchemaKeyEntry
+    ) throws -> String {
+        guard
+            let field = entry.sliceField,
+            let declaredType = parent.objectShape?[field],
+            declaredType == entry.type
+        else {
+            throw APSError.schemaInvalid(
+                reason: "slice \(entry.name) field must be explicitly declared as \(entry.type)"
+            )
+        }
+        return declaredType
     }
 
     private static func sliceSetUnlocked(
@@ -921,43 +935,27 @@ enum DynamicKeyStorage {
         guard let parentName = entry.sliceOf, let field = entry.sliceField else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
+        let declaredType = try sliceFieldType(entry: entry, parent: parent)
+        let requested = try requestedValue(value, for: entry)
         let raw = try fileGet(parent, stateRoot: stateRoot, operations: operations)
         guard let inputData = raw.data(using: .utf8) else {
             throw APSError.corruptState(key: parentName)
         }
-        guard var object = try? JSONDecoder().decode([String: SchemaJSON].self, from: inputData) else {
+        guard
+            let parentValue = try? JSONDecoder().decode(SchemaJSON.self, from: inputData),
+            case .object(var object) = parentValue
+        else {
             throw APSError.corruptState(key: parentName)
         }
-        let declaredType = parent.objectShape?[field] ?? entry.type
-        switch declaredType {
-        case "Int":
-            guard let intValue = Int(value) else {
-                throw APSError.invalidValue(key: entry.name, value: value)
-            }
-            object[field] = .int(intValue)
-        case "Bool":
-            guard let boolValue = StateStore.parseBool(value) else {
-                throw APSError.invalidValue(key: entry.name, value: value)
-            }
-            object[field] = .bool(boolValue)
-        case "object":
-            guard
-                let valueData = value.data(using: .utf8),
-                let objectValue = try? JSONDecoder().decode(SchemaJSON.self, from: valueData),
-                case .object = objectValue
-            else {
-                throw APSError.invalidValue(key: entry.name, value: value)
-            }
-            object[field] = objectValue
-        case "String":
-            object[field] = .string(value)
-        default:
+        guard requested.matches(type: declaredType, objectShape: entry.objectShape) else {
             throw APSError.invalidValue(key: entry.name, value: value)
         }
-        let outputData = try JSONEncoder().encode(object)
-        guard let encoded = String(data: outputData, encoding: .utf8) else {
-            throw APSError.encodingFailed
+        object[field] = requested
+        let updatedParent = SchemaJSON.object(object)
+        guard updatedParent.matches(type: parent.type, objectShape: parent.objectShape) else {
+            throw APSError.corruptState(key: parentName)
         }
+        let encoded = updatedParent.wireString
         try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot, operations: operations)
     }
 }

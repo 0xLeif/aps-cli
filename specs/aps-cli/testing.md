@@ -51,11 +51,20 @@
 
 - Slice `profileName` writes land in parent `profile` FileState.
 - Torn FileState files surface `corruptState` (exit 65) on get/watch; missing files stay nil/initial.
-- Unit: schema materialize, key add, unknown_key, schemaVersion 5, peel/unlock/reset/lock tests
+- Unit: schema materialize, key add, unknown_key, schemaVersion 6,
+  userSchema.keyCount, peel/unlock/reset/lock tests
 - Smoke: key add/remove round-trip plus lexical, reserved, directory, symlink
   where supported, collision, reset, and purge path-safety cases (sh + ps1)
 - Registry authority: forced seed type, storage, path, initial value, Slice
   metadata, watch, dump, reset scope, and typed output use `SchemaKeyEntry`.
+- Recursive JSON: Codable and wire round trips cover null, Bool, Int, finite
+  Double, String, arrays, nested objects, and preservation of undeclared fields.
+- Open object shapes: every declared field is required and type-checked;
+  malformed or scalar FileState object data fails loudly without mutation.
+- Key-add CLI tests cover repeatable `--field NAME=TYPE`, malformed and
+  duplicate declarations, primitive rejection, and shaped-object round trips.
+- Slice schema tests require an explicitly declared, type-compatible parent
+  field and typed initial, including forward references and object Slice shapes.
 - Compatibility: default flag reads JSON-encoded legacy `App/aps.flag` data and
   reset prevents it from reappearing behind `aps.user.flag`.
 - Smoke: shell and PowerShell force `counter` from Int/State to

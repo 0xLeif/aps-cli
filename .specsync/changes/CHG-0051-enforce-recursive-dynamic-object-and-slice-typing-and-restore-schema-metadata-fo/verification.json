@@ -1,0 +1,21 @@
+{
+  "timestamp": 1785162873,
+  "commit": "ebedc5994e59454ef688f7206236207a9f6f9ac3",
+  "contract_digest": "4a6e6392c344b4cc1008f3203c8a41afd0e4d86d2440120ad7f7ff3b7dec25ac",
+  "workspace_digest": "ed2b4fcea7be2d3113a3f9f656026c83a95b0c831d5a2b12eb1f17c1e5f11469",
+  "passed": true,
+  "commands": [
+    {
+      "command": "fledge lanes run verify",
+      "success": true,
+      "exit_code": 0
+    }
+  ],
+  "requirement_ids": [
+    "REQ-aps-cli-019",
+    "REQ-aps-cli-024",
+    "REQ-aps-cli-031",
+    "REQ-state-store-022",
+    "REQ-state-store-024"
+  ]
+}

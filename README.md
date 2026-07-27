@@ -105,9 +105,21 @@ Add or remove keys at runtime:
 ```bash
 aps key add smokeNote --type String --storage FileState --path smoke-note.json --initial ''
 aps set smokeNote hello
+aps key add settings --type object --storage FileState --path settings.json \
+  --field name=String --field retries=Int \
+  --initial '{"name":"agent","retries":3,"features":{"watch":true}}'
+aps key add settingsName --type String --storage Slice \
+  --slice-of settings --slice-field name --initial ''
+aps get settings --json
 aps key remove smokeNote --purge
 aps key list --json
 ```
+
+`--field NAME=TYPE` is repeatable for object keys. Every declared field is
+required and type-checked, while undeclared fields are preserved. Object
+values are structural JSON and may recursively contain nulls, booleans,
+integers, finite doubles, strings, arrays, and objects. A Slice is valid only
+when its parent object declares `sliceField` with the same type as the Slice.
 
 Persistent schema paths must be portable relative file paths below the state root. `aps` rejects absolute or traversing paths, reserved APS files, case or Unicode-equivalent collisions, directories, special files, and paths that traverse symbolic links. Reset and purge delete only a validated regular-file leaf.
 
@@ -264,7 +276,7 @@ swift run aps key add agentNote --type String --storage FileState --path agent-n
 ```
 
 `aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion`
-(bumped when the document shape changes; currently **5**), live `userSchema` meta (formatVersion, keyCount, hash),
+(bumped when the document shape changes; currently **6**), live `userSchema` meta (`formatVersion`, `keyCount`, `hash`),
 state-root precedence, every registered key and command, payload shapes, and the error-code table. Live values stay in
 `aps dump`. ArgumentParser's full command tree is also available as JSON via
 `aps <cmd> --experimental-dump-help`.
@@ -277,6 +289,9 @@ state-root precedence, every registered key and command, payload shapes, and the
 
 - On a TTY: `keys` renders an aligned table with a bold header, JSON is pretty-printed, and semantic color is used sparingly (set `NO_COLOR` to disable).
 - When piped: `keys` is byte-stable TSV with no ANSI escapes, and all JSON is single-line compact.
+- Object values remain JSON objects in machine output. They are never
+  stringified, and recursively nested arrays, objects, nulls, and numeric
+  values retain their JSON kinds.
 - `watch --json` is an alias for `--jsonl`; `keys --quiet` prints key names only (handy for `xargs aps reset`).
 - Shell completions: `aps --generate-completion-script bash|zsh|fish` (install into your shell's completion directory).
 

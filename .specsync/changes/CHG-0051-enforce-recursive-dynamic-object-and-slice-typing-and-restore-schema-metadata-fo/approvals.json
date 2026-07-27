@@ -1,0 +1,40 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785160884,
+      "digest": "3dcd88be0b8f6b7cac8f0c9354f7ba2fbd86b1bc62891f8e5d6eb7f498a9053f",
+      "note": "Definition approved from three independent schema, runtime-output, and contract audits for claimed issue 114, with full recursive JSON, explicit Slice field typing, open object shapes, and schema version 6."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785162313,
+      "digest": "96f287fa44d184e68db409a679c2d4d26ce8694adc2ddc51b79c645d20b03df2",
+      "note": "Re-approved after implementation, smoke, public docs, and canonical spec synchronization; recursive JSON, open shapes, explicit Slice fields, schema version 6, and keyCount remain unchanged."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785162582,
+      "digest": "96f287fa44d184e68db409a679c2d4d26ce8694adc2ddc51b79c645d20b03df2",
+      "note": "Re-approved after adapting the public API table to SpecSync 5.2.0's indirect-case export parser; behavioral contract unchanged."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785162612,
+      "digest": "59c43704f4dbb7ca248b5b29b911cb02fad47c3660fee0a5bf18382aed9d380e",
+      "note": "Re-approved after recording completed local verification work and explicitly deferring stacked Trust and hosted evidence until the prerequisite change merges."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785162804,
+      "digest": "4a6e6392c344b4cc1008f3203c8a41afd0e4d86d2440120ad7f7ff3b7dec25ac",
+      "note": "Re-approved after binding exact requirement IDs to their unit and smoke evidence in testing.md."
+    }
+  ],
+  "reopenings": []
+}

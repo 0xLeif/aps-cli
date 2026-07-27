@@ -49,12 +49,11 @@
 - Windows lock recovery distinguishes live, dead, indeterminate, corrupt, and
   same-process-orphan owners; only proven-dead or safely orphaned locks are
   reclaimed.
-- Bulk reset rejects incompatible parent/Slice and sibling Slice initial values,
-  including sibling values with identical SchemaJSON initials but different
-  effective types on an unshaped parent field, without falsely reporting
-  overwritten outcomes as successful.
-- Bulk reset accepts an omitted parent field when the Slice initial provides
-  the observable fallback.
+- Schema loading rejects missing, wrong-kind, and non-FileState Slice parents;
+  undeclared Slice fields; parent-field/type mismatches; untyped or mistyped
+  initials; and incompatible object Slice shapes.
+- Valid forward Slice references and declared String, Int, Bool, and object
+  Slice fields preserve their recursive JSON types through get, set, and reset.
 - The seed dump preserves seed ordering while typing forced seed values and
   reporting storage metadata from the resolved registry entry.
 - The seed dump reads unchanged default State values from their live AppState
@@ -76,11 +75,13 @@
   portable case-fold aliases.
 - Storage-lock acquisition failure tests require the selected key in the
   `persistence_failed` error.
-- Bool Slice verification uses the declared parent object shape.
-- Unshaped Bool Slice reads use the Slice entry type and reject JSON integer
-  values instead of accepting Foundation numeric bridging.
-- Unshaped String, Int, Bool, and object Slice set/reset round trips preserve
-  their declared JSON types.
+- Bool Slice verification uses the explicitly declared parent object shape and
+  rejects JSON integer values instead of accepting Foundation numeric bridging.
+- Dynamic adapters validate recursive objects before mutation. FileState reads
+  reject non-object roots, missing declared fields, and wrong field types as
+  corrupt state while preserving valid undeclared fields.
+- SchemaJSON tests cover null, Bool, Int, finite Double, String, array, and
+  nested object Codable and wire round trips.
 - Staged deletion restores FileState and secret envelope data when
   postcondition inspection fails.
 - Staged deletion requires both the original and staging leaves to be absent
