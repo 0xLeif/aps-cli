@@ -39,6 +39,7 @@ public enum SchemaFileLock {
             processLock: schemaProcessLock,
             stateRoot: stateRoot,
             lockFileName: "schema.json.lock",
+            resourceKey: UserSchema.fileName,
             body
         )
     }
@@ -46,12 +47,14 @@ public enum SchemaFileLock {
     internal static func withExclusiveStorageLock<T>(
         stateRoot: String,
         lockFileName: String,
+        resourceKey: String,
         _ body: () throws -> T
     ) throws -> T {
         try withExclusiveLock(
             processLock: storageProcessLock,
             stateRoot: stateRoot,
             lockFileName: lockFileName,
+            resourceKey: resourceKey,
             body
         )
     }
@@ -60,6 +63,7 @@ public enum SchemaFileLock {
         processLock: NSLock,
         stateRoot: String,
         lockFileName: String,
+        resourceKey: String,
         _ body: () throws -> T
     ) throws -> T {
         processLock.lock()
@@ -72,15 +76,25 @@ public enum SchemaFileLock {
                 withIntermediateDirectories: true
             )
         } catch {
-            throw APSError.persistenceFailed(key: UserSchema.fileName)
+            throw APSError.persistenceFailed(key: resourceKey)
         }
 
         let safeLockFileName = URL(fileURLWithPath: lockFileName).lastPathComponent
 
         #if os(Windows)
-        return try withWindowsLock(stateRoot: stateRoot, lockFileName: safeLockFileName, body)
+        return try withWindowsLock(
+            stateRoot: stateRoot,
+            lockFileName: safeLockFileName,
+            resourceKey: resourceKey,
+            body
+        )
         #else
-        return try withPOSIXLock(stateRoot: stateRoot, lockFileName: safeLockFileName, body)
+        return try withPOSIXLock(
+            stateRoot: stateRoot,
+            lockFileName: safeLockFileName,
+            resourceKey: resourceKey,
+            body
+        )
         #endif
     }
 
@@ -88,6 +102,7 @@ public enum SchemaFileLock {
     private static func withPOSIXLock<T>(
         stateRoot: String,
         lockFileName: String,
+        resourceKey: String,
         _ body: () throws -> T
     ) throws -> T {
         let lockURL = URL(fileURLWithPath: stateRoot)
@@ -97,7 +112,7 @@ public enum SchemaFileLock {
         }
         let fd = open(lockURL.path, O_RDWR)
         guard fd >= 0 else {
-            throw APSError.persistenceFailed(key: UserSchema.fileName)
+            throw APSError.persistenceFailed(key: resourceKey)
         }
         defer { close(fd) }
 
@@ -114,7 +129,7 @@ public enum SchemaFileLock {
             if errno == EINTR {
                 continue
             }
-            throw APSError.persistenceFailed(key: UserSchema.fileName)
+            throw APSError.persistenceFailed(key: resourceKey)
         }
         defer {
             var unlock = flock()
@@ -140,6 +155,7 @@ public enum SchemaFileLock {
     private static func withWindowsLock<T>(
         stateRoot: String,
         lockFileName: String,
+        resourceKey: String,
         _ body: () throws -> T
     ) throws -> T {
         let heldURL = URL(fileURLWithPath: stateRoot)
@@ -147,7 +163,7 @@ public enum SchemaFileLock {
         let deadline = Date().addingTimeInterval(60)
         while true {
             if Date() >= deadline {
-                throw APSError.persistenceFailed(key: UserSchema.fileName)
+                throw APSError.persistenceFailed(key: resourceKey)
             }
             let payload = HeldPayload(
                 pid: GetCurrentProcessId(),

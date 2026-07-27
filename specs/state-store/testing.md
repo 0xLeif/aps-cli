@@ -33,14 +33,20 @@
   without falsely reporting overwritten outcomes as successful.
 - Bulk reset accepts an omitted parent field when the Slice initial provides
   the observable fallback.
+- Bulk reset rejects a present integer parent initial when the Slice initial is
+  the same wire text represented as a string.
 - StoredState reset restores canonical and legacy raw objects after detected
   replacement or synchronization failure; Linux and Windows smoke verify
   cross-process `UserDefaults` persistence.
+- Registered StoredState set tests drop a canonical write while synchronization
+  succeeds and require persistence failure plus exact prior-object rollback.
 - StoredState and staged-file rollback tests inject repeated synchronization,
   dropped restoration-write, and move-back failures and require
   `rollback_failed` with a truthful resource-specific description and hint.
 - Storage-lock name tests cover nested `schema.json`, same basenames, and
   portable case-fold aliases.
+- Storage-lock acquisition failure tests require the selected key in the
+  `persistence_failed` error.
 - Bool Slice verification uses the declared parent object shape.
 - Unshaped Bool Slice reads use the Slice entry type and reject JSON integer
   values instead of accepting Foundation numeric bridging.

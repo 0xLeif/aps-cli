@@ -86,7 +86,8 @@ enum DynamicKeyStorage {
             if entry.initial != nil {
                 try SchemaFileLock.withExclusiveStorageLock(
                     stateRoot: stateRoot,
-                    lockFileName: try fileLockName(entry)
+                    lockFileName: try fileLockName(entry),
+                    resourceKey: entry.name
                 ) {
                     try fileSetUnlocked(entry, value: initial, stateRoot: stateRoot)
                     guard try fileGet(entry, stateRoot: stateRoot) == initial else {
@@ -96,7 +97,8 @@ enum DynamicKeyStorage {
             } else {
                 _ = try SchemaFileLock.withExclusiveStorageLock(
                     stateRoot: stateRoot,
-                    lockFileName: try fileLockName(entry)
+                    lockFileName: try fileLockName(entry),
+                    resourceKey: entry.name
                 ) {
                     try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
                 }
@@ -107,7 +109,8 @@ enum DynamicKeyStorage {
             let parent = try sliceParent(entry: entry, schema: schema)
             try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: stateRoot,
-                lockFileName: try fileLockName(parent)
+                lockFileName: try fileLockName(parent),
+                resourceKey: entry.name
             ) {
                 try sliceSetUnlocked(
                     entry: entry,
@@ -130,7 +133,8 @@ enum DynamicKeyStorage {
         case "FileState":
             _ = try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: stateRoot,
-                lockFileName: try fileLockName(entry)
+                lockFileName: try fileLockName(entry),
+                resourceKey: entry.name
             ) {
                 try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
             }
@@ -422,10 +426,81 @@ enum DynamicKeyStorage {
     }
 
     private static func storedSet(_ entry: SchemaKeyEntry, value: String) throws {
+        try validateStoredValue(entry, value: value)
         let store = userDefaults
-        try storedSet(entry, value: value, in: store)
-        guard synchronize(store) else {
-            throw APSError.persistenceFailed(key: entry.name)
+        let canonicalKey = storedDefaultsKey(entry.name)
+        let oldCanonical = store.object(forKey: canonicalKey)
+        let oldLegacy = usesLegacyFlagStorage(entry) ? store.object(forKey: legacyFlagDefaultsKey) : nil
+
+        do {
+            try storedSet(entry, value: value, in: store)
+            guard
+                synchronize(store),
+                storedCanonicalValueMatches(entry, value: value, in: store)
+            else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+        } catch {
+            try restoreStoredObjects(
+                canonical: oldCanonical,
+                legacy: oldLegacy,
+                entry: entry,
+                in: store,
+                after: error
+            )
+            throw error
+        }
+    }
+
+    private static func validateStoredValue(_ entry: SchemaKeyEntry, value: String) throws {
+        switch entry.type {
+        case "Int":
+            guard Int(value) != nil else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+        case "Bool":
+            guard StateStore.parseBool(value) != nil else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+        default:
+            break
+        }
+    }
+
+    private static func storedCanonicalValueMatches(
+        _ entry: SchemaKeyEntry,
+        value: String,
+        in store: any UserDefaultsManaging
+    ) -> Bool {
+        guard
+            let object = store.object(forKey: storedDefaultsKey(entry.name)),
+            JSONSerialization.isValidJSONObject([object]),
+            let data = try? JSONSerialization.data(withJSONObject: [object])
+        else {
+            return false
+        }
+        switch entry.type {
+        case "Int":
+            guard
+                let expected = Int(value),
+                let persisted = try? JSONDecoder().decode([Int].self, from: data)
+            else {
+                return false
+            }
+            return persisted == [expected]
+        case "Bool":
+            guard
+                let expected = StateStore.parseBool(value),
+                let persisted = try? JSONDecoder().decode([Bool].self, from: data)
+            else {
+                return false
+            }
+            return persisted == [expected]
+        default:
+            guard let persisted = try? JSONDecoder().decode([String].self, from: data) else {
+                return false
+            }
+            return persisted == [value]
         }
     }
 
@@ -522,7 +597,8 @@ enum DynamicKeyStorage {
     private static func fileSet(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
         try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
-            lockFileName: try fileLockName(entry)
+            lockFileName: try fileLockName(entry),
+            resourceKey: entry.name
         ) {
             try fileSetUnlocked(entry, value: value, stateRoot: stateRoot)
         }
@@ -642,7 +718,8 @@ enum DynamicKeyStorage {
         let parent = try sliceParent(entry: entry, schema: schema)
         try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
-            lockFileName: try fileLockName(parent)
+            lockFileName: try fileLockName(parent),
+            resourceKey: entry.name
         ) {
             try sliceSetUnlocked(entry: entry, parent: parent, value: value, stateRoot: stateRoot)
         }

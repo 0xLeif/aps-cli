@@ -187,18 +187,24 @@ Acceptance Criteria
   StoredState value, or staged file that could not be restored.
 - Bulk reset stops at the first failure, identifies reset, failed, and
   not-attempted keys, and records stats only for successful keys.
-- Parent/Slice compatibility treats an omitted parent initial field as the
-  Slice initial fallback.
+- Parent/Slice compatibility compares an explicitly present parent field and
+  Slice initial with type-sensitive `SchemaJSON` equality, while an omitted
+  parent field uses the Slice initial fallback.
 - StoredState resets restore canonical and legacy backing objects when
   replacement verification fails.
 - StoredState rollback verifies exact raw-object restoration and reports
   `rollback_failed` if restoration cannot be synchronized or verified.
+- Registered StoredState set synchronizes and type-checks the canonical object,
+  treating a dropped or mistyped write as persistence failure and restoring
+  the exact prior object.
 - Destructive leaf removal stages the original regular file and restores it
   when post-delete verification fails.
 - Failed staged-leaf restoration reports `rollback_failed` instead of masking
   data stranded under the staging name.
 - FileState and Slice storage locks derive from the full portable relative path
   and cannot alias `schema.json.lock` or another same-basename storage path.
+- Storage-lock acquisition failures report the affected FileState, Slice, or
+  encrypted key rather than misidentifying the failure as `schema.json`.
 - Slice reads use the Slice entry type when the parent object shape omits the
   field and reject JSON values of another primitive type.
 - Documentation-only edits to a default entry preserve its default adapter

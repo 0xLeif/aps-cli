@@ -120,7 +120,8 @@ public struct SecretStore: Sendable {
         _ = try validatedStoragePath()
         try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: directory,
-            lockFileName: "secret.store.lock"
+            lockFileName: "secret.store.lock",
+            resourceKey: keyName
         ) {
             try setUnlocked(value)
         }
@@ -170,7 +171,8 @@ public struct SecretStore: Sendable {
         do {
             return try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: directory,
-                lockFileName: "secret.store.lock"
+                lockFileName: "secret.store.lock",
+                resourceKey: keyName
             ) {
                 try storagePath.removeRegularFileIfPresent(
                     stateRoot: directory,
@@ -309,7 +311,8 @@ public struct SecretStore: Sendable {
 
         return try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: directory,
-            lockFileName: "secret.key.lock"
+            lockFileName: "secret.key.lock",
+            resourceKey: keyName
         ) {
             try loadOrCreateKeyFileUnlocked()
         }

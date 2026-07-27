@@ -247,8 +247,7 @@ extension StateStore {
         guard
             let field = slice.sliceField,
             case .object(let initialObject) = parent.initial,
-            (initialObject[field]?.wireString ?? slice.initial?.wireString ?? "")
-                == (slice.initial?.wireString ?? "")
+            (initialObject[field] ?? slice.initial) == slice.initial
         else {
             return .schemaInvalid(
                 reason: "\(slice.name) initial conflicts with selected parent reset '\(parent.name)'"

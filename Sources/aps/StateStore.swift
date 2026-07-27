@@ -142,7 +142,8 @@ public final class StateStore {
             }
             try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: FileManager.defaultFileStatePath,
-                lockFileName: "profile.json.lock"
+                lockFileName: "profile.json.lock",
+                resourceKey: DemoKey.profile.rawValue
             ) {
                 try Self.refreshProfileFileStateFromDisk()
                 var state = Application.fileState(\.profile)
@@ -161,7 +162,8 @@ public final class StateStore {
             // ProfileDocument cannot clobber a newer on-disk version.
             try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: FileManager.defaultFileStatePath,
-                lockFileName: "profile.json.lock"
+                lockFileName: "profile.json.lock",
+                resourceKey: DemoKey.profileName.rawValue
             ) {
                 try Self.refreshProfileFileStateFromDisk()
                 let expectedVersion = (try? Self.readProfileFromDisk())?.version ?? 0
@@ -387,7 +389,8 @@ public final class StateStore {
     private func synchronizeNoteAdapter() throws {
         try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
-            lockFileName: "note.json.lock"
+            lockFileName: "note.json.lock",
+            resourceKey: DemoKey.note.rawValue
         ) {
             let fresh = try Self.readNoteFromDiskIfPresent() ?? ""
             var state = Application.fileState(\.note)
@@ -403,7 +406,8 @@ public final class StateStore {
     private func synchronizeProfileAdapter() throws {
         try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
-            lockFileName: "profile.json.lock"
+            lockFileName: "profile.json.lock",
+            resourceKey: DemoKey.profile.rawValue
         ) {
             let fresh = try Self.readProfileFromDiskIfPresent() ?? ProfileDocument()
             var state = Application.fileState(\.profile)
@@ -425,7 +429,8 @@ public final class StateStore {
     ) throws {
         try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
-            lockFileName: "profile.json.lock"
+            lockFileName: "profile.json.lock",
+            resourceKey: DemoKey.profileName.rawValue
         ) {
             afterAcquiringStorageLock()
             try Self.refreshProfileFileStateFromDisk()

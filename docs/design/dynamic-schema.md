@@ -167,7 +167,7 @@ Replace compile-time-only dispatch with a loaded registry:
 | Storage | Adapter idea |
 |---------|----------------|
 | `State` | Process-local map in `Application` / in-memory box keyed by name |
-| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
+| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; writes synchronize, type-check the canonical object, and restore its exact prior value after detected failure; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
 | `FileState` | JSON file at `path` (string or object document) |
 | `EncryptedFile` | Reuse #35 envelope helpers with configurable filename |
 | `Slice` | Read/write parent object field |
@@ -205,12 +205,16 @@ A FileState reset with an initial value atomically overwrites that value under
 the per-file lock instead of deleting first. EncryptedFile reset uses
 `secret.store.lock`, removes only the envelope, verifies its absence, and
 preserves `secret.key`.
+Parent and Slice reset initials compare as typed `SchemaJSON` values when the
+parent field is present. Only an omitted parent field selects the Slice initial
+as its fallback.
 Default FileState adapters then reload the current disk value under the same
 storage lock. They update the AppState cache without deleting or replacing a
 valid write that arrived after the registry reset.
 FileState and Slice lock names are derived from the full portable relative path,
 so nested `schema.json` files and same-basename files cannot alias the registry
-lock or each other.
+lock or each other. If a storage lock cannot be acquired, the persistence error
+names the selected FileState, Slice, or encrypted key, not `schema.json`.
 
 `key remove --purge` keeps the schema lock while it writes the candidate schema
 and deletes the old storage. If deletion reports an error, it restores the

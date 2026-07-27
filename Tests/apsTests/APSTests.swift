@@ -1831,6 +1831,25 @@ final class APSTests: XCTestCase {
     }
 #endif
 
+    func testStorageLockAcquisitionFailureNamesAffectedKey() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-storage-lock-root-\(UUID().uuidString)")
+        XCTAssertTrue(FileManager.default.createFile(atPath: root.path, contents: Data()))
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        XCTAssertThrowsError(
+            try SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: root.path,
+                lockFileName: "profile.json.lock",
+                resourceKey: "profileName"
+            ) {
+                XCTFail("Body must not run when storage lock acquisition fails")
+            }
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "profileName"))
+        }
+    }
+
 #if os(Windows)
     func testSchemaFileLockPropagatesBodyErrors() throws {
         let root = FileManager.default.temporaryDirectory
@@ -1840,7 +1859,8 @@ final class APSTests: XCTestCase {
         XCTAssertThrowsError(
             try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: root.path,
-                lockFileName: "secret.store.lock"
+                lockFileName: "secret.store.lock",
+                resourceKey: "secret"
             ) {
                 throw APSError.secretUnlockFailed
             }
@@ -2171,7 +2191,8 @@ final class APSTests: XCTestCase {
             competingWriterAttempting.signal()
             if (try? SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: root,
-                lockFileName: "profile.json.lock"
+                lockFileName: "profile.json.lock",
+                resourceKey: "profileName"
             ) {}) != nil {
                 competingWriterAcquired.signal()
             }
@@ -2562,6 +2583,44 @@ extension APSTests {
     }
 
     @MainActor
+    internal func testBulkResetRejectsTypeDistinctParentAndSliceInitials() async {
+        let parent = SchemaKeyEntry(
+            name: "parent",
+            type: "object",
+            storage: "FileState",
+            initial: .object(["value": .int(1)]),
+            path: "parent.json",
+            doc: "parent",
+            objectShape: ["value": "Int"]
+        )
+        let slice = SchemaKeyEntry(
+            name: "childValue",
+            type: "String",
+            storage: "Slice",
+            initial: .string("1"),
+            doc: "child",
+            sliceOf: "parent",
+            sliceField: "value"
+        )
+        let schema = UserSchemaDocument(keys: [parent, slice])
+        let store = StateStore()
+
+        let error = store.bulkResetCompatibilityError(
+            for: parent.name,
+            at: 0,
+            selectedNames: [parent.name, slice.name],
+            schema: schema
+        )
+
+        XCTAssertEqual(
+            error,
+            .schemaInvalid(
+                reason: "childValue initial conflicts with selected parent reset 'parent'"
+            )
+        )
+    }
+
+    @MainActor
     internal func testDocumentationOnlyDefaultChangeStillUsesDemoAdapter() async throws {
         var schema = UserSchema.defaultDocument()
         let flagIndex = try XCTUnwrap(schema.keys.firstIndex(where: { $0.name == "flag" }))
@@ -2681,6 +2740,36 @@ extension APSTests {
             XCTAssertEqual(error as? APSError, .persistenceFailed(key: entry.name))
         }
         XCTAssertNil(defaults.object(forKey: "aps.user.\(entry.name)"))
+    }
+
+    @MainActor
+    internal func testStoredStateSetRejectsDroppedCanonicalWriteAndRestoresPriorObject() async throws {
+        let defaults = OneShotDroppingUserDefaults()
+        let canonicalKey = "aps.user.droppedSet"
+        defaults.seed("before", forKey: canonicalKey)
+        defaults.dropNextSet(forKey: canonicalKey)
+        let override = Application.override(\Application.userDefaults, with: defaults)
+        defer { _ = override }
+        let entry = SchemaKeyEntry(
+            name: "droppedSet",
+            type: "String",
+            storage: "StoredState",
+            initial: .string("initial"),
+            doc: "Dropped registered set write"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.set(
+                entry: entry,
+                value: "after",
+                stateRoot: "/tmp",
+                schema: schema
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: entry.name))
+        }
+        XCTAssertEqual(defaults.object(forKey: canonicalKey) as? String, "before")
     }
 }
 
