@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 48,
-  "id": "CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112",
+  "sequence": 49,
+  "id": "CHG-0049-make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113",
   "acknowledged_collisions": []
 }

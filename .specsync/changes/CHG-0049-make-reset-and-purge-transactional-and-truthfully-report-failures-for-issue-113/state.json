@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0049-make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113",
+  "slug": "make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113",
+  "title": "Make reset and purge transactional and truthfully report failures for issue 113",
+  "description": "Make reset and purge transactional and truthfully report failures for issue 113",
+  "kind": "bug_fix",
+  "state": "draft",
+  "base_commit": "da5c9b76fb25714ad58b0841a9f7203f766c5a15",
+  "created_at": 1785120678,
+  "updated_at": 1785120725,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/SecretStore.swift",
+    "Sources/aps/StateStore.swift",
+    "Sources/aps/StateStore+Registry.swift",
+    "Sources/aps/DynamicKeyStorage.swift",
+    "Sources/aps/SchemaStoragePath.swift",
+    "Sources/aps/SchemaFileLock.swift",
+    "Sources/aps/Aps.swift",
+    "Sources/aps/CLIOutput.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Scripts/smoke.sh",
+    "Scripts/smoke.ps1",
+    "README.md",
+    "docs/design/dynamic-schema.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Detected reset and purge persistence failures produce stable nonzero errors and no false success; secret envelope deletion is locked and postcondition-verified while preserving shared key material; schema removal with purge holds the schema lock and restores the original schema on detected purge failure; bulk reset reports reset, failed, and not-attempted keys with stats only for successes; deterministic tests cover wrong-kind and unwritable paths, injected deletion and rollback failures, concurrent path reuse, secret reset races, and macOS Linux Windows behavior."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}
