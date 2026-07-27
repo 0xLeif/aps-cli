@@ -84,7 +84,7 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
     /// `key add` would overwrite an existing entry without force.
     case schemaConflict(name: String)
     /// Purge failed and the original schema could not be restored.
-    case rollbackFailed
+    case rollbackFailed(purgeErrorCode: String, purgeErrorDescription: String)
 
     /// sysexits `EX_DATAERR` (65): input/state data was present but unusable.
     public static let corruptStateExitCode: Int32 = 65
@@ -109,9 +109,10 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
             return "Unknown key '\(name)'"
         case .schemaConflict(let name):
             return "Key '\(name)' already exists in schema.json"
-        case .rollbackFailed:
+        case .rollbackFailed(let purgeErrorCode, let purgeErrorDescription):
             return "Failed to restore schema.json after purge failed; "
-                + "the retained data may no longer match the registry"
+                + "the retained data may no longer match the registry. "
+                + "Original purge failure [\(purgeErrorCode)]: \(purgeErrorDescription)"
         }
     }
 

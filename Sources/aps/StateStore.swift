@@ -171,12 +171,21 @@ public final class StateStore {
     @discardableResult
     public func resetAll() throws -> BulkResetReport {
         let schema = try loadSchema()
-        let selected = DemoKey.allCases.filter { key in
-            schema.keys.contains(where: { $0.name == key.rawValue })
+        let selected = schema.keys.compactMap { entry in
+            DemoKey(rawValue: entry.name)
         }
+        let selectedNames = selected.map(\.rawValue)
         var resetNames: [String] = []
         for (index, key) in selected.enumerated() {
             do {
+                if let error = bulkResetCompatibilityError(
+                    for: key.rawValue,
+                    at: index,
+                    selectedNames: selectedNames,
+                    schema: schema
+                ) {
+                    throw error
+                }
                 _ = try reset(key)
                 resetNames.append(key.rawValue)
             } catch let error as APSError {

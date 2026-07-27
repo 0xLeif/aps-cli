@@ -75,18 +75,27 @@ enum DynamicKeyStorage {
                 try memorySet(entry, value: initial)
             }
         case "StoredState":
-            try removeStoredValue(entry)
+            let store = userDefaults
+            try removeStoredValue(entry, from: store)
             if entry.initial != nil {
-                try storedSet(entry, value: initial)
+                try storedSet(entry, value: initial, in: store)
             }
-            guard storedGet(entry) == initial else {
+            guard synchronize(store) else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+            guard storedPersistedValue(entry, in: store) == (entry.initial == nil ? nil : initial) else {
                 throw APSError.persistenceFailed(key: entry.name)
             }
         case "FileState":
             if entry.initial != nil {
-                try fileSet(entry, value: initial, stateRoot: stateRoot)
-                guard try fileGet(entry, stateRoot: stateRoot) == initial else {
-                    throw APSError.persistenceFailed(key: entry.name)
+                try SchemaFileLock.withExclusiveStorageLock(
+                    stateRoot: stateRoot,
+                    lockFileName: fileLockName(entry)
+                ) {
+                    try fileSetUnlocked(entry, value: initial, stateRoot: stateRoot)
+                    guard try fileGet(entry, stateRoot: stateRoot) == initial else {
+                        throw APSError.persistenceFailed(key: entry.name)
+                    }
                 }
             } else {
                 _ = try SchemaFileLock.withExclusiveStorageLock(
@@ -99,9 +108,20 @@ enum DynamicKeyStorage {
         case "EncryptedFile":
             _ = try encryptedStore(entry, stateRoot: stateRoot).reset()
         case "Slice":
-            try sliceSet(entry: entry, value: initial, stateRoot: stateRoot, schema: schema)
-            guard try sliceGet(entry: entry, stateRoot: stateRoot, schema: schema) == initial else {
-                throw APSError.persistenceFailed(key: entry.name)
+            let parent = try sliceParent(entry: entry, schema: schema)
+            try SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: stateRoot,
+                lockFileName: fileLockName(parent)
+            ) {
+                try sliceSetUnlocked(
+                    entry: entry,
+                    parent: parent,
+                    value: initial,
+                    stateRoot: stateRoot
+                )
+                guard try sliceGetUnlocked(entry: entry, parent: parent, stateRoot: stateRoot) == initial else {
+                    throw APSError.persistenceFailed(key: entry.name)
+                }
             }
         default:
             throw APSError.schemaInvalid(reason: "unsupported storage \(entry.storage)")
@@ -191,13 +211,20 @@ enum DynamicKeyStorage {
     }
 
     internal static func removeStoredValue(_ entry: SchemaKeyEntry) throws {
-        let store = userDefaults
+        try removeStoredValue(entry, from: userDefaults)
+    }
+
+    private static func removeStoredValue(
+        _ entry: SchemaKeyEntry,
+        from store: any UserDefaultsManaging
+    ) throws {
         store.removeObject(forKey: storedDefaultsKey(entry.name))
         if usesLegacyFlagStorage(entry) {
             store.removeObject(forKey: legacyFlagDefaultsKey)
         }
-        (store as? UserDefaults)?.synchronize()
-        UserDefaults.standard.synchronize()
+        guard synchronize(store) else {
+            throw APSError.persistenceFailed(key: entry.name)
+        }
         guard store.object(forKey: storedDefaultsKey(entry.name)) == nil else {
             throw APSError.persistenceFailed(key: entry.name)
         }
@@ -213,8 +240,10 @@ enum DynamicKeyStorage {
         entry.name == "flag" && entry.type == "Bool" && entry.storage == "StoredState"
     }
 
-    private static func storedObject(_ entry: SchemaKeyEntry) -> Any? {
-        let store = userDefaults
+    private static func storedObject(
+        _ entry: SchemaKeyEntry,
+        in store: any UserDefaultsManaging
+    ) -> Any? {
         if let object = store.object(forKey: storedDefaultsKey(entry.name)) {
             return object
         }
@@ -256,28 +285,56 @@ enum DynamicKeyStorage {
     }
 
     private static func storedGet(_ entry: SchemaKeyEntry) -> String {
+        storedPersistedValue(entry, in: userDefaults)
+            ?? entry.initial?.wireString
+            ?? storedFallbackValue(entry)
+    }
+
+    private static func storedFallbackValue(_ entry: SchemaKeyEntry) -> String {
+        switch entry.type {
+        case "Int": return "0"
+        case "Bool": return "false"
+        default: return ""
+        }
+    }
+
+    private static func storedPersistedValue(
+        _ entry: SchemaKeyEntry,
+        in store: any UserDefaultsManaging
+    ) -> String? {
         switch entry.type {
         case "Int":
-            if let object = storedObject(entry), let intValue = decodeStoredInt(object) {
+            if let object = storedObject(entry, in: store), let intValue = decodeStoredInt(object) {
                 return String(intValue)
             }
-            return entry.initial?.wireString ?? "0"
+            return nil
         case "Bool":
-            if let object = storedObject(entry), let boolValue = decodeStoredBool(object) {
+            if let object = storedObject(entry, in: store), let boolValue = decodeStoredBool(object) {
                 return boolValue ? "true" : "false"
             }
-            return entry.initial?.wireString ?? "false"
+            return nil
         default:
-            if let object = storedObject(entry), let stringValue = decodeStoredString(object) {
+            if let object = storedObject(entry, in: store), let stringValue = decodeStoredString(object) {
                 return stringValue
             }
-            return entry.initial?.wireString ?? ""
+            return nil
         }
     }
 
     private static func storedSet(_ entry: SchemaKeyEntry, value: String) throws {
-        let key = storedDefaultsKey(entry.name)
         let store = userDefaults
+        try storedSet(entry, value: value, in: store)
+        guard synchronize(store) else {
+            throw APSError.persistenceFailed(key: entry.name)
+        }
+    }
+
+    private static func storedSet(
+        _ entry: SchemaKeyEntry,
+        value: String,
+        in store: any UserDefaultsManaging
+    ) throws {
+        let key = storedDefaultsKey(entry.name)
         switch entry.type {
         case "Int":
             guard let intValue = Int(value) else {
@@ -292,8 +349,11 @@ enum DynamicKeyStorage {
         default:
             store.set(value, forKey: key)
         }
-        (store as? UserDefaults)?.synchronize()
-        UserDefaults.standard.synchronize()
+    }
+
+    private static func synchronize(_ store: any UserDefaultsManaging) -> Bool {
+        guard let defaults = store as? UserDefaults else { return true }
+        return defaults.synchronize()
     }
 
     // MARK: - FileState
@@ -417,11 +477,16 @@ enum DynamicKeyStorage {
         stateRoot: String,
         schema: UserSchemaDocument
     ) throws -> String {
-        guard
-            let parentName = entry.sliceOf,
-            let field = entry.sliceField,
-            let parent = UserSchema.entry(named: parentName, in: schema)
-        else {
+        let parent = try sliceParent(entry: entry, schema: schema)
+        return try sliceGetUnlocked(entry: entry, parent: parent, stateRoot: stateRoot)
+    }
+
+    private static func sliceGetUnlocked(
+        entry: SchemaKeyEntry,
+        parent: SchemaKeyEntry,
+        stateRoot: String
+    ) throws -> String {
+        guard let parentName = entry.sliceOf, let field = entry.sliceField else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
         let raw = try fileGet(parent, stateRoot: stateRoot)
@@ -445,54 +510,73 @@ enum DynamicKeyStorage {
         stateRoot: String,
         schema: UserSchemaDocument
     ) throws {
-        guard
-            let parentName = entry.sliceOf,
-            let field = entry.sliceField,
-            let parent = UserSchema.entry(named: parentName, in: schema)
-        else {
-            throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
-        }
+        let parent = try sliceParent(entry: entry, schema: schema)
         try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
             lockFileName: fileLockName(parent)
         ) {
-            let raw = try fileGet(parent, stateRoot: stateRoot)
-            guard let inputData = raw.data(using: .utf8) else {
-                throw APSError.corruptState(key: parentName)
-            }
-            let objectValue: Any
-            do {
-                objectValue = try JSONSerialization.jsonObject(with: inputData)
-            } catch {
-                throw APSError.corruptState(key: parentName)
-            }
-            guard var object = objectValue as? [String: Any] else {
-                throw APSError.corruptState(key: parentName)
-            }
-            if let shape = parent.objectShape?[field] {
-                switch shape {
-                case "Int":
-                    guard let intValue = Int(value) else {
-                        throw APSError.invalidValue(key: entry.name, value: value)
-                    }
-                    object[field] = intValue
-                case "Bool":
-                    guard let boolValue = StateStore.parseBool(value) else {
-                        throw APSError.invalidValue(key: entry.name, value: value)
-                    }
-                    object[field] = boolValue
-                default:
-                    object[field] = value
+            try sliceSetUnlocked(entry: entry, parent: parent, value: value, stateRoot: stateRoot)
+        }
+    }
+
+    private static func sliceParent(
+        entry: SchemaKeyEntry,
+        schema: UserSchemaDocument
+    ) throws -> SchemaKeyEntry {
+        guard
+            let parentName = entry.sliceOf,
+            let parent = UserSchema.entry(named: parentName, in: schema)
+        else {
+            throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
+        }
+        return parent
+    }
+
+    private static func sliceSetUnlocked(
+        entry: SchemaKeyEntry,
+        parent: SchemaKeyEntry,
+        value: String,
+        stateRoot: String
+    ) throws {
+        guard let parentName = entry.sliceOf, let field = entry.sliceField else {
+            throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
+        }
+        let raw = try fileGet(parent, stateRoot: stateRoot)
+        guard let inputData = raw.data(using: .utf8) else {
+            throw APSError.corruptState(key: parentName)
+        }
+        let objectValue: Any
+        do {
+            objectValue = try JSONSerialization.jsonObject(with: inputData)
+        } catch {
+            throw APSError.corruptState(key: parentName)
+        }
+        guard var object = objectValue as? [String: Any] else {
+            throw APSError.corruptState(key: parentName)
+        }
+        if let shape = parent.objectShape?[field] {
+            switch shape {
+            case "Int":
+                guard let intValue = Int(value) else {
+                    throw APSError.invalidValue(key: entry.name, value: value)
                 }
-            } else {
+                object[field] = intValue
+            case "Bool":
+                guard let boolValue = StateStore.parseBool(value) else {
+                    throw APSError.invalidValue(key: entry.name, value: value)
+                }
+                object[field] = boolValue
+            default:
                 object[field] = value
             }
-            // Avoid `.sortedKeys`: not available on all Linux Foundation builds we smoke.
-            let outputData = try JSONSerialization.data(withJSONObject: object)
-            guard let encoded = String(data: outputData, encoding: .utf8) else {
-                throw APSError.encodingFailed
-            }
-            try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot)
+        } else {
+            object[field] = value
         }
+        // Avoid `.sortedKeys`: not available on all Linux Foundation builds we smoke.
+        let outputData = try JSONSerialization.data(withJSONObject: object)
+        guard let encoded = String(data: outputData, encoding: .utf8) else {
+            throw APSError.encodingFailed
+        }
+        try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot)
     }
 }

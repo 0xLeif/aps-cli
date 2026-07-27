@@ -1134,7 +1134,10 @@ final class APSTests: XCTestCase {
             .persistenceFailed(key: "flag"),
             .secretUnlockFailed,
             .corruptState(key: "profile"),
-            .rollbackFailed,
+            .rollbackFailed(
+                purgeErrorCode: "persistence_failed",
+                purgeErrorDescription: "Failed to persist note"
+            ),
         ]
         for error in errors {
             XCTAssertFalse(error.hint.isEmpty, "hint required for \(error.code)")
@@ -1851,7 +1854,11 @@ final class APSTests: XCTestCase {
             )
         ) { error in
             let domainError = error as? APSError
-            XCTAssertEqual(domainError, .rollbackFailed)
+            guard case .rollbackFailed(let purgeCode, let purgeDescription) = domainError else {
+                return XCTFail("Expected rollbackFailed, got \(error)")
+            }
+            XCTAssertEqual(purgeCode, "persistence_failed")
+            XCTAssertEqual(purgeDescription, "Failed to persist note")
             XCTAssertEqual(domainError?.code, "rollback_failed")
             XCTAssertEqual(domainError?.exitCode, 73)
             XCTAssertFalse(domainError?.hint.isEmpty == true)
@@ -2085,4 +2092,182 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(mockDefaults.object(forKey: "aps.user.testStoredStateKey") as? String, "initial_val")
     }
 
+}
+
+extension APSTests {
+    @MainActor
+    internal func testPublicResetAllUsesSchemaOrderInFailureReport() async throws {
+        let defaults = UserSchema.defaultDocument().keys
+        let orderedNames = ["message", "counter", "profileName", "profile"]
+        let entries = try orderedNames.map { name in
+            try XCTUnwrap(defaults.first(where: { $0.name == name }))
+        }
+        let root = FileManager.defaultFileStatePath
+        try UserSchema.write(UserSchemaDocument(keys: entries), stateRoot: root)
+        try Data("{".utf8).write(
+            to: URL(fileURLWithPath: root).appendingPathComponent("profile.json")
+        )
+        let store = StateStore()
+
+        XCTAssertThrowsError(try store.resetAll()) { error in
+            guard let bulkError = error as? BulkResetError else {
+                return XCTFail("Expected BulkResetError, got \(error)")
+            }
+            XCTAssertEqual(bulkError.report.reset, ["message", "counter"])
+            XCTAssertEqual(bulkError.report.failed?.key, "profileName")
+            XCTAssertEqual(bulkError.report.notAttempted, ["profile"])
+        }
+    }
+
+    @MainActor
+    internal func testBulkResetRejectsSliceInvalidatedByLaterParentBeforeMutation() async throws {
+        let slice = SchemaKeyEntry(
+            name: "childName",
+            type: "String",
+            storage: "Slice",
+            initial: .string("child-initial"),
+            doc: "child",
+            sliceOf: "parent",
+            sliceField: "name"
+        )
+        let parent = SchemaKeyEntry(
+            name: "parent",
+            type: "object",
+            storage: "FileState",
+            initial: .object(["name": .string("parent-initial")]),
+            path: "parent.json",
+            doc: "parent",
+            objectShape: ["name": "String"]
+        )
+        let root = FileManager.defaultFileStatePath
+        try UserSchema.write(UserSchemaDocument(keys: [slice, parent]), stateRoot: root)
+        let store = StateStore()
+        try store.set(name: "parent", value: #"{"name":"current"}"#)
+
+        XCTAssertThrowsError(try store.resetAllRegistered()) { error in
+            guard let bulkError = error as? BulkResetError else {
+                return XCTFail("Expected BulkResetError, got \(error)")
+            }
+            XCTAssertEqual(bulkError.report.reset, [])
+            XCTAssertEqual(bulkError.report.failed?.key, "childName")
+            XCTAssertEqual(bulkError.report.failed?.code, "schema_invalid")
+            XCTAssertEqual(bulkError.report.notAttempted, ["parent"])
+        }
+
+        XCTAssertEqual(try store.get(name: "parent"), #"{"name":"current"}"#)
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 1)
+    }
+
+    @MainActor
+    internal func testRollbackFailureRetainsOriginalPurgeDiagnostic() async throws {
+        let store = StateStore()
+        _ = try store.loadSchema()
+        var schemaWriteCount = 0
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    throw APSError.persistenceFailed(key: "note-data")
+                },
+                schemaWriter: { document, root in
+                    schemaWriteCount += 1
+                    if schemaWriteCount == 2 {
+                        throw APSError.persistenceFailed(key: UserSchema.fileName)
+                    }
+                    try UserSchema.write(document, stateRoot: root)
+                }
+            )
+        ) { error in
+            guard
+                let domainError = error as? APSError,
+                case .rollbackFailed(let purgeCode, let purgeDescription) = domainError
+            else {
+                return XCTFail("Expected rollbackFailed, got \(error)")
+            }
+            XCTAssertEqual(purgeCode, "persistence_failed")
+            XCTAssertEqual(purgeDescription, "Failed to persist note-data")
+            XCTAssertTrue(domainError.description.contains("note-data"))
+        }
+    }
+
+    internal func testHumanBulkFailureNamesSelectedKeyWhenStorageErrorNamesParent() {
+        let underlying = APSError.corruptState(key: "parent")
+        let report = BulkResetReport(
+            reset: ["alpha"],
+            failed: ResetFailure(key: "blocked", error: underlying),
+            notAttempted: ["omega"]
+        )
+
+        XCTAssertEqual(
+            CLIOutput.bulkFailureHumanLines(report),
+            [
+                "Reset: alpha",
+                "Failed: blocked",
+                "Not attempted: omega",
+            ]
+        )
+    }
+
+    internal func testBulkResetReportSchemaMarksOmittedFailureOptional() throws {
+        let json = try CLIOutput.encodeLine(Schema.staticDocument())
+        let data = try XCTUnwrap(json.data(using: .utf8))
+        let document = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+        let payloads = try XCTUnwrap(document["payloads"] as? [String: Any])
+        let report = try XCTUnwrap(payloads["BulkResetReport"] as? [String: Any])
+        let required = try XCTUnwrap(report["required"] as? [String])
+        let properties = try XCTUnwrap(report["properties"] as? [String: Any])
+        let failed = try XCTUnwrap(properties["failed"] as? [String: Any])
+
+        XCTAssertFalse(required.contains("failed"))
+        XCTAssertEqual(failed["type"] as? String, "ResetFailure")
+    }
+
+    @MainActor
+    internal func testStoredStateResetRejectsDroppedInitialWrite() throws {
+        let defaults = DroppingWritesUserDefaults()
+        let override = Application.override(\Application.userDefaults, with: defaults)
+        defer { _ = override }
+        let entry = SchemaKeyEntry(
+            name: "droppedReset",
+            type: "String",
+            storage: "StoredState",
+            initial: .string("initial"),
+            path: nil,
+            doc: "Dropped reset write"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.reset(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: entry.name))
+        }
+        XCTAssertNil(defaults.object(forKey: "aps.user.\(entry.name)"))
+    }
+}
+
+/// Locked storage makes this synchronous test double safe across Sendable boundaries.
+private final class DroppingWritesUserDefaults: UserDefaultsManaging, @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [String: Any] = [:]
+
+    fileprivate func object(forKey key: String) -> Any? {
+        lock.lock()
+        defer { lock.unlock() }
+        return storage[key]
+    }
+
+    fileprivate func removeObject(forKey key: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        storage.removeValue(forKey: key)
+    }
+
+    fileprivate func set(_ value: Any?, forKey key: String) {
+        // Model a UserDefaults backend that accepts the call but loses the write.
+    }
 }

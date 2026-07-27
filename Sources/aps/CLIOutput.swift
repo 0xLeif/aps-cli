@@ -253,10 +253,19 @@ enum CLIOutput {
             }
         } else {
             writeError("Error: \(error.description)")
-            writeError("Reset: \(renderedKeys(error.report.reset))")
-            writeError("Not attempted: \(renderedKeys(error.report.notAttempted))")
+            for line in bulkFailureHumanLines(error.report) {
+                writeError(line)
+            }
         }
         throw ExitCode(error.exitCode)
+    }
+
+    internal static func bulkFailureHumanLines(_ report: BulkResetReport) -> [String] {
+        [
+            "Reset: \(renderedKeys(report.reset))",
+            "Failed: \(report.failed?.key ?? "(unknown)")",
+            "Not attempted: \(renderedKeys(report.notAttempted))",
+        ]
     }
 
     private static func renderedKeys(_ keys: [String]) -> String {

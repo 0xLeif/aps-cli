@@ -9,7 +9,7 @@ Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable ins
 ## What is already strong
 
 - The fledge verification lane passes all seven steps.
-- 78 Swift tests pass, including four-worker isolation.
+- 124 Swift tests pass, including four-worker isolation.
 - SpecSync passes with 2 specs, 0 errors, and 0 warnings.
 - macOS, Ubuntu, Linux smoke, Windows smoke, and Trust workflows run on main.
 - The repository has no active SpecSync changes after the latest archive housekeeping.

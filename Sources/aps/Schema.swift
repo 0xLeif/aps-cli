@@ -269,7 +269,7 @@ enum Schema {
         ])
         let bulkResetReport = Node.obj([
             prop("reset", .arr(.prim("string"))),
-            prop("failed", .prim("ResetFailure | null")),
+            prop("failed", .prim("ResetFailure"), required: false),
             prop("notAttempted", .arr(.prim("string"))),
         ])
         return [

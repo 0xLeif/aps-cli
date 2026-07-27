@@ -14,7 +14,7 @@ This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.
 
 | Surface | Status |
 | --- | --- |
-| Swift package and 117-test verification lane | Passing |
+| Serial and four-worker Swift verification lanes | Passing |
 | macOS, Linux, and Windows source CI | Active |
 | Homebrew and release packaging | Hardening before the next tag |
 | Dynamic schema safety | Safe paths, authoritative registry, and transactional destructive operations implemented |

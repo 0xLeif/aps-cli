@@ -111,9 +111,18 @@ extension StateStore {
         entries: [SchemaKeyEntry],
         schema: UserSchemaDocument
     ) throws -> BulkResetReport {
+        let selectedNames = entries.map(\.name)
         var resetNames: [String] = []
         for (index, entry) in entries.enumerated() {
             do {
+                if let error = bulkResetCompatibilityError(
+                    for: entry.name,
+                    at: index,
+                    selectedNames: selectedNames,
+                    schema: schema
+                ) {
+                    throw error
+                }
                 _ = try DynamicKeyStorage.reset(
                     entry: entry,
                     stateRoot: stateRoot,
@@ -139,6 +148,41 @@ extension StateStore {
             }
         }
         return .success(reset: resetNames)
+    }
+
+    /// Rejects a Slice reset that a later selected parent reset would invalidate.
+    @MainActor
+    internal func bulkResetCompatibilityError(
+        for name: String,
+        at index: Int,
+        selectedNames: [String],
+        schema: UserSchemaDocument
+    ) -> APSError? {
+        guard
+            let entry = UserSchema.entry(named: name, in: schema),
+            entry.storage == "Slice",
+            let parentName = entry.sliceOf,
+            let field = entry.sliceField,
+            selectedNames.dropFirst(index + 1).contains(parentName),
+            let parent = UserSchema.entry(named: parentName, in: schema)
+        else {
+            return nil
+        }
+        guard case .object(let initialObject) = parent.initial else {
+            return .schemaInvalid(
+                reason: "\(entry.name) reset would be invalidated by later parent reset '\(parentName)'"
+            )
+        }
+        guard let parentFieldInitial = initialObject[field] else {
+            return nil
+        }
+        let sliceInitial = entry.initial?.wireString ?? ""
+        guard parentFieldInitial.wireString == sliceInitial else {
+            return .schemaInvalid(
+                reason: "\(entry.name) initial conflicts with later parent reset '\(parentName).\(field)'"
+            )
+        }
+        return nil
     }
 
     @MainActor
@@ -219,7 +263,10 @@ extension StateStore {
                 do {
                     try schemaWriter(original, root)
                 } catch {
-                    throw APSError.rollbackFailed
+                    throw APSError.rollbackFailed(
+                        purgeErrorCode: purgeError.code,
+                        purgeErrorDescription: purgeError.description
+                    )
                 }
                 throw purgeError
             }
