@@ -44,43 +44,75 @@ extension StateStore {
 
     @MainActor
     public func set(name: String, value: String) throws {
-        let schema = try loadSchema()
-        guard let entry = UserSchema.entry(named: name, in: schema) else {
-            throw APSError.unknownKey(name: name)
-        }
-        try DynamicKeyStorage.set(
-            entry: entry,
+        try set(
+            name: name,
             value: value,
-            stateRoot: stateRoot,
-            schema: schema
+            storageOperation: { entry, rawValue, root, schema in
+                try DynamicKeyStorage.set(
+                    entry: entry,
+                    value: rawValue,
+                    stateRoot: root,
+                    schema: schema
+                )
+            }
         )
+    }
+
+    /// Storage seam used to prove the schema lock spans resolution and persistence.
+    @MainActor
+    internal func set(
+        name: String,
+        value: String,
+        storageOperation: (
+            SchemaKeyEntry,
+            String,
+            String,
+            UserSchemaDocument
+        ) throws -> Void
+    ) throws {
+        let root = stateRoot
+        try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            guard let entry = UserSchema.entry(named: name, in: schema) else {
+                throw APSError.unknownKey(name: name)
+            }
+            try storageOperation(entry, value, root, schema)
+        }
         stats.recordMutation(key: name)
     }
 
     @MainActor
     @discardableResult
     public func reset(name: String) throws -> ResetOutcome {
-        try reset(name: name, recordMutation: true)
+        try reset(name: name, recordMutation: true, afterReset: { _ in })
     }
 
     @MainActor
     @discardableResult
-    internal func reset(name: String, recordMutation: Bool) throws -> ResetOutcome {
-        let schema = try loadSchema()
-        guard let entry = UserSchema.entry(named: name, in: schema) else {
-            throw APSError.unknownKey(name: name)
-        }
-        let outcome: ResetOutcome
-        do {
-            outcome = try DynamicKeyStorage.reset(
-                entry: entry,
-                stateRoot: stateRoot,
-                schema: schema
-            )
-        } catch let error as APSError {
-            throw error
-        } catch {
-            throw APSError.persistenceFailed(key: name)
+    internal func reset(
+        name: String,
+        recordMutation: Bool,
+        afterReset: (SchemaKeyEntry) throws -> Void
+    ) throws -> ResetOutcome {
+        let root = stateRoot
+        let outcome = try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            guard let entry = UserSchema.entry(named: name, in: schema) else {
+                throw APSError.unknownKey(name: name)
+            }
+            do {
+                let resetOutcome = try DynamicKeyStorage.reset(
+                    entry: entry,
+                    stateRoot: root,
+                    schema: schema
+                )
+                try afterReset(entry)
+                return resetOutcome
+            } catch let error as APSError {
+                throw error
+            } catch {
+                throw APSError.persistenceFailed(key: name)
+            }
         }
         if recordMutation {
             stats.recordMutation(key: name)
@@ -91,25 +123,33 @@ extension StateStore {
     @MainActor
     @discardableResult
     public func resetAllRegistered() throws -> BulkResetReport {
-        let schema = try loadSchema()
-        return try reset(entries: schema.keys, schema: schema)
+        let root = stateRoot
+        return try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            return try reset(entries: schema.keys, schema: schema)
+        }
     }
 
     @MainActor
     @discardableResult
     internal func resetAllSeedKeys() throws -> BulkResetReport {
-        let schema = try loadSchema()
-        let seedNames = Set(DemoKey.allCases.map(\.rawValue))
-        return try reset(
-            entries: schema.keys.filter { seedNames.contains($0.name) },
-            schema: schema
-        )
+        let root = stateRoot
+        return try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            let seedNames = Set(DemoKey.allCases.map(\.rawValue))
+            return try reset(
+                entries: schema.keys.filter { seedNames.contains($0.name) },
+                schema: schema,
+                afterReset: { _ in }
+            )
+        }
     }
 
     @MainActor
-    private func reset(
+    internal func reset(
         entries: [SchemaKeyEntry],
-        schema: UserSchemaDocument
+        schema: UserSchemaDocument,
+        afterReset: (SchemaKeyEntry) throws -> Void = { _ in }
     ) throws -> BulkResetReport {
         let selectedNames = entries.map(\.name)
         var resetNames: [String] = []
@@ -128,6 +168,7 @@ extension StateStore {
                     stateRoot: stateRoot,
                     schema: schema
                 )
+                try afterReset(entry)
                 stats.recordMutation(key: entry.name)
                 resetNames.append(entry.name)
             } catch let error as APSError {
@@ -150,7 +191,7 @@ extension StateStore {
         return .success(reset: resetNames)
     }
 
-    /// Rejects a Slice reset that a later selected parent reset would invalidate.
+    /// Rejects incompatible parent/Slice and sibling Slice reset combinations.
     @MainActor
     internal func bulkResetCompatibilityError(
         for name: String,
@@ -158,28 +199,59 @@ extension StateStore {
         selectedNames: [String],
         schema: UserSchemaDocument
     ) -> APSError? {
-        guard
-            let entry = UserSchema.entry(named: name, in: schema),
-            entry.storage == "Slice",
-            let parentName = entry.sliceOf,
-            let field = entry.sliceField,
-            selectedNames.dropFirst(index + 1).contains(parentName),
-            let parent = UserSchema.entry(named: parentName, in: schema)
-        else {
+        guard let entry = UserSchema.entry(named: name, in: schema) else {
             return nil
         }
-        guard case .object(let initialObject) = parent.initial else {
+
+        for laterName in selectedNames.dropFirst(index + 1) {
+            guard let later = UserSchema.entry(named: laterName, in: schema) else {
+                continue
+            }
+            if let error = incompatibleResetPair(first: entry, second: later) {
+                return error
+            }
+        }
+        return nil
+    }
+
+    @MainActor
+    private func incompatibleResetPair(
+        first: SchemaKeyEntry,
+        second: SchemaKeyEntry
+    ) -> APSError? {
+        if first.storage == "Slice", second.storage == "Slice" {
+            guard
+                first.sliceOf == second.sliceOf,
+                first.sliceField == second.sliceField,
+                (first.initial?.wireString ?? "") != (second.initial?.wireString ?? "")
+            else {
+                return nil
+            }
             return .schemaInvalid(
-                reason: "\(entry.name) reset would be invalidated by later parent reset '\(parentName)'"
+                reason: "\(first.name) initial conflicts with selected sibling slice '\(second.name)'"
             )
         }
-        guard let parentFieldInitial = initialObject[field] else {
+
+        let slice: SchemaKeyEntry
+        let parent: SchemaKeyEntry
+        if first.storage == "Slice", first.sliceOf == second.name {
+            slice = first
+            parent = second
+        } else if second.storage == "Slice", second.sliceOf == first.name {
+            slice = second
+            parent = first
+        } else {
             return nil
         }
-        let sliceInitial = entry.initial?.wireString ?? ""
-        guard parentFieldInitial.wireString == sliceInitial else {
+
+        guard
+            let field = slice.sliceField,
+            case .object(let initialObject) = parent.initial,
+            let parentFieldInitial = initialObject[field],
+            parentFieldInitial.wireString == (slice.initial?.wireString ?? "")
+        else {
             return .schemaInvalid(
-                reason: "\(entry.name) initial conflicts with later parent reset '\(parentName).\(field)'"
+                reason: "\(slice.name) initial conflicts with selected parent reset '\(parent.name)'"
             )
         }
         return nil

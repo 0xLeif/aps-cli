@@ -11,18 +11,26 @@ internal struct SchemaStoragePath: Hashable, Sendable {
     /// Tests can inject deterministic failures without process-global mutable
     /// state. Production callers use `live`.
     internal struct DeletionOperations: Sendable {
+        internal let moveItem: @Sendable (URL, URL) throws -> Void
         internal let removeItem: @Sendable (URL) throws -> Void
         internal let isAbsent: @Sendable (URL) throws -> Bool
 
         internal init(
+            moveItem: @escaping @Sendable (URL, URL) throws -> Void = { source, destination in
+                try FileManager.default.moveItem(at: source, to: destination)
+            },
             removeItem: @escaping @Sendable (URL) throws -> Void,
             isAbsent: @escaping @Sendable (URL) throws -> Bool
         ) {
+            self.moveItem = moveItem
             self.removeItem = removeItem
             self.isAbsent = isAbsent
         }
 
         internal static let live = DeletionOperations(
+            moveItem: { source, destination in
+                try FileManager.default.moveItem(at: source, to: destination)
+            },
             removeItem: { url in
                 try FileManager.default.removeItem(at: url)
             },
@@ -127,8 +135,12 @@ internal struct SchemaStoragePath: Hashable, Sendable {
         guard kind == .regularFile else {
             throw Self.invalid("\(rawValue) is not a regular file")
         }
+
+        let stagedURL = url
+            .deletingLastPathComponent()
+            .appendingPathComponent(".\(url.lastPathComponent).aps-delete-\(UUID().uuidString)")
         do {
-            try operations.removeItem(url)
+            try operations.moveItem(url, stagedURL)
         } catch let error as CocoaError
             where error.code == .fileNoSuchFile || error.code == .fileReadNoSuchFile {
             try requireAbsent(url, operations: operations)
@@ -136,8 +148,27 @@ internal struct SchemaStoragePath: Hashable, Sendable {
         } catch {
             throw APSError.persistenceFailed(key: rawValue)
         }
-        try requireAbsent(url, operations: operations)
+
+        do {
+            try requireAbsent(url, operations: operations)
+            try operations.removeItem(stagedURL)
+        } catch {
+            try? restoreStagedFile(stagedURL, to: url, operations: operations)
+            throw APSError.persistenceFailed(key: rawValue)
+        }
         return true
+    }
+
+    private func restoreStagedFile(
+        _ stagedURL: URL,
+        to originalURL: URL,
+        operations: DeletionOperations
+    ) throws {
+        do {
+            try operations.moveItem(stagedURL, originalURL)
+        } catch {
+            throw APSError.persistenceFailed(key: rawValue)
+        }
     }
 
     private func requireAbsent(

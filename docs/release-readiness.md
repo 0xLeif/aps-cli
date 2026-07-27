@@ -9,7 +9,7 @@ Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable ins
 ## What is already strong
 
 - The fledge verification lane passes all seven steps.
-- 124 Swift tests pass, including four-worker isolation.
+- 134 Swift tests pass, including four-worker isolation.
 - SpecSync passes with 2 specs, 0 errors, and 0 warnings.
 - macOS, Ubuntu, Linux smoke, Windows smoke, and Trust workflows run on main.
 - The repository has no active SpecSync changes after the latest archive housekeeping.
@@ -31,9 +31,20 @@ Recursive arbitrary object values remain tracked separately and do not weaken au
 
 ### 3. Make reset and purge report the truth
 
-Implemented for v1.1.0 by [#113](https://github.com/0xLeif/aps-cli/issues/113). Reset APIs throw, destructive filesystem operations verify their postconditions, FileState reset atomically overwrites its initial value under the storage lock, and SecretStore reset removes only the envelope under `secret.store.lock`.
+Implemented for v1.1.0 by
+[#113](https://github.com/0xLeif/aps-cli/issues/113). Reset APIs throw,
+destructive filesystem operations stage recoverable leaves before verification,
+FileState reset atomically overwrites its initial value under the storage lock,
+StoredState restores its prior raw objects after detected replacement failure,
+and SecretStore reset removes only the envelope under `secret.store.lock`.
 
-Schema removal plus purge holds the schema lock through storage deletion and restores the original schema on a detected purge failure. This guarantee is transactional for detected errors, not for process crashes or power loss. Bulk reset remains deterministic and fail-fast while returning an explicit report of reset, failed, and not-attempted keys; mutation stats count only verified successes.
+Schema removal plus purge holds the schema lock through storage deletion and
+restores the original schema on a detected purge failure. Registered writers
+resolve and persist under that same schema lock, so stale writers cannot
+recreate purged data. This guarantee is transactional for detected errors, not
+for process crashes or power loss. Bulk reset remains deterministic and
+fail-fast while returning an explicit report of reset, failed, and
+not-attempted keys; mutation stats count only verified successes.
 
 ### 4. Repair Linux and Homebrew distribution
 

@@ -183,9 +183,15 @@ affects missing reads and later reset, not an existing value.
 
 Reset and purge use one global lock order:
 
-1. schema lock, when the operation changes the registry;
+1. schema lock before resolving any registered storage mutation or changing
+   the registry;
 2. storage lock for FileState or EncryptedFile;
 3. secret key lock only when cryptographic access requires it.
+
+Registered set and reset operations reload the entry under the schema lock and
+retain that lock through verified persistence. Direct `DemoKey` adapters enter
+the same transaction before using the AppState dogfood surface. This prevents a
+writer that resolved an entry before removal from recreating purged data.
 
 A FileState reset with an initial value atomically overwrites that value under
 the per-file lock instead of deleting first. EncryptedFile reset uses

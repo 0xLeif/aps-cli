@@ -175,9 +175,16 @@ Acceptance Criteria
   envelope leaf, and preserves shared `secret.key` material.
 - Schema removal plus purge holds `schema.json.lock` through candidate write,
   storage deletion, verification, and any original-schema rollback.
+- Registered set and reset operations reload their entry under
+  `schema.json.lock` and retain that lock through verified persistence, so a
+  stale writer cannot recreate data after successful purge.
 - Concurrent APS schema mutation cannot reuse a purged path during the
   transaction.
 - Successful rollback rethrows the original purge error; failed rollback emits
   a distinct stable rollback error.
 - Bulk reset stops at the first failure, identifies reset, failed, and
   not-attempted keys, and records stats only for successful keys.
+- StoredState resets restore canonical and legacy backing objects when
+  replacement verification fails.
+- Destructive leaf removal stages the original regular file and restores it
+  when post-delete verification fails.

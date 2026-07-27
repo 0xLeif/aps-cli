@@ -236,9 +236,23 @@ enum CLIOutput {
     }
 
     /// Failure path for a fail-fast bulk reset. The report is included in the
-    /// single structured stderr envelope and stdout remains untouched.
+    /// optional structured stderr envelope and stdout remains untouched.
     static func fail(_ error: BulkResetError, json: Bool) throws -> Never {
-        if structuredErrorsEnabled(json: json) {
+        for line in bulkFailureOutputLines(
+            error,
+            structuredErrors: structuredErrorsEnabled(json: json)
+        ) {
+            writeError(line)
+        }
+        throw ExitCode(error.exitCode)
+    }
+
+    internal static func bulkFailureOutputLines(
+        _ error: BulkResetError,
+        structuredErrors: Bool
+    ) -> [String] {
+        var lines = ["Error: \(error.description)"]
+        if structuredErrors {
             if let envelope = try? encodeLine(
                 ErrorEnvelope(
                     error: .init(
@@ -249,15 +263,12 @@ enum CLIOutput {
                     )
                 )
             ) {
-                writeError(envelope)
+                lines.append(envelope)
             }
         } else {
-            writeError("Error: \(error.description)")
-            for line in bulkFailureHumanLines(error.report) {
-                writeError(line)
-            }
+            lines.append(contentsOf: bulkFailureHumanLines(error.report))
         }
-        throw ExitCode(error.exitCode)
+        return lines
     }
 
     internal static func bulkFailureHumanLines(_ report: BulkResetReport) -> [String] {

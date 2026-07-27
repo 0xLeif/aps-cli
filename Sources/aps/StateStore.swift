@@ -81,10 +81,25 @@ public final class StateStore {
     }
 
     public func set(_ key: DemoKey, value: String) throws {
-        if !usesDefaultDefinition(key) {
-            try set(name: key.rawValue, value: value)
-            return
-        }
+        try set(
+            name: key.rawValue,
+            value: value,
+            storageOperation: { entry, rawValue, root, schema in
+                guard isDefaultDefinition(entry, for: key) else {
+                    try DynamicKeyStorage.set(
+                        entry: entry,
+                        value: rawValue,
+                        stateRoot: root,
+                        schema: schema
+                    )
+                    return
+                }
+                try setDefaultAdapter(key, value: rawValue)
+            }
+        )
+    }
+
+    private func setDefaultAdapter(_ key: DemoKey, value: String) throws {
         switch key {
         case .counter:
             guard let intValue = Int(value) else {
@@ -155,76 +170,71 @@ public final class StateStore {
                 }
             }
         }
-        stats.recordMutation(key: key.rawValue)
     }
 
     @discardableResult
     public func reset(_ key: DemoKey) throws -> ResetOutcome {
-        let outcome = try reset(name: key.rawValue, recordMutation: false)
-        if usesDefaultDefinition(key) {
-            try synchronizeDefaultAdapter(afterResetting: key)
-        }
-        stats.recordMutation(key: key.rawValue)
-        return outcome
+        try reset(
+            name: key.rawValue,
+            recordMutation: true,
+            afterReset: { entry in
+                if isDefaultDefinition(entry, for: key) {
+                    try synchronizeDefaultAdapter(afterResetting: key)
+                }
+            }
+        )
     }
 
     @discardableResult
     public func resetAll() throws -> BulkResetReport {
-        let schema = try loadSchema()
-        let selected = schema.keys.compactMap { entry in
-            DemoKey(rawValue: entry.name)
-        }
-        let selectedNames = selected.map(\.rawValue)
-        var resetNames: [String] = []
-        for (index, key) in selected.enumerated() {
-            do {
-                if let error = bulkResetCompatibilityError(
-                    for: key.rawValue,
-                    at: index,
-                    selectedNames: selectedNames,
-                    schema: schema
-                ) {
-                    throw error
+        let root = stateRoot
+        return try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            let entries = schema.keys.filter { DemoKey(rawValue: $0.name) != nil }
+            return try reset(
+                entries: entries,
+                schema: schema,
+                afterReset: { entry in
+                    guard
+                        let key = DemoKey(rawValue: entry.name),
+                        isDefaultDefinition(entry, for: key)
+                    else {
+                        return
+                    }
+                    try synchronizeDefaultAdapter(afterResetting: key)
                 }
-                _ = try reset(key)
-                resetNames.append(key.rawValue)
-            } catch let error as APSError {
-                let report = BulkResetReport(
-                    reset: resetNames,
-                    failed: ResetFailure(key: key.rawValue, error: error),
-                    notAttempted: selected.dropFirst(index + 1).map(\.rawValue)
-                )
-                throw BulkResetError(report: report, underlying: error)
-            }
+            )
         }
-        return .success(reset: resetNames)
     }
 
     private func usesDefaultDefinition(_ key: DemoKey) -> Bool {
         guard
-            let current = try? resolve(key.rawValue),
-            let seeded = UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue })
+            let current = try? resolve(key.rawValue)
         else {
             return false
         }
-        return current == seeded
+        return isDefaultDefinition(current, for: key)
+    }
+
+    private func isDefaultDefinition(_ entry: SchemaKeyEntry, for key: DemoKey) -> Bool {
+        UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue }) == entry
     }
 
     private func synchronizeDefaultAdapter(afterResetting key: DemoKey) throws {
         switch key {
         case .counter:
             Application.reset(\.counter)
-            guard get(.counter) == "0" else {
+            guard Application.state(\.counter).value == 0 else {
                 throw APSError.persistenceFailed(key: key.rawValue)
             }
         case .message:
             Application.reset(\.message)
-            guard get(.message).isEmpty else {
+            guard Application.state(\.message).value.isEmpty else {
                 throw APSError.persistenceFailed(key: key.rawValue)
             }
         case .flag:
             Application.reset(storedState: \.flag)
-            guard get(.flag) == "false" else {
+            guard Application.state(\.flag).value == false else {
                 throw APSError.persistenceFailed(key: key.rawValue)
             }
         case .note:

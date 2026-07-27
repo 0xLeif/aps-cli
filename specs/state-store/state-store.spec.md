@@ -22,8 +22,8 @@ depends_on: []
 all string-key registry entries through `DynamicKeyStorage`, including default
 seed names, injects real dependencies with `@AppDependency`, and provides dump,
 watch, and reset helpers suitable for non-UI use. Direct `DemoKey` adapters
-delegate reset through the same throwing registry implementation and synchronize
-the default AppState dogfood surface only after verified persistence.
+delegate writes and resets through the same schema-locked registry transaction
+and synchronize the default AppState dogfood surface before releasing the lock.
 
 ## Public API
 
@@ -32,8 +32,8 @@ the default AppState dogfood surface only after verified persistence.
 | `StateStore` | MainActor facade over registry-backed AppState keys. |
 | `init` | Loads clock/jsonCoding/stats dependencies without forcing `~/.aps`. |
 | `get` | Returns the current string rendering for a demo or registry key. |
-| `set` | Parses and writes a demo or registry key value; records a stats mutation. |
-| `reset` | Throwing reset that verifies the storage postcondition before recording a stats mutation. |
+| `set` | Schema-locked demo or registry write with one stats mutation. |
+| `reset` | Schema-locked reset that verifies storage before recording stats. |
 | `resetAll` | Deterministic fail-fast reset of every currently registered demo seed name. |
 | `resetAllRegistered` | Deterministic fail-fast reset of every active registry key with an explicit report. |
 | `dump` | JSON snapshot of demo seed adapters (pretty on TTY, compact when piped). |

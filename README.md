@@ -125,9 +125,15 @@ data, so changing back can reveal it again.
 - **Stateful gating:** until `secret.enc` exists, the first write seals with whichever recipient is active (key file or passphrase). After that, set must unlock the existing envelope before rewrite; a wrong passphrase cannot silently re-key.
 - A corrupt `secret.enc` envelope blocks both get and set with `decoding_failed` until you run `aps reset secret` (or repair the file).
 - **Interactive opt-in:** with `APS_SECRET_USE_PASSPHRASE=1` on a TTY, aps prompts once itself (its own getpass prompt, not macOS Keychain's).
-- `aps reset secret` takes the secret-store lock, verifies deletion of `secret.enc`, and keeps the shared key file for future writes.
+- `aps reset secret` takes the secret-store lock, stages and verifies deletion
+  of `secret.enc`, restores the envelope after a detected verification failure,
+  and keeps the shared key file for future writes.
 - `aps reset --all` restores currently registered seed names through their live schema entries (safe for agent keys). Removed seed names stay removed. Use `aps reset --registered` to restore every key in `schema.json`. Bulk reset is deterministic and fail-fast; JSON success and error payloads report reset, failed, and not-attempted keys.
-- `aps key remove NAME --purge` keeps the schema lock through storage deletion. A detected purge failure restores the original schema before returning an error. This is detected-error transactional behavior, not crash atomicity.
+- Registered writes and resets resolve under the schema lock and retain it
+  through verified persistence. `aps key remove NAME --purge` keeps that lock
+  through storage deletion, so a stale writer cannot recreate purged data. A
+  detected purge failure restores the original schema before returning an
+  error. This is detected-error transactional behavior, not crash atomicity.
 - The previous AppState `SecureState` / Keychain backend was replaced: ad-hoc signed CLI binaries can never earn durable Keychain trust, so every access prompted for a password. AppState itself is unchanged; SecureState remains dogfooded in [AppStateExamples](https://github.com/0xLeif/AppStateExamples).
 
 ### Dependencies

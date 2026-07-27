@@ -24,5 +24,15 @@
   parent/field selection.
 - Seed bulk reset intersects `DemoKey` names with current registry entries,
   skips removed seeds, and preserves non-seed values.
+- Registered and direct `DemoKey` mutations hold the schema lock from
+  authoritative resolution through verified persistence.
+- Bulk reset rejects incompatible parent/Slice and sibling Slice initial values
+  without falsely reporting overwritten outcomes as successful.
+- StoredState reset restores canonical and legacy raw objects after detected
+  replacement or synchronization failure; Linux and Windows smoke verify
+  cross-process `UserDefaults` persistence.
+- Bool Slice verification uses the declared parent object shape.
+- Staged deletion restores FileState and secret envelope data when
+  postcondition inspection fails.
 - Legacy default-flag fixtures use AppState's JSON-encoded `App/aps.flag`
   representation and verify canonical reset behavior.

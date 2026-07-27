@@ -76,16 +76,7 @@ enum DynamicKeyStorage {
             }
         case "StoredState":
             let store = userDefaults
-            try removeStoredValue(entry, from: store)
-            if entry.initial != nil {
-                try storedSet(entry, value: initial, in: store)
-            }
-            guard synchronize(store) else {
-                throw APSError.persistenceFailed(key: entry.name)
-            }
-            guard storedPersistedValue(entry, in: store) == (entry.initial == nil ? nil : initial) else {
-                throw APSError.persistenceFailed(key: entry.name)
-            }
+            try resetStoredValue(entry, initial: entry.initial == nil ? nil : initial, in: store)
         case "FileState":
             if entry.initial != nil {
                 try SchemaFileLock.withExclusiveStorageLock(
@@ -290,6 +281,51 @@ enum DynamicKeyStorage {
             ?? storedFallbackValue(entry)
     }
 
+    private static func resetStoredValue(
+        _ entry: SchemaKeyEntry,
+        initial: String?,
+        in store: any UserDefaultsManaging
+    ) throws {
+        let canonicalKey = storedDefaultsKey(entry.name)
+        let oldCanonical = store.object(forKey: canonicalKey)
+        let oldLegacy = usesLegacyFlagStorage(entry) ? store.object(forKey: legacyFlagDefaultsKey) : nil
+
+        do {
+            store.removeObject(forKey: canonicalKey)
+            if usesLegacyFlagStorage(entry) {
+                store.removeObject(forKey: legacyFlagDefaultsKey)
+            }
+            if let initial {
+                try storedSet(entry, value: initial, in: store)
+            }
+            guard synchronize(store),
+                  storedPersistedValue(entry, in: store) == initial,
+                  !usesLegacyFlagStorage(entry) || store.object(forKey: legacyFlagDefaultsKey) == nil
+            else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+        } catch {
+            restoreStoredObject(oldCanonical, forKey: canonicalKey, in: store)
+            if usesLegacyFlagStorage(entry) {
+                restoreStoredObject(oldLegacy, forKey: legacyFlagDefaultsKey, in: store)
+            }
+            _ = synchronize(store)
+            throw error
+        }
+    }
+
+    private static func restoreStoredObject(
+        _ object: Any?,
+        forKey key: String,
+        in store: any UserDefaultsManaging
+    ) {
+        if let object {
+            store.set(object, forKey: key)
+        } else {
+            store.removeObject(forKey: key)
+        }
+    }
+
     private static func storedFallbackValue(_ entry: SchemaKeyEntry) -> String {
         switch entry.type {
         case "Int": return "0"
@@ -352,8 +388,13 @@ enum DynamicKeyStorage {
     }
 
     private static func synchronize(_ store: any UserDefaultsManaging) -> Bool {
-        guard let defaults = store as? UserDefaults else { return true }
-        return defaults.synchronize()
+        if let defaults = store as? UserDefaults {
+            return defaults.synchronize()
+        }
+        if store is Application.SendableUserDefaults {
+            return UserDefaults.standard.synchronize()
+        }
+        return true
     }
 
     // MARK: - FileState
@@ -498,9 +539,21 @@ enum DynamicKeyStorage {
         guard let value = object[field] else {
             return entry.initial?.wireString ?? ""
         }
+        if parent.objectShape?[field] == "Bool" {
+            guard let boolValue = value as? Bool else {
+                throw APSError.corruptState(key: parentName)
+            }
+            return boolValue ? "true" : "false"
+        }
+        if parent.objectShape?[field] == "Int" {
+            guard let intValue = value as? Int else {
+                throw APSError.corruptState(key: parentName)
+            }
+            return String(intValue)
+        }
         if let string = value as? String { return string }
-        if let intValue = value as? Int { return String(intValue) }
         if let boolValue = value as? Bool { return boolValue ? "true" : "false" }
+        if let intValue = value as? Int { return String(intValue) }
         return "\(value)"
     }
 
