@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0050-harden-passphrase-envelopes-and-existing-secret-key-validation-for-issue-118",
+  "slug": "harden-passphrase-envelopes-and-existing-secret-key-validation-for-issue-118",
+  "title": "Harden passphrase envelopes and existing secret-key validation for issue 118",
+  "description": "Harden passphrase envelopes and existing secret-key validation for issue 118",
+  "kind": "migration",
+  "state": "implementing",
+  "base_commit": "c365187d9f2baadf097aaedafcb144f60a7a0fa8",
+  "created_at": 1785152498,
+  "updated_at": 1785152918,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Package.swift",
+    "Package.resolved",
+    "Sources/aps/SecretStore.swift",
+    "Sources/aps/PasswordKDF.swift",
+    "Sources/aps/SecureKeyFile.swift",
+    "Tests/apsTests",
+    "README.md",
+    "docs",
+    "specs",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "New passphrase writes use a strict versioned v2 envelope with a fresh random salt and bounded scrypt N=131072,r=8,p=1 parameters; legacy passphrase envelopes migrate transactionally after successful unlock and remain byte-identical on wrong credentials or migration failure; key files are opened and created without symlink races, validated as owned regular files, repaired to owner-only permissions or ACLs when safe, and rejected unchanged otherwise on macOS, Linux, and Windows; unchanged encrypted watch polling does not repeatedly invoke scrypt; production contains no force casts or force tries; security regressions, tri-OS CI, smoke, SpecSync, trust, and provenance gates pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "research",
+    "design",
+    "plan",
+    "tasks",
+    "testing",
+    "docs",
+    "requirements"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

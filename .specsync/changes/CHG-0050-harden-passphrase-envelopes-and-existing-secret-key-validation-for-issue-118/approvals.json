@@ -1,0 +1,12 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785152917,
+      "digest": "0a5f92b5cc532b8ed9d377937f99f9250b5c4f3020e8ac752e0c9f8fdcab175d",
+      "note": "Definition approved from three independent security, dependency, and migration audits for claimed issue 118."
+    }
+  ],
+  "reopenings": []
+}

@@ -83,6 +83,8 @@ public enum RollbackContext: Equatable, Sendable {
     case fileState(path: String)
     /// A staged file could not be moved back after a failed deletion.
     case stagedFile(path: String)
+    /// An encrypted envelope could not be restored after a failed migration or rewrite.
+    case secretEnvelope(path: String)
 
     /// Human-readable rollback failure without the original error.
     public var failureDescription: String {
@@ -105,6 +107,9 @@ public enum RollbackContext: Equatable, Sendable {
         case .stagedFile(let path):
             return "Failed to restore state file '\(path)' after deletion failed; "
                 + "the original data may remain only in a staged deletion file."
+        case .secretEnvelope(let path):
+            return "Failed to restore encrypted envelope '\(path)' after its replacement failed; "
+                + "the secret store may contain a partial migration."
         }
     }
 
@@ -123,6 +128,8 @@ public enum RollbackContext: Equatable, Sendable {
             return "Inspect '\(path)' under the state root before retrying the reset."
         case .stagedFile(let path):
             return "Inspect '\(path)' and its neighboring .aps-delete file under the state root before retrying."
+        case .secretEnvelope(let path):
+            return "Restore '\(path)' from a known-good state-root backup before retrying."
         }
     }
 }
@@ -133,6 +140,10 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
     case decodingFailed
     case persistenceFailed(key: String)
     case secretUnlockFailed
+    /// The encrypted envelope declares a version or recipient mode this aps build cannot open.
+    case unsupportedSecretEnvelope
+    /// The recipient key path cannot be proven private and owned by the current user.
+    case insecureSecretKeyFile(reason: String)
     /// On-disk FileState exists but cannot be decoded (torn concurrent write).
     case corruptState(key: String)
     /// `schema.json` present but undecodable or fails validation.
@@ -163,8 +174,13 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
             return "Failed to persist \(key)"
         case .secretUnlockFailed:
             return "Failed to unlock the secret store (wrong passphrase or key)"
+        case .unsupportedSecretEnvelope:
+            return "The secret store uses an unsupported encrypted envelope"
+        case .insecureSecretKeyFile(let reason):
+            return "Refusing insecure secret key file: \(reason)"
         case .corruptState(let key):
-            return "Corrupt or torn \(key) state file (undecodable). Concurrent writers may have torn the file; reset the key or repair the file."
+            return "Corrupt or torn \(key) state file (undecodable). "
+                + "Concurrent writers may have torn the file; reset the key or repair the file."
         case .schemaInvalid(let reason):
             return "Invalid schema.json: \(reason)"
         case .unknownKey(let name):
@@ -185,6 +201,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
         case .decodingFailed: return "decoding_failed"
         case .persistenceFailed: return "persistence_failed"
         case .secretUnlockFailed: return "secret_unlock_failed"
+        case .unsupportedSecretEnvelope: return "unsupported_secret_envelope"
+        case .insecureSecretKeyFile: return "insecure_secret_key_file"
         case .corruptState: return "corrupt_state"
         case .schemaInvalid: return "schema_invalid"
         case .unknownKey: return "unknown_key"
@@ -198,10 +216,12 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
     public var exitCode: Int32 {
         switch self {
         case .invalidValue, .unknownKey, .schemaConflict: return 64 // EX_USAGE
-        case .decodingFailed, .corruptState, .schemaInvalid: return APSError.corruptStateExitCode
+        case .decodingFailed, .corruptState, .schemaInvalid, .unsupportedSecretEnvelope:
+            return APSError.corruptStateExitCode
         case .secretUnlockFailed: return 69 // EX_UNAVAILABLE
         case .encodingFailed: return 70 // EX_SOFTWARE
         case .persistenceFailed, .rollbackFailed: return 73 // EX_CANTCREAT
+        case .insecureSecretKeyFile: return 77 // EX_NOPERM
         }
     }
 
@@ -213,11 +233,18 @@ public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
         case .encodingFailed:
             return "The value could not be JSON-encoded; please report this if it reproduces."
         case .decodingFailed:
-            return "A value or file is not valid JSON for its key; check the input or the state root (--state-dir / APS_HOME)."
+            return "A value or file is not valid JSON for its key; "
+                + "check the input or the state root (--state-dir / APS_HOME)."
         case .persistenceFailed:
             return "Check that the state root exists and is writable (--state-dir / APS_HOME)."
         case .secretUnlockFailed:
             return "Check APS_SECRET_PASSPHRASE or the secret.key file under the state root."
+        case .unsupportedSecretEnvelope:
+            return "Upgrade aps to a version that supports this envelope, "
+                + "or restore a compatible state-root backup."
+        case .insecureSecretKeyFile:
+            return "Replace secret.key with a current-user-owned regular file "
+                + "that is private to that user."
         case .corruptState(let key):
             return "Reset the key (`aps reset \(key)`) or repair the file under the state root."
         case .schemaInvalid:

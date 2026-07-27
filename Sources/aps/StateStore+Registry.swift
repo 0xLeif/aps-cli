@@ -457,6 +457,18 @@ extension StateStore {
         guard let entry = UserSchema.entry(named: name, in: schema) else {
             throw APSError.unknownKey(name: name)
         }
+        if entry.storage == "EncryptedFile" {
+            let store = try DynamicKeyStorage.encryptedStore(entry, stateRoot: stateRoot)
+            try watchEncryptedStore(
+                store,
+                initialValue: entry.initial?.wireString ?? "",
+                pollInterval: pollInterval,
+                pollDeadline: pollDeadline,
+                shouldContinue: shouldContinue,
+                onChange: onChange
+            )
+            return
+        }
         var last = try DynamicKeyStorage.get(
             entry: entry,
             stateRoot: stateRoot,

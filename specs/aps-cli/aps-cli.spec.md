@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 37
+version: 38
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -10,6 +10,8 @@ files:
   - Sources/aps/TTY.swift
   - Sources/aps/WatchTermination.swift
   - Sources/aps/SecretStore.swift
+  - Sources/aps/PasswordKDF.swift
+  - Sources/aps/SecureKeyFile.swift
   - Sources/aps/Schema.swift
   - Sources/aps/SchemaFileLock.swift
   - Sources/aps/UserSchema.swift
@@ -47,7 +49,7 @@ self-describes that contract for agents through the `schema` command.
 | `note` | String key stored in AppState `FileState`. |
 | `profile` | ProfileDocument key stored in AppState `FileState`. |
 | `secret` | String key stored in the encrypted-file secret store (`secret.enc`). |
-| `SecretStore` | Encrypted-file store: `get` / `set` (unlock-before-rewrite) / `reset` over `secret.enc`; fresh `set` serializes key recovery/creation, sealing, and envelope persistence through `secret.store.lock`, while direct key creation uses `secret.key.lock`. |
+| `SecretStore` | Strict v2 encrypted-file store with legacy reads, passphrase migration, and locked verified writes. |
 | `hasSecret` | True when a store file exists (missing means initial value). |
 | `get` | Decrypt the stored secret; loud corrupt/unlock failures. |
 | `set` | Unlock existing envelope when present, then seal and verify. |
@@ -109,6 +111,8 @@ self-describes that contract for agents through the `schema` command.
 | `decodingFailed` | UTF-8 JSON decode failure. |
 | `persistenceFailed` | Disk-backed key or schema.json did not persist after write. |
 | `secretUnlockFailed` | Secret store would not open (wrong passphrase or key). |
+| `unsupportedSecretEnvelope` | Envelope version or recipient mode is not supported by this aps build. |
+| `insecureSecretKeyFile` | Key-file ownership, type, or current-user privacy could not be proven. |
 | `corruptState` | FileState file exists but is undecodable (torn write). |
 | `schemaInvalid` | schema.json undecodable or fails validation. |
 | `unknownKey` | Name not present in the active registry. |
@@ -179,6 +183,13 @@ report.
     failure.
 13. Bulk reset records stats only for verified successes and reports the first
     failure plus every remaining not-attempted key.
+14. Every new encrypted envelope is v2 and binds decryption to exactly one
+    `recipientMode`. Passphrase metadata uses a fresh 16-byte salt and the fixed
+    scrypt profile `N=131072`, `r=8`, `p=1`, with 32 output bytes.
+15. Envelope shape, canonical base64, decoded field lengths, recipient mode,
+    and KDF constants are validated before KDF or key agreement.
+16. v2 never falls back between recipient modes. Wrong credentials or mode
+    mismatch leave envelope and key-file bytes unchanged.
 
 ## Behavioral Examples
 
@@ -217,9 +228,11 @@ Exit codes (sysexits-aligned):
 |------|---------|-------------|
 | 0 | success | stdout contract satisfied |
 | 64 | EX_USAGE | caller-fixable: bad key/flags, `invalidValue`, `unknownKey`, `schemaConflict`, reset arg conflicts |
-| 65 | EX_DATAERR | corrupt persisted state (`corruptState`), undecodable data (`decodingFailed`), or invalid schema (`schemaInvalid`) |
+| 65 | EX_DATAERR | corrupt data, invalid schema, or `unsupportedSecretEnvelope` |
+| 69 | EX_UNAVAILABLE | `secretUnlockFailed`: configured recipient cannot unlock the envelope |
 | 70 | EX_SOFTWARE | internal bug: `encodingFailed` |
 | 73 | EX_CANTCREAT | persistence or schema rollback did not complete: `persistenceFailed`, `rollbackFailed` |
+| 77 | EX_NOPERM | `insecureSecretKeyFile`: key-file privacy cannot be proven |
 | 66 | EX_NOINPUT | reserved for future explicit-file operations |
 
 - Missing state files are not errors: they mean the initial value.
@@ -234,6 +247,8 @@ Exit codes (sysexits-aligned):
 
 - `ArgumentParser` for the command tree
 - AppState (via `StateStore`) for typed state and dependencies
+- apple/swift-crypto `4.0.0..<4.4.0`: `Crypto` plus public `CryptoExtras`
+  scrypt; the upper bound preserves the Swift 6.0 tools floor
 - Foundation for FileHandle / RunLoop / process paths
 
 ## Change Log

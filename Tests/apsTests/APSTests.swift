@@ -333,15 +333,17 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testSecretStoreFreshKeyCreationFailureRemainsPersistenceFailed() async throws {
+    func testSecretStoreFreshKeyCreationRejectsNonRegularPath() async throws {
         let path = FileManager.defaultFileStatePath
         let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
-        // Non-regular path: recovery refuses to remove it and createKeyFile refuses
-        // to overwrite, so the failure stays persistenceFailed (not secretUnlockFailed).
+        // Non-regular paths are security-policy failures and must remain unchanged.
         try FileManager.default.createDirectory(at: keyURL, withIntermediateDirectories: false)
 
         XCTAssertThrowsError(try SecretStore(directory: path).set("blocked-key-create")) { error in
-            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+            XCTAssertEqual(
+                error as? APSError,
+                .insecureSecretKeyFile(reason: "path is not a regular file")
+            )
         }
         XCTAssertFalse(
             FileManager.default.fileExists(
@@ -378,7 +380,10 @@ final class APSTests: XCTestCase {
         try FileManager.default.createDirectory(at: keyURL, withIntermediateDirectories: false)
 
         XCTAssertThrowsError(try SecretStore(directory: path).set("directory-key")) { error in
-            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret"))
+            XCTAssertEqual(
+                error as? APSError,
+                .insecureSecretKeyFile(reason: "path is not a regular file")
+            )
         }
         var isDirectory: ObjCBool = false
         XCTAssertTrue(FileManager.default.fileExists(atPath: keyURL.path, isDirectory: &isDirectory))
@@ -767,11 +772,16 @@ final class APSTests: XCTestCase {
             pollInterval: 0.05,
             shouldContinue: { events.count < 2 }
         ) { value in
-            let event = try! CLIOutput.watchEvent(
-                key: .profile,
-                rawValue: value,
-                timestamp: store.now
-            )
+            guard
+                let event = try? CLIOutput.watchEvent(
+                    key: .profile,
+                    rawValue: value,
+                    timestamp: store.now
+                )
+            else {
+                XCTFail("Expected profile watch event to encode")
+                return
+            }
             events.append(event)
             if events.count == 1 {
                 let changed = ProfileDocument(name: "leif", version: 4)
@@ -1197,6 +1207,14 @@ final class APSTests: XCTestCase {
             "Inspect schema.json before retrying; retained key data was not purged."
         )
         XCTAssertFalse(candidateRollback.description.contains("after purging"))
+
+        let envelopeRollback = APSError.rollbackFailed(
+            context: .secretEnvelope(path: "secret.enc"),
+            originalErrorCode: "persistence_failed",
+            originalErrorDescription: "Failed to persist secret"
+        )
+        XCTAssertTrue(envelopeRollback.description.contains("encrypted envelope 'secret.enc'"))
+        XCTAssertTrue(envelopeRollback.hint.contains("state-root backup"))
     }
 
     func testAPSErrorContractCodesAndExitCodes() {
@@ -1205,14 +1223,21 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(APSError.decodingFailed.code, "decoding_failed")
         XCTAssertEqual(APSError.persistenceFailed(key: "note").code, "persistence_failed")
         XCTAssertEqual(APSError.secretUnlockFailed.code, "secret_unlock_failed")
+        XCTAssertEqual(APSError.unsupportedSecretEnvelope.code, "unsupported_secret_envelope")
+        XCTAssertEqual(
+            APSError.insecureSecretKeyFile(reason: "test").code,
+            "insecure_secret_key_file"
+        )
         XCTAssertEqual(APSError.corruptState(key: "note").code, "corrupt_state")
 
         XCTAssertEqual(APSError.invalidValue(key: "counter", value: "x").exitCode, 64)
         XCTAssertEqual(APSError.decodingFailed.exitCode, 65)
         XCTAssertEqual(APSError.corruptState(key: "note").exitCode, 65)
         XCTAssertEqual(APSError.secretUnlockFailed.exitCode, 69)
+        XCTAssertEqual(APSError.unsupportedSecretEnvelope.exitCode, 65)
         XCTAssertEqual(APSError.encodingFailed.exitCode, 70)
         XCTAssertEqual(APSError.persistenceFailed(key: "note").exitCode, 73)
+        XCTAssertEqual(APSError.insecureSecretKeyFile(reason: "test").exitCode, 77)
 
         let errors: [APSError] = [
             .invalidValue(key: "flag", value: "x"),
@@ -1220,6 +1245,8 @@ final class APSTests: XCTestCase {
             .decodingFailed,
             .persistenceFailed(key: "flag"),
             .secretUnlockFailed,
+            .unsupportedSecretEnvelope,
+            .insecureSecretKeyFile(reason: "test"),
             .corruptState(key: "profile"),
             .rollbackFailed(
                 context: .schema(key: "note"),
@@ -1367,12 +1394,14 @@ final class APSTests: XCTestCase {
 
     func testSchemaErrorTableIsStable() {
         let table = Schema.staticDocument().errors
-        XCTAssertEqual(table.count, 10)
+        XCTAssertEqual(table.count, 12)
         let byCode = Dictionary(uniqueKeysWithValues: table.map { ($0.code, $0.exitCode) })
         XCTAssertEqual(byCode["invalid_value"], 64)
         XCTAssertEqual(byCode["decoding_failed"], 65)
         XCTAssertEqual(byCode["corrupt_state"], 65)
         XCTAssertEqual(byCode["secret_unlock_failed"], 69)
+        XCTAssertEqual(byCode["unsupported_secret_envelope"], 65)
+        XCTAssertEqual(byCode["insecure_secret_key_file"], 77)
         XCTAssertEqual(byCode["encoding_failed"], 70)
         XCTAssertEqual(byCode["persistence_failed"], 73)
         XCTAssertEqual(byCode["unknown_key"], 64)

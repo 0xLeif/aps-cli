@@ -11,10 +11,28 @@
 - Smoke: `Scripts/smoke.sh` (Unix) and `Scripts/smoke.ps1` (Windows / PowerShell) for flag/note persistence, reset, and `aps stats`
 - CI: `ci.yml` matrix runs macOS + Linux (fail if either fails); Windows: `swift test` + `Scripts/smoke.ps1` on `windows-latest` (`windows-smoke.yml`)
 
-- Encrypted-file `secret` round-trip / wrong-passphrase `secretUnlockFailed` / corrupt envelope `decodingFailed`.
-- Encrypted-file `secret` parallel fresh writes share one atomically created `0600` key file.
+- Encrypted-file v2 tests prove exact `recipientMode`, fixed scrypt metadata,
+  fresh 16-byte salts, distinct repeated ciphertext, and key-file KDF omission.
+- Hostile envelope tests reject unknown versions and modes, malformed KDF
+  metadata, noncanonical base64, and invalid field lengths before KDF work.
+- Recipient-mode mismatch and wrong credentials retain `secretUnlockFailed`
+  without changing envelope or key-file bytes.
+- Legacy passphrase fixtures migrate once after successful unlock; wrong
+  credentials and injected replacement failures preserve exact v1 bytes, while
+  restoration failure reports `rollbackFailed`.
+- Legacy key-file fixtures remain readable and upgrade on the next successful
+  set.
+- Counting-KDF tests prove per-operation reuse for each salt and zero additional
+  KDF work during unchanged encrypted-watch polls.
+- Encrypted-file parallel fresh writes share one exclusively created private
+  key file: exact `0600` on POSIX and a protected current-user DACL on Windows.
+- Secure key-file tests cover POSIX permission repair, symlink, directory, FIFO,
+  hostile umask, exclusive creation, and regeneration refusal. Windows covers
+  private create/load/remove, ACL repair, and directory rejection.
 - Fresh SET recovers a partial `secret.key` without envelope; existing-envelope corrupt keys stay unlock failures without truncating key material.
 - Fresh key-creation write failures remain `persistenceFailed`.
+- Error and schema-table tests cover `unsupported_secret_envelope` at exit 65
+  and `insecure_secret_key_file` at exit 77.
 - Secret SET with wrong passphrase leaves ciphertext unchanged; root `--state-dir` peel; safer reset; schema lock.
 
 - Slice `profileName` writes land in parent `profile` FileState.

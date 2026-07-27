@@ -192,7 +192,10 @@ extension Aps {
                 let signalSources = installWatchSignalHandlers(signalBox)
 
                 if count == nil && timeout == nil {
-                    CLIOutput.writeError("watch: unbounded stream; press Ctrl-C to stop, or use --count/--timeout for bounded runs")
+                    CLIOutput.writeError(
+                        "watch: unbounded stream; press Ctrl-C to stop, "
+                            + "or use --count/--timeout for bounded runs"
+                    )
                 }
 
                 do {
