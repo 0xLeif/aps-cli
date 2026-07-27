@@ -10,6 +10,11 @@ Keys live in `<state-root>/schema.json`, with demo defaults materialized on firs
 
 This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.xyz/integrate/) (fledge, spec-sync, augur, attest). See `AGENTS.md`.
 
+The v1.1.0 release workflow introduces a stricter boundary than ordinary pull
+requests: the exact tag commit must carry passing-test evidence signed by the
+pinned `human:leif` Attest key. Both tag pushes and manual backfills use that
+gate before artifact upload. See the [release provenance runbook](docs/release-provenance.md).
+
 ## Project status
 
 | Surface | Status |
@@ -203,6 +208,8 @@ ChaCha20-Poly1305 through
 - macOS 14+ (primary CI on `macos-latest`). Linux smoke runs on `ubuntu-latest`. Windows smoke runs on `windows-latest` via `Scripts/smoke.ps1`.
 - For the trust gate locally: [corvid-trust](https://github.com/CorvidLabs/trust) (`brew install CorvidLabs/tap/corvid-trust`)
 - SpecSync **5.2.0** (see `.specsync/version`). Trust CI mirrors that exact release; brew `spec-sync` latest should match.
+- Attest **1.0.0** for the local release-provenance contract test. Ordinary
+  Swift build and test commands do not require the release signing key.
 
 ## Build and run
 
@@ -364,6 +371,7 @@ pwsh ./Scripts/smoke.ps1
 | `.trust.toml` | Unified Trust policy |
 | `.augur.toml` | Diff-risk thresholds |
 | `.attest.json` | Provenance policy |
+| `.attest-release.json` | Strict release-only provenance policy |
 | `.specsync/` | SpecSync 5.2.0 config + SDD change tracking (`.specsync/version`) |
 | `specs/` | Module contracts (`aps-cli`, `state-store`) |
 | `GOAL.md` | Shipped 1.0.0 release record |
@@ -384,6 +392,8 @@ specs/
 docs/design/
 Scripts/smoke.sh
 Scripts/smoke.ps1
+Scripts/release-provenance-gate.sh
+Scripts/test-release-provenance.sh
 GOAL.md
 LICENSE
 .github/workflows/{ci,linux-smoke,windows-smoke,trust,release,post-release-formula}.yml
@@ -399,6 +409,7 @@ The next release will:
 - make the runtime registry authoritative for every key;
 - align portable Linux, Homebrew, and GitHub Action distribution;
 - ship the implemented v2 passphrase and key-file hardening;
+- require signed passing-test provenance on the exact release commit;
 - rehearse installation from real release artifacts on clean hosts.
 
 The full evidence, blockers, and exit criteria live in [docs/release-readiness.md](docs/release-readiness.md).

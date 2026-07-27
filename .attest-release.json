@@ -1,0 +1,15 @@
+{
+  "requireAttestation": true,
+  "requireTestsPassed": true,
+  "requireSignature": true,
+  "requireHumanApprovalWhenVerdictAtLeast": "block",
+  "allowedReviewers": [
+    "human:leif"
+  ],
+  "trustedKeys": [
+    "8L3Inb9GXaWv3TM69s1ikAuDcel9F4rtknLZXBkudyI="
+  ],
+  "signerPinning": {
+    "human:leif": "8L3Inb9GXaWv3TM69s1ikAuDcel9F4rtknLZXBkudyI="
+  }
+}

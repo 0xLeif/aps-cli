@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "human:leif",
+      "timestamp": 1785164508,
+      "digest": "d429ea9d6782538ead1789aa6668897c8ac75597ff40acfaa2cdb7e43c4fe3c3",
+      "note": "Approved through explicit release-readiness hardening request for issue 119"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785166387,
+      "digest": "33606d08ce0d258bc0b5e92aa3c10e1f0762f24d750f48f44bc8ed02e08b3180",
+      "note": "Re-approved after requested release-hardening review changes"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785166474,
+      "digest": "fdf437f982de086257b747f50d99420a2d91b5ed981caf0246460038f412385a",
+      "note": "Re-approved after final hosted-control and verification updates"
+    }
+  ],
+  "reopenings": []
+}
