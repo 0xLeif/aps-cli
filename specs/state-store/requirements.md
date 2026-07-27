@@ -237,9 +237,22 @@ Acceptance Criteria
   then reloads and compares the original after rollback. A dropped schema write
   cannot delete registered storage or hide a failed rollback. Candidate
   write or verification failure restores and verifies the original before
-  returning, including when a writer persists and then throws.
+  returning, including when a writer persists and then throws. If that
+  restoration fails, the rollback context states that no data purge was
+  attempted; rollback after an actual purge failure retains its purge-specific
+  context.
 - Failed staged deletion verifies that rollback restored a regular-file
   original and removed the staging leaf before returning the deletion error;
   otherwise it reports `rollback_failed`.
 - Default FileState reset adapter synchronization reloads the current disk value
   under the storage lock and cannot delete or replace a newer valid write.
+- Default adapter synchronization is part of the reset transaction. A
+  synchronization failure restores and verifies both the compiled AppState
+  adapter cache and the exact pre-reset backing state before returning the
+  original error. Bulk reset captures this checkpoint immediately before each
+  key so rollback cannot undo an earlier successful key, and stats include only
+  those earlier verified successes.
+- A failed compiled-adapter restoration reports `rollback_failed` with an
+  adapter-specific context that preserves the original synchronization error.
+- The default encrypted adapter is a no-op and runs before envelope deletion,
+  so an injected adapter failure leaves the exact existing envelope untouched.

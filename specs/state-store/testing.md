@@ -79,9 +79,17 @@
 - Schema removal tests drop the candidate write before purge and the original
   write during rollback, requiring safe refusal and `rollback_failed`
   respectively. Candidate verification mismatch and read-failure tests require
-  verified original restoration or a schema-specific `rollback_failed`; a
-  write-then-throw fault preserves its diagnostic after verified restoration.
+  verified original restoration or a candidate-specific `rollback_failed`
+  that states no purge was attempted; rollback after a purge failure retains
+  purge-specific wording. A write-then-throw fault preserves its diagnostic
+  after verified restoration.
 - Staged deletion tests drop or replace the rollback move and require a
   regular-file original plus an absent staging leaf before restoration succeeds.
 - Default FileState reset tests inject newer note and profile writes before
   adapter synchronization and require both values to survive.
+- Default-adapter reset tests inject failures after note and profile-name
+  synchronization and require exact backing bytes, compiled cache restoration,
+  per-key bulk checkpoints, and successful-key-only stats.
+- Adapter reset rollback tests inject a failed restoration proof and require a
+  resource-specific `rollback_failed`; encrypted adapter failure preserves the
+  exact pre-reset envelope because synchronization precedes deletion.

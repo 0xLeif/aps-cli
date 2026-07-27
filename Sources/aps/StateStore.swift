@@ -15,6 +15,16 @@ import Observation
 /// `StateStore` does not call `APSPaths.configure()`, so injected test paths stay put.
 @MainActor
 public final class StateStore {
+    private enum DefaultAdapterSnapshot: Equatable {
+        case counter(Int)
+        case message(String)
+        case flag(Bool)
+        case note(String)
+        case profile(ProfileDocument)
+        case secret
+        case profileName(ProfileDocument)
+    }
+
     @AppDependency(\.clock) var clock: any APSClock
     @AppDependency(\.jsonCoding) var jsonCoding: JSONCoding
     #if !os(Linux) && !os(Windows)
@@ -290,17 +300,24 @@ public final class StateStore {
     @discardableResult
     internal func reset(
         _ key: DemoKey,
-        afterAcquiringProfileStorageLock: () -> Void
+        afterAcquiringProfileStorageLock: () -> Void,
+        fileOperations: DynamicKeyStorage.FileOperations = .live,
+        afterSynchronizingDefaultAdapter: () throws -> Void = {}
     ) throws -> ResetOutcome {
-        try reset(
+        let adapterSnapshot = defaultAdapterSnapshot(for: key)
+        return try reset(
             name: key.rawValue,
             recordMutation: true,
+            fileOperations: fileOperations,
             afterReset: { entry in
                 let schema = try UserSchema.loadUnlocked(stateRoot: stateRoot)
                 if isDefaultDefinition(entry, for: key, in: schema) {
-                    try synchronizeDefaultAdapter(
+                    try synchronizeDefaultAdapterTransaction(
                         afterResetting: key,
-                        afterAcquiringProfileStorageLock: afterAcquiringProfileStorageLock
+                        snapshot: adapterSnapshot,
+                        storageLockAlreadyHeld: entry.storage == "FileState" || entry.storage == "Slice",
+                        afterAcquiringProfileStorageLock: afterAcquiringProfileStorageLock,
+                        afterSynchronizingDefaultAdapter: afterSynchronizingDefaultAdapter
                     )
                 }
             }
@@ -309,14 +326,31 @@ public final class StateStore {
 
     @discardableResult
     public func resetAll() throws -> BulkResetReport {
+        try resetAll(afterSynchronizingDefaultAdapter: { _ in })
+    }
+
+    @discardableResult
+    internal func resetAll(
+        afterSynchronizingDefaultAdapter: (DemoKey) throws -> Void
+    ) throws -> BulkResetReport {
         let root = stateRoot
         return try publishingBulkResetStats {
             try SchemaFileLock.withExclusiveLock(stateRoot: root) {
                 let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
                 let entries = schema.keys.filter { DemoKey(rawValue: $0.name) != nil }
+                var adapterSnapshots: [DemoKey: DefaultAdapterSnapshot] = [:]
                 return try reset(
                     entries: entries,
                     schema: schema,
+                    beforeReset: { entry in
+                        guard
+                            let key = DemoKey(rawValue: entry.name),
+                            isDefaultDefinition(entry, for: key, in: schema)
+                        else {
+                            return
+                        }
+                        adapterSnapshots[key] = defaultAdapterSnapshot(for: key)
+                    },
                     afterReset: { entry in
                         guard
                             let key = DemoKey(rawValue: entry.name),
@@ -324,7 +358,17 @@ public final class StateStore {
                         else {
                             return
                         }
-                        try synchronizeDefaultAdapter(afterResetting: key)
+                        guard let snapshot = adapterSnapshots[key] else {
+                            throw APSError.persistenceFailed(key: key.rawValue)
+                        }
+                        try synchronizeDefaultAdapterTransaction(
+                            afterResetting: key,
+                            snapshot: snapshot,
+                            storageLockAlreadyHeld: entry.storage == "FileState" || entry.storage == "Slice",
+                            afterSynchronizingDefaultAdapter: {
+                                try afterSynchronizingDefaultAdapter(key)
+                            }
+                        )
                     }
                 )
             }
@@ -382,6 +426,7 @@ public final class StateStore {
 
     internal func synchronizeDefaultAdapter(
         afterResetting key: DemoKey,
+        storageLockAlreadyHeld: Bool = false,
         afterAcquiringProfileStorageLock: () -> Void = {}
     ) throws {
         switch key {
@@ -401,16 +446,120 @@ public final class StateStore {
                 throw APSError.persistenceFailed(key: key.rawValue)
             }
         case .note:
-            try synchronizeNoteAdapter()
+            if storageLockAlreadyHeld {
+                try synchronizeNoteAdapterUnlocked()
+            } else {
+                try synchronizeNoteAdapter()
+            }
         case .profile:
-            try synchronizeProfileAdapter()
+            if storageLockAlreadyHeld {
+                try synchronizeProfileAdapterUnlocked()
+            } else {
+                try synchronizeProfileAdapter()
+            }
         case .secret:
             break
         case .profileName:
-            try synchronizeProfileNameAdapter(
-                afterAcquiringStorageLock: afterAcquiringProfileStorageLock
-            )
+            if storageLockAlreadyHeld {
+                try synchronizeProfileNameAdapterUnlocked(
+                    afterAcquiringStorageLock: afterAcquiringProfileStorageLock
+                )
+            } else {
+                try synchronizeProfileNameAdapter(
+                    afterAcquiringStorageLock: afterAcquiringProfileStorageLock
+                )
+            }
         }
+    }
+
+    private func defaultAdapterSnapshot(for key: DemoKey) -> DefaultAdapterSnapshot {
+        switch key {
+        case .counter:
+            return .counter(Application.state(\.counter).value)
+        case .message:
+            return .message(Application.state(\.message).value)
+        case .flag:
+            return .flag(Application.state(\.flag).value)
+        case .note:
+            return .note(Application.fileState(\.note).value)
+        case .profile:
+            return .profile(Application.fileState(\.profile).value)
+        case .secret:
+            return .secret
+        case .profileName:
+            return .profileName(Application.fileState(\.profile).value)
+        }
+    }
+
+    private func synchronizeDefaultAdapterTransaction(
+        afterResetting key: DemoKey,
+        snapshot: DefaultAdapterSnapshot,
+        storageLockAlreadyHeld: Bool,
+        afterAcquiringProfileStorageLock: () -> Void = {},
+        afterSynchronizingDefaultAdapter: () throws -> Void
+    ) throws {
+        do {
+            try synchronizeDefaultAdapter(
+                afterResetting: key,
+                storageLockAlreadyHeld: storageLockAlreadyHeld,
+                afterAcquiringProfileStorageLock: afterAcquiringProfileStorageLock
+            )
+            try afterSynchronizingDefaultAdapter()
+        } catch {
+            let originalError = error
+            try restoreDefaultAdapter(snapshot, for: key, after: originalError)
+            throw originalError
+        }
+    }
+
+    private func restoreDefaultAdapter(
+        _ snapshot: DefaultAdapterSnapshot,
+        for key: DemoKey,
+        after originalError: Error
+    ) throws {
+        switch snapshot {
+        case .counter(let value):
+            var state = Application.state(\.counter)
+            state.value = value
+            guard Application.state(\.counter).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .message(let value):
+            var state = Application.state(\.message)
+            state.value = value
+            guard Application.state(\.message).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .flag(let value):
+            var state = Application.state(\.flag)
+            state.value = value
+            guard Application.state(\.flag).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .note(let value):
+            var state = Application.fileState(\.note)
+            state.value = value
+            guard Application.fileState(\.note).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .profile(let value), .profileName(let value):
+            var state = Application.fileState(\.profile)
+            state.value = value
+            guard Application.fileState(\.profile).value == value else {
+                throw adapterRollbackFailure(for: key, after: originalError)
+            }
+        case .secret:
+            break
+        }
+    }
+
+    private func adapterRollbackFailure(for key: DemoKey, after originalError: Error) -> APSError {
+        let failure = originalError as? APSError ?? .persistenceFailed(key: key.rawValue)
+        return .rollbackFailed(
+            context: .adapter(key: key.rawValue),
+            originalErrorCode: failure.code,
+            originalErrorDescription: failure.description
+        )
     }
 
     /// Synchronizes the default note cache to the current disk value without
@@ -421,12 +570,16 @@ public final class StateStore {
             lockFileName: "note.json.lock",
             resourceKey: DemoKey.note.rawValue
         ) {
-            let fresh = try Self.readNoteFromDiskIfPresent() ?? ""
-            var state = Application.fileState(\.note)
-            state.value = fresh
-            guard try Self.readNoteFromDisk() == fresh else {
-                throw APSError.persistenceFailed(key: DemoKey.note.rawValue)
-            }
+            try synchronizeNoteAdapterUnlocked()
+        }
+    }
+
+    private func synchronizeNoteAdapterUnlocked() throws {
+        let fresh = try Self.readNoteFromDiskIfPresent() ?? ""
+        var state = Application.fileState(\.note)
+        state.value = fresh
+        guard try Self.readNoteFromDisk() == fresh else {
+            throw APSError.persistenceFailed(key: DemoKey.note.rawValue)
         }
     }
 
@@ -438,12 +591,16 @@ public final class StateStore {
             lockFileName: "profile.json.lock",
             resourceKey: DemoKey.profile.rawValue
         ) {
-            let fresh = try Self.readProfileFromDiskIfPresent() ?? ProfileDocument()
-            var state = Application.fileState(\.profile)
-            state.value = fresh
-            guard try Self.readProfileFromDisk() == fresh else {
-                throw APSError.persistenceFailed(key: DemoKey.profile.rawValue)
-            }
+            try synchronizeProfileAdapterUnlocked()
+        }
+    }
+
+    private func synchronizeProfileAdapterUnlocked() throws {
+        let fresh = try Self.readProfileFromDiskIfPresent() ?? ProfileDocument()
+        var state = Application.fileState(\.profile)
+        state.value = fresh
+        guard try Self.readProfileFromDisk() == fresh else {
+            throw APSError.persistenceFailed(key: DemoKey.profile.rawValue)
         }
     }
 
@@ -461,13 +618,21 @@ public final class StateStore {
             lockFileName: "profile.json.lock",
             resourceKey: DemoKey.profileName.rawValue
         ) {
-            afterAcquiringStorageLock()
-            try Self.refreshProfileFileStateFromDisk()
-            var slice = Application.slice(\.profile, \.name)
-            slice.value = ""
-            guard try Self.readProfileFromDisk().name.isEmpty else {
-                throw APSError.persistenceFailed(key: DemoKey.profileName.rawValue)
-            }
+            try synchronizeProfileNameAdapterUnlocked(
+                afterAcquiringStorageLock: afterAcquiringStorageLock
+            )
+        }
+    }
+
+    private func synchronizeProfileNameAdapterUnlocked(
+        afterAcquiringStorageLock: () -> Void
+    ) throws {
+        afterAcquiringStorageLock()
+        try Self.refreshProfileFileStateFromDisk()
+        var slice = Application.slice(\.profile, \.name)
+        slice.value = ""
+        guard try Self.readProfileFromDisk().name.isEmpty else {
+            throw APSError.persistenceFailed(key: DemoKey.profileName.rawValue)
         }
     }
 

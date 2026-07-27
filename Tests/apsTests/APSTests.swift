@@ -1140,8 +1140,23 @@ final class APSTests: XCTestCase {
         )
         XCTAssertTrue(storedRollback.description.contains("StoredState"))
         XCTAssertTrue(storedRollback.description.contains("profile"))
+        XCTAssertTrue(storedRollback.description.contains("after reset failed"))
         XCTAssertFalse(storedRollback.description.contains("schema.json"))
         XCTAssertTrue(storedRollback.hint.contains("profile"))
+
+        let adapterRollback = APSError.rollbackFailed(
+            context: .adapter(key: "counter"),
+            originalErrorCode: "persistence_failed",
+            originalErrorDescription: "Failed to persist counter-adapter"
+        )
+        XCTAssertEqual(
+            adapterRollback.description,
+            "Failed to restore AppState adapter 'counter' after reset synchronization failed; "
+                + "the compiled adapter may no longer match its backing storage. "
+                + "Original failure [persistence_failed]: Failed to persist counter-adapter"
+        )
+        XCTAssertTrue(adapterRollback.hint.contains("adapter"))
+        XCTAssertTrue(adapterRollback.hint.contains("counter"))
 
         let stagedRollback = APSError.rollbackFailed(
             context: .stagedFile(path: "nested/value.json"),
@@ -1158,9 +1173,30 @@ final class APSTests: XCTestCase {
             originalErrorCode: "persistence_failed",
             originalErrorDescription: "Failed to persist note"
         )
-        XCTAssertTrue(schemaRollback.description.contains("schema.json"))
-        XCTAssertTrue(schemaRollback.description.contains("note"))
+        XCTAssertEqual(
+            schemaRollback.description,
+            "Failed to restore schema.json after purging 'note' failed; "
+                + "the retained data may no longer match the registry. "
+                + "Original failure [persistence_failed]: Failed to persist note"
+        )
         XCTAssertTrue(schemaRollback.hint.contains("retained data"))
+
+        let candidateRollback = APSError.rollbackFailed(
+            context: .schemaCandidate(key: "note"),
+            originalErrorCode: "persistence_failed",
+            originalErrorDescription: "Failed to persist schema.json"
+        )
+        XCTAssertEqual(
+            candidateRollback.description,
+            "The candidate registry update for removing 'note' failed, "
+                + "and schema.json could not be restored; no data purge was attempted. "
+                + "Original failure [persistence_failed]: Failed to persist schema.json"
+        )
+        XCTAssertEqual(
+            candidateRollback.hint,
+            "Inspect schema.json before retrying; retained key data was not purged."
+        )
+        XCTAssertFalse(candidateRollback.description.contains("after purging"))
     }
 
     func testAPSErrorContractCodesAndExitCodes() {
@@ -1681,7 +1717,10 @@ final class APSTests: XCTestCase {
 
         _ = try store.reset(name: "note", recordMutation: false) { entry in
             try JSONEncoder().encode("newer-note").write(to: noteURL)
-            try store.synchronizeDefaultAdapter(afterResetting: try XCTUnwrap(DemoKey(rawValue: entry.name)))
+            try store.synchronizeDefaultAdapter(
+                afterResetting: try XCTUnwrap(DemoKey(rawValue: entry.name)),
+                storageLockAlreadyHeld: true
+            )
         }
 
         XCTAssertEqual(try StateStore.readNoteFromDisk(), "newer-note")
@@ -1694,11 +1733,164 @@ final class APSTests: XCTestCase {
 
         _ = try store.reset(name: "profile", recordMutation: false) { entry in
             try JSONEncoder().encode(newerProfile).write(to: profileURL)
-            try store.synchronizeDefaultAdapter(afterResetting: try XCTUnwrap(DemoKey(rawValue: entry.name)))
+            try store.synchronizeDefaultAdapter(
+                afterResetting: try XCTUnwrap(DemoKey(rawValue: entry.name)),
+                storageLockAlreadyHeld: true
+            )
         }
 
         XCTAssertEqual(try StateStore.readProfileFromDisk(), newerProfile)
         XCTAssertEqual(try store.profileDocument(), newerProfile)
+    }
+
+    @MainActor
+    internal func testDefaultNoteResetAdapterFailureRestoresStorageCacheAndStats() async throws {
+        let store = StateStore()
+        try store.set(.note, value: "before-reset")
+        let noteURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("note.json")
+        let originalBytes = try Data(contentsOf: noteURL)
+        store.resetStats()
+
+        XCTAssertThrowsError(
+            try store.reset(
+                .note,
+                afterAcquiringProfileStorageLock: {},
+                afterSynchronizingDefaultAdapter: {
+                    throw APSError.persistenceFailed(key: "note-adapter")
+                }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "note-adapter"))
+        }
+
+        XCTAssertEqual(try Data(contentsOf: noteURL), originalBytes)
+        XCTAssertEqual(store.get(.note), "before-reset")
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
+    }
+
+    @MainActor
+    internal func testDefaultStateAndStoredStateAdapterFailuresRestoreExactValues() async throws {
+        let store = StateStore()
+        try store.set(.counter, value: "41")
+        store.resetStats()
+
+        XCTAssertThrowsError(
+            try store.reset(
+                .counter,
+                afterAcquiringProfileStorageLock: {},
+                afterSynchronizingDefaultAdapter: {
+                    throw APSError.persistenceFailed(key: "counter-adapter")
+                }
+            )
+        )
+        XCTAssertEqual(store.get(.counter), "41")
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
+
+        try store.set(.flag, value: "true")
+        let originalCanonical = hermeticDefaults?.object(forKey: "aps.user.flag") as? Bool
+        let originalLegacy = hermeticDefaults?.object(forKey: "App/aps.flag") as? Data
+        store.resetStats()
+
+        XCTAssertThrowsError(
+            try store.reset(
+                .flag,
+                afterAcquiringProfileStorageLock: {},
+                afterSynchronizingDefaultAdapter: {
+                    throw APSError.persistenceFailed(key: "flag-adapter")
+                }
+            )
+        )
+        XCTAssertEqual(hermeticDefaults?.object(forKey: "aps.user.flag") as? Bool, originalCanonical)
+        XCTAssertEqual(hermeticDefaults?.object(forKey: "App/aps.flag") as? Data, originalLegacy)
+        XCTAssertEqual(store.get(.flag), "true")
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
+    }
+
+    @MainActor
+    internal func testBulkProfileNameAdapterFailureRollsBackOnlyFailedKey() async throws {
+        let store = StateStore()
+        try store.set(.profile, value: #"{"name":"before-reset","version":7}"#)
+        store.resetStats()
+
+        XCTAssertThrowsError(
+            try store.resetAll(afterSynchronizingDefaultAdapter: { key in
+                if key == .profileName {
+                    throw APSError.persistenceFailed(key: "profileName-adapter")
+                }
+            })
+        ) { error in
+            guard let bulkError = error as? BulkResetError else {
+                return XCTFail("Expected BulkResetError, got \(error)")
+            }
+            XCTAssertEqual(
+                bulkError.report.reset,
+                ["counter", "message", "flag", "note", "profile", "secret"]
+            )
+            XCTAssertEqual(bulkError.report.failed?.key, "profileName")
+            XCTAssertTrue(bulkError.report.notAttempted.isEmpty)
+        }
+
+        XCTAssertEqual(try store.profileDocument(), ProfileDocument())
+        XCTAssertEqual(store.profileName(), "")
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 6)
+        XCTAssertEqual(store.statsSnapshot().lastMutatedKey, "secret")
+    }
+
+    @MainActor
+    internal func testDefaultNoteAdapterFailureReportsUnprovableStorageRollback() async throws {
+        let store = StateStore()
+        try store.set(.note, value: "before-reset")
+        let faults = ResetFileFaults(failingRead: 3)
+        store.resetStats()
+
+        XCTAssertThrowsError(
+            try store.reset(
+                .note,
+                afterAcquiringProfileStorageLock: {},
+                fileOperations: faults.operations,
+                afterSynchronizingDefaultAdapter: {
+                    throw APSError.persistenceFailed(key: "note-adapter")
+                }
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .rollbackFailed(
+                    context: .fileState(path: "note.json"),
+                    originalErrorCode: "persistence_failed",
+                    originalErrorDescription: "Failed to persist note-adapter"
+                )
+            )
+        }
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
+    }
+
+    @MainActor
+    internal func testDefaultSecretAdapterFailurePreservesEnvelopeAndStats() async throws {
+        setProcessEnv("APS_SECRET_PASSPHRASE", "adapter-transaction-test")
+        defer { setProcessEnv("APS_SECRET_PASSPHRASE", nil) }
+        let store = StateStore()
+        try store.set(.secret, value: "before-reset")
+        let envelopeURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("secret.enc")
+        let originalBytes = try Data(contentsOf: envelopeURL)
+        store.resetStats()
+
+        XCTAssertThrowsError(
+            try store.reset(
+                .secret,
+                afterAcquiringProfileStorageLock: {},
+                afterSynchronizingDefaultAdapter: {
+                    throw APSError.persistenceFailed(key: "secret-adapter")
+                }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "secret-adapter"))
+        }
+        XCTAssertEqual(try Data(contentsOf: envelopeURL), originalBytes)
+        XCTAssertEqual(store.get(.secret), "before-reset")
+        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
     }
 
     @MainActor
@@ -2238,7 +2430,7 @@ final class APSTests: XCTestCase {
             XCTAssertEqual(
                 error as? APSError,
                 .rollbackFailed(
-                    context: .schema(key: "note"),
+                    context: .schemaCandidate(key: "note"),
                     originalErrorCode: "persistence_failed",
                     originalErrorDescription: "Failed to persist schema.json"
                 )

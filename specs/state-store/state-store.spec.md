@@ -106,6 +106,11 @@ and synchronize the default AppState dogfood surface before releasing the lock.
     after the outer schema lock is released.
 15. The removal guarantee covers errors detected before return. It does not
     claim crash or power-loss atomicity.
+16. Default adapter synchronization participates in single and bulk reset
+    transactions. Failure restores the exact backing checkpoint and compiled
+    adapter cache, reports no mutation for the failed key, and reports
+    `rollbackFailed` if restoration cannot be proven. Bulk checkpoints are
+    captured per key immediately before mutation.
 
 ## Behavioral Examples
 

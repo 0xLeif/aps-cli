@@ -100,32 +100,49 @@ enum DynamicKeyStorage {
         entry: SchemaKeyEntry,
         stateRoot: String,
         schema: UserSchemaDocument,
-        fileOperations: FileOperations = .live
+        fileOperations: FileOperations = .live,
+        afterReset: () throws -> Void = {}
     ) throws -> ResetOutcome {
         let initial = entry.initial?.wireString ?? ""
         switch entry.storage {
         case "State":
-            memoryStrings.removeValue(forKey: entry.name)
-            memoryInts.removeValue(forKey: entry.name)
-            memoryBools.removeValue(forKey: entry.name)
-            if entry.initial != nil {
-                try memorySet(entry, value: initial)
+            let oldString = memoryStrings[entry.name]
+            let oldInt = memoryInts[entry.name]
+            let oldBool = memoryBools[entry.name]
+            do {
+                memoryStrings.removeValue(forKey: entry.name)
+                memoryInts.removeValue(forKey: entry.name)
+                memoryBools.removeValue(forKey: entry.name)
+                if entry.initial != nil {
+                    try memorySet(entry, value: initial)
+                }
+                try afterReset()
+            } catch {
+                restoreMemoryValue(oldString, forKey: entry.name, in: &memoryStrings)
+                restoreMemoryValue(oldInt, forKey: entry.name, in: &memoryInts)
+                restoreMemoryValue(oldBool, forKey: entry.name, in: &memoryBools)
+                throw error
             }
         case "StoredState":
             let store = userDefaults
-            try resetStoredValue(entry, initial: entry.initial == nil ? nil : initial, in: store)
+            try resetStoredValue(
+                entry,
+                initial: entry.initial == nil ? nil : initial,
+                in: store,
+                afterReset: afterReset
+            )
         case "FileState":
-            if entry.initial != nil {
-                try SchemaFileLock.withExclusiveStorageLock(
+            try SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: stateRoot,
+                lockFileName: try fileLockName(entry),
+                resourceKey: entry.name
+            ) {
+                try resetFileTransaction(
+                    entry: entry,
                     stateRoot: stateRoot,
-                    lockFileName: try fileLockName(entry),
-                    resourceKey: entry.name
+                    operations: fileOperations
                 ) {
-                    try resetFileTransaction(
-                        entry: entry,
-                        stateRoot: stateRoot,
-                        operations: fileOperations
-                    ) {
+                    if entry.initial != nil {
                         try fileSetUnlocked(
                             entry,
                             value: initial,
@@ -139,18 +156,17 @@ enum DynamicKeyStorage {
                         ) == initial else {
                             throw APSError.persistenceFailed(key: entry.name)
                         }
+                    } else {
+                        _ = try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
                     }
-                }
-            } else {
-                _ = try SchemaFileLock.withExclusiveStorageLock(
-                    stateRoot: stateRoot,
-                    lockFileName: try fileLockName(entry),
-                    resourceKey: entry.name
-                ) {
-                    try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
+                    try afterReset()
                 }
             }
         case "EncryptedFile":
+            // The default encrypted adapter is intentionally a no-op. Run the
+            // callback first so a future injected adapter failure cannot delete
+            // an existing envelope without a rollback-capable secret transaction.
+            try afterReset()
             _ = try encryptedStore(entry, stateRoot: stateRoot).reset()
         case "Slice":
             let parent = try sliceParent(entry: entry, schema: schema)
@@ -179,12 +195,25 @@ enum DynamicKeyStorage {
                     ) == initial else {
                         throw APSError.persistenceFailed(key: entry.name)
                     }
+                    try afterReset()
                 }
             }
         default:
             throw APSError.schemaInvalid(reason: "unsupported storage \(entry.storage)")
         }
         return ResetOutcome(key: entry.name)
+    }
+
+    private static func restoreMemoryValue<Value>(
+        _ value: Value?,
+        forKey key: String,
+        in storage: inout [String: Value]
+    ) {
+        if let value {
+            storage[key] = value
+        } else {
+            storage.removeValue(forKey: key)
+        }
     }
 
     static func purge(entry: SchemaKeyEntry, stateRoot: String) throws {
@@ -363,7 +392,8 @@ enum DynamicKeyStorage {
     private static func resetStoredValue(
         _ entry: SchemaKeyEntry,
         initial: String?,
-        in store: any UserDefaultsManaging
+        in store: any UserDefaultsManaging,
+        afterReset: () throws -> Void
     ) throws {
         let canonicalKey = storedDefaultsKey(entry.name)
         let oldCanonical = store.object(forKey: canonicalKey)
@@ -383,6 +413,7 @@ enum DynamicKeyStorage {
             else {
                 throw APSError.persistenceFailed(key: entry.name)
             }
+            try afterReset()
         } catch {
             try restoreStoredObjects(
                 canonical: oldCanonical,

@@ -99,6 +99,7 @@ extension StateStore {
     internal func reset(
         name: String,
         recordMutation: Bool,
+        fileOperations: DynamicKeyStorage.FileOperations = .live,
         afterReset: (SchemaKeyEntry) throws -> Void
     ) throws -> ResetOutcome {
         let root = stateRoot
@@ -111,9 +112,12 @@ extension StateStore {
                 let resetOutcome = try DynamicKeyStorage.reset(
                     entry: entry,
                     stateRoot: root,
-                    schema: schema
+                    schema: schema,
+                    fileOperations: fileOperations,
+                    afterReset: {
+                        try afterReset(entry)
+                    }
                 )
-                try afterReset(entry)
                 return resetOutcome
             } catch let error as APSError {
                 throw error
@@ -182,6 +186,8 @@ extension StateStore {
     internal func reset(
         entries: [SchemaKeyEntry],
         schema: UserSchemaDocument,
+        fileOperations: DynamicKeyStorage.FileOperations = .live,
+        beforeReset: (SchemaKeyEntry) throws -> Void = { _ in },
         afterReset: (SchemaKeyEntry) throws -> Void = { _ in }
     ) throws -> BulkResetReport {
         let selectedNames = entries.map(\.name)
@@ -196,12 +202,16 @@ extension StateStore {
                 ) {
                     throw error
                 }
+                try beforeReset(entry)
                 _ = try DynamicKeyStorage.reset(
                     entry: entry,
                     stateRoot: stateRoot,
-                    schema: schema
+                    schema: schema,
+                    fileOperations: fileOperations,
+                    afterReset: {
+                        try afterReset(entry)
+                    }
                 )
-                try afterReset(entry)
                 resetNames.append(entry.name)
             } catch let error as APSError {
                 let report = BulkResetReport(
@@ -400,7 +410,7 @@ extension StateStore {
                     }
                 } catch {
                     throw APSError.rollbackFailed(
-                        context: .schema(key: name),
+                        context: .schemaCandidate(key: name),
                         originalErrorCode: candidateError.code,
                         originalErrorDescription: candidateError.description
                     )

@@ -390,7 +390,8 @@ enum Schema {
             ErrorEntry(
                 code: "rollback_failed",
                 exitCode: 73,
-                meaning: "an operation failed and its schema, StoredState value, or staged file could not be restored",
+                meaning: "an operation failed and its adapter, schema, StoredState value, "
+                    + "or staged file could not be restored",
                 hint: "Inspect the resource named in the error and its retained or staged data before retrying."
             ),
         ]

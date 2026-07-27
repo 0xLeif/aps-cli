@@ -113,8 +113,10 @@ self-describes that contract for agents through the `schema` command.
 | `schemaInvalid` | schema.json undecodable or fails validation. |
 | `unknownKey` | Name not present in the active registry. |
 | `schemaConflict` | key add would overwrite without `--force`. |
-| `RollbackContext` | Identifies the schema, StoredState value, reset file, or staged file whose restoration failed. |
+| `RollbackContext` | Identifies the adapter or backing resource whose restoration failed. |
+| `adapter` | Rollback context for a compiled AppState adapter restoration failure. |
 | `schema` | Rollback context for a schema registry restoration failure. |
+| `schemaCandidate` | Rollback context for restoration after a candidate schema update failed before purge. |
 | `storedState` | Rollback context for a StoredState restoration failure. |
 | `fileState` | Rollback context for a FileState or Slice-parent reset restoration failure. |
 | `stagedFile` | Rollback context for a staged-file restoration failure. |

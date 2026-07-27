@@ -71,8 +71,12 @@ public struct ProfileDocument: Codable, Equatable, Sendable {
 
 /// Resource whose restoration failed during a transactional operation.
 public enum RollbackContext: Equatable, Sendable {
+    /// A compiled AppState adapter could not be restored after synchronization failed.
+    case adapter(key: String)
     /// The schema registry could not be restored after purging a key.
     case schema(key: String)
+    /// The schema registry could not be restored after a candidate update failed.
+    case schemaCandidate(key: String)
     /// A StoredState value could not be restored after a failed reset.
     case storedState(key: String)
     /// A FileState file could not be restored after a failed reset.
@@ -83,14 +87,20 @@ public enum RollbackContext: Equatable, Sendable {
     /// Human-readable rollback failure without the original error.
     public var failureDescription: String {
         switch self {
+        case .adapter(let key):
+            return "Failed to restore AppState adapter '\(key)' after reset synchronization failed; "
+                + "the compiled adapter may no longer match its backing storage."
         case .schema(let key):
             return "Failed to restore schema.json after purging '\(key)' failed; "
                 + "the retained data may no longer match the registry."
+        case .schemaCandidate(let key):
+            return "The candidate registry update for removing '\(key)' failed, "
+                + "and schema.json could not be restored; no data purge was attempted."
         case .storedState(let key):
-            return "Failed to restore StoredState value '\(key)' after reset persistence failed; "
+            return "Failed to restore StoredState value '\(key)' after reset failed; "
                 + "the stored value may be partially updated."
         case .fileState(let path):
-            return "Failed to restore state file '\(path)' after reset verification failed; "
+            return "Failed to restore state file '\(path)' after reset failed; "
                 + "the file may be partially updated."
         case .stagedFile(let path):
             return "Failed to restore state file '\(path)' after deletion failed; "
@@ -101,8 +111,12 @@ public enum RollbackContext: Equatable, Sendable {
     /// Actionable recovery guidance for the affected resource.
     public var hint: String {
         switch self {
+        case .adapter(let key):
+            return "Inspect the AppState adapter and backing storage for '\(key)' before retrying the reset."
         case .schema:
             return "Inspect schema.json and the retained data under the state root before retrying."
+        case .schemaCandidate:
+            return "Inspect schema.json before retrying; retained key data was not purged."
         case .storedState(let key):
             return "Inspect the StoredState value for '\(key)' before retrying the reset."
         case .fileState(let path):
