@@ -212,6 +212,25 @@ test -f "$APS_HOME/schema.json"
 test "$("$bin" get smokeNote)" = "from-smoke"
 "$bin" schema | grep -q '"name":"smokeNote"'
 
+# A forced seed entry is governed by schema.json, not its compiled DemoKey.
+"$bin" key add counter \
+  --type String \
+  --storage FileState \
+  --path forced-counter.json \
+  --initial forced-initial \
+  --force
+test "$("$bin" get counter)" = "forced-initial"
+test "$("$bin" set counter from-registry)" = "from-registry"
+"$bin" get counter --json | grep -q '"storage":"FileState"'
+"$bin" get counter --json | grep -q '"type":"String"'
+"$bin" get counter --json | grep -q '"value":"from-registry"'
+"$bin" dump --json | grep -q '"value":"from-registry"'
+forced_watch="$("$bin" watch counter --count 1 --jsonl)"
+echo "$forced_watch" | grep -q '"storage":"FileState"'
+"$bin" reset counter --json | grep -q '"value":"forced-initial"'
+test "$("$bin" get counter)" = "forced-initial"
+test -f "$APS_HOME/forced-counter.json"
+
 # Schema-controlled paths cannot alias the state root or endanger unrelated files.
 echo "must-survive" > "$APS_HOME/path-safety-sentinel.txt"
 unsafe_paths=(

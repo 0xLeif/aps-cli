@@ -227,15 +227,7 @@ enum CLIOutput {
         }
     }
 
-    @MainActor
-    static func typedValue(for entry: SchemaKeyEntry, store: StateStore) throws -> JSONValue {
-        try typedValue(for: entry, from: try store.get(name: entry.name))
-    }
-
     static func typedValue(for entry: SchemaKeyEntry, from raw: String) throws -> JSONValue {
-        if let demo = DemoKey(rawValue: entry.name) {
-            return try typedValue(for: demo, from: raw)
-        }
         switch entry.type {
         case "Int":
             guard let intValue = Int(raw) else {

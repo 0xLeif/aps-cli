@@ -520,11 +520,11 @@ final class APSTests: XCTestCase {
     @MainActor
     func testDumpIncludesKeysAndUsesDependency() async throws {
         let store = StateStore()
-        try store.set(.counter, value: "3")
-        try store.set(.message, value: "hi")
-        try store.set(.profile, value: #"{"name":"x","version":1}"#)
+        try store.set(name: "counter", value: "3")
+        try store.set(name: "message", value: "hi")
+        try store.set(name: "profile", value: #"{"name":"x","version":1}"#)
 
-        let json = try store.dump()
+        let json = try store.dumpRegistered()
         XCTAssertTrue(json.contains("\"key\":\"counter\""))
         XCTAssertTrue(json.contains("\"value\":3"))
         XCTAssertTrue(json.contains("\"key\":\"message\""))
@@ -605,13 +605,20 @@ final class APSTests: XCTestCase {
     @MainActor
     func testResetAll() async throws {
         let store = StateStore()
-        try store.set(.counter, value: "5")
-        try store.set(.note, value: "keep?")
-        try store.set(.profile, value: #"{"name":"p","version":1}"#)
-        store.resetAll()
-        XCTAssertEqual(store.get(.counter), "0")
-        XCTAssertEqual(store.get(.note), "")
-        XCTAssertEqual(try store.profileDocument(), ProfileDocument())
+        try store.set(name: "counter", value: "5")
+        try store.set(name: "note", value: "keep?")
+        try store.set(name: "profile", value: #"{"name":"p","version":1}"#)
+        try store.resetAllSeedKeys()
+        XCTAssertEqual(try store.get(name: "counter"), "0")
+        XCTAssertEqual(try store.get(name: "note"), "")
+        let profileData = try XCTUnwrap(
+            try store.get(name: "profile").data(using: .utf8)
+        )
+        let profile = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: profileData) as? [String: Any]
+        )
+        XCTAssertEqual(profile["name"] as? String, "")
+        XCTAssertEqual(profile["version"] as? Int, 0)
     }
 
     @MainActor
@@ -1278,6 +1285,220 @@ final class APSTests: XCTestCase {
         }
     }
 
+    @MainActor
+    internal func testForcedSeedUsesRegistryTypeStoragePathInitialOutputAndWatch() async throws {
+        let store = StateStore()
+        let forced = SchemaKeyEntry(
+            name: "counter",
+            type: "String",
+            storage: "FileState",
+            initial: .string("forced-initial"),
+            path: "forced-counter.json",
+            doc: "forced seed"
+        )
+        try store.addKey(forced, force: true)
+
+        XCTAssertEqual(try store.get(name: "counter"), "forced-initial")
+        XCTAssertEqual(try store.resolve("counter").doc, "forced seed")
+        let root = FileManager.defaultFileStatePath
+        let projected = try XCTUnwrap(
+            try Schema.document(stateDir: root).keys.first { $0.name == "counter" }
+        )
+        XCTAssertEqual(projected.type, "String")
+        XCTAssertEqual(projected.storage, "FileState")
+        XCTAssertEqual(projected.path, "<state-root>/forced-counter.json")
+        try store.set(name: "counter", value: "hello")
+        XCTAssertEqual(try StateStore().get(name: "counter"), "hello")
+        XCTAssertEqual(
+            try CLIOutput.typedValue(for: forced, from: try store.get(name: "counter")),
+            .string("hello")
+        )
+        let dump = try store.dumpRegistered()
+        XCTAssertTrue(dump.contains(#""key":"counter""#))
+        XCTAssertTrue(dump.contains(#""storage":"FileState""#))
+        XCTAssertTrue(dump.contains(#""value":"hello""#))
+
+        let fileURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("forced-counter.json")
+        var seen: [String] = []
+        try store.watchBlocking(
+            name: "counter",
+            pollInterval: 0.05,
+            shouldContinue: { seen.count < 2 }
+        ) { value in
+            seen.append(value)
+            if seen.count == 1, let data = try? JSONEncoder().encode("changed") {
+                try? data.write(to: fileURL)
+            }
+        }
+        XCTAssertEqual(seen, ["hello", "changed"])
+
+        try store.reset(name: "counter")
+        XCTAssertEqual(try store.get(name: "counter"), "forced-initial")
+    }
+
+    @MainActor
+    internal func testForcedStringSeedUsesRegistryBoolStoredState() async throws {
+        let store = StateStore()
+        let forced = SchemaKeyEntry(
+            name: "message",
+            type: "Bool",
+            storage: "StoredState",
+            initial: .bool(true),
+            doc: "forced bool"
+        )
+        try store.addKey(forced, force: true)
+
+        XCTAssertEqual(try store.get(name: "message"), "true")
+        try store.set(name: "message", value: "false")
+        XCTAssertEqual(
+            try CLIOutput.typedValue(for: forced, from: try store.get(name: "message")),
+            .bool(false)
+        )
+        XCTAssertEqual(
+            hermeticDefaults?.object(forKey: "aps.user.message") as? Bool,
+            false
+        )
+        XCTAssertThrowsError(try store.set(name: "message", value: "not-bool"))
+
+        try store.reset(name: "message")
+        XCTAssertEqual(try store.get(name: "message"), "true")
+    }
+
+    @MainActor
+    internal func testForcedSeedPathIgnoresAndPreservesFormerData() async throws {
+        let store = StateStore()
+        try store.set(name: "note", value: "legacy-note")
+        let oldURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("note.json")
+        let forced = SchemaKeyEntry(
+            name: "note",
+            type: "String",
+            storage: "FileState",
+            initial: .string("new-initial"),
+            path: "moved-note.json",
+            doc: "moved seed"
+        )
+        try store.addKey(forced, force: true)
+
+        XCTAssertEqual(try store.get(name: "note"), "new-initial")
+        try store.set(name: "note", value: "moved-note")
+        XCTAssertEqual(try store.get(name: "note"), "moved-note")
+        XCTAssertEqual(
+            try JSONDecoder().decode(String.self, from: Data(contentsOf: oldURL)),
+            "legacy-note"
+        )
+
+        try store.reset(name: "note")
+        XCTAssertEqual(try store.get(name: "note"), "new-initial")
+        XCTAssertEqual(
+            try JSONDecoder().decode(String.self, from: Data(contentsOf: oldURL)),
+            "legacy-note"
+        )
+    }
+
+    @MainActor
+    internal func testForcedSeedSliceUsesRegistryParentAndField() async throws {
+        let store = StateStore()
+        let parent = SchemaKeyEntry(
+            name: "alternateProfile",
+            type: "object",
+            storage: "FileState",
+            initial: .object(["alias": .string("seed"), "version": .int(7)]),
+            path: "alternate-profile.json",
+            doc: "alternate slice parent",
+            objectShape: ["alias": "String", "version": "Int"]
+        )
+        try store.addKey(parent, force: false)
+        let forcedSlice = SchemaKeyEntry(
+            name: "profileName",
+            type: "String",
+            storage: "Slice",
+            initial: .string("reset-alias"),
+            doc: "redirected slice",
+            sliceOf: "alternateProfile",
+            sliceField: "alias"
+        )
+        try store.addKey(forcedSlice, force: true)
+
+        XCTAssertEqual(try store.get(name: "profileName"), "seed")
+        try store.set(name: "profileName", value: "redirected")
+        XCTAssertEqual(try store.get(name: "profileName"), "redirected")
+        let profileData = try XCTUnwrap(
+            try store.get(name: "profile").data(using: .utf8)
+        )
+        let profile = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: profileData) as? [String: Any]
+        )
+        XCTAssertEqual(profile["name"] as? String, "")
+        XCTAssertEqual(profile["version"] as? Int, 0)
+
+        try store.reset(name: "profileName")
+        XCTAssertEqual(try store.get(name: "profileName"), "reset-alias")
+    }
+
+    @MainActor
+    internal func testSeedBulkResetSkipsRemovedSeedName() async throws {
+        let store = StateStore()
+        try store.set(name: "message", value: "must-survive")
+        try store.removeKey(name: "message", purge: false)
+
+        try store.resetAllSeedKeys()
+        XCTAssertThrowsError(try store.get(name: "message")) { error in
+            XCTAssertEqual(error as? APSError, .unknownKey(name: "message"))
+        }
+
+        let seed = try XCTUnwrap(
+            UserSchema.defaultDocument().keys.first { $0.name == "message" }
+        )
+        try store.addKey(seed, force: false)
+        XCTAssertEqual(try store.get(name: "message"), "must-survive")
+    }
+
+    @MainActor
+    internal func testDefaultFlagReadsLegacyAppStateDataAndResetPreventsResurrection() async throws {
+        let legacyData = try JSONEncoder().encode(true)
+        hermeticDefaults?.set(legacyData, forKey: "App/aps.flag")
+        hermeticDefaults?.removeObject(forKey: "aps.user.flag")
+        let store = StateStore()
+
+        XCTAssertEqual(try store.get(name: "flag"), "true")
+        XCTAssertNil(hermeticDefaults?.object(forKey: "aps.user.flag"))
+
+        try store.reset(name: "flag")
+        XCTAssertNil(hermeticDefaults?.object(forKey: "App/aps.flag"))
+        XCTAssertEqual(
+            hermeticDefaults?.object(forKey: "aps.user.flag") as? Bool,
+            false
+        )
+        XCTAssertEqual(try store.get(name: "flag"), "false")
+    }
+
+    @MainActor
+    internal func testForcedFlagDefinitionDisablesLegacyCompatibility() async throws {
+        let legacyData = try JSONEncoder().encode(true)
+        hermeticDefaults?.set(legacyData, forKey: "App/aps.flag")
+        hermeticDefaults?.removeObject(forKey: "aps.user.flag")
+        let store = StateStore()
+        let forced = SchemaKeyEntry(
+            name: "flag",
+            type: "String",
+            storage: "StoredState",
+            initial: .string("forced"),
+            doc: "forced flag"
+        )
+        try store.addKey(forced, force: true)
+
+        XCTAssertEqual(try store.get(name: "flag"), "forced")
+        try store.set(name: "flag", value: "current")
+        XCTAssertEqual(try store.get(name: "flag"), "current")
+        XCTAssertNotNil(hermeticDefaults?.object(forKey: "App/aps.flag"))
+
+        try store.reset(name: "flag")
+        XCTAssertEqual(try store.get(name: "flag"), "forced")
+        XCTAssertNotNil(hermeticDefaults?.object(forKey: "App/aps.flag"))
+    }
+
     internal func testSchemaRejectsStateRootAndPreservesSentinel() async throws {
         try await MainActor.run {
             let root = FileManager.default.temporaryDirectory
@@ -1504,10 +1725,10 @@ final class APSTests: XCTestCase {
             force: false
         )
         try store.set(name: "agentStatus", value: "exploring")
-        try store.set(.flag, value: "true")
+        try store.set(name: "flag", value: "true")
 
-        store.resetAll()
-        XCTAssertEqual(store.get(.flag), "false")
+        try store.resetAllSeedKeys()
+        XCTAssertEqual(try store.get(name: "flag"), "false")
         XCTAssertEqual(try store.get(name: "agentStatus"), "exploring")
 
         try store.resetAllRegistered()

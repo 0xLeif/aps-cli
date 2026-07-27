@@ -150,7 +150,10 @@ Missing `schema.json` on an existing state root: **materialize the built-in defa
 | `aps key list [--json]` | Human/agent listing (subset of `aps keys`) |
 | Hand-editing `schema.json` | Supported; next `aps` command validates and fails with `invalid_value` / dedicated `schema_invalid` if needed |
 
-`aps keys` remains the agent-facing inventory (name/type/storage/detail). After dynamic schema lands, it reads the registry rather than `DemoKey.allCases`.
+`aps keys` remains the agent-facing inventory (name/type/storage/detail). It
+reads the registry rather than `DemoKey.allCases`. The same rule applies to
+get, set, reset, watch, dump, disk validation, and machine-value typing:
+matching a default seed name never selects a compiled adapter.
 
 ### 3. Runtime model (implementation sketch)
 
@@ -164,12 +167,19 @@ Replace compile-time-only dispatch with a loaded registry:
 | Storage | Adapter idea |
 |---------|----------------|
 | `State` | Process-local map in `Application` / in-memory box keyed by name |
-| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>` |
+| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
 | `FileState` | JSON file at `path` (string or object document) |
 | `EncryptedFile` | Reuse #35 envelope helpers with configurable filename |
 | `Slice` | Read/write parent object field |
 
-`get` / `set` / `watch` / `reset` / `dump` take **string key names** resolved through the registry. ArgumentParser's current `DemoKey` enum becomes a compatibility layer during migration (accept known demo names) and is removed from the public CLI surface once string keys land.
+`get` / `set` / `watch` / `reset` / `dump` take **string key names** resolved
+through the registry. `DemoKey` is seed inventory and a low-level AppState
+dogfood surface only; it is not a registry dispatch mechanism.
+
+`key add --force` replaces metadata without migrating or deleting data.
+Changing storage or path takes effect on the next command, while former adapter
+data remains untouched unless an explicit purge removes it. Changing `initial`
+affects missing reads and later reset, not an existing value.
 
 Unknown key: exit **64** (`invalid_value` or a dedicated `unknown_key` code added in the same implementation change; prefer extending the #31 table once rather than inventing ad hoc messages).
 
@@ -223,10 +233,13 @@ Deferred: arrays, nested objects, enums, decimals, timestamps as first-class typ
 | A. Ship RFC (this change) | Docs only |
 | B. Dual-read | Code still has `DemoKey`, but also reads `schema.json` when present |
 | C. Materialize | On boot of a state root without `schema.json`, write the default demo schema |
-| D. String keys | CLI accepts any registered name; `DemoKey` becomes internal seed only |
-| E. Cleanup | Remove `ExpressibleByArgument` enum from public CLI; keep seed builder for defaults |
+| D. String keys | Complete: CLI accepts any registered name and resolves it uniformly |
+| E. Cleanup | Complete for CLI dispatch: `DemoKey` remains seed inventory and direct AppState dogfood only |
 
-Data files (`note.json`, `profile.json`, `secret.enc`, UserDefaults `flag`) keep their current paths so existing roots do not break when `schema.json` appears.
+Data files (`note.json`, `profile.json`, `secret.enc`) keep their current paths.
+The default flag reads the legacy AppState `App/aps.flag` encoding when no
+canonical `aps.user.flag` value exists. Reset clears the legacy key before
+writing the current initial value so old data cannot reappear.
 
 ### 8. Errors and exits
 
@@ -263,12 +276,12 @@ Torn FileState files remain `corrupt_state` / 65.
 Ordered work once this RFC merges:
 
 1. **Schema file IO + validation** (load/materialize/write, path safety, slice refs).
-2. **Registry resolve** for get/set/reset/dump/keys against string names (demo seed parity tests).
+2. **Registry resolve** for get/set/reset/dump/keys against string names (complete, including forced seed replacements).
 3. **`aps key add|remove|list`** sugar with JSON errors.
 4. **Dynamic `aps schema` keys projection** + `userSchema.hash`; bump static `schemaVersion` when the contract document gains fields.
 5. **Watch** against registry keys (poll path first; Match current signal/TTY behavior).
 6. **Docs + smoke**: seed schema in smoke state roots; add/remove round-trip in `Scripts/smoke.sh` / `smoke.ps1`.
-7. **Remove CLI `DemoKey` argument type** after parity.
+7. **Remove CLI `DemoKey` argument dispatch** after parity (complete).
 
 Suggested tracking: open implementation issues from this list when starting 1.0 coding (do not block on #40's public flip for the first phases; dynamic schema can land in a 1.0.0-rc while the repo is still private).
 

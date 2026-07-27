@@ -70,10 +70,7 @@ enum DynamicKeyStorage {
                 try memorySet(entry, value: initial)
             }
         case "StoredState":
-            let store = userDefaults
-            store.removeObject(forKey: storedDefaultsKey(entry.name))
-            (store as? UserDefaults)?.synchronize()
-            UserDefaults.standard.synchronize()
+            removeStoredValue(entry)
             if entry.initial != nil {
                 try storedSet(entry, value: initial)
             }
@@ -150,25 +147,79 @@ enum DynamicKeyStorage {
         "aps.user.\(name)"
     }
 
-    private static func storedGet(_ entry: SchemaKeyEntry) -> String {
-        let key = storedDefaultsKey(entry.name)
+    internal static func removeStoredValue(_ entry: SchemaKeyEntry) {
         let store = userDefaults
+        store.removeObject(forKey: storedDefaultsKey(entry.name))
+        if usesLegacyFlagStorage(entry) {
+            store.removeObject(forKey: legacyFlagDefaultsKey)
+        }
+        (store as? UserDefaults)?.synchronize()
+        UserDefaults.standard.synchronize()
+    }
+
+    private static let legacyFlagDefaultsKey = "App/aps.flag"
+
+    private static func usesLegacyFlagStorage(_ entry: SchemaKeyEntry) -> Bool {
+        entry.name == "flag" && entry.type == "Bool" && entry.storage == "StoredState"
+    }
+
+    private static func storedObject(_ entry: SchemaKeyEntry) -> Any? {
+        let store = userDefaults
+        if let object = store.object(forKey: storedDefaultsKey(entry.name)) {
+            return object
+        }
+        guard usesLegacyFlagStorage(entry) else { return nil }
+        return store.object(forKey: legacyFlagDefaultsKey)
+    }
+
+    private static func decodeStoredInt(_ object: Any) -> Int? {
+        if let data = object as? Data {
+            return try? JSONDecoder().decode(Int.self, from: data)
+        }
+        if let intValue = object as? Int {
+            return intValue
+        }
+        if let stringValue = object as? String {
+            return Int(stringValue)
+        }
+        return nil
+    }
+
+    private static func decodeStoredBool(_ object: Any) -> Bool? {
+        if let data = object as? Data {
+            return try? JSONDecoder().decode(Bool.self, from: data)
+        }
+        if let boolValue = object as? Bool {
+            return boolValue
+        }
+        if let stringValue = object as? String {
+            return StateStore.parseBool(stringValue)
+        }
+        return nil
+    }
+
+    private static func decodeStoredString(_ object: Any) -> String? {
+        if let data = object as? Data {
+            return try? JSONDecoder().decode(String.self, from: data)
+        }
+        return object as? String
+    }
+
+    private static func storedGet(_ entry: SchemaKeyEntry) -> String {
         switch entry.type {
         case "Int":
-            if let object = store.object(forKey: key) {
-                if let intValue = object as? Int { return String(intValue) }
-                if let strValue = object as? String, let intValue = Int(strValue) { return String(intValue) }
+            if let object = storedObject(entry), let intValue = decodeStoredInt(object) {
+                return String(intValue)
             }
             return entry.initial?.wireString ?? "0"
         case "Bool":
-            if let object = store.object(forKey: key) {
-                if let boolValue = object as? Bool { return boolValue ? "true" : "false" }
-                if let strValue = object as? String, let boolValue = StateStore.parseBool(strValue) { return boolValue ? "true" : "false" }
+            if let object = storedObject(entry), let boolValue = decodeStoredBool(object) {
+                return boolValue ? "true" : "false"
             }
             return entry.initial?.wireString ?? "false"
         default:
-            if let object = store.object(forKey: key) as? String {
-                return object
+            if let object = storedObject(entry), let stringValue = decodeStoredString(object) {
+                return stringValue
             }
             return entry.initial?.wireString ?? ""
         }

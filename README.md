@@ -108,6 +108,13 @@ aps key list --json
 
 Persistent schema paths must be portable relative file paths below the state root. `aps` rejects absolute or traversing paths, reserved APS files, case or Unicode-equivalent collisions, directories, special files, and paths that traverse symbolic links. Reset and purge delete only a validated regular-file leaf.
 
+`schema.json` is authoritative for every registered name, including the seven
+default seed names. `DemoKey` defines only the schema materialized for a new
+state root. After `key add --force`, get, set, reset, watch, dump, type parsing,
+and machine output all use the replacement entry. Force is non-destructive:
+changing storage or path does not migrate, purge, or read the former adapter's
+data, so changing back can reveal it again.
+
 ### Encrypted-file secret store (`secret`)
 
 `secret` is backed by an age-style encrypted envelope under the state root (issue #35), not the Keychain: ephemeral X25519 ECDH + HKDF + ChaCha20-Poly1305 via [swift-crypto](https://github.com/apple/swift-crypto), the same construction as [AlgoChat](https://github.com/CorvidLabs/swift-algochat)'s message encryptor.
@@ -119,7 +126,7 @@ Persistent schema paths must be portable relative file paths below the state roo
 - A corrupt `secret.enc` envelope blocks both get and set with `decoding_failed` until you run `aps reset secret` (or repair the file).
 - **Interactive opt-in:** with `APS_SECRET_USE_PASSPHRASE=1` on a TTY, aps prompts once itself (its own getpass prompt, not macOS Keychain's).
 - `aps reset secret` deletes `secret.enc`; the key file is kept for future writes.
-- `aps reset --all` restores DemoKey seed keys only (safe for agent FileState keys). Use `aps reset --registered` to wipe every key in `schema.json`.
+- `aps reset --all` restores currently registered seed names through their live schema entries (safe for agent keys). Removed seed names stay removed. Use `aps reset --registered` to restore every key in `schema.json`.
 - The previous AppState `SecureState` / Keychain backend was replaced: ad-hoc signed CLI binaries can never earn durable Keychain trust, so every access prompted for a password. AppState itself is unchanged; SecureState remains dogfooded in [AppStateExamples](https://github.com/0xLeif/AppStateExamples).
 
 ### Dependencies
@@ -211,7 +218,7 @@ swift run aps key add agentNote --type String --storage FileState --path agent-n
 
 `aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion` (bumped when the document shape changes; currently **4**), live `userSchema` meta (formatVersion, keyCount, hash), state-root precedence, every registered key and command, payload shapes, and the error-code table. Live values stay in `aps dump`. ArgumentParser's full command tree is also available as JSON via `aps <cmd> --experimental-dump-help`.
 
-`watch` uses Swift Observation for in-process updates and polls as a fallback so disk-backed `FileState` / `StoredState` changes can still surface, including updates written by another `aps` process. For `note` and `profile`, polling reads the JSON files directly so AppState's FileState cache cannot hide cross-process writes.
+`watch` polls the adapter selected by the resolved registry entry, so forced seed replacements and disk-backed `FileState` / `StoredState` changes surface even when another `aps` process writes them. The default `flag` can read legacy AppState `App/aps.flag` data when `aps.user.flag` is absent; new registry writes use the canonical `aps.user.<name>` namespace.
 
 ### Output modes (human and agent)
 

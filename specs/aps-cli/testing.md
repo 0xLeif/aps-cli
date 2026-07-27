@@ -22,3 +22,9 @@
 - Unit: schema materialize, key add, unknown_key, schemaVersion 4, peel/unlock/reset/lock tests
 - Smoke: key add/remove round-trip plus lexical, reserved, directory, symlink
   where supported, collision, reset, and purge path-safety cases (sh + ps1)
+- Registry authority: forced seed type, storage, path, initial value, Slice
+  metadata, watch, dump, reset scope, and typed output use `SchemaKeyEntry`.
+- Compatibility: default flag reads JSON-encoded legacy `App/aps.flag` data and
+  reset prevents it from reappearing behind `aps.user.flag`.
+- Smoke: shell and PowerShell force `counter` from Int/State to
+  String/FileState and verify fresh-process get, set, dump, watch, and reset.

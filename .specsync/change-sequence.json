@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 47,
-  "id": "CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for",
+  "sequence": 48,
+  "id": "CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112",
   "acknowledged_collisions": []
 }

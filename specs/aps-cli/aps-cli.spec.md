@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 35
+version: 36
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -27,6 +27,8 @@ It exposes a registry-backed schema (`schema.json` under the state root, seeded 
 DemoKey defaults) through ArgumentParser subcommands so humans and agents can get,
 set, watch, dump, list, reset, and mutate typed application state, and it
 self-describes that contract for agents through the `schema` command.
+`schema.json` is authoritative at runtime for default and user-added names;
+`DemoKey` defines seed inventory, not CLI dispatch.
 
 ## Public API
 
@@ -119,8 +121,8 @@ schema. `schema` prints one cacheable JSON document (`SchemaDocument`):
 cliVersion, integer schemaVersion (bumped when the document shape changes;
 currently 4), state-root precedence, live registry keys, userSchema meta,
 commands, payload shapes, and the error table. Live state stays in `dump`.
-`reset --all` restores seed keys only; `reset --registered` restores every
-registry key.
+`reset --all` restores seed names that remain registered through their current
+entries; `reset --registered` restores every registry key.
 
 ## Invariants
 
@@ -147,6 +149,8 @@ registry key.
    (timeout), 128+signal (130 SIGINT, 143 SIGTERM). The `--jsonl` stream never
    contains non-JSON lines. An unbounded watch prints a one-time stderr hint
    suggesting `--count` / `--timeout`.
+11. Registry commands never select type, storage, path, initial value, Slice
+    metadata, or output typing from a `DemoKey` name match.
 
 ## Behavioral Examples
 
@@ -241,3 +245,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-26 | CHG-0044-recover-stale-secretstore-keys-and-serialize-fresh-encrypted-file-writes: Recover stale SecretStore keys and serialize fresh encrypted-file writes |
 | 2026-07-26 | CHG-0038-harden-adversarial-findings-safer-reset-secret-set-unlock-root-state-dir-sch: Harden adversarial findings: safer reset, secret SET unlock, root state-dir, schema lock |
 | 2026-07-26 | CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for: Prevent schema-controlled paths from deleting or escaping the APS state root for issue 111 |
+| 2026-07-27 | CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112: Make schema.json authoritative for built-in and dynamic key names for issue 112 |

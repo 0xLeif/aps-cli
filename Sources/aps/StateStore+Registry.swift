@@ -1,4 +1,3 @@
-import AppState
 import Foundation
 
 extension StateStore {
@@ -26,44 +25,48 @@ extension StateStore {
 
     @MainActor
     public func get(name: String) throws -> String {
-        let entry = try resolve(name)
-        if let demo = DemoKey(rawValue: name) {
-            return get(demo)
+        try valueSnapshot(name: name).raw
+    }
+
+    @MainActor
+    internal func valueSnapshot(name: String) throws -> (entry: SchemaKeyEntry, raw: String) {
+        let schema = try loadSchema()
+        guard let entry = UserSchema.entry(named: name, in: schema) else {
+            throw APSError.unknownKey(name: name)
         }
-        return try DynamicKeyStorage.get(
+        let raw = try DynamicKeyStorage.get(
             entry: entry,
             stateRoot: stateRoot,
-            schema: try loadSchema()
+            schema: schema
         )
+        return (entry, raw)
     }
 
     @MainActor
     public func set(name: String, value: String) throws {
-        let entry = try resolve(name)
-        if let demo = DemoKey(rawValue: name) {
-            try set(demo, value: value)
-            return
+        let schema = try loadSchema()
+        guard let entry = UserSchema.entry(named: name, in: schema) else {
+            throw APSError.unknownKey(name: name)
         }
         try DynamicKeyStorage.set(
             entry: entry,
             value: value,
             stateRoot: stateRoot,
-            schema: try loadSchema()
+            schema: schema
         )
         stats.recordMutation(key: name)
     }
 
     @MainActor
     public func reset(name: String) throws {
-        let entry = try resolve(name)
-        if let demo = DemoKey(rawValue: name) {
-            reset(demo)
-            return
+        let schema = try loadSchema()
+        guard let entry = UserSchema.entry(named: name, in: schema) else {
+            throw APSError.unknownKey(name: name)
         }
         try DynamicKeyStorage.reset(
             entry: entry,
             stateRoot: stateRoot,
-            schema: try loadSchema()
+            schema: schema
         )
         stats.recordMutation(key: name)
     }
@@ -72,7 +75,26 @@ extension StateStore {
     public func resetAllRegistered() throws {
         let schema = try loadSchema()
         for entry in schema.keys {
-            try reset(name: entry.name)
+            try DynamicKeyStorage.reset(
+                entry: entry,
+                stateRoot: stateRoot,
+                schema: schema
+            )
+            stats.recordMutation(key: entry.name)
+        }
+    }
+
+    @MainActor
+    internal func resetAllSeedKeys() throws {
+        let schema = try loadSchema()
+        let seedNames = Set(DemoKey.allCases.map(\.rawValue))
+        for entry in schema.keys where seedNames.contains(entry.name) {
+            try DynamicKeyStorage.reset(
+                entry: entry,
+                stateRoot: stateRoot,
+                schema: schema
+            )
+            stats.recordMutation(key: entry.name)
         }
     }
 
@@ -82,10 +104,6 @@ extension StateStore {
         let schema = try UserSchema.loadOrMaterialize(stateRoot: root)
         guard let entry = UserSchema.entry(named: name, in: schema) else {
             throw APSError.unknownKey(name: name)
-        }
-        if let demo = DemoKey(rawValue: name) {
-            try requireDecodableDiskState(for: demo)
-            return
         }
         try DynamicKeyStorage.requireDecodable(entry: entry, stateRoot: root)
     }
@@ -141,10 +159,7 @@ extension StateStore {
                     try SchemaStoragePath(path).removeRegularFileIfPresent(stateRoot: root)
                 }
             case "StoredState":
-                let store = Application.dependency(\Application.userDefaults)
-                store.removeObject(forKey: "aps.user.\(name)")
-                (store as? UserDefaults)?.synchronize()
-                UserDefaults.standard.synchronize()
+                DynamicKeyStorage.removeStoredValue(entry)
             case "State":
                 DynamicKeyStorage.clearMemory(named: name)
             default:
@@ -161,23 +176,24 @@ extension StateStore {
         shouldContinue: () -> Bool = { true },
         onChange: (String) -> Void
     ) throws {
-        if let demo = DemoKey(rawValue: name) {
-            try watchBlocking(
-                demo,
-                pollInterval: pollInterval,
-                pollDeadline: pollDeadline,
-                shouldContinue: shouldContinue,
-                onChange: onChange
-            )
-            return
+        let schema = try loadSchema()
+        guard let entry = UserSchema.entry(named: name, in: schema) else {
+            throw APSError.unknownKey(name: name)
         }
-        _ = try resolve(name)
-        var last = try get(name: name)
+        var last = try DynamicKeyStorage.get(
+            entry: entry,
+            stateRoot: stateRoot,
+            schema: schema
+        )
         onChange(last)
         let slice = max(pollInterval / 5.0, 0.05)
         while shouldContinue() {
             waitForWatchPoll(interval: slice, deadline: pollDeadline)
-            let current = try get(name: name)
+            let current = try DynamicKeyStorage.get(
+                entry: entry,
+                stateRoot: stateRoot,
+                schema: schema
+            )
             if current != last {
                 last = current
                 onChange(current)
@@ -191,11 +207,16 @@ extension StateStore {
         let snapshot = RegistryDumpSnapshot(
             timestamp: now,
             keys: try schema.keys.map { entry in
-                DumpEntry(
+                let raw = try DynamicKeyStorage.get(
+                    entry: entry,
+                    stateRoot: stateRoot,
+                    schema: schema
+                )
+                return DumpEntry(
                     key: entry.name,
                     storage: entry.storage,
                     type: entry.type,
-                    value: try CLIOutput.typedValue(for: entry, store: self)
+                    value: try CLIOutput.typedValue(for: entry, from: raw)
                 )
             }
         )
@@ -208,7 +229,6 @@ private struct RegistryDumpSnapshot: Encodable {
     let keys: [DumpEntry]
 }
 
-// DumpEntry is fileprivate in StateStore.swift — duplicate a local Encodable mirror.
 private struct DumpEntry: Encodable {
     let key: String
     let storage: String
