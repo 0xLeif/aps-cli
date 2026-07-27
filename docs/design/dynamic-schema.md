@@ -175,11 +175,16 @@ Replace compile-time-only dispatch with a loaded registry:
 Slice reads decode the parent field against the type declared by
 `objectShape`. When the parent shape omits the field, the Slice entry's `type`
 is authoritative. A JSON integer is therefore never accepted as a Bool through
-Foundation numeric bridging.
+Foundation numeric bridging. Slice set and reset use the same fallback and
+encode String, Int, Bool, and object fields as their declared JSON types.
 
 `get` / `set` / `watch` / `reset` / `dump` take **string key names** resolved
 through the registry. `DemoKey` is seed inventory and a low-level AppState
 dogfood surface only; it is not a registry dispatch mechanism.
+The compiled adapter for a default Slice is eligible only when both the Slice
+and its resolved parent behaviorally match their default definitions.
+Replacing the parent therefore routes the unchanged Slice through registry
+storage instead of the hard-coded AppState parent.
 
 `key add --force` replaces metadata without migrating or deleting data.
 Changing storage or path takes effect on the next command, while former adapter
@@ -228,7 +233,9 @@ describing every rollback as a `schema.json` failure.
 
 Bulk reset runs in schema order and fails fast. Its report identifies reset,
 failed, and not-attempted keys. Mutation statistics advance only for resets
-whose storage postcondition was verified.
+whose storage postcondition was verified. Those stats publish after the outer
+schema lock is released on both success and partial-failure paths, allowing
+synchronous subscribers to perform schema operations without deadlocking.
 
 Unknown key: exit **64** (`invalid_value` or a dedicated `unknown_key` code added in the same implementation change; prefer extending the #31 table once rather than inventing ad hoc messages).
 

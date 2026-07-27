@@ -751,35 +751,36 @@ enum DynamicKeyStorage {
         guard let inputData = raw.data(using: .utf8) else {
             throw APSError.corruptState(key: parentName)
         }
-        let objectValue: Any
-        do {
-            objectValue = try JSONSerialization.jsonObject(with: inputData)
-        } catch {
+        guard var object = try? JSONDecoder().decode([String: SchemaJSON].self, from: inputData) else {
             throw APSError.corruptState(key: parentName)
         }
-        guard var object = objectValue as? [String: Any] else {
-            throw APSError.corruptState(key: parentName)
-        }
-        if let shape = parent.objectShape?[field] {
-            switch shape {
-            case "Int":
-                guard let intValue = Int(value) else {
-                    throw APSError.invalidValue(key: entry.name, value: value)
-                }
-                object[field] = intValue
-            case "Bool":
-                guard let boolValue = StateStore.parseBool(value) else {
-                    throw APSError.invalidValue(key: entry.name, value: value)
-                }
-                object[field] = boolValue
-            default:
-                object[field] = value
+        let declaredType = parent.objectShape?[field] ?? entry.type
+        switch declaredType {
+        case "Int":
+            guard let intValue = Int(value) else {
+                throw APSError.invalidValue(key: entry.name, value: value)
             }
-        } else {
-            object[field] = value
+            object[field] = .int(intValue)
+        case "Bool":
+            guard let boolValue = StateStore.parseBool(value) else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+            object[field] = .bool(boolValue)
+        case "object":
+            guard
+                let valueData = value.data(using: .utf8),
+                let objectValue = try? JSONDecoder().decode(SchemaJSON.self, from: valueData),
+                case .object = objectValue
+            else {
+                throw APSError.invalidValue(key: entry.name, value: value)
+            }
+            object[field] = objectValue
+        case "String":
+            object[field] = .string(value)
+        default:
+            throw APSError.invalidValue(key: entry.name, value: value)
         }
-        // Avoid `.sortedKeys`: not available on all Linux Foundation builds we smoke.
-        let outputData = try JSONSerialization.data(withJSONObject: object)
+        let outputData = try JSONEncoder().encode(object)
         guard let encoded = String(data: outputData, encoding: .utf8) else {
             throw APSError.encodingFailed
         }

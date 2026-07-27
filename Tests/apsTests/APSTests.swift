@@ -1537,6 +1537,36 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    internal func testDefaultSliceUsesRegistryWhenItsDefaultParentIsReplaced() async throws {
+        let store = StateStore()
+        let replacedParent = SchemaKeyEntry(
+            name: "profile",
+            type: "object",
+            storage: "FileState",
+            initial: .object(["name": .string("replacement"), "version": .int(8)]),
+            path: "replacement-profile.json",
+            doc: "replaced default Slice parent",
+            objectShape: ["name": "String", "version": "Int"]
+        )
+        try store.addKey(replacedParent, force: true)
+        let compiledProfileBefore = try StateStore.readProfileFromDisk()
+
+        try store.set(.profileName, value: "registry-value")
+
+        XCTAssertEqual(store.get(.profileName), "registry-value")
+        XCTAssertEqual(try store.get(name: "profileName"), "registry-value")
+        XCTAssertEqual(try StateStore.readProfileFromDisk(), compiledProfileBefore)
+        let replacementURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("replacement-profile.json")
+        let replacementData = try Data(contentsOf: replacementURL)
+        let replacementObject = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: replacementData) as? [String: Any]
+        )
+        XCTAssertEqual(replacementObject["name"] as? String, "registry-value")
+        XCTAssertEqual(replacementObject["version"] as? Int, 8)
+    }
+
+    @MainActor
     internal func testSeedBulkResetSkipsRemovedSeedName() async throws {
         let store = StateStore()
         try store.set(name: "message", value: "must-survive")
@@ -2259,6 +2289,24 @@ final class APSTests: XCTestCase {
         )
         let store = StateStore()
 
+        #if canImport(Combine)
+        var statsPublicationCount = 0
+        var statsPublishedAfterSchemaUnlock = false
+        let cancellable = Application.dependency(\.stats).$mutationCount
+            .dropFirst()
+            .sink { _ in
+                statsPublicationCount += 1
+                let lockAcquired = DispatchSemaphore(value: 0)
+                DispatchQueue.global().async {
+                    if (try? SchemaFileLock.withExclusiveLock(stateRoot: root) {}) != nil {
+                        lockAcquired.signal()
+                    }
+                }
+                statsPublishedAfterSchemaUnlock = lockAcquired.wait(timeout: .now() + 1) == .success
+            }
+        defer { cancellable.cancel() }
+        #endif
+
         XCTAssertThrowsError(try store.resetAllRegistered()) { error in
             guard let bulkError = error as? BulkResetError else {
                 return XCTFail("Expected BulkResetError, got \(error)")
@@ -2274,6 +2322,10 @@ final class APSTests: XCTestCase {
         let stats = store.statsSnapshot()
         XCTAssertEqual(stats.mutationCount, 1)
         XCTAssertEqual(stats.lastMutatedKey, "alpha")
+        #if canImport(Combine)
+        XCTAssertEqual(statsPublicationCount, 1)
+        XCTAssertTrue(statsPublishedAfterSchemaUnlock)
+        #endif
     }
 
     func testSuccessfulBulkResetReportEncodesInResetPayload() throws {
@@ -3021,6 +3073,95 @@ extension APSTests {
             try DynamicKeyStorage.get(entry: slice, stateRoot: root, schema: schema)
         ) { error in
             XCTAssertEqual(error as? APSError, .corruptState(key: parent.name))
+        }
+    }
+
+    @MainActor
+    internal func testUnshapedSlicesUseDeclaredTypesForSetAndResetRoundTrips() async throws {
+        let parent = SchemaKeyEntry(
+            name: "settings",
+            type: "object",
+            storage: "FileState",
+            initial: .object([
+                "label": .string("initial"),
+                "count": .int(1),
+                "enabled": .bool(true),
+                "metadata": .object(["state": .string("initial")]),
+            ]),
+            path: "settings.json",
+            doc: "Unshaped Slice parent",
+            objectShape: [:]
+        )
+        let stringSlice = SchemaKeyEntry(
+            name: "settingsLabel",
+            type: "String",
+            storage: "Slice",
+            initial: .string("reset"),
+            doc: "Unshaped String Slice",
+            sliceOf: parent.name,
+            sliceField: "label"
+        )
+        let intSlice = SchemaKeyEntry(
+            name: "settingsCount",
+            type: "Int",
+            storage: "Slice",
+            initial: .int(2),
+            doc: "Unshaped Int Slice",
+            sliceOf: parent.name,
+            sliceField: "count"
+        )
+        let boolSlice = SchemaKeyEntry(
+            name: "settingsEnabled",
+            type: "Bool",
+            storage: "Slice",
+            initial: .bool(false),
+            doc: "Unshaped Bool Slice",
+            sliceOf: parent.name,
+            sliceField: "enabled"
+        )
+        let objectSlice = SchemaKeyEntry(
+            name: "settingsMetadata",
+            type: "object",
+            storage: "Slice",
+            initial: .object(["state": .string("reset")]),
+            doc: "Unshaped object Slice",
+            sliceOf: parent.name,
+            sliceField: "metadata"
+        )
+        let schema = UserSchemaDocument(keys: [
+            parent,
+            stringSlice,
+            intSlice,
+            boolSlice,
+            objectSlice,
+        ])
+        let root = FileManager.defaultFileStatePath
+        let cases: [(entry: SchemaKeyEntry, set: String, reset: String)] = [
+            (stringSlice, "set", "reset"),
+            (intSlice, "9", "2"),
+            (boolSlice, "true", "false"),
+            (objectSlice, #"{"state":"set"}"#, #"{"state":"reset"}"#),
+        ]
+
+        for testCase in cases {
+            try DynamicKeyStorage.set(
+                entry: testCase.entry,
+                value: testCase.set,
+                stateRoot: root,
+                schema: schema
+            )
+            XCTAssertEqual(
+                try DynamicKeyStorage.get(entry: testCase.entry, stateRoot: root, schema: schema),
+                testCase.set
+            )
+        }
+
+        for testCase in cases {
+            _ = try DynamicKeyStorage.reset(entry: testCase.entry, stateRoot: root, schema: schema)
+            XCTAssertEqual(
+                try DynamicKeyStorage.get(entry: testCase.entry, stateRoot: root, schema: schema),
+                testCase.reset
+            )
         }
     }
 

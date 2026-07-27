@@ -124,9 +124,11 @@ extension StateStore {
     @discardableResult
     public func resetAllRegistered() throws -> BulkResetReport {
         let root = stateRoot
-        return try SchemaFileLock.withExclusiveLock(stateRoot: root) {
-            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
-            return try reset(entries: schema.keys, schema: schema)
+        return try publishingBulkResetStats {
+            try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+                let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+                return try reset(entries: schema.keys, schema: schema)
+            }
         }
     }
 
@@ -134,14 +136,38 @@ extension StateStore {
     @discardableResult
     internal func resetAllSeedKeys() throws -> BulkResetReport {
         let root = stateRoot
-        return try SchemaFileLock.withExclusiveLock(stateRoot: root) {
-            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
-            let seedNames = Set(DemoKey.allCases.map(\.rawValue))
-            return try reset(
-                entries: schema.keys.filter { seedNames.contains($0.name) },
-                schema: schema,
-                afterReset: { _ in }
-            )
+        return try publishingBulkResetStats {
+            try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+                let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+                let seedNames = Set(DemoKey.allCases.map(\.rawValue))
+                return try reset(
+                    entries: schema.keys.filter { seedNames.contains($0.name) },
+                    schema: schema,
+                    afterReset: { _ in }
+                )
+            }
+        }
+    }
+
+    /// Publishes verified bulk-reset mutations after the enclosing schema lock returns.
+    @MainActor
+    internal func publishingBulkResetStats(
+        _ operation: () throws -> BulkResetReport
+    ) throws -> BulkResetReport {
+        do {
+            let report = try operation()
+            publishBulkResetStats(for: report.reset)
+            return report
+        } catch let error as BulkResetError {
+            publishBulkResetStats(for: error.report.reset)
+            throw error
+        }
+    }
+
+    @MainActor
+    private func publishBulkResetStats(for resetNames: [String]) {
+        for name in resetNames {
+            stats.recordMutation(key: name)
         }
     }
 
@@ -169,7 +195,6 @@ extension StateStore {
                     schema: schema
                 )
                 try afterReset(entry)
-                stats.recordMutation(key: entry.name)
                 resetNames.append(entry.name)
             } catch let error as APSError {
                 let report = BulkResetReport(

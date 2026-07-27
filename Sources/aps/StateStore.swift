@@ -85,7 +85,7 @@ public final class StateStore {
             name: key.rawValue,
             value: value,
             storageOperation: { entry, rawValue, root, schema in
-                guard isDefaultDefinition(entry, for: key) else {
+                guard isDefaultDefinition(entry, for: key, in: schema) else {
                     try DynamicKeyStorage.set(
                         entry: entry,
                         value: rawValue,
@@ -296,7 +296,8 @@ public final class StateStore {
             name: key.rawValue,
             recordMutation: true,
             afterReset: { entry in
-                if isDefaultDefinition(entry, for: key) {
+                let schema = try UserSchema.loadUnlocked(stateRoot: stateRoot)
+                if isDefaultDefinition(entry, for: key, in: schema) {
                     try synchronizeDefaultAdapter(
                         afterResetting: key,
                         afterAcquiringProfileStorageLock: afterAcquiringProfileStorageLock
@@ -309,39 +310,67 @@ public final class StateStore {
     @discardableResult
     public func resetAll() throws -> BulkResetReport {
         let root = stateRoot
-        return try SchemaFileLock.withExclusiveLock(stateRoot: root) {
-            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
-            let entries = schema.keys.filter { DemoKey(rawValue: $0.name) != nil }
-            return try reset(
-                entries: entries,
-                schema: schema,
-                afterReset: { entry in
-                    guard
-                        let key = DemoKey(rawValue: entry.name),
-                        isDefaultDefinition(entry, for: key)
-                    else {
-                        return
+        return try publishingBulkResetStats {
+            try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+                let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+                let entries = schema.keys.filter { DemoKey(rawValue: $0.name) != nil }
+                return try reset(
+                    entries: entries,
+                    schema: schema,
+                    afterReset: { entry in
+                        guard
+                            let key = DemoKey(rawValue: entry.name),
+                            isDefaultDefinition(entry, for: key, in: schema)
+                        else {
+                            return
+                        }
+                        try synchronizeDefaultAdapter(afterResetting: key)
                     }
-                    try synchronizeDefaultAdapter(afterResetting: key)
-                }
-            )
+                )
+            }
         }
     }
 
     private func usesDefaultDefinition(_ key: DemoKey) -> Bool {
+        let root = stateRoot
+        return (try? SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            guard let current = UserSchema.entry(named: key.rawValue, in: schema) else {
+                return false
+            }
+            return isDefaultDefinition(current, for: key, in: schema)
+        }) ?? false
+    }
+
+    private func isDefaultDefinition(
+        _ entry: SchemaKeyEntry,
+        for key: DemoKey,
+        in schema: UserSchemaDocument
+    ) -> Bool {
+        let defaults = UserSchema.defaultDocument()
         guard
-            let current = try? resolve(key.rawValue)
+            let defaultEntry = UserSchema.entry(named: key.rawValue, in: defaults),
+            behaviorallyMatchesDefault(entry, defaultEntry)
         else {
             return false
         }
-        return isDefaultDefinition(current, for: key)
-    }
-
-    private func isDefaultDefinition(_ entry: SchemaKeyEntry, for key: DemoKey) -> Bool {
-        guard let defaultEntry = UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue }) else {
+        guard entry.storage == "Slice" else { return true }
+        guard
+            let parentName = entry.sliceOf,
+            let defaultParentName = defaultEntry.sliceOf,
+            let parent = UserSchema.entry(named: parentName, in: schema),
+            let defaultParent = UserSchema.entry(named: defaultParentName, in: defaults)
+        else {
             return false
         }
-        return entry.name == defaultEntry.name
+        return behaviorallyMatchesDefault(parent, defaultParent)
+    }
+
+    private func behaviorallyMatchesDefault(
+        _ entry: SchemaKeyEntry,
+        _ defaultEntry: SchemaKeyEntry
+    ) -> Bool {
+        entry.name == defaultEntry.name
             && entry.type == defaultEntry.type
             && entry.storage == defaultEntry.storage
             && entry.initial == defaultEntry.initial

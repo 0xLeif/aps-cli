@@ -187,6 +187,9 @@ Acceptance Criteria
   StoredState value, or staged file that could not be restored.
 - Bulk reset stops at the first failure, identifies reset, failed, and
   not-attempted keys, and records stats only for successful keys.
+- Bulk-reset stats publish only after the outer schema lock is released, on
+  both full success and partial-success error paths, so synchronous subscribers
+  can safely perform schema operations.
 - Parent/Slice compatibility compares an explicitly present parent field and
   Slice initial with type-sensitive `SchemaJSON` equality, while an omitted
   parent field uses the Slice initial fallback.
@@ -207,8 +210,13 @@ Acceptance Criteria
   encrypted key rather than misidentifying the failure as `schema.json`.
 - Slice reads use the Slice entry type when the parent object shape omits the
   field and reject JSON values of another primitive type.
+- Slice set and reset use the same declared-type fallback, preserving
+  String, Int, Bool, and object values without string coercion.
 - Documentation-only edits to a default entry preserve its default adapter
   behavior.
+- A default Slice uses its compiled adapter only while its resolved parent also
+  behaviorally matches the default parent; replacing the parent selects registry
+  storage for the Slice.
 - Default flag writes synchronize and verify canonical and legacy values as one
   operation, restoring both exact prior objects after detected failure.
 - Default FileState reset adapter synchronization reloads the current disk value

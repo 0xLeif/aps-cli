@@ -99,7 +99,8 @@ and synchronize the default AppState dogfood surface before releasing the lock.
     A detected purge failure restores the original schema before the lock is
     released; rollback failure is reported distinctly.
 14. Bulk reset runs in schema order, stops after the first failure, reports
-    reset and not-attempted keys, and records stats only for verified successes.
+    reset and not-attempted keys, and records stats only for verified successes
+    after the outer schema lock is released.
 15. The removal guarantee covers errors detected before return. It does not
     claim crash or power-loss atomicity.
 

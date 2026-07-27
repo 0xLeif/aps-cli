@@ -5,6 +5,8 @@
 - watchBlocking in-process and FileState change detection
 - dump includes dependency-driven timestamp and all keys
 - DemoStats ObservedDependency records mutations and Combine publishes on change
+- Bulk-reset stats subscribers can reacquire the schema lock on partial failure
+  because verified-success publications occur after the outer lock is released
 - watchStatsBlocking detects dependency mutation
 - Isolation: hermetic UserDefaults for StoredState `flag`; per-case FileState
   path; `DynamicKeyStorage.resetProcessMemory()` between cases; parallel suite
@@ -50,12 +52,17 @@
 - Bool Slice verification uses the declared parent object shape.
 - Unshaped Bool Slice reads use the Slice entry type and reject JSON integer
   values instead of accepting Foundation numeric bridging.
+- Unshaped String, Int, Bool, and object Slice set/reset round trips preserve
+  their declared JSON types.
 - Staged deletion restores FileState and secret envelope data when
   postcondition inspection fails.
 - Legacy default-flag fixtures use AppState's JSON-encoded `App/aps.flag`
   representation and verify canonical reset behavior.
 - Documentation-only default edits still synchronize the AppState adapter, and
   reset-then-write flag tests require canonical and legacy reads to agree.
+- Replacing the default `profile` parent while leaving `profileName` unchanged
+  keeps direct Slice writes on the replacement registry file and leaves the
+  compiled profile file unchanged.
 - Default flag set tests drop the legacy adapter write and require exact
   canonical and legacy rollback.
 - Default FileState reset tests inject newer note and profile writes before
