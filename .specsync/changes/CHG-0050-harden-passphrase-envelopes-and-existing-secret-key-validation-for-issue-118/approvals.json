@@ -97,6 +97,13 @@
       "timestamp": 1785170739,
       "digest": "f204855f765789ac6210c787ca0308f946ec83b2766cbaaf66a8486fd90b60b5",
       "note": "Accept exact reverified delivery after hosted Linux O_PATH compile repair"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1785171303,
+      "digest": "829f7ca36486b89010c238f499b2ff6f51f113950c0391c238d424f8513579bd",
+      "note": "Linux XCTest discovery fixed; strict verification and complete local trust lane passed at d7b99a2."
     }
   ],
   "reopenings": [

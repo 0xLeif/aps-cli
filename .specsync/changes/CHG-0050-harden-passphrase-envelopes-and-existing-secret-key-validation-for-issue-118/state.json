@@ -5,11 +5,11 @@
   "title": "Harden passphrase envelopes and existing secret-key validation for issue 118",
   "description": "Harden passphrase envelopes and existing secret-key validation for issue 118",
   "kind": "migration",
-  "state": "verifying",
+  "state": "accepted",
   "canonical_applied": true,
   "base_commit": "c365187d9f2baadf097aaedafcb144f60a7a0fa8",
   "created_at": 1785152498,
-  "updated_at": 1785171207,
+  "updated_at": 1785171303,
   "affected_specs": [
     "aps-cli",
     "state-store"
