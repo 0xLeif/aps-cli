@@ -2227,7 +2227,7 @@ extension APSTests {
     }
 
     @MainActor
-    internal func testStoredStateResetRejectsDroppedInitialWrite() throws {
+    internal func testStoredStateResetRejectsDroppedInitialWrite() async throws {
         let defaults = DroppingWritesUserDefaults()
         let override = Application.override(\Application.userDefaults, with: defaults)
         defer { _ = override }
