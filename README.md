@@ -223,7 +223,11 @@ swift run aps stats --json
 swift run aps key add agentNote --type String --storage FileState --path agent-note.json --initial ''
 ```
 
-`aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion` (bumped when the document shape changes; currently **4**), live `userSchema` meta (formatVersion, keyCount, hash), state-root precedence, every registered key and command, payload shapes, and the error-code table. Live values stay in `aps dump`. ArgumentParser's full command tree is also available as JSON via `aps <cmd> --experimental-dump-help`.
+`aps schema` is the contract endpoint: one cacheable JSON document with `cliVersion`, integer `schemaVersion`
+(bumped when the document shape changes; currently **5**), live `userSchema` meta (formatVersion, keyCount, hash),
+state-root precedence, every registered key and command, payload shapes, and the error-code table. Live values stay in
+`aps dump`. ArgumentParser's full command tree is also available as JSON via
+`aps <cmd> --experimental-dump-help`.
 
 `watch` polls the adapter selected by the resolved registry entry, so forced seed replacements and disk-backed `FileState` / `StoredState` changes surface even when another `aps` process writes them. The default `flag` can read legacy AppState `App/aps.flag` data when `aps.user.flag` is absent; new registry writes use the canonical `aps.user.<name>` namespace.
 

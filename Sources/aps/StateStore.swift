@@ -174,12 +174,24 @@ public final class StateStore {
 
     @discardableResult
     public func reset(_ key: DemoKey) throws -> ResetOutcome {
+        try reset(key, afterAcquiringProfileStorageLock: {})
+    }
+
+    /// Reset seam used to prove profile adapter synchronization stays inside its storage lock.
+    @discardableResult
+    internal func reset(
+        _ key: DemoKey,
+        afterAcquiringProfileStorageLock: () -> Void
+    ) throws -> ResetOutcome {
         try reset(
             name: key.rawValue,
             recordMutation: true,
             afterReset: { entry in
                 if isDefaultDefinition(entry, for: key) {
-                    try synchronizeDefaultAdapter(afterResetting: key)
+                    try synchronizeDefaultAdapter(
+                        afterResetting: key,
+                        afterAcquiringProfileStorageLock: afterAcquiringProfileStorageLock
+                    )
                 }
             }
         )
@@ -220,7 +232,10 @@ public final class StateStore {
         UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue }) == entry
     }
 
-    private func synchronizeDefaultAdapter(afterResetting key: DemoKey) throws {
+    private func synchronizeDefaultAdapter(
+        afterResetting key: DemoKey,
+        afterAcquiringProfileStorageLock: () -> Void = {}
+    ) throws {
         switch key {
         case .counter:
             Application.reset(\.counter)
@@ -250,11 +265,31 @@ public final class StateStore {
         case .secret:
             break
         case .profileName:
+            try synchronizeProfileNameAdapter(
+                afterAcquiringStorageLock: afterAcquiringProfileStorageLock
+            )
+        }
+    }
+
+    /// Synchronizes the AppState profile-name adapter while holding the parent storage lock.
+    ///
+    /// The caller already holds the schema lock during public reset operations, preserving
+    /// the supported schema-then-storage lock order. The test seam runs after storage locking
+    /// and before the parent refresh so regression tests can prove the full read-modify-write
+    /// remains serialized.
+    internal func synchronizeProfileNameAdapter(
+        afterAcquiringStorageLock: () -> Void = {}
+    ) throws {
+        try SchemaFileLock.withExclusiveStorageLock(
+            stateRoot: stateRoot,
+            lockFileName: "profile.json.lock"
+        ) {
+            afterAcquiringStorageLock()
             try Self.refreshProfileFileStateFromDisk()
             var slice = Application.slice(\.profile, \.name)
             slice.value = ""
             guard try Self.readProfileFromDisk().name.isEmpty else {
-                throw APSError.persistenceFailed(key: key.rawValue)
+                throw APSError.persistenceFailed(key: DemoKey.profileName.rawValue)
             }
         }
     }

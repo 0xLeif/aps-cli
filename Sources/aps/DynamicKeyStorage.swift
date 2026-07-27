@@ -1,6 +1,10 @@
 import AppState
 import Foundation
 
+internal protocol UserDefaultsSynchronizing: UserDefaultsManaging {
+    func synchronize() -> Bool
+}
+
 /// Process-local and file-backed storage for user-defined schema keys.
 @MainActor
 enum DynamicKeyStorage {
@@ -209,19 +213,28 @@ enum DynamicKeyStorage {
         _ entry: SchemaKeyEntry,
         from store: any UserDefaultsManaging
     ) throws {
-        store.removeObject(forKey: storedDefaultsKey(entry.name))
-        if usesLegacyFlagStorage(entry) {
-            store.removeObject(forKey: legacyFlagDefaultsKey)
-        }
-        guard synchronize(store) else {
-            throw APSError.persistenceFailed(key: entry.name)
-        }
-        guard store.object(forKey: storedDefaultsKey(entry.name)) == nil else {
-            throw APSError.persistenceFailed(key: entry.name)
-        }
-        if usesLegacyFlagStorage(entry),
-           store.object(forKey: legacyFlagDefaultsKey) != nil {
-            throw APSError.persistenceFailed(key: entry.name)
+        let canonicalKey = storedDefaultsKey(entry.name)
+        let oldCanonical = store.object(forKey: canonicalKey)
+        let oldLegacy = usesLegacyFlagStorage(entry) ? store.object(forKey: legacyFlagDefaultsKey) : nil
+
+        do {
+            store.removeObject(forKey: canonicalKey)
+            if usesLegacyFlagStorage(entry) {
+                store.removeObject(forKey: legacyFlagDefaultsKey)
+            }
+            guard synchronize(store),
+                  store.object(forKey: canonicalKey) == nil,
+                  !usesLegacyFlagStorage(entry) || store.object(forKey: legacyFlagDefaultsKey) == nil
+            else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+        } catch {
+            restoreStoredObject(oldCanonical, forKey: canonicalKey, in: store)
+            if usesLegacyFlagStorage(entry) {
+                restoreStoredObject(oldLegacy, forKey: legacyFlagDefaultsKey, in: store)
+            }
+            _ = synchronize(store)
+            throw error
         }
     }
 
@@ -388,6 +401,9 @@ enum DynamicKeyStorage {
     }
 
     private static func synchronize(_ store: any UserDefaultsManaging) -> Bool {
+        if let synchronizingStore = store as? any UserDefaultsSynchronizing {
+            return synchronizingStore.synchronize()
+        }
         if let defaults = store as? UserDefaults {
             return defaults.synchronize()
         }

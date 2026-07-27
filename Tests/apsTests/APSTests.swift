@@ -1976,6 +1976,44 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
+    func testProfileNameAdapterResetHoldsStorageLockThroughRefreshAndRewrite() async throws {
+        let store = StateStore()
+        let root = FileManager.defaultFileStatePath
+        try store.set(.profile, value: #"{"name":"before","version":7}"#)
+        let adapterEntered = DispatchSemaphore(value: 0)
+        let competingWriterAttempting = DispatchSemaphore(value: 0)
+        let competingWriterAcquired = DispatchSemaphore(value: 0)
+
+        DispatchQueue.global().async {
+            adapterEntered.wait()
+            competingWriterAttempting.signal()
+            if (try? SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: root,
+                lockFileName: "profile.json.lock"
+            ) {}) != nil {
+                competingWriterAcquired.signal()
+            }
+        }
+
+        let outcome = try store.reset(
+            .profileName,
+            afterAcquiringProfileStorageLock: {
+                adapterEntered.signal()
+                XCTAssertEqual(competingWriterAttempting.wait(timeout: .now() + 1), .success)
+                XCTAssertEqual(
+                    competingWriterAcquired.wait(timeout: .now() + 0.1),
+                    .timedOut,
+                    "a competing profile writer acquired the lock during adapter synchronization"
+                )
+            }
+        )
+
+        XCTAssertEqual(competingWriterAcquired.wait(timeout: .now() + 1), .success)
+        XCTAssertEqual(outcome, ResetOutcome(key: DemoKey.profileName.rawValue))
+        XCTAssertEqual(try store.profileDocument(), ProfileDocument(name: "", version: 7))
+    }
+
+    @MainActor
     func testResetAllRegisteredFailsFastWithDeterministicReportAndStats() async throws {
         let root = FileManager.defaultFileStatePath
         let entries = [
@@ -2457,9 +2495,7 @@ extension APSTests {
 
     @MainActor
     internal func testStoredStateResetRestoresCanonicalObjectAfterSynchronizationFailure() async throws {
-        let suiteName = "aps-tests-transaction-\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(OneShotFailingSynchronizationUserDefaults(suiteName: suiteName))
-        defer { defaults.removePersistentDomain(forName: suiteName) }
+        let defaults = OneShotFailingSynchronizationUserDefaults()
         let canonicalKey = "aps.user.syncFailure"
         let oldCanonical = try JSONEncoder().encode("before")
         defaults.set(oldCanonical, forKey: canonicalKey)
@@ -2482,6 +2518,36 @@ extension APSTests {
             XCTAssertEqual(error as? APSError, .persistenceFailed(key: entry.name))
         }
         XCTAssertEqual(defaults.object(forKey: canonicalKey) as? Data, oldCanonical)
+    }
+
+    @MainActor
+    internal func testStoredStatePurgeRestoresCanonicalAndLegacyObjectsAfterSynchronizationFailure() async throws {
+        let defaults = OneShotFailingSynchronizationUserDefaults()
+        let canonicalKey = "aps.user.flag"
+        let legacyKey = "App/aps.flag"
+        let oldCanonical = try JSONEncoder().encode(true)
+        let oldLegacy = try JSONEncoder().encode(false)
+        defaults.set(oldCanonical, forKey: canonicalKey)
+        defaults.set(oldLegacy, forKey: legacyKey)
+        defaults.failNextSynchronization()
+
+        let overrideToken = Application.override(\Application.userDefaults, with: defaults)
+        defer { _ = overrideToken }
+        let entry = SchemaKeyEntry(
+            name: "flag",
+            type: "Bool",
+            storage: "StoredState",
+            initial: .bool(false),
+            doc: "Transactional StoredState purge"
+        )
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.purge(entry: entry, stateRoot: "/tmp")
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: entry.name))
+        }
+        XCTAssertEqual(defaults.object(forKey: canonicalKey) as? Data, oldCanonical)
+        XCTAssertEqual(defaults.object(forKey: legacyKey) as? Data, oldLegacy)
     }
 
     @MainActor
@@ -2675,26 +2741,44 @@ private final class OneShotDroppingUserDefaults: UserDefaultsManaging, @unchecke
     }
 }
 
-/// UserDefaults subclass that reports one deterministic synchronization failure.
+/// In-memory UserDefaults test double that reports one deterministic synchronization failure.
 private final class OneShotFailingSynchronizationUserDefaults:
-    UserDefaults,
-    UserDefaultsManaging,
+    UserDefaultsSynchronizing,
     @unchecked Sendable
 {
-    private let failureLock = NSLock()
+    private let lock = NSLock()
+    private var storage: [String: Any] = [:]
     private var shouldFailSynchronization = false
 
+    fileprivate func object(forKey key: String) -> Any? {
+        lock.lock()
+        defer { lock.unlock() }
+        return storage[key]
+    }
+
+    fileprivate func removeObject(forKey key: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        storage.removeValue(forKey: key)
+    }
+
+    fileprivate func set(_ value: Any?, forKey key: String) {
+        lock.lock()
+        defer { lock.unlock() }
+        storage[key] = value
+    }
+
     fileprivate func failNextSynchronization() {
-        failureLock.lock()
-        defer { failureLock.unlock() }
+        lock.lock()
+        defer { lock.unlock() }
         shouldFailSynchronization = true
     }
 
-    override fileprivate func synchronize() -> Bool {
-        failureLock.lock()
+    fileprivate func synchronize() -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
         let shouldFail = shouldFailSynchronization
         shouldFailSynchronization = false
-        failureLock.unlock()
-        return shouldFail ? false : super.synchronize()
+        return !shouldFail
     }
 }

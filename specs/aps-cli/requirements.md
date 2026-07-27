@@ -206,7 +206,7 @@ Acceptance Criteria
 `aps schema` SHALL emit one cacheable JSON document describing the CLI contract: cliVersion, integer schemaVersion (bumped when the document shape changes), state-root precedence, live registered keys, `userSchema` meta (formatVersion, keyCount, hash), commands, payload shapes, and the error table.
 
 Acceptance Criteria
-- Output is valid JSON with top-level integer `schemaVersion` equal to 4 after this change.
+- Output is valid JSON with top-level integer `schemaVersion` equal to 5 after this change.
 - Keys cover every entry in the active `schema.json`; commands cover every subcommand including `key`.
 - `cliVersion` equals `aps --version`.
 - `userSchema.hash` changes when the registry changes.
