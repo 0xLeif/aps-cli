@@ -1,6 +1,6 @@
 ---
 id: CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112
-state: accepted
+state: archived
 type: bug_fix
 base_commit: 512c307a71c1d84e4ddf60eea34de3dc221ec903
 ---
