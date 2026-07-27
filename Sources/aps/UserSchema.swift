@@ -273,7 +273,7 @@ public enum UserSchema {
             )
         }
         var seen = Set<String>()
-        var storagePaths = Set<String>()
+        var storagePaths: [SchemaStoragePath] = []
         let nameRegex = try? NSRegularExpression(pattern: namePattern)
         for entry in document.keys {
             if seen.contains(entry.name) {
@@ -302,11 +302,12 @@ public enum UserSchema {
                     )
                 }
                 let storagePath = try SchemaStoragePath(path)
-                guard storagePaths.insert(storagePath.collisionKey).inserted else {
+                guard !storagePaths.contains(where: { $0.collides(with: storagePath) }) else {
                     throw APSError.schemaInvalid(
                         reason: "\(entry.name) path '\(path)' collides with another key"
                     )
                 }
+                storagePaths.append(storagePath)
             }
             if entry.storage == "Slice" {
                 guard let parent = entry.sliceOf, let field = entry.sliceField else {

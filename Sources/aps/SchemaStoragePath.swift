@@ -20,8 +20,16 @@ internal struct SchemaStoragePath: Hashable, Sendable {
         self.rawValue = rawValue
         self.components = components
         self.collisionKey = components
-            .map { $0.precomposedStringWithCanonicalMapping.lowercased() }
+            .map(Self.portableCollisionComponent)
             .joined(separator: "/")
+    }
+
+    /// Returns true when two paths name the same portable leaf or when one
+    /// would need to be a directory ancestor of the other's regular-file leaf.
+    internal func collides(with other: SchemaStoragePath) -> Bool {
+        collisionKey == other.collisionKey
+            || collisionKey.hasPrefix("\(other.collisionKey)/")
+            || other.collisionKey.hasPrefix("\(collisionKey)/")
     }
 
     /// Resolves the path beneath a canonical state root and validates all
@@ -138,7 +146,7 @@ internal struct SchemaStoragePath: Hashable, Sendable {
         }
 
         let collisionKey = pathComponents
-            .map { $0.precomposedStringWithCanonicalMapping.lowercased() }
+            .map(portableCollisionComponent)
             .joined(separator: "/")
         guard !isReserved(collisionKey) else {
             throw invalid("\(path) is reserved by APS")
@@ -163,13 +171,25 @@ internal struct SchemaStoragePath: Hashable, Sendable {
             return true
         }
         for prefix in ["com", "lpt"] {
-            if stem.hasPrefix(prefix),
-               let number = Int(stem.dropFirst(prefix.count)),
-               (1...9).contains(number) {
+            guard stem.hasPrefix(prefix) else { continue }
+            let suffix = String(stem.dropFirst(prefix.count))
+            if let number = Int(suffix), (1...9).contains(number) {
+                return true
+            }
+            if ["¹", "²", "³"].contains(suffix) {
                 return true
             }
         }
         return false
+    }
+
+    private static func portableCollisionComponent(_ component: String) -> String {
+        component
+            .folding(
+                options: [.caseInsensitive],
+                locale: Locale(identifier: "en_US_POSIX")
+            )
+            .precomposedStringWithCanonicalMapping
     }
 
     private static func isReserved(_ collisionKey: String) -> Bool {

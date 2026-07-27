@@ -52,6 +52,9 @@ internal final class SchemaStoragePathTests: XCTestCase {
             "nul.txt",
             "nested/COM1.json",
             "Lpt9",
+            "COM¹",
+            "com².txt",
+            "nested/LPT³.json",
         ]
 
         for path in paths {
@@ -64,6 +67,44 @@ internal final class SchemaStoragePathTests: XCTestCase {
         let decomposed = try SchemaStoragePath("Cafe\u{0301}/value.JSON")
 
         XCTAssertEqual(composed.collisionKey, decomposed.collisionKey)
+    }
+
+    internal func testCollisionKeyUsesFullUnicodeCaseFolding() throws {
+        let capitalSigma = try SchemaStoragePath("\u{03A3}.json")
+        let finalSigma = try SchemaStoragePath("\u{03C2}.json")
+
+        XCTAssertEqual(capitalSigma.collisionKey, finalSigma.collisionKey)
+    }
+
+    internal func testDetectsAncestorAndDescendantStoragePathCollisions() throws {
+        let ancestor = try SchemaStoragePath("data")
+        let descendant = try SchemaStoragePath("DATA/value.json")
+        let sibling = try SchemaStoragePath("database/value.json")
+
+        XCTAssertTrue(ancestor.collides(with: descendant))
+        XCTAssertTrue(descendant.collides(with: ancestor))
+        XCTAssertFalse(ancestor.collides(with: sibling))
+    }
+
+    internal func testSchemaRejectsAncestorAndDescendantStoragePathCollisions() {
+        let document = UserSchemaDocument(keys: [
+            SchemaKeyEntry(
+                name: "ancestor",
+                type: "String",
+                storage: "FileState",
+                initial: .string(""),
+                path: "data"
+            ),
+            SchemaKeyEntry(
+                name: "descendant",
+                type: "String",
+                storage: "EncryptedFile",
+                initial: .string(""),
+                path: "data/value.json"
+            ),
+        ])
+
+        XCTAssertThrowsError(try UserSchema.validate(document))
     }
 
     internal func testResolvesMissingNestedLeafBeneathCanonicalRoot() throws {

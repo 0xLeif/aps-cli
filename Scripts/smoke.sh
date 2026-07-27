@@ -226,6 +226,7 @@ unsafe_paths=(
   "secret.key"
   "unsafe.lock"
   "CON"
+  "COM¹"
 )
 unsafe_index=0
 for unsafe_path in "${unsafe_paths[@]}"; do
@@ -266,7 +267,30 @@ if "$bin" key add collisionTwo \
   echo "expected portable storage-path collision to fail" >&2
   exit 1
 fi
+if "$bin" key add collisionChild \
+  --type String \
+  --storage FileState \
+  --path collision.json/value.json \
+  --initial "" >/dev/null 2>&1; then
+  echo "expected ancestor storage-path collision to fail" >&2
+  exit 1
+fi
 "$bin" key remove collisionOne --purge
+
+"$bin" key add sigmaOne \
+  --type String \
+  --storage FileState \
+  --path Σ.json \
+  --initial ""
+if "$bin" key add sigmaTwo \
+  --type String \
+  --storage FileState \
+  --path ς.json \
+  --initial "" >/dev/null 2>&1; then
+  echo "expected Unicode case-folded storage-path collision to fail" >&2
+  exit 1
+fi
+"$bin" key remove sigmaOne --purge
 
 SYMLINK_TARGET="$(mktemp -d "${TMPDIR:-/tmp}/aps-smoke-symlink-target.XXXXXX")"
 echo "external-leaf" > "$SYMLINK_TARGET/leaf.json"

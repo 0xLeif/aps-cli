@@ -200,7 +200,8 @@ $unsafePaths = @(
     'schema.json',
     'secret.key',
     'unsafe.lock',
-    'CON'
+    'CON',
+    'COM¹'
 )
 $unsafeIndex = 0
 foreach ($unsafePath in $unsafePaths) {
@@ -238,7 +239,24 @@ Invoke-ApsExpectFail key add collisionTwo `
     --storage EncryptedFile `
     --path COLLISION.JSON `
     --initial ''
+Invoke-ApsExpectFail key add collisionChild `
+    --type String `
+    --storage FileState `
+    --path collision.json/value.json `
+    --initial ''
 $null = Invoke-ApsOk key remove collisionOne --purge
+
+$null = Invoke-ApsOk key add sigmaOne `
+    --type String `
+    --storage FileState `
+    --path Σ.json `
+    --initial ''
+Invoke-ApsExpectFail key add sigmaTwo `
+    --type String `
+    --storage FileState `
+    --path ς.json `
+    --initial ''
+$null = Invoke-ApsOk key remove sigmaOne --purge
 
 $symlinkTarget = Join-Path ([System.IO.Path]::GetTempPath()) (
     'aps-smoke-symlink-target-' + [guid]::NewGuid().ToString('N')
