@@ -95,17 +95,17 @@ extension Aps {
                 let store = StateStore()
                 do {
                     try StateStore.requireDecodableDiskState(forName: key)
-                    let entry = try store.resolve(key)
+                    let snapshot = try store.valueSnapshot(name: key)
                     if options.json {
                         let payload = CLIOutput.KeyValuePayload(
-                            key: entry.name,
-                            type: entry.type,
-                            storage: entry.storage,
-                            value: try CLIOutput.typedValue(for: entry, store: store)
+                            key: snapshot.entry.name,
+                            type: snapshot.entry.type,
+                            storage: snapshot.entry.storage,
+                            value: try CLIOutput.typedValue(for: snapshot.entry, from: snapshot.raw)
                         )
                         print(try CLIOutput.encodeJSON(payload))
                     } else {
-                        print(try store.get(name: key))
+                        print(snapshot.raw)
                     }
                 } catch let error as APSError {
                     try CLIOutput.fail(error, json: options.json)
@@ -134,17 +134,17 @@ extension Aps {
                 let store = StateStore()
                 do {
                     try store.set(name: key, value: value)
-                    let entry = try store.resolve(key)
+                    let snapshot = try store.valueSnapshot(name: key)
                     if options.json {
                         let payload = CLIOutput.KeyValuePayload(
-                            key: entry.name,
-                            type: entry.type,
-                            storage: entry.storage,
-                            value: try CLIOutput.typedValue(for: entry, store: store)
+                            key: snapshot.entry.name,
+                            type: snapshot.entry.type,
+                            storage: snapshot.entry.storage,
+                            value: try CLIOutput.typedValue(for: snapshot.entry, from: snapshot.raw)
                         )
                         print(try CLIOutput.encodeJSON(payload))
                     } else {
-                        print(try store.get(name: key))
+                        print(snapshot.raw)
                     }
                 } catch let error as APSError {
                     try CLIOutput.fail(error, json: options.json)
@@ -481,16 +481,19 @@ extension Aps {
                         }
                     } else if let key {
                         try store.reset(name: key)
-                        let entry = try store.resolve(key)
+                        let snapshot = try store.valueSnapshot(name: key)
                         if options.json {
                             let payload = CLIOutput.ResetPayload(
                                 reset: "key",
                                 key: key,
-                                value: try CLIOutput.typedValue(for: entry, store: store)
+                                value: try CLIOutput.typedValue(
+                                    for: snapshot.entry,
+                                    from: snapshot.raw
+                                )
                             )
                             print(try CLIOutput.encodeJSON(payload))
                         } else {
-                            print(try store.get(name: key))
+                            print(snapshot.raw)
                         }
                     }
                 } catch let error as APSError {

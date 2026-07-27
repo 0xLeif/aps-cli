@@ -1286,7 +1286,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testForcedSeedUsesRegistryTypeStoragePathInitialOutputAndWatch() async throws {
+    internal func testForcedSeedUsesRegistryTypeStoragePathInitialOutputAndWatch() async throws {
         let store = StateStore()
         let forced = SchemaKeyEntry(
             name: "counter",
@@ -1310,7 +1310,7 @@ final class APSTests: XCTestCase {
         try store.set(name: "counter", value: "hello")
         XCTAssertEqual(try StateStore().get(name: "counter"), "hello")
         XCTAssertEqual(
-            try CLIOutput.typedValue(for: forced, store: store),
+            try CLIOutput.typedValue(for: forced, from: try store.get(name: "counter")),
             .string("hello")
         )
         let dump = try store.dumpRegistered()
@@ -1338,7 +1338,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testForcedStringSeedUsesRegistryBoolStoredState() async throws {
+    internal func testForcedStringSeedUsesRegistryBoolStoredState() async throws {
         let store = StateStore()
         let forced = SchemaKeyEntry(
             name: "message",
@@ -1352,7 +1352,7 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(try store.get(name: "message"), "true")
         try store.set(name: "message", value: "false")
         XCTAssertEqual(
-            try CLIOutput.typedValue(for: forced, store: store),
+            try CLIOutput.typedValue(for: forced, from: try store.get(name: "message")),
             .bool(false)
         )
         XCTAssertEqual(
@@ -1366,7 +1366,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testForcedSeedPathIgnoresAndPreservesFormerData() async throws {
+    internal func testForcedSeedPathIgnoresAndPreservesFormerData() async throws {
         let store = StateStore()
         try store.set(name: "note", value: "legacy-note")
         let oldURL = URL(fileURLWithPath: FileManager.defaultFileStatePath)
@@ -1398,7 +1398,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testForcedSeedSliceUsesRegistryParentAndField() async throws {
+    internal func testForcedSeedSliceUsesRegistryParentAndField() async throws {
         let store = StateStore()
         let parent = SchemaKeyEntry(
             name: "alternateProfile",
@@ -1438,7 +1438,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testSeedBulkResetSkipsRemovedSeedName() async throws {
+    internal func testSeedBulkResetSkipsRemovedSeedName() async throws {
         let store = StateStore()
         try store.set(name: "message", value: "must-survive")
         try store.removeKey(name: "message", purge: false)
@@ -1456,7 +1456,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    func testDefaultFlagReadsLegacyAppStateDataAndResetPreventsResurrection() async throws {
+    internal func testDefaultFlagReadsLegacyAppStateDataAndResetPreventsResurrection() async throws {
         let legacyData = try JSONEncoder().encode(true)
         hermeticDefaults?.set(legacyData, forKey: "App/aps.flag")
         hermeticDefaults?.removeObject(forKey: "aps.user.flag")
@@ -1472,6 +1472,31 @@ final class APSTests: XCTestCase {
             false
         )
         XCTAssertEqual(try store.get(name: "flag"), "false")
+    }
+
+    @MainActor
+    internal func testForcedFlagDefinitionDisablesLegacyCompatibility() async throws {
+        let legacyData = try JSONEncoder().encode(true)
+        hermeticDefaults?.set(legacyData, forKey: "App/aps.flag")
+        hermeticDefaults?.removeObject(forKey: "aps.user.flag")
+        let store = StateStore()
+        let forced = SchemaKeyEntry(
+            name: "flag",
+            type: "String",
+            storage: "StoredState",
+            initial: .string("forced"),
+            doc: "forced flag"
+        )
+        try store.addKey(forced, force: true)
+
+        XCTAssertEqual(try store.get(name: "flag"), "forced")
+        try store.set(name: "flag", value: "current")
+        XCTAssertEqual(try store.get(name: "flag"), "current")
+        XCTAssertNotNil(hermeticDefaults?.object(forKey: "App/aps.flag"))
+
+        try store.reset(name: "flag")
+        XCTAssertEqual(try store.get(name: "flag"), "forced")
+        XCTAssertNotNil(hermeticDefaults?.object(forKey: "App/aps.flag"))
     }
 
     internal func testSchemaRejectsStateRootAndPreservesSentinel() async throws {

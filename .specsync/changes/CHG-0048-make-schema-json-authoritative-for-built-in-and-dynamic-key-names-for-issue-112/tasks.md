@@ -5,11 +5,11 @@ artifact: tasks
 
 # Tasks
 
-- [ ] Remove name-based seed dispatch from registry operations.
-- [ ] Make typed registry output depend only on the current entry.
-- [ ] Make seed bulk reset registry-aware.
-- [ ] Add narrow legacy StoredState flag compatibility.
-- [ ] Add forced seed override and reload tests.
-- [ ] Add shell and PowerShell smoke coverage.
-- [ ] Update canonical specs and public documentation.
-- [ ] Pass the configured verification and trust gates.
+- [x] Remove name-based seed dispatch from registry operations.
+- [x] Make typed registry output depend only on the current entry.
+- [x] Make seed bulk reset registry-aware.
+- [x] Add narrow legacy StoredState flag compatibility.
+- [x] Add forced seed override and reload tests.
+- [x] Add shell and PowerShell smoke coverage.
+- [x] Update canonical specs and public documentation.
+- [x] Pass the configured verification and trust gates.

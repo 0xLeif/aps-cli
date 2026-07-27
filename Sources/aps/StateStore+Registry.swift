@@ -25,15 +25,21 @@ extension StateStore {
 
     @MainActor
     public func get(name: String) throws -> String {
+        try valueSnapshot(name: name).raw
+    }
+
+    @MainActor
+    internal func valueSnapshot(name: String) throws -> (entry: SchemaKeyEntry, raw: String) {
         let schema = try loadSchema()
         guard let entry = UserSchema.entry(named: name, in: schema) else {
             throw APSError.unknownKey(name: name)
         }
-        return try DynamicKeyStorage.get(
+        let raw = try DynamicKeyStorage.get(
             entry: entry,
             stateRoot: stateRoot,
             schema: schema
         )
+        return (entry, raw)
     }
 
     @MainActor
@@ -201,11 +207,16 @@ extension StateStore {
         let snapshot = RegistryDumpSnapshot(
             timestamp: now,
             keys: try schema.keys.map { entry in
-                DumpEntry(
+                let raw = try DynamicKeyStorage.get(
+                    entry: entry,
+                    stateRoot: stateRoot,
+                    schema: schema
+                )
+                return DumpEntry(
                     key: entry.name,
                     storage: entry.storage,
                     type: entry.type,
-                    value: try CLIOutput.typedValue(for: entry, store: self)
+                    value: try CLIOutput.typedValue(for: entry, from: raw)
                 )
             }
         )

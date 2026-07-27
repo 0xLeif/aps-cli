@@ -5,10 +5,11 @@
   "title": "Make schema.json authoritative for built-in and dynamic key names for issue 112",
   "description": "Make schema.json authoritative for built-in and dynamic key names for issue 112",
   "kind": "bug_fix",
-  "state": "implementing",
+  "state": "accepted",
+  "canonical_applied": true,
   "base_commit": "512c307a71c1d84e4ddf60eea34de3dc221ec903",
   "created_at": 1785115559,
-  "updated_at": 1785115832,
+  "updated_at": 1785119558,
   "affected_specs": [
     "aps-cli",
     "state-store"
@@ -21,6 +22,7 @@
     "Tests/apsTests/APSTests.swift",
     "Scripts/smoke.sh",
     "Scripts/smoke.ps1",
+    "README.md",
     "docs/design/dynamic-schema.md",
     ".specsync/change-sequence.json"
   ],
