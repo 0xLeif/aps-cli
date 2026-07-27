@@ -8,6 +8,10 @@ import Glibc
 import Darwin
 #endif
 
+#if os(Windows)
+import WinSDK
+#endif
+
 internal final class SecureKeyFileTests: XCTestCase {
     #if !os(Windows)
     internal func testLoadRepairsOwnedRegularFilePermissions() throws {
@@ -284,20 +288,26 @@ internal final class SecureKeyFileTests: XCTestCase {
         let file = FileManager.default.temporaryDirectory
             .appendingPathComponent("aps-key-repair-\(UUID().uuidString)")
         let expected = Data(repeating: 2, count: SecureKeyFile.expectedByteCount)
-        try expected.write(to: file)
+        let secureFile = SecureKeyFile(path: file.path)
+        try secureFile.create(expected)
+        try makeWindowsDACLPermissive(file)
         defer { try? FileManager.default.removeItem(at: file) }
 
-        XCTAssertEqual(try SecureKeyFile(path: file.path).load(), expected)
+        XCTAssertEqual(try secureFile.load(), expected)
     }
 
     internal func testWindowsLoadRejectsOversizedFileBeforeReading() throws {
         let file = FileManager.default.temporaryDirectory
             .appendingPathComponent("aps-key-oversized-\(UUID().uuidString)")
-        try Data(repeating: 3, count: SecureKeyFile.expectedByteCount + 1)
-            .write(to: file)
+        let secureFile = SecureKeyFile(path: file.path)
+        try secureFile.create(Data(repeating: 3, count: SecureKeyFile.expectedByteCount))
+        let handle = try FileHandle(forWritingTo: file)
+        defer { try? handle.close() }
+        _ = try handle.seekToEnd()
+        try handle.write(contentsOf: Data([3]))
         defer { try? FileManager.default.removeItem(at: file) }
 
-        XCTAssertThrowsError(try SecureKeyFile(path: file.path).load()) { error in
+        XCTAssertThrowsError(try secureFile.load()) { error in
             XCTAssertEqual(
                 error as? SecureKeyFileError,
                 .invalidSize(actual: Int64(SecureKeyFile.expectedByteCount + 1))
@@ -313,6 +323,39 @@ internal final class SecureKeyFileTests: XCTestCase {
 
         XCTAssertThrowsError(try SecureKeyFile(path: directory.path).load()) { error in
             XCTAssertEqual(error as? SecureKeyFileError, .unsafeFileType)
+        }
+    }
+
+    private func makeWindowsDACLPermissive(_ file: URL) throws {
+        let handle = file.path.withCString(encodedAs: UTF16.self) { pathPointer in
+            CreateFileW(
+                pathPointer,
+                DWORD(READ_CONTROL) | DWORD(WRITE_DAC),
+                DWORD(FILE_SHARE_READ) | DWORD(FILE_SHARE_WRITE) | DWORD(FILE_SHARE_DELETE),
+                nil,
+                DWORD(OPEN_EXISTING),
+                DWORD(FILE_ATTRIBUTE_NORMAL),
+                nil
+            )
+        }
+        guard handle != INVALID_HANDLE_VALUE, let handle else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+        defer { _ = CloseHandle(handle) }
+        let result = SetSecurityInfo(
+            handle,
+            SE_FILE_OBJECT,
+            SECURITY_INFORMATION(
+                UInt32(bitPattern: DACL_SECURITY_INFORMATION)
+                    | UInt32(UNPROTECTED_DACL_SECURITY_INFORMATION)
+            ),
+            nil,
+            nil,
+            nil,
+            nil
+        )
+        guard result == DWORD(ERROR_SUCCESS) else {
+            throw CocoaError(.fileWriteUnknown)
         }
     }
     #endif

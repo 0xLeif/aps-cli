@@ -277,7 +277,7 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         let fixture = try makeFixture()
         let recipient = Curve25519.KeyAgreement.PrivateKey()
         let encodedKey = recipient.rawRepresentation.base64EncodedData()
-        try encodedKey.write(to: fixture.keyFileURL, options: .atomic)
+        try SecureKeyFile(path: fixture.keyFileURL.path).create(encodedKey)
         let legacyData = try JSONEncoder().encode(
             makeLegacyEnvelope(value: "legacy-key-file", recipient: recipient)
         )
