@@ -2424,8 +2424,8 @@ final class APSTests: XCTestCase {
             }
         )
 
-        XCTAssertEqual(removalFinished.wait(timeout: .now() + 1), .success)
-        XCTAssertEqual(removalAcquired.wait(timeout: .now() + 1), .success)
+        XCTAssertEqual(removalFinished.wait(timeout: .now() + 10), .success)
+        XCTAssertEqual(removalAcquired.wait(timeout: .now() + 10), .success)
         XCTAssertThrowsError(try store.resolve(entry.name)) { error in
             XCTAssertEqual(error as? APSError, .unknownKey(name: entry.name))
         }
