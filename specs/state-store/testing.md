@@ -26,6 +26,9 @@
   skips removed seeds, and preserves non-seed values.
 - Registered and direct `DemoKey` mutations hold the schema lock from
   authoritative resolution through verified persistence.
+- Windows lock recovery distinguishes live, dead, indeterminate, corrupt, and
+  same-process-orphan owners; only proven-dead or safely orphaned locks are
+  reclaimed.
 - Bulk reset rejects incompatible parent/Slice and sibling Slice initial values
   without falsely reporting overwritten outcomes as successful.
 - StoredState reset restores canonical and legacy raw objects after detected

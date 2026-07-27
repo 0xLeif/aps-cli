@@ -22,12 +22,16 @@ import WinSDK
 /// Inside a schema body, use the UserSchema `*Unlocked` load/materialize helpers
 /// instead of taking the schema lock again.
 public enum SchemaFileLock {
+    internal enum WindowsLockOwnerState: Sendable {
+        case alive
+        case dead
+        case unknown
+    }
+
     private static let schemaProcessLock = NSLock()
     private static let storageProcessLock = NSLock()
 
-    /// Maximum age of a Windows `.held` lock before it is treated as stale.
-    /// CLI RMW holds are milliseconds; a short TTL also covers PID reuse when a
-    /// leftover `.held` outlives its writer.
+    /// Maximum age before an unparseable Windows lock is treated as stale.
     private static let windowsHeldStaleAge: TimeInterval = 3
 
     public static func withExclusiveLock<T>(stateRoot: String, _ body: () throws -> T) throws -> T {
@@ -169,41 +173,94 @@ public enum SchemaFileLock {
         }
     }
 
-    /// True when `.held` is missing/corrupt, the writer PID is dead or matches
-    /// this process (orphaned leftover / PID reuse), or the timestamp is older
-    /// than `windowsHeldStaleAge`.
+    /// True when `.held` is safely reclaimable.
+    ///
+    /// A demonstrably live peer owns its lock regardless of age. Dead owners
+    /// can be reclaimed immediately. An indeterminate valid owner fails closed;
+    /// only a corrupt payload is reclaimed after its file lease expires.
     private static func isWindowsHeldStale(at url: URL) -> Bool {
-        guard
-            let data = try? Data(contentsOf: url),
-            let payload = try? JSONDecoder().decode(HeldPayload.self, from: data)
-        else {
-            return true
+        let fileTimestamp = (
+            try? url.resourceValues(forKeys: [.contentModificationDateKey])
+        )?.contentModificationDate?.timeIntervalSince1970
+        guard let data = try? Data(contentsOf: url),
+              let payload = try? JSONDecoder().decode(HeldPayload.self, from: data) else {
+            return windowsHeldIsStale(
+                ownerPID: nil,
+                fileTimestamp: fileTimestamp,
+                now: Date().timeIntervalSince1970,
+                currentPID: GetCurrentProcessId(),
+                ownerState: .unknown
+            )
         }
-        let age = Date().timeIntervalSince1970 - payload.ts
-        if age >= windowsHeldStaleAge || age < 0 {
-            return true
-        }
-        // A held file claiming our own PID cannot be a live peer lock in this
-        // single-threaded CLI; it is an orphan (often from Windows PID reuse).
-        if payload.pid == GetCurrentProcessId() {
-            return true
-        }
-        return !windowsProcessIsAlive(pid: payload.pid)
+
+        let currentPID = GetCurrentProcessId()
+        let ownerState = payload.pid == currentPID
+            ? WindowsLockOwnerState.unknown
+            : windowsProcessState(pid: payload.pid)
+        return windowsHeldIsStale(
+            ownerPID: payload.pid,
+            fileTimestamp: fileTimestamp,
+            now: Date().timeIntervalSince1970,
+            currentPID: currentPID,
+            ownerState: ownerState
+        )
     }
 
-    private static func windowsProcessIsAlive(pid: UInt32) -> Bool {
-        guard pid > 0 else { return false }
+    private static func windowsProcessState(pid: UInt32) -> WindowsLockOwnerState {
+        guard pid > 0 else { return .dead }
         // PROCESS_QUERY_LIMITED_INFORMATION = 0x1000; STILL_ACTIVE = 259
         let handle = OpenProcess(0x1000, false, pid)
         guard handle != nil, handle != INVALID_HANDLE_VALUE else {
-            return false
+            // ERROR_INVALID_PARAMETER means the PID does not identify a
+            // running process. Access failures are indeterminate, not proof
+            // that a live owner is gone.
+            return GetLastError() == 87 ? .dead : .unknown
         }
         defer { _ = CloseHandle(handle) }
         var exitCode: DWORD = 0
         guard GetExitCodeProcess(handle, &exitCode) else {
-            return false
+            return .unknown
         }
-        return exitCode == 259
+        return exitCode == 259 ? .alive : .dead
     }
     #endif
+
+    internal static func windowsHeldIsStale(
+        ownerPID: UInt32?,
+        fileTimestamp: TimeInterval?,
+        now: TimeInterval,
+        currentPID: UInt32,
+        ownerState: WindowsLockOwnerState
+    ) -> Bool {
+        if ownerPID == currentPID {
+            // The process-local mutex guarantees that this process has no live
+            // peer acquisition. A matching PID is an orphan or PID reuse.
+            return true
+        }
+        switch ownerState {
+        case .alive:
+            return false
+        case .dead:
+            return ownerPID != nil
+        case .unknown:
+            guard ownerPID == nil else {
+                return false
+            }
+            return windowsLeaseExpired(
+                fileTimestamp: fileTimestamp,
+                now: now
+            )
+        }
+    }
+
+    private static func windowsLeaseExpired(
+        fileTimestamp: TimeInterval?,
+        now: TimeInterval
+    ) -> Bool {
+        guard let fileTimestamp, fileTimestamp.isFinite else {
+            return false
+        }
+        let age = now - fileTimestamp
+        return age >= windowsHeldStaleAge
+    }
 }

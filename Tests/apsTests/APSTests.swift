@@ -1773,6 +1773,110 @@ final class APSTests: XCTestCase {
     }
 #endif
 
+    func testWindowsLockNeverReclaimsDemonstrablyLiveOwner() {
+        let now: TimeInterval = 10_000
+
+        XCTAssertFalse(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: 41,
+                fileTimestamp: now - 3_600,
+                now: now,
+                currentPID: 99,
+                ownerState: .alive
+            )
+        )
+    }
+
+    func testWindowsLockReclaimsDeadOwnerWithoutWaitingForLease() {
+        let now: TimeInterval = 10_000
+
+        XCTAssertTrue(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: 41,
+                fileTimestamp: now,
+                now: now,
+                currentPID: 99,
+                ownerState: .dead
+            )
+        )
+    }
+
+    func testWindowsLockNeverReclaimsIndeterminateValidOwner() {
+        let now: TimeInterval = 10_000
+
+        XCTAssertFalse(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: 41,
+                fileTimestamp: now - 2,
+                now: now,
+                currentPID: 99,
+                ownerState: .unknown
+            )
+        )
+        XCTAssertFalse(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: 41,
+                fileTimestamp: now - 3_600,
+                now: now,
+                currentPID: 99,
+                ownerState: .unknown
+            )
+        )
+    }
+
+    func testWindowsLockUsesFileAgeGraceForCorruptPayload() {
+        let now: TimeInterval = 10_000
+
+        XCTAssertFalse(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: nil,
+                fileTimestamp: now - 2,
+                now: now,
+                currentPID: 99,
+                ownerState: .unknown
+            )
+        )
+        XCTAssertTrue(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: nil,
+                fileTimestamp: now - 3,
+                now: now,
+                currentPID: 99,
+                ownerState: .unknown
+            )
+        )
+        XCTAssertFalse(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: nil,
+                fileTimestamp: now + 3_600,
+                now: now,
+                currentPID: 99,
+                ownerState: .unknown
+            )
+        )
+        XCTAssertFalse(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: nil,
+                fileTimestamp: nil,
+                now: now,
+                currentPID: 99,
+                ownerState: .unknown
+            )
+        )
+    }
+
+    func testWindowsLockReclaimsSameProcessOrphan() {
+        XCTAssertTrue(
+            SchemaFileLock.windowsHeldIsStale(
+                ownerPID: 99,
+                fileTimestamp: 10_000,
+                now: 10_000,
+                currentPID: 99,
+                ownerState: .alive
+            )
+        )
+    }
+
     @MainActor
     func testResetAllLeavesUserKeysResetRegisteredClearsThem() async throws {
         let root = FileManager.default.temporaryDirectory

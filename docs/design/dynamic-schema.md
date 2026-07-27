@@ -192,6 +192,9 @@ Registered set and reset operations reload the entry under the schema lock and
 retain that lock through verified persistence. Direct `DemoKey` adapters enter
 the same transaction before using the AppState dogfood surface. This prevents a
 writer that resolved an entry before removal from recreating purged data.
+On Windows, stale-lock recovery never steals a valid lock from an owner that is
+alive or cannot be proven dead, even when the lock is older than the normal
+operation duration.
 
 A FileState reset with an initial value atomically overwrites that value under
 the per-file lock instead of deleting first. EncryptedFile reset uses

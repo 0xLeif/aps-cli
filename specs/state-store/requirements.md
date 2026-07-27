@@ -178,6 +178,8 @@ Acceptance Criteria
 - Registered set and reset operations reload their entry under
   `schema.json.lock` and retain that lock through verified persistence, so a
   stale writer cannot recreate data after successful purge.
+- Windows stale-lock recovery never reclaims a valid lock whose owner process
+  is alive or cannot be proven dead, regardless of lock age.
 - Concurrent APS schema mutation cannot reuse a purged path during the
   transaction.
 - Successful rollback rethrows the original purge error; failed rollback emits
