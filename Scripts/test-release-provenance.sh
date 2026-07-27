@@ -5,9 +5,11 @@ repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 gate="$repo_root/Scripts/release-provenance-gate.sh"
 workflow="$repo_root/.github/workflows/release.yml"
 production_policy="$repo_root/.attest-release.json"
+trust_workflow="$repo_root/.github/workflows/trust.yml"
+attest_bin="${ATTEST_BIN:-attest}"
 
-command -v attest >/dev/null 2>&1 || {
-    echo "release provenance contract: attest is required" >&2
+command -v "$attest_bin" >/dev/null 2>&1 || {
+    echo "release provenance contract: attest is required at '$attest_bin'" >&2
     exit 1
 }
 command -v jq >/dev/null 2>&1 || {
@@ -268,5 +270,9 @@ grep -Fq 'git fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE
 # shellcheck disable=SC2016
 grep -Fq '"$RELEASE_TAG" "$RELEASE_COMMIT"' "$workflow"
 grep -Fq "release-provenance-test" "$repo_root/fledge.toml"
+grep -Fq "CorvidLabs/attest@e8a2d928eb4b9a33185c32ba7b8e9b3a985987f2" "$trust_workflow"
+grep -Fq 'version: "1.0.0"' "$trust_workflow"
+# shellcheck disable=SC2016
+grep -Fq 'ATTEST_BIN=$ATTEST_BINARY' "$trust_workflow"
 
 echo "release provenance contract checks passed"

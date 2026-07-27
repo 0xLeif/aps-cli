@@ -20,6 +20,13 @@
       "timestamp": 1785166474,
       "digest": "fdf437f982de086257b747f50d99420a2d91b5ed981caf0246460038f412385a",
       "note": "Re-approved after final hosted-control and verification updates"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785167246,
+      "digest": "f20ab6ba71d14d49f43414e2878916ee0d3020f80d7fa0bf0e71c12ed9be51a3",
+      "note": "Re-approved after making Attest available to hosted lifecycle contract tests"
     }
   ],
   "reopenings": []

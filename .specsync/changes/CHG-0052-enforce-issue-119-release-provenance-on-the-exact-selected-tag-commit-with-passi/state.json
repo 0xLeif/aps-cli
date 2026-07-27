@@ -8,12 +8,13 @@
   "state": "implementing",
   "base_commit": "4ece8fd08dd7a76ccd327ba43df036b35c7d3778",
   "created_at": 1785164309,
-  "updated_at": 1785166474,
+  "updated_at": 1785167246,
   "affected_specs": [
     "aps-cli"
   ],
   "affected_paths": [
     ".github/workflows/release.yml",
+    ".github/workflows/trust.yml",
     "Scripts/release-provenance-gate.sh",
     "Scripts/test-release-provenance.sh",
     ".attest-release.json",
