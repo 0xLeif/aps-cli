@@ -149,7 +149,7 @@ internal final class DynamicObjectTypingTests: XCTestCase {
     }
 
     @MainActor
-    internal func testFileStateObjectRejectsNonObjectBeforeMutation() throws {
+    internal func testFileStateObjectRejectsNonObjectBeforeMutation() async throws {
         let stateRoot = try temporaryStateRoot()
         defer { try? FileManager.default.removeItem(atPath: stateRoot) }
         let entry = SchemaKeyEntry(
@@ -180,7 +180,7 @@ internal final class DynamicObjectTypingTests: XCTestCase {
     }
 
     @MainActor
-    internal func testTypedSliceRoundTripUsesDeclaredJSONKind() throws {
+    internal func testTypedSliceRoundTripUsesDeclaredJSONKind() async throws {
         let stateRoot = try temporaryStateRoot()
         defer { try? FileManager.default.removeItem(atPath: stateRoot) }
         let parent = SchemaKeyEntry(
