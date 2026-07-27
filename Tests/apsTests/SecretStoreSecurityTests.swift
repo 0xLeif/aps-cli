@@ -309,7 +309,7 @@ internal final class SecretStoreSecurityTests: XCTestCase {
     }
 
     @MainActor
-    internal func testWatchEncryptedStoreDerivesOnlyInitiallyAndAfterEnvelopeChange() throws {
+    internal func testWatchEncryptedStoreDerivesOnlyInitiallyAndAfterEnvelopeChange() async throws {
         setSecretPassphrase("watch-passphrase")
         let recorder = KDFCallRecorder()
         let fixture = try makeFixture(recorder: recorder)
@@ -354,7 +354,7 @@ internal final class SecretStoreSecurityTests: XCTestCase {
     }
 
     @MainActor
-    internal func testWatchDecryptsTheExactComparedEnvelopeSnapshot() throws {
+    internal func testWatchDecryptsTheExactComparedEnvelopeSnapshot() async throws {
         setSecretPassphrase("snapshot-owner")
         let firstFixture = try makeFixture()
         try firstFixture.store.set("snapshot-a")
