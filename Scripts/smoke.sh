@@ -214,10 +214,163 @@ test "$("$bin" get smokeNote)" = "from-smoke"
 
 # Schema-controlled paths cannot alias the state root or endanger unrelated files.
 echo "must-survive" > "$APS_HOME/path-safety-sentinel.txt"
-if "$bin" key add unsafeRoot --type String --storage EncryptedFile --path . --initial "" >/dev/null 2>&1; then
-  echo "expected state-root storage path to fail" >&2
+unsafe_paths=(
+  "."
+  "./"
+  "../escape.json"
+  "nested/../escape.json"
+  "/tmp/aps-escape.json"
+  "C:/escape.json"
+  'nested\escape.json'
+  "schema.json"
+  "secret.key"
+  "unsafe.lock"
+  "CON"
+)
+unsafe_index=0
+for unsafe_path in "${unsafe_paths[@]}"; do
+  unsafe_index=$((unsafe_index + 1))
+  if "$bin" key add "unsafePath$unsafe_index" \
+    --type String \
+    --storage EncryptedFile \
+    --path "$unsafe_path" \
+    --initial "" >/dev/null 2>&1; then
+    echo "expected unsafe storage path '$unsafe_path' to fail" >&2
+    exit 1
+  fi
+done
+test -f "$APS_HOME/path-safety-sentinel.txt"
+
+mkdir -p "$APS_HOME/unsafe-directory"
+echo "directory-sentinel" > "$APS_HOME/unsafe-directory/sentinel.txt"
+if "$bin" key add unsafeDirectory \
+  --type String \
+  --storage FileState \
+  --path unsafe-directory \
+  --initial "" >/dev/null 2>&1; then
+  echo "expected directory storage path to fail" >&2
   exit 1
 fi
+test -f "$APS_HOME/unsafe-directory/sentinel.txt"
+
+"$bin" key add collisionOne \
+  --type String \
+  --storage FileState \
+  --path collision.json \
+  --initial ""
+if "$bin" key add collisionTwo \
+  --type String \
+  --storage EncryptedFile \
+  --path COLLISION.JSON \
+  --initial "" >/dev/null 2>&1; then
+  echo "expected portable storage-path collision to fail" >&2
+  exit 1
+fi
+"$bin" key remove collisionOne --purge
+
+SYMLINK_TARGET="$(mktemp -d "${TMPDIR:-/tmp}/aps-smoke-symlink-target.XXXXXX")"
+echo "external-leaf" > "$SYMLINK_TARGET/leaf.json"
+if ln -s "$SYMLINK_TARGET/leaf.json" "$APS_HOME/unsafe-leaf.json" 2>/dev/null; then
+  if "$bin" key add unsafeLeaf \
+    --type String \
+    --storage FileState \
+    --path unsafe-leaf.json \
+    --initial "" >/dev/null 2>&1; then
+    echo "expected symlink leaf storage path to fail" >&2
+    exit 1
+  fi
+  test "$(cat "$SYMLINK_TARGET/leaf.json")" = "external-leaf"
+fi
+if ln -s "$SYMLINK_TARGET" "$APS_HOME/unsafe-parent" 2>/dev/null; then
+  if "$bin" key add unsafeParent \
+    --type String \
+    --storage FileState \
+    --path unsafe-parent/leaf.json \
+    --initial "" >/dev/null 2>&1; then
+    echo "expected symlink ancestor storage path to fail" >&2
+    exit 1
+  fi
+  test "$(cat "$SYMLINK_TARGET/leaf.json")" = "external-leaf"
+fi
+
+# Malicious hand-edits are rejected before reset or purge can touch a path.
+"$bin" key add blockedReset \
+  --type String \
+  --storage FileState \
+  --path blocked-reset.json \
+  --initial ""
+"$bin" set blockedReset changed >/dev/null
+cp "$APS_HOME/schema.json" "$APS_HOME/schema-reset-backup.json"
+sed 's/blocked-reset\.json/unsafe-directory/' \
+  "$APS_HOME/schema-reset-backup.json" > "$APS_HOME/schema.json"
+if "$bin" reset blockedReset >/dev/null 2>&1; then
+  echo "expected reset through a directory path to fail" >&2
+  exit 1
+fi
+test -f "$APS_HOME/unsafe-directory/sentinel.txt"
+test -f "$APS_HOME/path-safety-sentinel.txt"
+mv "$APS_HOME/schema-reset-backup.json" "$APS_HOME/schema.json"
+"$bin" key remove blockedReset --purge
+
+"$bin" key add blockedPurge \
+  --type String \
+  --storage FileState \
+  --path blocked-purge.json \
+  --initial ""
+"$bin" set blockedPurge changed >/dev/null
+cp "$APS_HOME/schema.json" "$APS_HOME/schema-purge-backup.json"
+sed 's/blocked-purge\.json/unsafe-directory/' \
+  "$APS_HOME/schema-purge-backup.json" > "$APS_HOME/schema.json"
+if "$bin" key remove blockedPurge --purge >/dev/null 2>&1; then
+  echo "expected purge through a directory path to fail" >&2
+  exit 1
+fi
+test -f "$APS_HOME/unsafe-directory/sentinel.txt"
+test -f "$APS_HOME/path-safety-sentinel.txt"
+mv "$APS_HOME/schema-purge-backup.json" "$APS_HOME/schema.json"
+"$bin" key remove blockedPurge --purge
+
+# Reset and purge operate only on their verified regular leaf.
+"$bin" key add resetLeaf \
+  --type String \
+  --storage FileState \
+  --path reset-leaf.json \
+  --initial seed
+"$bin" set resetLeaf changed >/dev/null
+"$bin" reset resetLeaf >/dev/null
+test "$("$bin" get resetLeaf)" = "seed"
+test -f "$APS_HOME/path-safety-sentinel.txt"
+"$bin" key remove resetLeaf --purge
+test ! -f "$APS_HOME/reset-leaf.json"
+
+"$bin" key add purgeLeaf \
+  --type String \
+  --storage FileState \
+  --path purge-leaf.json \
+  --initial ""
+"$bin" set purgeLeaf changed >/dev/null
+"$bin" key remove purgeLeaf --purge
+test ! -f "$APS_HOME/purge-leaf.json"
+test -f "$APS_HOME/path-safety-sentinel.txt"
+
+"$bin" key add resetSecret \
+  --type String \
+  --storage EncryptedFile \
+  --path reset-secret.enc \
+  --initial ""
+"$bin" set resetSecret changed >/dev/null
+"$bin" reset resetSecret >/dev/null
+test ! -f "$APS_HOME/reset-secret.enc"
+"$bin" key remove resetSecret
+
+"$bin" key add purgeSecret \
+  --type String \
+  --storage EncryptedFile \
+  --path purge-secret.enc \
+  --initial ""
+"$bin" set purgeSecret changed >/dev/null
+"$bin" key remove purgeSecret --purge
+test ! -f "$APS_HOME/purge-secret.enc"
 test -f "$APS_HOME/path-safety-sentinel.txt"
 
 # Safer reset: --all is seed-only; --registered wipes user keys too.

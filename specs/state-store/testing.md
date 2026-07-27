@@ -17,3 +17,5 @@
 - Slice `profileName` writes land in parent `profile` FileState.
 - `read*FromDiskIfPresent` returns nil when absent and throws `corruptState` when torn.
 - `watchBlocking` throws `corruptState` when a FileState file becomes undecodable.
+- Subprocess safety suites reject malicious schema paths before reset/purge and
+  verify FileState/EncryptedFile deletion touches only the registered leaf.

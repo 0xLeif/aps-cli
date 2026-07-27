@@ -246,6 +246,7 @@ Torn FileState files remain `corrupt_state` / 65.
 - `aps key remove --purge` is the only path that deletes ciphertext/key material; document it loudly.
 - Schema edits are not authenticated; anyone who can write the state root can change types. Same trust model as today's FileState files.
 - Purge must never recursively remove an arbitrary schema path. It may delete only a validated, unshared regular file below the canonical state root.
+- Every persistent operation revalidates containment, ancestors, and the regular-file leaf immediately before use. The state root is a same-user trust boundary: hostile processes running as the same identity can already rewrite `schema.json` and state data, so concurrent hostile directory renames are outside the CLI's security model. Keep shared state roots owner-only and coordinate legitimate writers through APS locks.
 
 ## Alternatives considered
 
