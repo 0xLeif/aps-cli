@@ -6,7 +6,7 @@
   "description": "Make reset and purge transactional and truthfully report failures for issue 113",
   "kind": "bug_fix",
   "state": "draft",
-  "base_commit": "da5c9b76fb25714ad58b0841a9f7203f766c5a15",
+  "base_commit": "b0647eade46eeac974533e84f93440db956031db",
   "created_at": 1785120678,
   "updated_at": 1785120725,
   "affected_specs": [

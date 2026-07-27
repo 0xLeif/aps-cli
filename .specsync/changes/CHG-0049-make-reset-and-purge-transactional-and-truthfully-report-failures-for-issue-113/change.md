@@ -2,7 +2,7 @@
 id: CHG-0049-make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113
 state: draft
 type: bug_fix
-base_commit: da5c9b76fb25714ad58b0841a9f7203f766c5a15
+base_commit: b0647eade46eeac974533e84f93440db956031db
 ---
 
 # Make reset and purge transactional and truthfully report failures for issue 113
