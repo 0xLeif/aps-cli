@@ -28,7 +28,7 @@ artifact: tasks
   migration rollback, key-file adversarial, KDF-count, and tri-OS tests.
 - [x] Update README, security documentation, dynamic-schema documentation,
   dependency records, CLI schema contract, and canonical specs.
-- [ ] Pass local verify, strict SpecSync, Trust, provenance, and macOS, Ubuntu,
+- [x] Pass local verify, strict SpecSync, Trust, provenance, and macOS, Ubuntu,
   Linux smoke, and Windows hosted checks.
 
 No security acceptance item is complete until its implementation and regression
