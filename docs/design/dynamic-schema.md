@@ -228,6 +228,8 @@ and deletes the old storage. If deletion reports an error, it restores the
 original schema before releasing the lock. If restoration fails, aps reports
 `rollback_failed`. This is transactional for detected errors before return; it
 does not claim crash, power-loss, or distributed-filesystem atomicity.
+Staged deletion reports success only after verifying that both the original
+path and its bounded temporary staging leaf are absent.
 StoredState, FileState reset, and staged-file rollback paths verify restoration
 and also report `rollback_failed` when the original data cannot be restored.
 The error identifies the schema, StoredState key, reset file, or staged file

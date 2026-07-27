@@ -62,6 +62,8 @@
   their declared JSON types.
 - Staged deletion restores FileState and secret envelope data when
   postcondition inspection fails.
+- Staged deletion requires both the original and staging leaves to be absent
+  before success and restores the original when staged unlink is dropped.
 - Legacy default-flag fixtures use AppState's JSON-encoded `App/aps.flag`
   representation and verify canonical reset behavior.
 - Documentation-only default edits still synchronize the AppState adapter, and

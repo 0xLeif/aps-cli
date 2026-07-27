@@ -242,6 +242,30 @@ internal final class SchemaStoragePathTests: XCTestCase {
         }
     }
 
+    internal func testInjectedStagedUnlinkPostconditionFailureRestoresLeaf() throws {
+        try withStateRoot { root in
+            let file = root.appendingPathComponent("value.json")
+            try Data("keep".utf8).write(to: file)
+            let path = try SchemaStoragePath("value.json")
+            let operations = SchemaStoragePath.DeletionOperations(
+                removeItem: { _ in },
+                isAbsent: { url in
+                    !url.lastPathComponent.hasPrefix(".aps-delete-")
+                }
+            )
+
+            XCTAssertThrowsError(
+                try path.removeRegularFileIfPresent(
+                    stateRoot: root.path,
+                    operations: operations
+                )
+            ) { error in
+                XCTAssertEqual(error as? APSError, .persistenceFailed(key: "value.json"))
+            }
+            XCTAssertEqual(try Data(contentsOf: file), Data("keep".utf8))
+        }
+    }
+
     internal func testInjectedPostconditionReadFailureIsPersistenceError() throws {
         try withStateRoot { root in
             let file = root.appendingPathComponent("value.json")

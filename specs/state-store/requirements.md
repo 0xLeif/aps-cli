@@ -207,7 +207,8 @@ Acceptance Criteria
   treating a dropped or mistyped write as persistence failure and restoring
   the exact prior object.
 - Destructive leaf removal stages the original regular file and restores it
-  when post-delete verification fails. The staging leaf uses a bounded,
+  when post-delete verification fails. Success requires verified absence of
+  both the original and staging leaves. The staging leaf uses a bounded,
   hash-based component independent of the original leaf length.
 - Failed staged-leaf restoration reports `rollback_failed` instead of masking
   data stranded under the staging name.
