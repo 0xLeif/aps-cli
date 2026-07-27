@@ -1,4 +1,5 @@
 import Foundation
+import Crypto
 
 /// A portable, relative path used by a schema-controlled persistent store.
 ///
@@ -138,7 +139,7 @@ internal struct SchemaStoragePath: Hashable, Sendable {
 
         let stagedURL = url
             .deletingLastPathComponent()
-            .appendingPathComponent(".\(url.lastPathComponent).aps-delete-\(UUID().uuidString)")
+            .appendingPathComponent(stagedDeletionComponent())
         do {
             try operations.moveItem(url, stagedURL)
         } catch let error as CocoaError
@@ -178,6 +179,18 @@ internal struct SchemaStoragePath: Hashable, Sendable {
         } catch {
             throw APSError.persistenceFailed(key: rawValue)
         }
+    }
+
+    private func stagedDeletionComponent() -> String {
+        let digest = SHA256.hash(data: Data(collisionKey.utf8))
+        let digits = Array("0123456789abcdef".utf8)
+        var encoded: [UInt8] = []
+        encoded.reserveCapacity(SHA256.byteCount * 2)
+        for byte in digest {
+            encoded.append(digits[Int(byte >> 4)])
+            encoded.append(digits[Int(byte & 0x0f)])
+        }
+        return ".aps-delete-\(String(decoding: encoded, as: UTF8.self))-\(UUID().uuidString)"
     }
 
     private func requireAbsent(

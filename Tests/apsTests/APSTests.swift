@@ -1412,6 +1412,17 @@ final class APSTests: XCTestCase {
             try CLIOutput.typedValue(for: forced, from: try store.get(name: "counter")),
             .string("hello")
         )
+        let seedDumpData = Data(try store.dump().utf8)
+        let seedDump = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: seedDumpData) as? [String: Any]
+        )
+        let seedEntries = try XCTUnwrap(seedDump["keys"] as? [[String: Any]])
+        XCTAssertEqual(seedEntries.compactMap { $0["key"] as? String }, DemoKey.allCases.map(\.rawValue))
+        let counterEntry = try XCTUnwrap(seedEntries.first { $0["key"] as? String == "counter" })
+        XCTAssertEqual(counterEntry["storage"] as? String, "FileState")
+        XCTAssertEqual(counterEntry["type"] as? String, "String")
+        XCTAssertEqual(counterEntry["value"] as? String, "hello")
+
         let dump = try store.dumpRegistered()
         XCTAssertTrue(dump.contains(#""key":"counter""#))
         XCTAssertTrue(dump.contains(#""storage":"FileState""#))
@@ -2603,6 +2614,44 @@ extension APSTests {
     }
 
     @MainActor
+    internal func testBulkResetRejectsTypeDistinctSiblingSliceInitials() async {
+        let first = SchemaKeyEntry(
+            name: "firstValue",
+            type: "Int",
+            storage: "Slice",
+            initial: .int(1),
+            doc: "first child",
+            sliceOf: "parent",
+            sliceField: "value"
+        )
+        let second = SchemaKeyEntry(
+            name: "secondValue",
+            type: "String",
+            storage: "Slice",
+            initial: .string("1"),
+            doc: "second child",
+            sliceOf: "parent",
+            sliceField: "value"
+        )
+        let schema = UserSchemaDocument(keys: [first, second])
+        let store = StateStore()
+
+        let error = store.bulkResetCompatibilityError(
+            for: first.name,
+            at: 0,
+            selectedNames: [first.name, second.name],
+            schema: schema
+        )
+
+        XCTAssertEqual(
+            error,
+            .schemaInvalid(
+                reason: "firstValue initial conflicts with selected sibling slice 'secondValue'"
+            )
+        )
+    }
+
+    @MainActor
     internal func testBulkResetAcceptsMissingParentFieldUsingSliceInitialFallback() async throws {
         let parent = SchemaKeyEntry(
             name: "parent",
@@ -3500,5 +3549,180 @@ private final class DroppedRollbackUserDefaults: UserDefaultsSynchronizing, @unc
         guard !failedForwardSynchronization else { return true }
         failedForwardSynchronization = true
         return false
+    }
+}
+
+/// Locked fault injector for deterministic FileState reset verification tests.
+private final class ResetFileFaults: @unchecked Sendable {
+    private let lock = NSLock()
+    private var readCount = 0
+    private var writeCount = 0
+    private let failingRead: Int
+    private let droppedWrites: Set<Int>
+
+    fileprivate init(failingRead: Int, droppedWrites: Set<Int> = []) {
+        self.failingRead = failingRead
+        self.droppedWrites = droppedWrites
+    }
+
+    fileprivate var operations: DynamicKeyStorage.FileOperations {
+        DynamicKeyStorage.FileOperations(
+            fileExists: { FileManager.default.fileExists(atPath: $0.path) },
+            read: { [self] url in
+                lock.lock()
+                readCount += 1
+                let shouldFail = readCount == failingRead
+                lock.unlock()
+                if shouldFail {
+                    throw APSError.persistenceFailed(key: url.lastPathComponent)
+                }
+                return try Data(contentsOf: url)
+            },
+            write: { [self] data, url in
+                lock.lock()
+                writeCount += 1
+                let shouldDrop = droppedWrites.contains(writeCount)
+                lock.unlock()
+                guard !shouldDrop else { return }
+                try data.write(to: url, options: .atomic)
+            },
+            remove: { try FileManager.default.removeItem(at: $0) }
+        )
+    }
+}
+
+extension APSTests {
+    @MainActor
+    internal func testFileStateResetRestoresExactPriorBytesAfterVerificationFailure() async throws {
+        let entry = SchemaKeyEntry(
+            name: "transactionalFile",
+            type: "object",
+            storage: "FileState",
+            initial: .object(["value": .string("after")]),
+            path: "transactional-file.json",
+            doc: "Transactional FileState reset"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("transactional-file.json")
+        let original = Data(#"{ "value" : "before", "spacing" : true }"#.utf8)
+        try original.write(to: url)
+        let faults = ResetFileFaults(failingRead: 2)
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.reset(
+                entry: entry,
+                stateRoot: FileManager.defaultFileStatePath,
+                schema: schema,
+                fileOperations: faults.operations
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+        XCTAssertEqual(try Data(contentsOf: url), original)
+    }
+
+    @MainActor
+    internal func testFileStateResetRestoresPriorAbsenceAfterVerificationFailure() async throws {
+        let entry = SchemaKeyEntry(
+            name: "transactionalAbsentFile",
+            type: "String",
+            storage: "FileState",
+            initial: .string("after"),
+            path: "transactional-absent-file.json",
+            doc: "Transactional absent FileState reset"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("transactional-absent-file.json")
+        let faults = ResetFileFaults(failingRead: 1)
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.reset(
+                entry: entry,
+                stateRoot: FileManager.defaultFileStatePath,
+                schema: schema,
+                fileOperations: faults.operations
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+    }
+
+    @MainActor
+    internal func testSliceResetRestoresExactParentBytesAfterVerificationFailure() async throws {
+        let parent = SchemaKeyEntry(
+            name: "transactionalParent",
+            type: "object",
+            storage: "FileState",
+            initial: .object(["name": .string("initial")]),
+            path: "transactional-parent.json",
+            doc: "Transactional Slice parent",
+            objectShape: ["name": "String"]
+        )
+        let slice = SchemaKeyEntry(
+            name: "transactionalSlice",
+            type: "String",
+            storage: "Slice",
+            initial: .string("after"),
+            doc: "Transactional Slice reset",
+            sliceOf: parent.name,
+            sliceField: "name"
+        )
+        let schema = UserSchemaDocument(keys: [parent, slice])
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("transactional-parent.json")
+        let original = Data(#"{ "name" : "before", "version" : 7 }"#.utf8)
+        try original.write(to: url)
+        let faults = ResetFileFaults(failingRead: 3)
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.reset(
+                entry: slice,
+                stateRoot: FileManager.defaultFileStatePath,
+                schema: schema,
+                fileOperations: faults.operations
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: parent.name))
+        }
+        XCTAssertEqual(try Data(contentsOf: url), original)
+    }
+
+    @MainActor
+    internal func testFileStateResetReportsRollbackFailureWhenPriorBytesCannotBeRestored() async throws {
+        let entry = SchemaKeyEntry(
+            name: "failedFileRollback",
+            type: "String",
+            storage: "FileState",
+            initial: .string("after"),
+            path: "failed-file-rollback.json",
+            doc: "Failed FileState rollback"
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        let url = URL(fileURLWithPath: FileManager.defaultFileStatePath)
+            .appendingPathComponent("failed-file-rollback.json")
+        try Data(#""before""#.utf8).write(to: url)
+        let faults = ResetFileFaults(failingRead: 2, droppedWrites: [2])
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.reset(
+                entry: entry,
+                stateRoot: FileManager.defaultFileStatePath,
+                schema: schema,
+                fileOperations: faults.operations
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .rollbackFailed(
+                    context: .fileState(path: "failed-file-rollback.json"),
+                    originalErrorCode: "corrupt_state",
+                    originalErrorDescription: APSError.corruptState(key: entry.name).description
+                )
+            )
+        }
+        XCTAssertEqual(try JSONDecoder().decode(String.self, from: Data(contentsOf: url)), "after")
     }
 }

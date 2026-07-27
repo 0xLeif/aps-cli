@@ -248,7 +248,7 @@ extension StateStore {
             guard
                 first.sliceOf == second.sliceOf,
                 first.sliceField == second.sliceField,
-                (first.initial?.wireString ?? "") != (second.initial?.wireString ?? "")
+                first.initial != second.initial
             else {
                 return nil
             }
@@ -406,9 +406,18 @@ extension StateStore {
     @MainActor
     public func dumpRegistered() throws -> String {
         let schema = try loadSchema()
+        return try dumpRegistered(entries: schema.keys, schema: schema)
+    }
+
+    /// Encodes the selected registry entries in their supplied deterministic order.
+    @MainActor
+    internal func dumpRegistered(
+        entries: [SchemaKeyEntry],
+        schema: UserSchemaDocument
+    ) throws -> String {
         let snapshot = RegistryDumpSnapshot(
             timestamp: now,
-            keys: try schema.keys.map { entry in
+            keys: try entries.map { entry in
                 let raw = try DynamicKeyStorage.get(
                     entry: entry,
                     stateRoot: stateRoot,

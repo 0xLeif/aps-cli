@@ -206,8 +206,10 @@ On Windows, stale-lock recovery never steals a valid lock from an owner that is
 alive or cannot be proven dead, even when the lock is older than the normal
 operation duration.
 
-A FileState reset with an initial value atomically overwrites that value under
-the per-file lock instead of deleting first. EncryptedFile reset uses
+A FileState or Slice reset snapshots the exact prior file bytes under the
+per-file lock before atomically overwriting its initial value. If write
+verification fails, aps restores the exact present bytes or prior absence and
+verifies that rollback before returning. EncryptedFile reset uses
 `secret.store.lock`, removes only the envelope, verifies its absence, and
 preserves `secret.key`.
 Parent and Slice reset initials compare as typed `SchemaJSON` values when the
@@ -226,10 +228,11 @@ and deletes the old storage. If deletion reports an error, it restores the
 original schema before releasing the lock. If restoration fails, aps reports
 `rollback_failed`. This is transactional for detected errors before return; it
 does not claim crash, power-loss, or distributed-filesystem atomicity.
-StoredState and staged-file rollback paths verify restoration and also report
-`rollback_failed` when the original data cannot be restored. The error identifies
-the schema, StoredState key, or staged file that needs inspection rather than
-describing every rollback as a `schema.json` failure.
+StoredState, FileState reset, and staged-file rollback paths verify restoration
+and also report `rollback_failed` when the original data cannot be restored.
+The error identifies the schema, StoredState key, reset file, or staged file
+that needs inspection rather than describing every rollback as a `schema.json`
+failure.
 
 Bulk reset runs in schema order and fails fast. Its report identifies reset,
 failed, and not-attempted keys. Mutation statistics advance only for resets

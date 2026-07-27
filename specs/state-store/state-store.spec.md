@@ -92,9 +92,11 @@ and synchronize the default AppState dogfood surface before releasing the lock.
 11. The default Bool/StoredState flag can read JSON-encoded legacy
     `App/aps.flag` data only when `aps.user.flag` is absent; reset clears the
     legacy key before writing the current initial value.
-12. FileState reset atomically overwrites a nonnil initial value under the
-    per-file lock. EncryptedFile reset holds `secret.store.lock`, deletes only
-    the envelope, verifies absence, and preserves shared key material.
+12. FileState and Slice reset snapshot exact prior file bytes and atomically
+    overwrite a nonnil initial value under the per-file lock, restoring absent
+    or present state after detected verification failure. EncryptedFile reset
+    holds `secret.store.lock`, deletes only the envelope, verifies absence, and
+    preserves shared key material.
 13. Schema removal with purge holds the schema lock through storage deletion.
     A detected purge failure restores the original schema before the lock is
     released; rollback failure is reported distinctly.

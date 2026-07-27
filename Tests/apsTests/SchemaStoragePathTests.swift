@@ -184,6 +184,20 @@ internal final class SchemaStoragePathTests: XCTestCase {
         }
     }
 
+    internal func testDeletionStagesNearLimitLeafWithBoundedComponent() throws {
+        try withStateRoot { root in
+            let leaf = "\(String(repeating: "a", count: 250)).json"
+            let file = root.appendingPathComponent(leaf)
+            try Data("value".utf8).write(to: file)
+            let path = try SchemaStoragePath(leaf)
+
+            XCTAssertTrue(try path.removeRegularFileIfPresent(stateRoot: root.path))
+
+            XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
+            XCTAssertEqual(try FileManager.default.contentsOfDirectory(atPath: root.path), [])
+        }
+    }
+
     internal func testInjectedDeletionFailureIsPersistenceErrorAndPreservesLeaf() throws {
         try withStateRoot { root in
             let file = root.appendingPathComponent("value.json")

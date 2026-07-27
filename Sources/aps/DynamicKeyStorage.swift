@@ -9,6 +9,37 @@ internal protocol UserDefaultsSynchronizing: UserDefaultsManaging {
 /// Process-local and file-backed storage for user-defined schema keys.
 @MainActor
 enum DynamicKeyStorage {
+    internal struct FileOperations: Sendable {
+        internal let fileExists: @Sendable (URL) -> Bool
+        internal let read: @Sendable (URL) throws -> Data
+        internal let write: @Sendable (Data, URL) throws -> Void
+        internal let remove: @Sendable (URL) throws -> Void
+
+        internal init(
+            fileExists: @escaping @Sendable (URL) -> Bool,
+            read: @escaping @Sendable (URL) throws -> Data,
+            write: @escaping @Sendable (Data, URL) throws -> Void,
+            remove: @escaping @Sendable (URL) throws -> Void
+        ) {
+            self.fileExists = fileExists
+            self.read = read
+            self.write = write
+            self.remove = remove
+        }
+
+        internal static let live = FileOperations(
+            fileExists: { FileManager.default.fileExists(atPath: $0.path) },
+            read: { try Data(contentsOf: $0) },
+            write: { try $0.write(to: $1, options: .atomic) },
+            remove: { try FileManager.default.removeItem(at: $0) }
+        )
+    }
+
+    private enum FileSnapshot: Equatable {
+        case absent
+        case present(Data)
+    }
+
     private static var memoryStrings: [String: String] = [:]
     private static var memoryInts: [String: Int] = [:]
     private static var memoryBools: [String: Bool] = [:]
@@ -68,7 +99,8 @@ enum DynamicKeyStorage {
     static func reset(
         entry: SchemaKeyEntry,
         stateRoot: String,
-        schema: UserSchemaDocument
+        schema: UserSchemaDocument,
+        fileOperations: FileOperations = .live
     ) throws -> ResetOutcome {
         let initial = entry.initial?.wireString ?? ""
         switch entry.storage {
@@ -89,9 +121,24 @@ enum DynamicKeyStorage {
                     lockFileName: try fileLockName(entry),
                     resourceKey: entry.name
                 ) {
-                    try fileSetUnlocked(entry, value: initial, stateRoot: stateRoot)
-                    guard try fileGet(entry, stateRoot: stateRoot) == initial else {
-                        throw APSError.persistenceFailed(key: entry.name)
+                    try resetFileTransaction(
+                        entry: entry,
+                        stateRoot: stateRoot,
+                        operations: fileOperations
+                    ) {
+                        try fileSetUnlocked(
+                            entry,
+                            value: initial,
+                            stateRoot: stateRoot,
+                            operations: fileOperations
+                        )
+                        guard try fileGet(
+                            entry,
+                            stateRoot: stateRoot,
+                            operations: fileOperations
+                        ) == initial else {
+                            throw APSError.persistenceFailed(key: entry.name)
+                        }
                     }
                 }
             } else {
@@ -112,14 +159,26 @@ enum DynamicKeyStorage {
                 lockFileName: try fileLockName(parent),
                 resourceKey: entry.name
             ) {
-                try sliceSetUnlocked(
-                    entry: entry,
-                    parent: parent,
-                    value: initial,
-                    stateRoot: stateRoot
-                )
-                guard try sliceGetUnlocked(entry: entry, parent: parent, stateRoot: stateRoot) == initial else {
-                    throw APSError.persistenceFailed(key: entry.name)
+                try resetFileTransaction(
+                    entry: parent,
+                    stateRoot: stateRoot,
+                    operations: fileOperations
+                ) {
+                    try sliceSetUnlocked(
+                        entry: entry,
+                        parent: parent,
+                        value: initial,
+                        stateRoot: stateRoot,
+                        operations: fileOperations
+                    )
+                    guard try sliceGetUnlocked(
+                        entry: entry,
+                        parent: parent,
+                        stateRoot: stateRoot,
+                        operations: fileOperations
+                    ) == initial else {
+                        throw APSError.persistenceFailed(key: entry.name)
+                    }
                 }
             }
         default:
@@ -570,14 +629,18 @@ enum DynamicKeyStorage {
         return "storage-\(String(decoding: encoded, as: UTF8.self)).lock"
     }
 
-    private static func fileGet(_ entry: SchemaKeyEntry, stateRoot: String) throws -> String {
+    private static func fileGet(
+        _ entry: SchemaKeyEntry,
+        stateRoot: String,
+        operations: FileOperations = .live
+    ) throws -> String {
         let url = try fileURL(entry, stateRoot: stateRoot)
-        guard FileManager.default.fileExists(atPath: url.path) else {
+        guard operations.fileExists(url) else {
             return entry.initial?.wireString ?? (entry.type == "object" ? "{}" : "")
         }
         let data: Data
         do {
-            data = try Data(contentsOf: url)
+            data = try operations.read(url)
         } catch {
             throw APSError.corruptState(key: entry.name)
         }
@@ -604,7 +667,12 @@ enum DynamicKeyStorage {
         }
     }
 
-    private static func fileSetUnlocked(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
+    private static func fileSetUnlocked(
+        _ entry: SchemaKeyEntry,
+        value: String,
+        stateRoot: String,
+        operations: FileOperations = .live
+    ) throws {
         let url = try fileURL(entry, stateRoot: stateRoot)
         try FileManager.default.createDirectory(
             at: url.deletingLastPathComponent(),
@@ -634,9 +702,76 @@ enum DynamicKeyStorage {
             throw APSError.invalidValue(key: entry.name, value: value)
         }
         do {
-            try data.write(to: url, options: .atomic)
+            try operations.write(data, url)
         } catch {
             throw APSError.persistenceFailed(key: entry.name)
+        }
+    }
+
+    private static func resetFileTransaction(
+        entry: SchemaKeyEntry,
+        stateRoot: String,
+        operations: FileOperations,
+        mutation: () throws -> Void
+    ) throws {
+        let url = try fileURL(entry, stateRoot: stateRoot)
+        let snapshot = try fileSnapshot(at: url, operations: operations, key: entry.name)
+        do {
+            try mutation()
+        } catch {
+            let originalError = error
+            do {
+                try restoreFileSnapshot(
+                    snapshot,
+                    at: url,
+                    operations: operations,
+                    key: entry.name
+                )
+            } catch {
+                let failure = originalError as? APSError ?? .persistenceFailed(key: entry.name)
+                throw APSError.rollbackFailed(
+                    context: .fileState(path: entry.path ?? entry.name),
+                    originalErrorCode: failure.code,
+                    originalErrorDescription: failure.description
+                )
+            }
+            throw originalError
+        }
+    }
+
+    private static func fileSnapshot(
+        at url: URL,
+        operations: FileOperations,
+        key: String
+    ) throws -> FileSnapshot {
+        guard operations.fileExists(url) else { return .absent }
+        do {
+            return .present(try operations.read(url))
+        } catch {
+            throw APSError.persistenceFailed(key: key)
+        }
+    }
+
+    private static func restoreFileSnapshot(
+        _ snapshot: FileSnapshot,
+        at url: URL,
+        operations: FileOperations,
+        key: String
+    ) throws {
+        do {
+            switch snapshot {
+            case .absent:
+                if operations.fileExists(url) {
+                    try operations.remove(url)
+                }
+            case .present(let data):
+                try operations.write(data, url)
+            }
+        } catch {
+            throw APSError.persistenceFailed(key: key)
+        }
+        guard try fileSnapshot(at: url, operations: operations, key: key) == snapshot else {
+            throw APSError.persistenceFailed(key: key)
         }
     }
 
@@ -679,12 +814,13 @@ enum DynamicKeyStorage {
     private static func sliceGetUnlocked(
         entry: SchemaKeyEntry,
         parent: SchemaKeyEntry,
-        stateRoot: String
+        stateRoot: String,
+        operations: FileOperations = .live
     ) throws -> String {
         guard let parentName = entry.sliceOf, let field = entry.sliceField else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
-        let raw = try fileGet(parent, stateRoot: stateRoot)
+        let raw = try fileGet(parent, stateRoot: stateRoot, operations: operations)
         guard
             let data = raw.data(using: .utf8),
             let object = try? JSONDecoder().decode([String: SchemaJSON].self, from: data)
@@ -742,12 +878,13 @@ enum DynamicKeyStorage {
         entry: SchemaKeyEntry,
         parent: SchemaKeyEntry,
         value: String,
-        stateRoot: String
+        stateRoot: String,
+        operations: FileOperations = .live
     ) throws {
         guard let parentName = entry.sliceOf, let field = entry.sliceField else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
-        let raw = try fileGet(parent, stateRoot: stateRoot)
+        let raw = try fileGet(parent, stateRoot: stateRoot, operations: operations)
         guard let inputData = raw.data(using: .utf8) else {
             throw APSError.corruptState(key: parentName)
         }
@@ -784,6 +921,6 @@ enum DynamicKeyStorage {
         guard let encoded = String(data: outputData, encoding: .utf8) else {
             throw APSError.encodingFailed
         }
-        try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot)
+        try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot, operations: operations)
     }
 }

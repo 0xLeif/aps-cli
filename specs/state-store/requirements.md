@@ -154,7 +154,8 @@ behavior.
 
 Acceptance Criteria
 - A seed name forced to another supported type or adapter uses only the forced
-  definition.
+  definition, including its type and storage metadata in both seed and
+  registered dumps.
 - FileState and EncryptedFile paths come from the current entry.
 - Slice reads and writes use the current parent and field.
 - The unchanged default flag remains readable from legacy AppState StoredState
@@ -184,7 +185,8 @@ Acceptance Criteria
   transaction.
 - Successful rollback rethrows the original operation error; failed rollback
   emits a distinct stable rollback error that truthfully identifies the schema,
-  StoredState value, or staged file that could not be restored.
+  StoredState value, reset FileState file, or staged file that could not be
+  restored.
 - Bulk reset stops at the first failure, identifies reset, failed, and
   not-attempted keys, and records stats only for successful keys.
 - Bulk-reset stats publish only after the outer schema lock is released, on
@@ -197,11 +199,16 @@ Acceptance Criteria
   replacement verification fails.
 - StoredState rollback verifies exact raw-object restoration and reports
   `rollback_failed` if restoration cannot be synchronized or verified.
+- FileState and Slice reset snapshot the exact prior file bytes under the
+  storage lock, restore absent or present state after detected write
+  verification failure, and report `rollback_failed` if exact restoration
+  cannot be verified.
 - Registered StoredState set synchronizes and type-checks the canonical object,
   treating a dropped or mistyped write as persistence failure and restoring
   the exact prior object.
 - Destructive leaf removal stages the original regular file and restores it
-  when post-delete verification fails.
+  when post-delete verification fails. The staging leaf uses a bounded,
+  hash-based component independent of the original leaf length.
 - Failed staged-leaf restoration reports `rollback_failed` instead of masking
   data stranded under the staging name.
 - FileState and Slice storage locks derive from the full portable relative path

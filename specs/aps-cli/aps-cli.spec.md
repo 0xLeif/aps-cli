@@ -113,9 +113,10 @@ self-describes that contract for agents through the `schema` command.
 | `schemaInvalid` | schema.json undecodable or fails validation. |
 | `unknownKey` | Name not present in the active registry. |
 | `schemaConflict` | key add would overwrite without `--force`. |
-| `RollbackContext` | Identifies the schema, StoredState value, or staged file whose restoration failed. |
+| `RollbackContext` | Identifies the schema, StoredState value, reset file, or staged file whose restoration failed. |
 | `schema` | Rollback context for a schema registry restoration failure. |
 | `storedState` | Rollback context for a StoredState restoration failure. |
+| `fileState` | Rollback context for a FileState or Slice-parent reset restoration failure. |
 | `stagedFile` | Rollback context for a staged-file restoration failure. |
 | `failureDescription` | Context-specific human description of a rollback failure. |
 | `rollbackFailed` | An operation failed and its context-specific resource could not be restored. |

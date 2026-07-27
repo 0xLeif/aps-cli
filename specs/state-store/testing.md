@@ -31,10 +31,13 @@
 - Windows lock recovery distinguishes live, dead, indeterminate, corrupt, and
   same-process-orphan owners; only proven-dead or safely orphaned locks are
   reclaimed.
-- Bulk reset rejects incompatible parent/Slice and sibling Slice initial values
-  without falsely reporting overwritten outcomes as successful.
+- Bulk reset rejects incompatible parent/Slice and sibling Slice initial values,
+  including sibling values with identical wire text but distinct SchemaJSON
+  types, without falsely reporting overwritten outcomes as successful.
 - Bulk reset accepts an omitted parent field when the Slice initial provides
   the observable fallback.
+- The seed dump preserves seed ordering while typing forced seed values and
+  reporting storage metadata from the resolved registry entry.
 - Bulk reset rejects a present integer parent initial when the Slice initial is
   the same wire text represented as a string.
 - StoredState reset restores canonical and legacy raw objects after detected
@@ -45,6 +48,9 @@
 - StoredState and staged-file rollback tests inject repeated synchronization,
   dropped restoration-write, and move-back failures and require
   `rollback_failed` with a truthful resource-specific description and hint.
+- FileState and Slice reset tests inject post-write verification failures and
+  require exact prior-byte restoration; failed restoration reports the reset
+  file through `rollback_failed`.
 - Storage-lock name tests cover nested `schema.json`, same basenames, and
   portable case-fold aliases.
 - Storage-lock acquisition failure tests require the selected key in the

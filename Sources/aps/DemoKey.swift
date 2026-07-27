@@ -75,6 +75,8 @@ public enum RollbackContext: Equatable, Sendable {
     case schema(key: String)
     /// A StoredState value could not be restored after a failed reset.
     case storedState(key: String)
+    /// A FileState file could not be restored after a failed reset.
+    case fileState(path: String)
     /// A staged file could not be moved back after a failed deletion.
     case stagedFile(path: String)
 
@@ -87,6 +89,9 @@ public enum RollbackContext: Equatable, Sendable {
         case .storedState(let key):
             return "Failed to restore StoredState value '\(key)' after reset persistence failed; "
                 + "the stored value may be partially updated."
+        case .fileState(let path):
+            return "Failed to restore state file '\(path)' after reset verification failed; "
+                + "the file may be partially updated."
         case .stagedFile(let path):
             return "Failed to restore state file '\(path)' after deletion failed; "
                 + "the original data may remain only in a staged deletion file."
@@ -100,6 +105,8 @@ public enum RollbackContext: Equatable, Sendable {
             return "Inspect schema.json and the retained data under the state root before retrying."
         case .storedState(let key):
             return "Inspect the StoredState value for '\(key)' before retrying the reset."
+        case .fileState(let path):
+            return "Inspect '\(path)' under the state root before retrying the reset."
         case .stagedFile(let path):
             return "Inspect '\(path)' and its neighboring .aps-delete file under the state root before retrying."
         }

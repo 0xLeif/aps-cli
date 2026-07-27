@@ -472,18 +472,14 @@ public final class StateStore {
     }
 
     public func dump() throws -> String {
-        let snapshot = DumpSnapshot(
-            timestamp: clock.now,
-            keys: try DemoKey.allCases.map { key in
-                DumpEntry(
-                    key: key.rawValue,
-                    storage: key.storage,
-                    type: key.valueType,
-                    value: try CLIOutput.typedValue(for: key, store: self)
-                )
+        let schema = try loadSchema()
+        let entries = try DemoKey.allCases.map { key in
+            guard let entry = UserSchema.entry(named: key.rawValue, in: schema) else {
+                throw APSError.unknownKey(name: key.rawValue)
             }
-        )
-        return try jsonCoding.encodeAuto(snapshot)
+            return entry
+        }
+        return try dumpRegistered(entries: entries, schema: schema)
     }
 
     /// Blocking watch over the `@ObservedDependency` stats service.
@@ -747,16 +743,4 @@ private final class ChangeFlag: @unchecked Sendable {
         defer { lock.unlock() }
         return value
     }
-}
-
-private struct DumpSnapshot: Encodable {
-    let timestamp: Date
-    let keys: [DumpEntry]
-}
-
-private struct DumpEntry: Encodable {
-    let key: String
-    let storage: String
-    let type: String
-    let value: CLIOutput.JSONValue
 }
