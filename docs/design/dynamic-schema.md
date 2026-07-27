@@ -1,12 +1,12 @@
 # RFC: Dynamic schema (user-defined keys)
 
 Issue: [#39](https://github.com/0xLeif/aps-cli/issues/39)  
-Status: **Implemented in v1.0.0, hardening in progress** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); path safety implemented for v1.1.0; this doc remains the design record
+Status: **Implemented in v1.0.0, hardened for v1.1.0** (PR [#65](https://github.com/0xLeif/aps-cli/pull/65)); path safety, registry authority, and detected-error transactional reset/purge are implemented; this doc remains the design record
 Authors: agent:cursor (2026-07-19)  
 Depends on: error contract ([#31](https://github.com/0xLeif/aps-cli/issues/31)), `aps schema` ([#32](https://github.com/0xLeif/aps-cli/issues/32))  
 Milestone: v1.0.0
 
-> Release-readiness note: the current implementation enforces the path-safety invariants below. Object-shape, Slice-reference, and single-source-of-truth hardening remain open. Track the remaining closure criteria in [release readiness](../release-readiness.md).
+> Release-readiness note: the current implementation enforces the path-safety, Slice-reference, registry-authority, and destructive-operation invariants below. Recursive arbitrary object values remain a separate extension. Track remaining release closure criteria in [release readiness](../release-readiness.md).
 
 ## Verdict
 
@@ -181,6 +181,27 @@ Changing storage or path takes effect on the next command, while former adapter
 data remains untouched unless an explicit purge removes it. Changing `initial`
 affects missing reads and later reset, not an existing value.
 
+Reset and purge use one global lock order:
+
+1. schema lock, when the operation changes the registry;
+2. storage lock for FileState or EncryptedFile;
+3. secret key lock only when cryptographic access requires it.
+
+A FileState reset with an initial value atomically overwrites that value under
+the per-file lock instead of deleting first. EncryptedFile reset uses
+`secret.store.lock`, removes only the envelope, verifies its absence, and
+preserves `secret.key`.
+
+`key remove --purge` keeps the schema lock while it writes the candidate schema
+and deletes the old storage. If deletion reports an error, it restores the
+original schema before releasing the lock. If restoration fails, aps reports
+`rollback_failed`. This is transactional for detected errors before return; it
+does not claim crash, power-loss, or distributed-filesystem atomicity.
+
+Bulk reset runs in schema order and fails fast. Its report identifies reset,
+failed, and not-attempted keys. Mutation statistics advance only for resets
+whose storage postcondition was verified.
+
 Unknown key: exit **64** (`invalid_value` or a dedicated `unknown_key` code added in the same implementation change; prefer extending the #31 table once rather than inventing ad hoc messages).
 
 ### 4. Relationship to `aps schema` (#32)
@@ -256,7 +277,9 @@ Torn FileState files remain `corrupt_state` / 65.
 ### 9. Security notes
 
 - `EncryptedFile` keys each get their own `path` (default `secret.enc` for the demo entry). Do not share one envelope across unrelated secrets without an explicit design follow-up.
-- `aps key remove --purge` is the only path that deletes ciphertext/key material; document it loudly.
+- `aps key remove --purge` deletes the registered data leaf when requested.
+  EncryptedFile purge deletes only its ciphertext envelope and preserves shared
+  `secret.key` material.
 - Schema edits are not authenticated; anyone who can write the state root can change types. Same trust model as today's FileState files.
 - Purge must never recursively remove an arbitrary schema path. It may delete only a validated, unshared regular file below the canonical state root.
 - Every persistent operation revalidates containment, ancestors, and the regular-file leaf immediately before use. The state root is a same-user trust boundary: hostile processes running as the same identity can already rewrite `schema.json` and state data, so concurrent hostile directory renames are outside the CLI's security model. Keep shared state roots owner-only and coordinate legitimate writers through APS locks.

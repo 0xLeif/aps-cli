@@ -27,6 +27,7 @@ public struct SecretStore: Sendable {
     private let directory: String
     private let storeFileName: String
     private let keyName: String
+    private let deletionOperations: SchemaStoragePath.DeletionOperations
 
     /// Store rooted at the configured FileState path (`secret.enc`).
     @MainActor
@@ -34,6 +35,7 @@ public struct SecretStore: Sendable {
         self.directory = FileManager.defaultFileStatePath
         self.storeFileName = "secret.enc"
         self.keyName = "secret"
+        self.deletionOperations = .live
     }
 
     /// Store rooted at an explicit directory (tests, tooling).
@@ -41,6 +43,20 @@ public struct SecretStore: Sendable {
         self.directory = directory
         self.storeFileName = storeFileName
         self.keyName = keyName
+        self.deletionOperations = .live
+    }
+
+    /// Store with instance-scoped deletion operations for deterministic tests.
+    internal init(
+        directory: String,
+        storeFileName: String = "secret.enc",
+        keyName: String = "secret",
+        deletionOperations: SchemaStoragePath.DeletionOperations
+    ) {
+        self.directory = directory
+        self.storeFileName = storeFileName
+        self.keyName = keyName
+        self.deletionOperations = deletionOperations
     }
 
     private var storeURL: URL {
@@ -102,7 +118,7 @@ public struct SecretStore: Sendable {
     /// `secretUnlockFailed` and leaves ciphertext unchanged (issue #89).
     public func set(_ value: String) throws {
         _ = try validatedStoragePath()
-        try SchemaFileLock.withExclusiveLock(
+        try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: directory,
             lockFileName: "secret.store.lock"
         ) {
@@ -142,10 +158,28 @@ public struct SecretStore: Sendable {
         }
     }
 
-    /// Reset to the initial value: the store file is deleted.
-    public func reset() {
-        guard let storagePath = try? validatedStoragePath() else { return }
-        try? storagePath.removeRegularFileIfPresent(stateRoot: directory)
+    /// Reset to the initial value by removing only the encrypted envelope.
+    ///
+    /// The shared recipient key remains unchanged. Reset is serialized with
+    /// `set` and returns whether an envelope was removed.
+    /// - Returns: `true` when the envelope was removed, or `false` when it was
+    ///   already missing.
+    @discardableResult
+    public func reset() throws -> Bool {
+        let storagePath = try validatedStoragePath()
+        do {
+            return try SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: directory,
+                lockFileName: "secret.store.lock"
+            ) {
+                try storagePath.removeRegularFileIfPresent(
+                    stateRoot: directory,
+                    operations: deletionOperations
+                )
+            }
+        } catch APSError.persistenceFailed {
+            throw APSError.persistenceFailed(key: keyName)
+        }
     }
 
     private func validatedStoragePath() throws -> SchemaStoragePath {
@@ -220,13 +254,13 @@ public struct SecretStore: Sendable {
             guard !passphrase.isEmpty else {
                 throw APSError.secretUnlockFailed
             }
-            return Self.keyFromPassphrase(passphrase)
+            return try Self.keyFromPassphrase(passphrase)
         }
         #if !os(Windows)
         if ProcessInfo.processInfo.environment["APS_SECRET_USE_PASSPHRASE"] == "1",
            isatty(FileHandle.standardError.fileDescriptor) == 1 {
             if let passphrase = Self.promptPassphrase() {
-                return Self.keyFromPassphrase(passphrase)
+                return try Self.keyFromPassphrase(passphrase)
             }
             // Empty/cancelled TTY prompt falls through to key-file mode.
             if !hasSecret {
@@ -243,14 +277,18 @@ public struct SecretStore: Sendable {
         return try loadOrCreateKeyFileUnlocked()
     }
 
-    static func keyFromPassphrase(_ passphrase: String) -> Curve25519.KeyAgreement.PrivateKey {
+    private static func keyFromPassphrase(
+        _ passphrase: String
+    ) throws -> Curve25519.KeyAgreement.PrivateKey {
         let derived = HKDF<SHA256>.deriveKey(
             inputKeyMaterial: SymmetricKey(data: Data(passphrase.utf8)),
             salt: Data("aps-secret-store-v1".utf8),
             info: Data("x25519-key".utf8),
             outputByteCount: 32
         )
-        return try! Curve25519.KeyAgreement.PrivateKey(rawRepresentation: derived.withUnsafeBytes { Data($0) })
+        return try Curve25519.KeyAgreement.PrivateKey(
+            rawRepresentation: derived.withUnsafeBytes { Data($0) }
+        )
     }
 
     private static func promptPassphrase() -> String? {
@@ -269,7 +307,7 @@ public struct SecretStore: Sendable {
             return key
         }
 
-        return try SchemaFileLock.withExclusiveLock(
+        return try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: directory,
             lockFileName: "secret.key.lock"
         ) {

@@ -5,10 +5,11 @@
   "title": "Make reset and purge transactional and truthfully report failures for issue 113",
   "description": "Make reset and purge transactional and truthfully report failures for issue 113",
   "kind": "bug_fix",
-  "state": "draft",
+  "state": "accepted",
+  "canonical_applied": true,
   "base_commit": "b0647eade46eeac974533e84f93440db956031db",
   "created_at": 1785120678,
-  "updated_at": 1785120725,
+  "updated_at": 1785124308,
   "affected_specs": [
     "aps-cli",
     "state-store"
@@ -20,6 +21,7 @@
     "Sources/aps/ResetReport.swift",
     "Sources/aps/DynamicKeyStorage.swift",
     "Sources/aps/DemoKey.swift",
+    "Sources/aps/SchemaFileLock.swift",
     "Sources/aps/SchemaStoragePath.swift",
     "Sources/aps/UserSchema.swift",
     "Sources/aps/Schema.swift",
@@ -32,6 +34,7 @@
     "Scripts/smoke.ps1",
     "README.md",
     "docs/design/dynamic-schema.md",
+    "docs/release-readiness.md",
     ".specsync/change-sequence.json"
   ],
   "no_spec_change": false,

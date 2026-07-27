@@ -17,11 +17,13 @@ import WinSDK
 /// `fcntl(F_SETLKW)` for cross-process exclusion. Windows uses an exclusive
 /// create/retry on `schema.json.lock.held`, with PID+timestamp stale recovery.
 ///
-/// - Important: `processLock` (`NSLock`) is **non-recursive**. Callers must not
-///   nest `withExclusiveLock`. Inside the body, use the UserSchema `*Unlocked`
-///   load/materialize helpers instead of paths that take the lock again.
+/// Schema and storage locks use separate process-local mutexes so the supported
+/// schema-then-storage ordering does not recursively acquire one `NSLock`.
+/// Inside a schema body, use the UserSchema `*Unlocked` load/materialize helpers
+/// instead of taking the schema lock again.
 public enum SchemaFileLock {
-    private static let processLock = NSLock()
+    private static let schemaProcessLock = NSLock()
+    private static let storageProcessLock = NSLock()
 
     /// Maximum age of a Windows `.held` lock before it is treated as stale.
     /// CLI RMW holds are milliseconds; a short TTL also covers PID reuse when a
@@ -29,10 +31,29 @@ public enum SchemaFileLock {
     private static let windowsHeldStaleAge: TimeInterval = 3
 
     public static func withExclusiveLock<T>(stateRoot: String, _ body: () throws -> T) throws -> T {
-        try withExclusiveLock(stateRoot: stateRoot, lockFileName: "schema.json.lock", body)
+        try withExclusiveLock(
+            processLock: schemaProcessLock,
+            stateRoot: stateRoot,
+            lockFileName: "schema.json.lock",
+            body
+        )
     }
 
-    internal static func withExclusiveLock<T>(
+    internal static func withExclusiveStorageLock<T>(
+        stateRoot: String,
+        lockFileName: String,
+        _ body: () throws -> T
+    ) throws -> T {
+        try withExclusiveLock(
+            processLock: storageProcessLock,
+            stateRoot: stateRoot,
+            lockFileName: lockFileName,
+            body
+        )
+    }
+
+    private static func withExclusiveLock<T>(
+        processLock: NSLock,
         stateRoot: String,
         lockFileName: String,
         _ body: () throws -> T

@@ -58,44 +58,87 @@ extension StateStore {
     }
 
     @MainActor
-    public func reset(name: String) throws {
+    @discardableResult
+    public func reset(name: String) throws -> ResetOutcome {
+        try reset(name: name, recordMutation: true)
+    }
+
+    @MainActor
+    @discardableResult
+    internal func reset(name: String, recordMutation: Bool) throws -> ResetOutcome {
         let schema = try loadSchema()
         guard let entry = UserSchema.entry(named: name, in: schema) else {
             throw APSError.unknownKey(name: name)
         }
-        try DynamicKeyStorage.reset(
-            entry: entry,
-            stateRoot: stateRoot,
-            schema: schema
-        )
-        stats.recordMutation(key: name)
-    }
-
-    @MainActor
-    public func resetAllRegistered() throws {
-        let schema = try loadSchema()
-        for entry in schema.keys {
-            try DynamicKeyStorage.reset(
+        let outcome: ResetOutcome
+        do {
+            outcome = try DynamicKeyStorage.reset(
                 entry: entry,
                 stateRoot: stateRoot,
                 schema: schema
             )
-            stats.recordMutation(key: entry.name)
+        } catch let error as APSError {
+            throw error
+        } catch {
+            throw APSError.persistenceFailed(key: name)
         }
+        if recordMutation {
+            stats.recordMutation(key: name)
+        }
+        return outcome
     }
 
     @MainActor
-    internal func resetAllSeedKeys() throws {
+    @discardableResult
+    public func resetAllRegistered() throws -> BulkResetReport {
+        let schema = try loadSchema()
+        return try reset(entries: schema.keys, schema: schema)
+    }
+
+    @MainActor
+    @discardableResult
+    internal func resetAllSeedKeys() throws -> BulkResetReport {
         let schema = try loadSchema()
         let seedNames = Set(DemoKey.allCases.map(\.rawValue))
-        for entry in schema.keys where seedNames.contains(entry.name) {
-            try DynamicKeyStorage.reset(
-                entry: entry,
-                stateRoot: stateRoot,
-                schema: schema
-            )
-            stats.recordMutation(key: entry.name)
+        return try reset(
+            entries: schema.keys.filter { seedNames.contains($0.name) },
+            schema: schema
+        )
+    }
+
+    @MainActor
+    private func reset(
+        entries: [SchemaKeyEntry],
+        schema: UserSchemaDocument
+    ) throws -> BulkResetReport {
+        var resetNames: [String] = []
+        for (index, entry) in entries.enumerated() {
+            do {
+                _ = try DynamicKeyStorage.reset(
+                    entry: entry,
+                    stateRoot: stateRoot,
+                    schema: schema
+                )
+                stats.recordMutation(key: entry.name)
+                resetNames.append(entry.name)
+            } catch let error as APSError {
+                let report = BulkResetReport(
+                    reset: resetNames,
+                    failed: ResetFailure(key: entry.name, error: error),
+                    notAttempted: entries.dropFirst(index + 1).map(\.name)
+                )
+                throw BulkResetError(report: report, underlying: error)
+            } catch {
+                let normalized = APSError.persistenceFailed(key: entry.name)
+                let report = BulkResetReport(
+                    reset: resetNames,
+                    failed: ResetFailure(key: entry.name, error: normalized),
+                    notAttempted: entries.dropFirst(index + 1).map(\.name)
+                )
+                throw BulkResetError(report: report, underlying: normalized)
+            }
         }
+        return .success(reset: resetNames)
     }
 
     @MainActor
@@ -132,38 +175,53 @@ extension StateStore {
     /// Remove a schema entry. Optionally delete FileState/EncryptedFile data.
     @MainActor
     public func removeKey(name: String, purge: Bool) throws {
+        try removeKey(
+            name: name,
+            purge: purge,
+            purgeOperation: { entry, root in
+                try DynamicKeyStorage.purge(entry: entry, stateRoot: root)
+            },
+            schemaWriter: { schema, root in
+                try UserSchema.write(schema, stateRoot: root)
+            }
+        )
+    }
+
+    /// Transactional removal seam for deterministic purge and rollback tests.
+    @MainActor
+    internal func removeKey(
+        name: String,
+        purge: Bool,
+        purgeOperation: (SchemaKeyEntry, String) throws -> Void,
+        schemaWriter: (UserSchemaDocument, String) throws -> Void
+    ) throws {
         let root = stateRoot
-        let entry: SchemaKeyEntry = try SchemaFileLock.withExclusiveLock(stateRoot: root) {
-            var schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
-            guard let index = schema.keys.firstIndex(where: { $0.name == name }) else {
+        try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+            let original = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
+            guard let index = original.keys.firstIndex(where: { $0.name == name }) else {
                 throw APSError.unknownKey(name: name)
             }
-            let removed = schema.keys[index]
-            if schema.keys.contains(where: { $0.storage == "Slice" && $0.sliceOf == name }) {
+            let removed = original.keys[index]
+            if original.keys.contains(where: { $0.storage == "Slice" && $0.sliceOf == name }) {
                 throw APSError.schemaInvalid(
                     reason: "cannot remove '\(name)' while slice keys still reference it"
                 )
             }
-            schema.keys.remove(at: index)
-            try UserSchema.write(schema, stateRoot: root)
-            return removed
-        }
-        if purge {
-            switch entry.storage {
-            case "FileState":
-                if let path = entry.path {
-                    try SchemaStoragePath(path).removeRegularFileIfPresent(stateRoot: root)
+            var candidate = original
+            candidate.keys.remove(at: index)
+            try schemaWriter(candidate, root)
+            guard purge else { return }
+
+            do {
+                try purgeOperation(removed, root)
+            } catch {
+                let purgeError = (error as? APSError) ?? APSError.persistenceFailed(key: name)
+                do {
+                    try schemaWriter(original, root)
+                } catch {
+                    throw APSError.rollbackFailed
                 }
-            case "EncryptedFile":
-                if let path = entry.path {
-                    try SchemaStoragePath(path).removeRegularFileIfPresent(stateRoot: root)
-                }
-            case "StoredState":
-                DynamicKeyStorage.removeStoredValue(entry)
-            case "State":
-                DynamicKeyStorage.clearMemory(named: name)
-            default:
-                break
+                throw purgeError
             }
         }
     }

@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "attempts": [
+    {
+      "timestamp": 1785123667,
+      "commit": "cd087d6cbc7cdc3a80c99be54d75a30dbe0954c8",
+      "contract_digest": "794e42339c264daf93de1e24c2f7cea1c82a868eae6bb588c1a076c6a29aadbd",
+      "workspace_digest": "f2df4f3318f06d76f92b839d0890e99c74efc3df0fb92caed506eced24c391a9",
+      "passed": false,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-029",
+        "REQ-state-store-022"
+      ]
+    },
+    {
+      "timestamp": 1785123771,
+      "commit": "cd087d6cbc7cdc3a80c99be54d75a30dbe0954c8",
+      "contract_digest": "d0f15d22269bf78ef1de261c85b45ec82540d284f5b3f0cf06bcd78b7bc18a6b",
+      "workspace_digest": "f2df4f3318f06d76f92b839d0890e99c74efc3df0fb92caed506eced24c391a9",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-029",
+        "REQ-state-store-022"
+      ]
+    },
+    {
+      "timestamp": 1785124293,
+      "commit": "cd087d6cbc7cdc3a80c99be54d75a30dbe0954c8",
+      "contract_digest": "d0f15d22269bf78ef1de261c85b45ec82540d284f5b3f0cf06bcd78b7bc18a6b",
+      "workspace_digest": "526d01f864902a36c3e161e4fe356488d2c7c48eebcff22b99eb5fd7816d76ba",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-029",
+        "REQ-state-store-022"
+      ]
+    }
+  ]
+}

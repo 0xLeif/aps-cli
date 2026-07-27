@@ -460,27 +460,33 @@ extension Aps {
                 let store = StateStore()
                 do {
                     if all {
-                        try store.resetAllSeedKeys()
+                        let report = try store.resetAllSeedKeys()
                         if options.json {
-                            let payload = CLIOutput.ResetPayload(reset: "all", key: nil, value: nil)
+                            let payload = CLIOutput.ResetPayload(
+                                reset: "all",
+                                key: nil,
+                                value: nil,
+                                report: report
+                            )
                             print(try CLIOutput.encodeJSON(payload))
                         } else {
                             print("reset seed keys")
                         }
                     } else if registered {
-                        try store.resetAllRegistered()
+                        let report = try store.resetAllRegistered()
                         if options.json {
                             let payload = CLIOutput.ResetPayload(
                                 reset: "registered",
                                 key: nil,
-                                value: nil
+                                value: nil,
+                                report: report
                             )
                             print(try CLIOutput.encodeJSON(payload))
                         } else {
                             print("reset all registered keys")
                         }
                     } else if let key {
-                        try store.reset(name: key)
+                        _ = try store.reset(name: key)
                         let snapshot = try store.valueSnapshot(name: key)
                         if options.json {
                             let payload = CLIOutput.ResetPayload(
@@ -496,6 +502,8 @@ extension Aps {
                             print(snapshot.raw)
                         }
                     }
+                } catch let error as BulkResetError {
+                    try CLIOutput.fail(error, json: options.json)
                 } catch let error as APSError {
                     try CLIOutput.fail(error, json: options.json)
                 }

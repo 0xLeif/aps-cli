@@ -69,7 +69,7 @@ public struct ProfileDocument: Codable, Equatable, Sendable {
     }
 }
 
-public enum APSError: Error, CustomStringConvertible, Equatable {
+public enum APSError: Error, CustomStringConvertible, Equatable, Sendable {
     case invalidValue(key: String, value: String)
     case encodingFailed
     case decodingFailed
@@ -83,6 +83,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
     case unknownKey(name: String)
     /// `key add` would overwrite an existing entry without force.
     case schemaConflict(name: String)
+    /// Purge failed and the original schema could not be restored.
+    case rollbackFailed
 
     /// sysexits `EX_DATAERR` (65): input/state data was present but unusable.
     public static let corruptStateExitCode: Int32 = 65
@@ -107,6 +109,9 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "Unknown key '\(name)'"
         case .schemaConflict(let name):
             return "Key '\(name)' already exists in schema.json"
+        case .rollbackFailed:
+            return "Failed to restore schema.json after purge failed; "
+                + "the retained data may no longer match the registry"
         }
     }
 
@@ -122,6 +127,7 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
         case .schemaInvalid: return "schema_invalid"
         case .unknownKey: return "unknown_key"
         case .schemaConflict: return "schema_conflict"
+        case .rollbackFailed: return "rollback_failed"
         }
     }
 
@@ -133,7 +139,7 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
         case .decodingFailed, .corruptState, .schemaInvalid: return APSError.corruptStateExitCode
         case .secretUnlockFailed: return 69 // EX_UNAVAILABLE
         case .encodingFailed: return 70 // EX_SOFTWARE
-        case .persistenceFailed: return 73 // EX_CANTCREAT
+        case .persistenceFailed, .rollbackFailed: return 73 // EX_CANTCREAT
         }
     }
 
@@ -158,6 +164,8 @@ public enum APSError: Error, CustomStringConvertible, Equatable {
             return "Run `aps keys` or `aps key list`; add the key with `aps key add` if needed."
         case .schemaConflict:
             return "Choose a new name or pass --force to replace the existing schema entry."
+        case .rollbackFailed:
+            return "Inspect schema.json and the retained data under the state root before retrying."
         }
     }
 }

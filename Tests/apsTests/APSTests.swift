@@ -248,7 +248,7 @@ final class APSTests: XCTestCase {
         let fileURL = URL(fileURLWithPath: path).appendingPathComponent("secret.enc")
         XCTAssertTrue(FileManager.default.fileExists(atPath: fileURL.path))
 
-        store.reset(.secret)
+        _ = try store.reset(.secret)
         XCTAssertEqual(store.get(.secret), "")
         XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
     }
@@ -429,6 +429,51 @@ final class APSTests: XCTestCase {
     #endif
 
     @MainActor
+    func testSecretStoreConcurrentSetAndResetEndsCompleteOrAbsent() async throws {
+        let path = FileManager.defaultFileStatePath
+        let values = (0..<8).map { "set-reset-\($0)" }
+        let store = SecretStore(directory: path)
+        try store.set("initial")
+        let keyURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key")
+        let originalKey = try Data(contentsOf: keyURL)
+
+        let failures = await withTaskGroup(of: String?.self, returning: [String].self) { group in
+            values.forEach { value in
+                group.addTask {
+                    do {
+                        try SecretStore(directory: path).set(value)
+                        return nil
+                    } catch {
+                        return String(describing: error)
+                    }
+                }
+                group.addTask {
+                    do {
+                        _ = try SecretStore(directory: path).reset()
+                        return nil
+                    } catch {
+                        return String(describing: error)
+                    }
+                }
+            }
+
+            var failures: [String] = []
+            for await failure in group {
+                if let failure {
+                    failures.append(failure)
+                }
+            }
+            return failures
+        }
+
+        XCTAssertTrue(failures.isEmpty, "Concurrent set/reset failed: \(failures)")
+        XCTAssertEqual(try Data(contentsOf: keyURL), originalKey)
+        if store.hasSecret {
+            XCTAssertTrue(values.contains(try store.get()))
+        }
+    }
+
+    @MainActor
     func testSecretStoreRejectsUnsafeFilenameBeforeWrite() async throws {
         let path = FileManager.defaultFileStatePath
         let store = SecretStore(
@@ -470,7 +515,7 @@ final class APSTests: XCTestCase {
         let reader = StateStore()
         XCTAssertEqual(reader.get(.secret), "shared-secret")
 
-        reader.reset(.secret)
+        _ = try reader.reset(.secret)
         XCTAssertEqual(StateStore().get(.secret), "")
     }
 
@@ -589,11 +634,11 @@ final class APSTests: XCTestCase {
         try store.set(.note, value: "n")
         try store.set(.profile, value: #"{"name":"z","version":9}"#)
 
-        store.reset(.counter)
-        store.reset(.message)
-        store.reset(.flag)
-        store.reset(.note)
-        store.reset(.profile)
+        _ = try store.reset(.counter)
+        _ = try store.reset(.message)
+        _ = try store.reset(.flag)
+        _ = try store.reset(.note)
+        _ = try store.reset(.profile)
 
         XCTAssertEqual(store.get(.counter), "0")
         XCTAssertEqual(store.get(.message), "")
@@ -988,7 +1033,7 @@ final class APSTests: XCTestCase {
         let reader = StateStore()
         XCTAssertEqual(reader.get(.flag), "true")
 
-        reader.reset(.flag)
+        _ = try reader.reset(.flag)
         XCTAssertEqual(StateStore().get(.flag), "false")
     }
 
@@ -1009,7 +1054,7 @@ final class APSTests: XCTestCase {
             "expected App/aps.flag in the hermetic suite, got \(hermeticDefaults?.keys ?? [])"
         )
 
-        store.reset(.flag)
+        _ = try store.reset(.flag)
         XCTAssertEqual(store.get(.flag), "false")
         XCTAssertNil(UserDefaults.standard.object(forKey: "App/aps.flag"))
     }
@@ -1082,7 +1127,16 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(APSError.encodingFailed.exitCode, 70)
         XCTAssertEqual(APSError.persistenceFailed(key: "note").exitCode, 73)
 
-        for error in [APSError.invalidValue(key: "flag", value: "x"), .encodingFailed, .decodingFailed, .persistenceFailed(key: "flag"), .secretUnlockFailed, .corruptState(key: "profile")] as [APSError] {
+        let errors: [APSError] = [
+            .invalidValue(key: "flag", value: "x"),
+            .encodingFailed,
+            .decodingFailed,
+            .persistenceFailed(key: "flag"),
+            .secretUnlockFailed,
+            .corruptState(key: "profile"),
+            .rollbackFailed,
+        ]
+        for error in errors {
             XCTAssertFalse(error.hint.isEmpty, "hint required for \(error.code)")
         }
     }
@@ -1201,7 +1255,7 @@ final class APSTests: XCTestCase {
     func testSchemaDocumentCoversAllKeysAndCommands() throws {
         let document = Schema.staticDocument()
 
-        XCTAssertEqual(document.schemaVersion, 4)
+        XCTAssertEqual(document.schemaVersion, 5)
         XCTAssertEqual(document.cliVersion, "1.0.0")
         XCTAssertEqual(document.keys.map(\.name), DemoKey.allCases.map(\.rawValue))
         XCTAssertEqual(document.stateRoot.precedence, ["--state-dir", "APS_HOME", "~/.aps"])
@@ -1222,7 +1276,7 @@ final class APSTests: XCTestCase {
 
     func testSchemaErrorTableIsStable() {
         let table = Schema.staticDocument().errors
-        XCTAssertEqual(table.count, 9)
+        XCTAssertEqual(table.count, 10)
         let byCode = Dictionary(uniqueKeysWithValues: table.map { ($0.code, $0.exitCode) })
         XCTAssertEqual(byCode["invalid_value"], 64)
         XCTAssertEqual(byCode["decoding_failed"], 65)
@@ -1233,6 +1287,7 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(byCode["unknown_key"], 64)
         XCTAssertEqual(byCode["schema_conflict"], 64)
         XCTAssertEqual(byCode["schema_invalid"], 65)
+        XCTAssertEqual(byCode["rollback_failed"], 73)
         for entry in table {
             XCTAssertFalse(entry.hint.isEmpty, "hint required for \(entry.code)")
             XCTAssertFalse(entry.meaning.isEmpty, "meaning required for \(entry.code)")
@@ -1244,9 +1299,20 @@ final class APSTests: XCTestCase {
         let data = try XCTUnwrap(json.data(using: .utf8))
         let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
-        XCTAssertEqual(object?["schemaVersion"] as? Int, 4)
+        XCTAssertEqual(object?["schemaVersion"] as? Int, 5)
         let payloads = try XCTUnwrap(object?["payloads"] as? [String: Any])
-        for name in ["KeyValuePayload", "KeysPayload", "WatchEvent", "WatchErrorEvent", "WatchEndEvent", "ResetPayload", "StatsPayload", "ErrorEnvelope"] {
+        for name in [
+            "KeyValuePayload",
+            "KeysPayload",
+            "WatchEvent",
+            "WatchErrorEvent",
+            "WatchEndEvent",
+            "ResetPayload",
+            "BulkResetReport",
+            "ResetFailure",
+            "StatsPayload",
+            "ErrorEnvelope",
+        ] {
             XCTAssertNotNil(payloads[name], "missing payload schema \(name)")
         }
         let event = try XCTUnwrap(payloads["WatchEvent"] as? [String: Any])
@@ -1681,7 +1747,7 @@ final class APSTests: XCTestCase {
 
         setenv("APS_SECRET_PASSPHRASE", "alpha", 1)
         XCTAssertEqual(try store.get(), "owned-by-alpha")
-        store.reset()
+        _ = try store.reset()
     }
 #endif
 
@@ -1692,7 +1758,7 @@ final class APSTests: XCTestCase {
         defer { try? FileManager.default.removeItem(at: root) }
 
         XCTAssertThrowsError(
-            try SchemaFileLock.withExclusiveLock(
+            try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: root.path,
                 lockFileName: "secret.store.lock"
             ) {
@@ -1733,6 +1799,193 @@ final class APSTests: XCTestCase {
 
         try store.resetAllRegistered()
         XCTAssertEqual(try store.get(name: "agentStatus"), "")
+    }
+
+    @MainActor
+    func testRemoveKeyRestoresExactSchemaWhenPurgeFails() async throws {
+        let store = StateStore()
+        let original = try store.loadSchema()
+        var schemaWriteCount = 0
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    throw APSError.persistenceFailed(key: "note")
+                },
+                schemaWriter: { document, root in
+                    schemaWriteCount += 1
+                    try UserSchema.write(document, stateRoot: root)
+                }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .persistenceFailed(key: "note"))
+        }
+
+        XCTAssertEqual(schemaWriteCount, 2)
+        XCTAssertEqual(try store.loadSchema(), original)
+        XCTAssertNotNil(try store.resolve("note"))
+    }
+
+    @MainActor
+    func testRemoveKeyReportsRollbackFailureWhenSchemaRestoreFails() async throws {
+        let store = StateStore()
+        _ = try store.loadSchema()
+        var schemaWriteCount = 0
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    throw APSError.persistenceFailed(key: "note")
+                },
+                schemaWriter: { document, root in
+                    schemaWriteCount += 1
+                    if schemaWriteCount == 2 {
+                        throw APSError.persistenceFailed(key: UserSchema.fileName)
+                    }
+                    try UserSchema.write(document, stateRoot: root)
+                }
+            )
+        ) { error in
+            let domainError = error as? APSError
+            XCTAssertEqual(domainError, .rollbackFailed)
+            XCTAssertEqual(domainError?.code, "rollback_failed")
+            XCTAssertEqual(domainError?.exitCode, 73)
+            XCTAssertFalse(domainError?.hint.isEmpty == true)
+        }
+
+        XCTAssertEqual(schemaWriteCount, 2)
+        XCTAssertThrowsError(try store.resolve("note")) { error in
+            XCTAssertEqual(error as? APSError, .unknownKey(name: "note"))
+        }
+    }
+
+    @MainActor
+    func testRemoveKeyHoldsSchemaLockThroughPurgeAndRollback() async throws {
+        let store = StateStore()
+        let root = FileManager.defaultFileStatePath
+        _ = try store.loadSchema()
+        let purgeStarted = DispatchSemaphore(value: 0)
+        let lockAttempting = DispatchSemaphore(value: 0)
+        let competingLockAcquired = DispatchSemaphore(value: 0)
+
+        DispatchQueue.global().async {
+            purgeStarted.wait()
+            lockAttempting.signal()
+            if (try? SchemaFileLock.withExclusiveLock(stateRoot: root) {}) != nil {
+                competingLockAcquired.signal()
+            }
+        }
+
+        XCTAssertThrowsError(
+            try store.removeKey(
+                name: "note",
+                purge: true,
+                purgeOperation: { _, _ in
+                    purgeStarted.signal()
+                    XCTAssertEqual(lockAttempting.wait(timeout: .now() + 1), .success)
+                    XCTAssertEqual(
+                        competingLockAcquired.wait(timeout: .now() + 0.1),
+                        .timedOut,
+                        "a competing schema writer acquired the lock during purge"
+                    )
+                    throw APSError.persistenceFailed(key: "note")
+                },
+                schemaWriter: { document, stateRoot in
+                    try UserSchema.write(document, stateRoot: stateRoot)
+                }
+            )
+        )
+
+        XCTAssertEqual(competingLockAcquired.wait(timeout: .now() + 1), .success)
+        XCTAssertNotNil(try store.resolve("note"))
+    }
+
+    @MainActor
+    func testResetAllRegisteredFailsFastWithDeterministicReportAndStats() async throws {
+        let root = FileManager.defaultFileStatePath
+        let entries = [
+            SchemaKeyEntry(
+                name: "alpha",
+                type: "String",
+                storage: "State",
+                initial: .string("initial"),
+                doc: "successful first reset"
+            ),
+            SchemaKeyEntry(
+                name: "blocked",
+                type: "String",
+                storage: "Slice",
+                initial: .string("initial"),
+                doc: "corrupt-parent reset failure",
+                sliceOf: "parent",
+                sliceField: "name"
+            ),
+            SchemaKeyEntry(
+                name: "parent",
+                type: "object",
+                storage: "FileState",
+                initial: .object(["name": .string("initial")]),
+                path: "parent.json",
+                doc: "corrupt slice parent",
+                objectShape: ["name": "String"]
+            ),
+            SchemaKeyEntry(
+                name: "omega",
+                type: "String",
+                storage: "State",
+                initial: .string("initial"),
+                doc: "must not be attempted"
+            ),
+        ]
+        try UserSchema.write(UserSchemaDocument(keys: entries), stateRoot: root)
+        try Data("{".utf8).write(
+            to: URL(fileURLWithPath: root).appendingPathComponent("parent.json")
+        )
+        let store = StateStore()
+
+        XCTAssertThrowsError(try store.resetAllRegistered()) { error in
+            guard let bulkError = error as? BulkResetError else {
+                return XCTFail("Expected BulkResetError, got \(error)")
+            }
+            XCTAssertEqual(bulkError.underlying, .corruptState(key: "parent"))
+            XCTAssertEqual(bulkError.report.reset, ["alpha"])
+            XCTAssertEqual(bulkError.report.failed?.key, "blocked")
+            XCTAssertEqual(bulkError.report.failed?.code, "corrupt_state")
+            XCTAssertEqual(bulkError.report.failed?.exitCode, 65)
+            XCTAssertEqual(bulkError.report.notAttempted, ["parent", "omega"])
+        }
+
+        let stats = store.statsSnapshot()
+        XCTAssertEqual(stats.mutationCount, 1)
+        XCTAssertEqual(stats.lastMutatedKey, "alpha")
+    }
+
+    func testSuccessfulBulkResetReportEncodesInResetPayload() throws {
+        let report = BulkResetReport.success(reset: ["alpha", "omega"])
+        let payload = CLIOutput.ResetPayload(
+            reset: "registered",
+            key: nil,
+            value: nil,
+            report: report
+        )
+
+        let line = try CLIOutput.encodeLine(payload)
+        let data = try XCTUnwrap(line.data(using: .utf8))
+        let object = try XCTUnwrap(
+            try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        )
+        let encodedReport = try XCTUnwrap(object["report"] as? [String: Any])
+
+        XCTAssertEqual(object["reset"] as? String, "registered")
+        XCTAssertNil(object["key"])
+        XCTAssertNil(object["value"])
+        XCTAssertEqual(encodedReport["reset"] as? [String], ["alpha", "omega"])
+        XCTAssertNil(encodedReport["failed"])
+        XCTAssertEqual(encodedReport["notAttempted"] as? [String], [])
     }
 
     func testParallelSchemaAddsUnderLockRetainAllKeys() throws {

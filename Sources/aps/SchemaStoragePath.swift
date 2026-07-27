@@ -6,6 +6,32 @@ import Foundation
 /// Filesystem validation is intentionally repeated for every operation because
 /// the state-root contents may have changed since the schema was loaded.
 internal struct SchemaStoragePath: Hashable, Sendable {
+    /// Instance-scoped filesystem operations used by verified deletion.
+    ///
+    /// Tests can inject deterministic failures without process-global mutable
+    /// state. Production callers use `live`.
+    internal struct DeletionOperations: Sendable {
+        internal let removeItem: @Sendable (URL) throws -> Void
+        internal let isAbsent: @Sendable (URL) throws -> Bool
+
+        internal init(
+            removeItem: @escaping @Sendable (URL) throws -> Void,
+            isAbsent: @escaping @Sendable (URL) throws -> Bool
+        ) {
+            self.removeItem = removeItem
+            self.isAbsent = isAbsent
+        }
+
+        internal static let live = DeletionOperations(
+            removeItem: { url in
+                try FileManager.default.removeItem(at: url)
+            },
+            isAbsent: { url in
+                try SchemaStoragePath.itemKind(at: url) == nil
+            }
+        )
+    }
+
     internal let rawValue: String
     internal let collisionKey: String
 
@@ -85,18 +111,45 @@ internal struct SchemaStoragePath: Hashable, Sendable {
     ///
     /// A missing leaf is a successful no-op. This method never asks
     /// `FileManager` to recursively remove a directory.
-    /// - Parameter stateRoot: The active APS state-root path.
-    internal func removeRegularFileIfPresent(stateRoot: String) throws {
+    /// - Parameters:
+    ///   - stateRoot: The active APS state-root path.
+    ///   - operations: The filesystem operations used for deletion and
+    ///     postcondition verification.
+    /// - Returns: `true` when a regular file was removed, or `false` when the
+    ///   leaf was already missing.
+    @discardableResult
+    internal func removeRegularFileIfPresent(
+        stateRoot: String,
+        operations: DeletionOperations = .live
+    ) throws -> Bool {
         let url = try resolve(stateRoot: stateRoot)
-        guard let kind = try Self.itemKind(at: url) else { return }
+        guard let kind = try Self.itemKind(at: url) else { return false }
         guard kind == .regularFile else {
             throw Self.invalid("\(rawValue) is not a regular file")
         }
         do {
-            try FileManager.default.removeItem(at: url)
+            try operations.removeItem(url)
         } catch let error as CocoaError
             where error.code == .fileNoSuchFile || error.code == .fileReadNoSuchFile {
-            return
+            try requireAbsent(url, operations: operations)
+            return false
+        } catch {
+            throw APSError.persistenceFailed(key: rawValue)
+        }
+        try requireAbsent(url, operations: operations)
+        return true
+    }
+
+    private func requireAbsent(
+        _ url: URL,
+        operations: DeletionOperations
+    ) throws {
+        do {
+            guard try operations.isAbsent(url) else {
+                throw APSError.persistenceFailed(key: rawValue)
+            }
+        } catch let error as APSError {
+            throw error
         } catch {
             throw APSError.persistenceFailed(key: rawValue)
         }

@@ -59,7 +59,12 @@ enum DynamicKeyStorage {
         }
     }
 
-    static func reset(entry: SchemaKeyEntry, stateRoot: String, schema: UserSchemaDocument) throws {
+    @discardableResult
+    static func reset(
+        entry: SchemaKeyEntry,
+        stateRoot: String,
+        schema: UserSchemaDocument
+    ) throws -> ResetOutcome {
         let initial = entry.initial?.wireString ?? ""
         switch entry.storage {
         case "State":
@@ -70,19 +75,57 @@ enum DynamicKeyStorage {
                 try memorySet(entry, value: initial)
             }
         case "StoredState":
-            removeStoredValue(entry)
+            try removeStoredValue(entry)
             if entry.initial != nil {
                 try storedSet(entry, value: initial)
             }
+            guard storedGet(entry) == initial else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
         case "FileState":
-            try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
             if entry.initial != nil {
                 try fileSet(entry, value: initial, stateRoot: stateRoot)
+                guard try fileGet(entry, stateRoot: stateRoot) == initial else {
+                    throw APSError.persistenceFailed(key: entry.name)
+                }
+            } else {
+                _ = try SchemaFileLock.withExclusiveStorageLock(
+                    stateRoot: stateRoot,
+                    lockFileName: fileLockName(entry)
+                ) {
+                    try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
+                }
             }
         case "EncryptedFile":
-            try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
+            _ = try encryptedStore(entry, stateRoot: stateRoot).reset()
         case "Slice":
             try sliceSet(entry: entry, value: initial, stateRoot: stateRoot, schema: schema)
+            guard try sliceGet(entry: entry, stateRoot: stateRoot, schema: schema) == initial else {
+                throw APSError.persistenceFailed(key: entry.name)
+            }
+        default:
+            throw APSError.schemaInvalid(reason: "unsupported storage \(entry.storage)")
+        }
+        return ResetOutcome(key: entry.name)
+    }
+
+    static func purge(entry: SchemaKeyEntry, stateRoot: String) throws {
+        switch entry.storage {
+        case "FileState":
+            _ = try SchemaFileLock.withExclusiveStorageLock(
+                stateRoot: stateRoot,
+                lockFileName: fileLockName(entry)
+            ) {
+                try storagePath(for: entry).removeRegularFileIfPresent(stateRoot: stateRoot)
+            }
+        case "EncryptedFile":
+            _ = try encryptedStore(entry, stateRoot: stateRoot).reset()
+        case "StoredState":
+            try removeStoredValue(entry)
+        case "State":
+            clearMemory(named: entry.name)
+        case "Slice":
+            break
         default:
             throw APSError.schemaInvalid(reason: "unsupported storage \(entry.storage)")
         }
@@ -147,7 +190,7 @@ enum DynamicKeyStorage {
         "aps.user.\(name)"
     }
 
-    internal static func removeStoredValue(_ entry: SchemaKeyEntry) {
+    internal static func removeStoredValue(_ entry: SchemaKeyEntry) throws {
         let store = userDefaults
         store.removeObject(forKey: storedDefaultsKey(entry.name))
         if usesLegacyFlagStorage(entry) {
@@ -155,6 +198,13 @@ enum DynamicKeyStorage {
         }
         (store as? UserDefaults)?.synchronize()
         UserDefaults.standard.synchronize()
+        guard store.object(forKey: storedDefaultsKey(entry.name)) == nil else {
+            throw APSError.persistenceFailed(key: entry.name)
+        }
+        if usesLegacyFlagStorage(entry),
+           store.object(forKey: legacyFlagDefaultsKey) != nil {
+            throw APSError.persistenceFailed(key: entry.name)
+        }
     }
 
     private static let legacyFlagDefaultsKey = "App/aps.flag"
@@ -291,7 +341,7 @@ enum DynamicKeyStorage {
     }
 
     private static func fileSet(_ entry: SchemaKeyEntry, value: String, stateRoot: String) throws {
-        try SchemaFileLock.withExclusiveLock(
+        try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
             lockFileName: fileLockName(entry)
         ) {
@@ -402,17 +452,22 @@ enum DynamicKeyStorage {
         else {
             throw APSError.schemaInvalid(reason: "slice \(entry.name) missing parent")
         }
-        try SchemaFileLock.withExclusiveLock(
+        try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: stateRoot,
             lockFileName: fileLockName(parent)
         ) {
             let raw = try fileGet(parent, stateRoot: stateRoot)
-            var object: [String: Any]
-            if let data = raw.data(using: .utf8),
-               let parsed = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                object = parsed
-            } else {
-                object = [:]
+            guard let inputData = raw.data(using: .utf8) else {
+                throw APSError.corruptState(key: parentName)
+            }
+            let objectValue: Any
+            do {
+                objectValue = try JSONSerialization.jsonObject(with: inputData)
+            } catch {
+                throw APSError.corruptState(key: parentName)
+            }
+            guard var object = objectValue as? [String: Any] else {
+                throw APSError.corruptState(key: parentName)
             }
             if let shape = parent.objectShape?[field] {
                 switch shape {
@@ -433,8 +488,8 @@ enum DynamicKeyStorage {
                 object[field] = value
             }
             // Avoid `.sortedKeys`: not available on all Linux Foundation builds we smoke.
-            let data = try JSONSerialization.data(withJSONObject: object)
-            guard let encoded = String(data: data, encoding: .utf8) else {
+            let outputData = try JSONSerialization.data(withJSONObject: object)
+            guard let encoded = String(data: outputData, encoding: .utf8) else {
                 throw APSError.encodingFailed
             }
             try fileSetUnlocked(parent, value: encoded, stateRoot: stateRoot)

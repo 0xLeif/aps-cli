@@ -14,13 +14,13 @@ This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.
 
 | Surface | Status |
 | --- | --- |
-| Swift package and 94-test verification lane | Passing |
+| Swift package and 117-test verification lane | Passing |
 | macOS, Linux, and Windows source CI | Active |
 | Homebrew and release packaging | Hardening before the next tag |
-| Dynamic schema safety | Safe paths enforced; purge truthfulness and registry authority still hardening |
+| Dynamic schema safety | Safe paths, authoritative registry, and transactional destructive operations implemented |
 | SpecSync contracts | Passing with 2 active module specs |
 
-The current release remains useful for local AppState exploration. Treat `key remove --purge`, passphrase secrets, and production automation as advanced surfaces until the remaining items in [release readiness](docs/release-readiness.md) are closed.
+The current release remains useful for local AppState exploration. Treat passphrase secrets and production automation as advanced surfaces until the remaining items in [release readiness](docs/release-readiness.md) are closed.
 
 ## Install
 
@@ -125,8 +125,9 @@ data, so changing back can reveal it again.
 - **Stateful gating:** until `secret.enc` exists, the first write seals with whichever recipient is active (key file or passphrase). After that, set must unlock the existing envelope before rewrite; a wrong passphrase cannot silently re-key.
 - A corrupt `secret.enc` envelope blocks both get and set with `decoding_failed` until you run `aps reset secret` (or repair the file).
 - **Interactive opt-in:** with `APS_SECRET_USE_PASSPHRASE=1` on a TTY, aps prompts once itself (its own getpass prompt, not macOS Keychain's).
-- `aps reset secret` deletes `secret.enc`; the key file is kept for future writes.
-- `aps reset --all` restores currently registered seed names through their live schema entries (safe for agent keys). Removed seed names stay removed. Use `aps reset --registered` to restore every key in `schema.json`.
+- `aps reset secret` takes the secret-store lock, verifies deletion of `secret.enc`, and keeps the shared key file for future writes.
+- `aps reset --all` restores currently registered seed names through their live schema entries (safe for agent keys). Removed seed names stay removed. Use `aps reset --registered` to restore every key in `schema.json`. Bulk reset is deterministic and fail-fast; JSON success and error payloads report reset, failed, and not-attempted keys.
+- `aps key remove NAME --purge` keeps the schema lock through storage deletion. A detected purge failure restores the original schema before returning an error. This is detected-error transactional behavior, not crash atomicity.
 - The previous AppState `SecureState` / Keychain backend was replaced: ad-hoc signed CLI binaries can never earn durable Keychain trust, so every access prompted for a password. AppState itself is unchanged; SecureState remains dogfooded in [AppStateExamples](https://github.com/0xLeif/AppStateExamples).
 
 ### Dependencies
@@ -253,7 +254,7 @@ Domain errors always print a human line to stderr and keep stdout empty, with a 
 | 64 | EX_USAGE | caller-fixable input: bad key/flags, invalid value, `unknown_key`, `schema_conflict` |
 | 65 | EX_DATAERR | corrupt or undecodable persisted state, or invalid `schema.json` (`schema_invalid`) |
 | 70 | EX_SOFTWARE | internal bug |
-| 73 | EX_CANTCREAT | write did not persist (unwritable state root) |
+| 73 | EX_CANTCREAT | persistence or schema rollback did not complete |
 
 64 means fix the invocation; 65+ means environment or data; 70 means an aps bug. Missing state files are not errors: they mean the initial value.
 
@@ -263,7 +264,7 @@ With `--json` / `--jsonl`, or when `APS_ERROR_JSON=1`, stderr additionally gets 
 {"error":{"code":"invalid_value","hint":"Run `aps keys` to see expected types per key.","message":"Invalid value 'nope' for counter (Int)"}}
 ```
 
-`code` is stable and safe to match on: `invalid_value`, `encoding_failed`, `decoding_failed`, `persistence_failed`, `corrupt_state`, `schema_invalid`, `unknown_key`, `schema_conflict`, `secret_unlock_failed`.
+`code` is stable and safe to match on: `invalid_value`, `encoding_failed`, `decoding_failed`, `persistence_failed`, `corrupt_state`, `schema_invalid`, `unknown_key`, `schema_conflict`, `secret_unlock_failed`, `rollback_failed`.
 
 ## Tests and smoke
 

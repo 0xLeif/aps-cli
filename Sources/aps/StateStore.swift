@@ -49,6 +49,9 @@ public final class StateStore {
     }
 
     public func get(_ key: DemoKey) -> String {
+        if !usesDefaultDefinition(key) {
+            return (try? get(name: key.rawValue)) ?? ""
+        }
         switch key {
         case .counter:
             return String(Application.state(\.counter).value)
@@ -78,6 +81,10 @@ public final class StateStore {
     }
 
     public func set(_ key: DemoKey, value: String) throws {
+        if !usesDefaultDefinition(key) {
+            try set(name: key.rawValue, value: value)
+            return
+        }
         switch key {
         case .counter:
             guard let intValue = Int(value) else {
@@ -115,7 +122,7 @@ public final class StateStore {
             } catch {
                 throw APSError.invalidValue(key: key.rawValue, value: value)
             }
-            try SchemaFileLock.withExclusiveLock(
+            try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: FileManager.defaultFileStatePath,
                 lockFileName: "profile.json.lock"
             ) {
@@ -134,7 +141,7 @@ public final class StateStore {
         case .profileName:
             // Refresh FileState from disk before Slice write so a stale cached
             // ProfileDocument cannot clobber a newer on-disk version.
-            try SchemaFileLock.withExclusiveLock(
+            try SchemaFileLock.withExclusiveStorageLock(
                 stateRoot: FileManager.defaultFileStatePath,
                 lockFileName: "profile.json.lock"
             ) {
@@ -151,32 +158,85 @@ public final class StateStore {
         stats.recordMutation(key: key.rawValue)
     }
 
-    public func reset(_ key: DemoKey) {
+    @discardableResult
+    public func reset(_ key: DemoKey) throws -> ResetOutcome {
+        let outcome = try reset(name: key.rawValue, recordMutation: false)
+        if usesDefaultDefinition(key) {
+            try synchronizeDefaultAdapter(afterResetting: key)
+        }
+        stats.recordMutation(key: key.rawValue)
+        return outcome
+    }
+
+    @discardableResult
+    public func resetAll() throws -> BulkResetReport {
+        let schema = try loadSchema()
+        let selected = DemoKey.allCases.filter { key in
+            schema.keys.contains(where: { $0.name == key.rawValue })
+        }
+        var resetNames: [String] = []
+        for (index, key) in selected.enumerated() {
+            do {
+                _ = try reset(key)
+                resetNames.append(key.rawValue)
+            } catch let error as APSError {
+                let report = BulkResetReport(
+                    reset: resetNames,
+                    failed: ResetFailure(key: key.rawValue, error: error),
+                    notAttempted: selected.dropFirst(index + 1).map(\.rawValue)
+                )
+                throw BulkResetError(report: report, underlying: error)
+            }
+        }
+        return .success(reset: resetNames)
+    }
+
+    private func usesDefaultDefinition(_ key: DemoKey) -> Bool {
+        guard
+            let current = try? resolve(key.rawValue),
+            let seeded = UserSchema.defaultDocument().keys.first(where: { $0.name == key.rawValue })
+        else {
+            return false
+        }
+        return current == seeded
+    }
+
+    private func synchronizeDefaultAdapter(afterResetting key: DemoKey) throws {
         switch key {
         case .counter:
             Application.reset(\.counter)
+            guard get(.counter) == "0" else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         case .message:
             Application.reset(\.message)
+            guard get(.message).isEmpty else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         case .flag:
             Application.reset(storedState: \.flag)
-            UserDefaults.standard.synchronize()
+            guard get(.flag) == "false" else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         case .note:
             Application.reset(fileState: \.note)
+            guard try Self.readNoteFromDisk() == "" else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         case .profile:
             Application.reset(fileState: \.profile)
+            guard try Self.readProfileFromDisk() == ProfileDocument() else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         case .secret:
-            SecretStore().reset()
+            break
         case .profileName:
-            try? Self.refreshProfileFileStateFromDisk()
+            try Self.refreshProfileFileStateFromDisk()
             var slice = Application.slice(\.profile, \.name)
             slice.value = ""
-        }
-        stats.recordMutation(key: key.rawValue)
-    }
-
-    public func resetAll() {
-        for key in DemoKey.allCases {
-            reset(key)
+            guard try Self.readProfileFromDisk().name.isEmpty else {
+                throw APSError.persistenceFailed(key: key.rawValue)
+            }
         }
     }
 

@@ -5,6 +5,13 @@ artifact: testing
 
 # Testing
 
+## Requirement evidence
+
+| Requirement | Evidence |
+| --- | --- |
+| REQ-aps-cli-029 | `testResetAllRegisteredFailsFastWithDeterministicReportAndStats`, `testSuccessfulBulkResetReportEncodesInResetPayload`, `testSchemaErrorTableIsStable`; bulk report assertions in `Scripts/smoke.sh` and `Scripts/smoke.ps1` |
+| REQ-state-store-022 | `testRemoveKeyRestoresExactSchemaWhenPurgeFails`, `testRemoveKeyReportsRollbackFailureWhenSchemaRestoreFails`, `testRemoveKeyHoldsSchemaLockThroughPurgeAndRollback`, `testSecretStoreConcurrentSetAndResetEndsCompleteOrAbsent`, and `SchemaStoragePathTests` deletion/reset failure cases |
+
 ## Unit coverage
 
 - Secret reset throws on directory, symbolic-link, special-file, injected
@@ -15,7 +22,7 @@ artifact: testing
   end in one complete envelope or the verified missing state, never a torn
   envelope.
 - FileState reset writes the encoded initial atomically under its per-file lock
-  and preserves the previous file when encoding or replacement fails.
+  and verifies the value through a fresh read.
 - Slice reset shares the parent FileState lock and preserves unrelated fields.
 - Schema purge holds the schema lock through storage deletion, preventing a
   concurrent add from reusing the path.
