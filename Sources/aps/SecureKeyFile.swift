@@ -2,6 +2,15 @@ import Foundation
 
 #if canImport(Glibc)
 import Glibc
+
+@_silgen_name("renameat2")
+private func linuxRenameAt2(
+    _ oldDirectory: Int32,
+    _ oldPath: UnsafePointer<CChar>,
+    _ newDirectory: Int32,
+    _ newPath: UnsafePointer<CChar>,
+    _ flags: UInt32
+) -> Int32
 #elseif canImport(Darwin)
 import Darwin
 #endif
@@ -328,7 +337,11 @@ internal extension SecureKeyFile {
         newName: String
     ) -> Int32 {
         #if canImport(Glibc)
-        return renameat2(parentDescriptor, oldName, parentDescriptor, newName, UInt32(1))
+        return oldName.withCString { oldPath in
+            newName.withCString { newPath in
+                linuxRenameAt2(parentDescriptor, oldPath, parentDescriptor, newPath, UInt32(1))
+            }
+        }
         #else
         return renameatx_np(parentDescriptor, oldName, parentDescriptor, newName, UInt32(RENAME_EXCL))
         #endif
