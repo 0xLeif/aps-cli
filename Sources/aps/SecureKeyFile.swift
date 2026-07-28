@@ -650,6 +650,8 @@ internal extension SecureKeyFile {
 internal extension SecureKeyFile {
     private static let fileAllAccess = DWORD(0x001F01FF)
     private static let readAccess: DWORD = DWORD(GENERIC_READ)
+    private static let repairAccess = DWORD(READ_CONTROL) | DWORD(WRITE_DAC)
+        | DWORD(FILE_READ_ATTRIBUTES)
     private static let writeAccess: DWORD = DWORD(GENERIC_WRITE)
     private static let shareNone: DWORD = 0
     private static let shareExistingReads: DWORD = DWORD(FILE_SHARE_READ)
@@ -658,10 +660,11 @@ internal extension SecureKeyFile {
 
     private func loadWindows() throws -> Data? {
         let repairHandle = try openWindows(
-            access: DWORD(READ_CONTROL) | DWORD(WRITE_DAC),
+            access: Self.repairAccess,
             disposition: DWORD(OPEN_EXISTING),
             shareMode: Self.shareExistingReads,
-            flags: Self.openReparsePoint | DWORD(FILE_FLAG_OVERLAPPED)
+            flags: Self.openReparsePoint | DWORD(FILE_FLAG_OVERLAPPED),
+            operation: "CreateFileW-repair"
         )
         guard let repairHandle else {
             return nil
@@ -679,7 +682,8 @@ internal extension SecureKeyFile {
         guard let readHandle = try openWindows(
             access: Self.readAccess | DWORD(READ_CONTROL),
             disposition: DWORD(OPEN_EXISTING),
-            shareMode: Self.shareExistingReads
+            shareMode: Self.shareExistingReads,
+            operation: "CreateFileW-read"
         ) else {
             throw SecureKeyFileError.securityUnproven
         }
@@ -739,7 +743,8 @@ internal extension SecureKeyFile {
         access: DWORD,
         disposition: DWORD,
         shareMode: DWORD,
-        flags: DWORD = Self.openReparsePoint
+        flags: DWORD = Self.openReparsePoint,
+        operation: String
     ) throws -> HANDLE? {
         let handle = path.withCString(encodedAs: UTF16.self) { pathPointer in
             CreateFileW(
@@ -760,7 +765,7 @@ internal extension SecureKeyFile {
             if code == DWORD(ERROR_FILE_EXISTS) || code == DWORD(ERROR_ALREADY_EXISTS) {
                 throw SecureKeyFileError.alreadyExists
             }
-            throw SecureKeyFileError.io(operation: "CreateFileW", code: Int32(bitPattern: code))
+            throw SecureKeyFileError.io(operation: operation, code: Int32(bitPattern: code))
         }
         return handle
     }
