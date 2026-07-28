@@ -779,6 +779,16 @@ internal extension SecureKeyFile {
         private let volumeSerialNumber: DWORD
         private let fileIndexHigh: DWORD
         private let fileIndexLow: DWORD
+
+        fileprivate init(
+            volumeSerialNumber: DWORD,
+            fileIndexHigh: DWORD,
+            fileIndexLow: DWORD
+        ) {
+            self.volumeSerialNumber = volumeSerialNumber
+            self.fileIndexHigh = fileIndexHigh
+            self.fileIndexLow = fileIndexLow
+        }
     }
 
     private func createWindowsHandle(
