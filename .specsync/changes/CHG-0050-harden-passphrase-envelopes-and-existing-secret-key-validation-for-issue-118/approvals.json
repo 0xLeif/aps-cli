@@ -118,6 +118,13 @@
       "timestamp": 1785247576,
       "digest": "718c5c9a6e10d6341033fd7ce34e88fdc2d1feea34137a26f7a1bc3a77fdd5fb",
       "note": "Final review pass closes serialized key repair, POSIX/Windows handle races, encrypted-watch path revalidation, and hostile JSON depth; strict verification passed at 7c0c4b7."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1785247940,
+      "digest": "2f3fe47da4a391074f0096a4e26df9847ec680a34d2e278be621cee366d9a597",
+      "note": "Linux socket regression now uses a portable temporary root; strict verification passed at 7a427ae."
     }
   ],
   "reopenings": [

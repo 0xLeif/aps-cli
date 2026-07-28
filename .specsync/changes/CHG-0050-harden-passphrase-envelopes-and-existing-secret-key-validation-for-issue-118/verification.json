@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785247566,
-  "commit": "7c0c4b7c8f6430c4e6b7371b3d7a760b4ed2d6c8",
+  "timestamp": 1785247931,
+  "commit": "7a427aefec611c84d94db641573041f7ee6cce6f",
   "contract_digest": "d8b4cb593b5fdfa4b3959d16663da909d8084ae14ac29be3e21d378440178bdd",
-  "workspace_digest": "a16bfcfb8e4e6a3308fbba7c6b4e38a5f8edbf8a71fff295621e64b5b9809ebf",
-  "acceptance_input_digest": "f9c377e63ef9689ec52b0d7dd08813563b5cd417bd772082cc006ee640ea7b7d",
+  "workspace_digest": "4edc74e116b5d52558436645408eb19b2ea7a8addb41e2c58eb98572b31de87c",
+  "acceptance_input_digest": "85150b429a7c58be2b1a53c5f1a508ea519b9a4a2fc04daf06f880d1caf8a37a",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -321,8 +321,8 @@
         "path": "Tests/apsTests/SecureKeyFileTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "2eef27bed07f330db6f702d9872dd5bb719a1d569c74603edc3ad649c581379d",
-        "entry_digest": "950e9b893ff5635a20c10248845e18b70690ad2c2f4334feff6eee5c65875486",
+        "payload_digest": "63ac76d82a81961e75140e7b5e9ac8e9661494ac100766524940632a88528d21",
+        "entry_digest": "c5097b8f655cd5ba05e431c668192be758635c194aa41ec22cbc97759c01b265",
         "owners": [
           "@exact:test"
         ]
