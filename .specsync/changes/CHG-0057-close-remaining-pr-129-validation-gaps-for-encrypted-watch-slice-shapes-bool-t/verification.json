@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785273305,
-  "commit": "24aeb9192d604b9cea6345eef699cb25ff8a6ec4",
+  "timestamp": 1785274410,
+  "commit": "495b377cfb58a77f709bb4fad5f6989764c52b7b",
   "contract_digest": "ca273cfa0d1df9cacd09d1052866fc6c6654b7ce8e648f226842a569aa146c47",
-  "workspace_digest": "cec51395827308c989c5f72777a44594e9c1878a52dd70c7ac1a7c0bb12923b5",
-  "acceptance_input_digest": "ea619a90016b0311efe9cade81f4e4b0b11a3cd34d902b9bfb93cbbc518615b1",
+  "workspace_digest": "0518093d31f1326302b20295b25ccd5478c301cbb9038486e16125f9bc3c9bc1",
+  "acceptance_input_digest": "03daaa8926bb372643387cc1fc18a0138fdba7fb1c9cb5263871a1278db6f60a",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -21,8 +21,8 @@
         "path": "Sources/aps/DynamicKeyStorage.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "8dbd95585877d3e64aee5649c1ef00ec2c1a782b983745899d29d4b1cc398e4e",
-        "entry_digest": "d1cccc19d3cadeeed3fab4e09e8fef5201499db22d6e608ab89ca36f08699160",
+        "payload_digest": "b75e930721e3ed8a25b0f04aaf67b43f4069f706c44190e4cb72f80c1aa02817",
+        "entry_digest": "c71d5630dff995c9444f2228de009e5eb7245c8a8bdf6ec15a948665e84688c4",
         "owners": [
           "state-store"
         ]

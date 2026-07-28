@@ -1,5 +1,7 @@
 import Foundation
+#if canImport(CoreFoundation)
 import CoreFoundation
+#endif
 import AppState
 import Crypto
 
@@ -403,12 +405,20 @@ enum DynamicKeyStorage {
         return store.object(forKey: legacyFlagDefaultsKey)
     }
 
+    private static func isBooleanNumber(_ number: NSNumber) -> Bool {
+        #if canImport(CoreFoundation)
+        return CFGetTypeID(number) == CFBooleanGetTypeID()
+        #else
+        return String(cString: number.objCType) == "c"
+        #endif
+    }
+
     private static func decodeStoredInt(_ object: Any) -> Int? {
         if let data = object as? Data {
             return try? JSONDecoder().decode(Int.self, from: data)
         }
         if let number = object as? NSNumber,
-           CFGetTypeID(number) == CFBooleanGetTypeID() {
+           isBooleanNumber(number) {
             return nil
         }
         if let intValue = object as? Int {
@@ -425,7 +435,7 @@ enum DynamicKeyStorage {
             return try? JSONDecoder().decode(Bool.self, from: data)
         }
         if let number = object as? NSNumber,
-           CFGetTypeID(number) != CFBooleanGetTypeID() {
+           !isBooleanNumber(number) {
             return nil
         }
         if let boolValue = object as? Bool {
