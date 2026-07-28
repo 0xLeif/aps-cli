@@ -184,7 +184,12 @@ internal final class SecureKeyFileTests: XCTestCase {
     }
 
     internal func testLoadRejectsSocketAsUnsafeFileType() throws {
-        let directory = URL(fileURLWithPath: "/private/tmp/a\(UUID().uuidString)")
+        #if os(Linux)
+        let temporaryRoot = URL(fileURLWithPath: "/tmp", isDirectory: true)
+        #else
+        let temporaryRoot = URL(fileURLWithPath: "/private/tmp", isDirectory: true)
+        #endif
+        let directory = temporaryRoot.appendingPathComponent("a\(UUID().uuidString)")
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
         defer { try? FileManager.default.removeItem(at: directory) }
         let socketPath = directory.appendingPathComponent("key").path
