@@ -88,6 +88,8 @@ public enum SchemaJSON: Codable, Equatable, Sendable {
             self = .int(value)
         } else if let value = try? container.decode(Double.self),
                   value.isFinite,
+                  let decimal = try? container.decode(Decimal.self),
+                  Self.preservesDecimalValue(decimal, as: value),
                   value.rounded(.towardZero) != value || Int(exactly: value) != nil {
             self = .double(value)
         } else if let value = try? container.decode(String.self) {
@@ -102,6 +104,16 @@ public enum SchemaJSON: Codable, Equatable, Sendable {
                 debugDescription: "unsupported schema JSON value"
             )
         }
+    }
+
+    private static func preservesDecimalValue(_ decimal: Decimal, as value: Double) -> Bool {
+        guard
+            let encoded = try? JSONEncoder().encode(value),
+            let encodedDecimal = try? JSONDecoder().decode(Decimal.self, from: encoded)
+        else {
+            return false
+        }
+        return encodedDecimal == decimal
     }
 
     public func encode(to encoder: Encoder) throws {

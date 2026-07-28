@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785280375,
+      "digest": "a07b5175afea77b1400c8a23863e3259ecf131ab9dfcceec6b8490ec62b19df7",
+      "note": "Existing recursive JSON exact-value regression"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785280469,
+      "digest": "a0f26a5d6045deaeb2ffae3f0e309823c82ebdf0137dd3934859c3045cda9df4",
+      "note": "265-test gate passed with exact decimal preservation"
+    }
+  ],
+  "reopenings": []
+}

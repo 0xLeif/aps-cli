@@ -50,6 +50,12 @@ internal final class DynamicObjectTypingTests: XCTestCase {
         }
     }
 
+    internal func testFractionRoundedToIntegralDoubleIsRejected() {
+        let data = Data(#"{"value":1.0000000000000000001}"#.utf8)
+
+        XCTAssertThrowsError(try JSONDecoder().decode(SchemaJSON.self, from: data))
+    }
+
     internal func testNonFiniteJSONNumberCannotProduceInvalidWireJSON() {
         let value = SchemaJSON.double(.infinity)
 

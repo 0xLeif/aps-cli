@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 59,
-  "id": "CHG-0059-reject-underflowing-recursive-json-numbers-instead-of-coercing-them-to-zero",
+  "sequence": 60,
+  "id": "CHG-0060-reject-fractional-recursive-json-values-when-double-encoding-would-change-their",
   "acknowledged_collisions": []
 }
