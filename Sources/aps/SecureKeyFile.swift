@@ -660,7 +660,8 @@ internal extension SecureKeyFile {
         let repairHandle = try openWindows(
             access: DWORD(READ_CONTROL) | DWORD(WRITE_DAC),
             disposition: DWORD(OPEN_EXISTING),
-            shareMode: Self.shareExistingReads
+            shareMode: Self.shareExistingReads,
+            flags: Self.openReparsePoint | DWORD(FILE_FLAG_OVERLAPPED)
         )
         guard let repairHandle else {
             return nil
@@ -737,7 +738,8 @@ internal extension SecureKeyFile {
     private func openWindows(
         access: DWORD,
         disposition: DWORD,
-        shareMode: DWORD
+        shareMode: DWORD,
+        flags: DWORD = Self.openReparsePoint
     ) throws -> HANDLE? {
         let handle = path.withCString(encodedAs: UTF16.self) { pathPointer in
             CreateFileW(
@@ -746,7 +748,7 @@ internal extension SecureKeyFile {
                 shareMode,
                 nil,
                 disposition,
-                Self.openReparsePoint,
+                flags,
                 nil
             )
         }

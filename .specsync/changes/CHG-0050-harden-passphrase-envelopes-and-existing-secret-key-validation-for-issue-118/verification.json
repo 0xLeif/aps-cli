@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785248662,
-  "commit": "ab86be963ae27239a1a3675ae020bde6265ca0b7",
+  "timestamp": 1785249596,
+  "commit": "01412f3da5b3950d6dba00031dda6ca90f7d8456",
   "contract_digest": "d8b4cb593b5fdfa4b3959d16663da909d8084ae14ac29be3e21d378440178bdd",
-  "workspace_digest": "be69ed9605d737429c9a167ddc68e309b3846fd4f6be9acc796d15395bc6f23c",
-  "acceptance_input_digest": "37098c4739e271f58faaf06a61ef4db0a6835fc955aaaaf338e1291297d69669",
+  "workspace_digest": "e23cc8d4bc08824a83d21c5307cbd9139bfedc5c4b8659475ffba1116dae14fd",
+  "acceptance_input_digest": "110aa171850e28b390a1012062f1a14b49718e0a6fc1141985f04a4c5a6fa40a",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -191,8 +191,8 @@
         "path": "Sources/aps/SecureKeyFile.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "a4139329e2b723079ec925bda70af8847185cf5e579915ece39508954694ca62",
-        "entry_digest": "1f1b3de751a5242e986bee0ff2d116a919ec279b35496c6b83f5d1f8771ae7b7",
+        "payload_digest": "0ced8cdbb9e301f552d4c364953e014a6a6c08c9597aeb39a6c2319fbccc11ba",
+        "entry_digest": "1c769d849ec14de5e3e6c6a0f31d594b1ffcabc40a8c76905fd2bfaa4aa7c008",
         "owners": [
           "aps-cli"
         ]
