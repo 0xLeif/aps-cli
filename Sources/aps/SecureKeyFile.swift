@@ -651,7 +651,7 @@ internal extension SecureKeyFile {
     private static let fileAllAccess = DWORD(0x001F01FF)
     private static let readAccess: DWORD = DWORD(GENERIC_READ)
     private static let repairAccess = DWORD(READ_CONTROL) | DWORD(WRITE_DAC)
-        | DWORD(FILE_READ_ATTRIBUTES)
+        | DWORD(FILE_READ_ATTRIBUTES) | DWORD(SYNCHRONIZE)
     private static let writeAccess: DWORD = DWORD(GENERIC_WRITE)
     private static let shareNone: DWORD = 0
     private static let shareExistingReads: DWORD = DWORD(FILE_SHARE_READ)
@@ -663,7 +663,6 @@ internal extension SecureKeyFile {
             access: Self.repairAccess,
             disposition: DWORD(OPEN_EXISTING),
             shareMode: Self.shareExistingReads,
-            flags: Self.openReparsePoint | DWORD(FILE_FLAG_OVERLAPPED),
             operation: "CreateFileW-repair"
         )
         guard let repairHandle else {
@@ -743,7 +742,6 @@ internal extension SecureKeyFile {
         access: DWORD,
         disposition: DWORD,
         shareMode: DWORD,
-        flags: DWORD = Self.openReparsePoint,
         operation: String
     ) throws -> HANDLE? {
         let handle = path.withCString(encodedAs: UTF16.self) { pathPointer in
@@ -753,7 +751,7 @@ internal extension SecureKeyFile {
                 shareMode,
                 nil,
                 disposition,
-                flags,
+                Self.openReparsePoint,
                 nil
             )
         }

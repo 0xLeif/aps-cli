@@ -608,7 +608,8 @@ internal final class SecureKeyFileTests: XCTestCase {
                       acl,
                       DWORD(ACL_REVISION),
                       0,
-                      DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES),
+                      DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES)
+                          | DWORD(SYNCHRONIZE),
                       userSID
                   ) else {
                 throw CocoaError(.fileWriteUnknown)
@@ -616,7 +617,8 @@ internal final class SecureKeyFileTests: XCTestCase {
             let handle = file.path.withCString(encodedAs: UTF16.self) { pathPointer in
                 CreateFileW(
                     pathPointer,
-                    DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES),
+                    DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES)
+                        | DWORD(SYNCHRONIZE),
                     DWORD(FILE_SHARE_READ) | DWORD(FILE_SHARE_WRITE) | DWORD(FILE_SHARE_DELETE),
                     nil,
                     DWORD(OPEN_EXISTING),

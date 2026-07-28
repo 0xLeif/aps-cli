@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785250383,
-  "commit": "82029429d69568d84e7e470d82943bab27471948",
+  "timestamp": 1785251252,
+  "commit": "088c88e17e5cf5ce47f32aa45d2cc9669082cfd9",
   "contract_digest": "d8b4cb593b5fdfa4b3959d16663da909d8084ae14ac29be3e21d378440178bdd",
-  "workspace_digest": "66d078973211fc6b691bd8deadd511d35760eb4212c4c6ed70fa45eb7e6d67e0",
-  "acceptance_input_digest": "b32127eb6b9fb371c8d27f7aa1121bcc3bfde5e39dc8ff0a2b31e1cc2fa82bd4",
+  "workspace_digest": "dd8132a0d3db490c9388e3c7bf7c822b705a2d807aa6c6493cb0c230a7f8f0e6",
+  "acceptance_input_digest": "3b236d9016ca479ca879f7ecc14c9425a07f644cba37bbba14f66f098c3c3240",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -191,8 +191,8 @@
         "path": "Sources/aps/SecureKeyFile.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "c0b8fcc0de4d8e86e64de6db257944ef92d4b6c101d8a47e34b3eb04cab7c86a",
-        "entry_digest": "38b9533a14b7e8d829ff878f760595405cf30c0e5f8874b3c9da457b3828103a",
+        "payload_digest": "94dd1ed53085f62c2171583229446c51738ec9c9a9e3dd03c174a9ef398ff6bc",
+        "entry_digest": "0f278cf1614f95bdaa241454f55506b809ea136f53f994bcd02fc5a64fdecfe0",
         "owners": [
           "aps-cli"
         ]
@@ -321,8 +321,8 @@
         "path": "Tests/apsTests/SecureKeyFileTests.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "09915678c68cd9982c42dc12b0f021cb72e50b8cfbadd9762261d1aa3d6fc045",
-        "entry_digest": "2930f627305c064a746e85870ce3c2719d1b6ed192c1eed91b7d3ff2cb448b83",
+        "payload_digest": "83e0dffd6305568f72dc32d1a3c8c4b60b3ac0ef6064314f0633af0915d96b22",
+        "entry_digest": "fa94d368e6c6e1e90839aa1607d3e3d06b0cf86fd13fa2820aa89b1daddf186f",
         "owners": [
           "@exact:test"
         ]
