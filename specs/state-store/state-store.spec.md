@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 35
+version: 36
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -208,3 +208,4 @@ preserve registry type and storage metadata, and include a timestamp field.
 | 2026-07-27 | CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112: Make schema.json authoritative for built-in and dynamic key names for issue 112 |
 | 2026-07-27 | CHG-0049-make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113: Make reset and purge transactional and truthfully report failures for issue 113 |
 | 2026-07-27 | CHG-0050-harden-passphrase-envelopes-and-existing-secret-key-validation-for-issue-118: Harden passphrase envelopes and existing secret-key validation for issue 118 |
+| 2026-07-28 | CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re: Finalize PR 128 review corrections for secure key lifecycle and CLI recipient reuse |

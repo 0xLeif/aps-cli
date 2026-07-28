@@ -23,7 +23,8 @@
 - Legacy key-file fixtures remain readable and upgrade on the next successful
   set.
 - Counting-KDF tests prove per-operation reuse for each salt and zero additional
-  KDF work during unchanged encrypted-watch polls.
+  KDF work during unchanged encrypted-watch polls. CLI get derives once, and
+  encrypted set output performs no redundant post-commit decrypt.
 - Encrypted-file parallel fresh writes share one exclusively created private
   key file: exact `0600` on POSIX and a protected current-user DACL on Windows.
 - Secure key-file tests cover POSIX descriptor-pinned unreadable and permissive
@@ -31,6 +32,9 @@
   regular-file and symlink swaps, directory, FIFO, hostile umask, and exclusive
   creation. Windows covers private create/load, ACL repair, and directory
   rejection.
+- POSIX state-root tests preserve safe shared modes, reject writable roots
+  without mutation, and round-trip through a symlinked root. Changed encrypted
+  watch snapshots reload and revalidate key-file recipients.
 - Fresh SET preserves a partial `secret.key` and fails with
   `persistenceFailed`; existing-envelope corrupt keys stay unlock failures
   without truncating key material.

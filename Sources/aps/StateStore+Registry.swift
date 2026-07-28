@@ -43,7 +43,8 @@ extension StateStore {
     }
 
     @MainActor
-    public func set(name: String, value: String) throws {
+    @discardableResult
+    public func set(name: String, value: String) throws -> SchemaKeyEntry {
         try set(
             name: name,
             value: value,
@@ -67,6 +68,7 @@ extension StateStore {
 
     /// Storage seam used to prove the schema lock spans resolution and persistence.
     @MainActor
+    @discardableResult
     internal func set(
         name: String,
         value: String,
@@ -76,16 +78,18 @@ extension StateStore {
             String,
             UserSchemaDocument
         ) throws -> Void
-    ) throws {
+    ) throws -> SchemaKeyEntry {
         let root = stateRoot
-        try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+        let entry = try SchemaFileLock.withExclusiveLock(stateRoot: root) {
             let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
             guard let entry = UserSchema.entry(named: name, in: schema) else {
                 throw APSError.unknownKey(name: name)
             }
             try storageOperation(entry, value, root, schema)
+            return entry
         }
         stats.recordMutation(key: name)
+        return entry
     }
 
     @MainActor

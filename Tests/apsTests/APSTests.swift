@@ -446,16 +446,19 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    internal func testSecretStoreReadExistingKeyUsesKeyLock() async throws {
+    internal func testSecretStoreReadExistingKeyUsesStoreLock() async throws {
         let path = FileManager.defaultFileStatePath
         let store = SecretStore(directory: path)
         try store.set("read-only-secret")
 
-        let lockURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key.lock")
-        try? FileManager.default.removeItem(at: lockURL)
+        let storeLockURL = URL(fileURLWithPath: path).appendingPathComponent("secret.store.lock")
+        let keyLockURL = URL(fileURLWithPath: path).appendingPathComponent("secret.key.lock")
+        try? FileManager.default.removeItem(at: storeLockURL)
+        try? FileManager.default.removeItem(at: keyLockURL)
 
         XCTAssertEqual(try store.get(), "read-only-secret")
-        XCTAssertTrue(FileManager.default.fileExists(atPath: lockURL.path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: storeLockURL.path))
+        XCTAssertFalse(FileManager.default.fileExists(atPath: keyLockURL.path))
     }
     #endif
 
@@ -2651,7 +2654,7 @@ final class APSTests: XCTestCase {
             }
         }
 
-        try store.set(
+        let persistedEntry = try store.set(
             name: entry.name,
             value: "must-be-purged",
             storageOperation: { resolved, value, stateRoot, schema in
@@ -2671,6 +2674,7 @@ final class APSTests: XCTestCase {
             }
         )
 
+        XCTAssertEqual(persistedEntry, entry)
         XCTAssertEqual(removalFinished.wait(timeout: .now() + 10), .success)
         XCTAssertEqual(removalAcquired.wait(timeout: .now() + 10), .success)
         XCTAssertThrowsError(try store.resolve(entry.name)) { error in

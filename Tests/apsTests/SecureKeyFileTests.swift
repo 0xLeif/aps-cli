@@ -96,7 +96,7 @@ internal final class SecureKeyFileTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: fixture.file), replacement)
     }
 
-    internal func testLoadRepairsOwnedParentDirectoryPermissions() throws {
+    internal func testLoadPreservesOwnedParentDirectoryPermissions() throws {
         let fixture = try makeFixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
         try keyData(2).write(to: fixture.file)
@@ -106,7 +106,45 @@ internal final class SecureKeyFileTests: XCTestCase {
 
         var status = stat()
         XCTAssertEqual(stat(fixture.directory.path, &status), 0)
-        XCTAssertEqual(status.st_mode & mode_t(0o077), 0)
+        XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o755))
+    }
+
+    internal func testLoadSupportsSymlinkedOwnedParentDirectory() throws {
+        let fixture = try makeFixture()
+        let linkedDirectory = fixture.directory
+            .deletingLastPathComponent()
+            .appendingPathComponent("aps-key-link-\(UUID().uuidString)")
+        defer {
+            try? FileManager.default.removeItem(at: linkedDirectory)
+            try? FileManager.default.removeItem(at: fixture.directory)
+        }
+        try keyData(3).write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o600)), 0)
+        try FileManager.default.createSymbolicLink(
+            at: linkedDirectory,
+            withDestinationURL: fixture.directory
+        )
+        let linkedFile = linkedDirectory.appendingPathComponent("secret.key")
+
+        XCTAssertEqual(try SecureKeyFile(path: linkedFile.path).load(), keyData(3))
+    }
+
+    internal func testLoadRejectsWritableParentWithoutChangingIt() throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let expected = keyData(4)
+        try expected.write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o600)), 0)
+        XCTAssertEqual(chmod(fixture.directory.path, mode_t(0o0775)), 0)
+
+        XCTAssertThrowsError(try fixture.secureFile.load()) { error in
+            XCTAssertEqual(error as? SecureKeyFileError, .insecurePermissions)
+        }
+
+        var status = stat()
+        XCTAssertEqual(stat(fixture.directory.path, &status), 0)
+        XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o775))
+        XCTAssertEqual(try Data(contentsOf: fixture.file), expected)
     }
 
     internal func testLoadRejectsOversizedFileBeforeReading() throws {

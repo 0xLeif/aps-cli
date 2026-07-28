@@ -28,6 +28,7 @@ internal enum SecureKeyFileError: Error, Equatable, Sendable {
     case invalidSize(actual: Int64)
     case insecurePermissions
     case io(operation: String, code: Int32)
+    case permissionRepairFailed(operation: String, code: Int32)
     case securityUnproven
     case unsafeFileType
     case wrongOwner
@@ -287,7 +288,10 @@ internal extension SecureKeyFile {
             linuxOpenPathFlag | O_NOFOLLOW | O_CLOEXEC
         )
         guard repairDescriptor >= 0 else {
-            throw posixError(operation: "openat-permission-handle")
+            throw SecureKeyFileError.permissionRepairFailed(
+                operation: "openat-permission-handle",
+                code: errno
+            )
         }
         defer { _ = close(repairDescriptor) }
         var repairStatus = stat()
@@ -303,7 +307,10 @@ internal extension SecureKeyFile {
             if errno == EINTR {
                 continue
             }
-            throw posixError(operation: "chmod-permission-handle")
+            throw SecureKeyFileError.permissionRepairFailed(
+                operation: "chmod-permission-handle",
+                code: errno
+            )
         }
         guard fstat(repairDescriptor, &repairStatus) == 0,
               repairStatus.st_mode & mode_t(0o7777) == mode_t(0o600) else {
@@ -316,7 +323,10 @@ internal extension SecureKeyFile {
             O_WRONLY | O_NOFOLLOW | O_CLOEXEC
         )
         guard repairDescriptor >= 0 else {
-            throw posixError(operation: "openat-permission-handle")
+            throw SecureKeyFileError.permissionRepairFailed(
+                operation: "openat-permission-handle",
+                code: errno
+            )
         }
         defer { _ = close(repairDescriptor) }
         var repairStatus = stat()
@@ -331,7 +341,10 @@ internal extension SecureKeyFile {
             if errno == EINTR {
                 continue
             }
-            throw posixError(operation: "fchmod-permission-handle")
+            throw SecureKeyFileError.permissionRepairFailed(
+                operation: "fchmod-permission-handle",
+                code: errno
+            )
         }
         guard fstat(repairDescriptor, &repairStatus) == 0,
               repairStatus.st_mode & mode_t(0o7777) == mode_t(0o600) else {
@@ -395,7 +408,10 @@ internal extension SecureKeyFile {
         guard !fileName.isEmpty, fileName != ".", fileName != ".." else {
             throw SecureKeyFileError.securityUnproven
         }
-        let resolvedParentPath = parentPath.isEmpty ? "." : parentPath
+        let unresolvedParentPath = parentPath.isEmpty ? "." : parentPath
+        let resolvedParentPath = URL(fileURLWithPath: unresolvedParentPath)
+            .resolvingSymlinksInPath()
+            .path
         let parentDescriptor = open(
             resolvedParentPath,
             O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC
@@ -407,11 +423,11 @@ internal extension SecureKeyFile {
             throw posixError(operation: "open-parent")
         }
         defer { _ = close(parentDescriptor) }
-        try validateAndRepairParentPOSIX(parentDescriptor)
+        try validateParentPOSIX(parentDescriptor)
         return try body(parentDescriptor, fileName)
     }
 
-    private func validateAndRepairParentPOSIX(_ descriptor: Int32) throws {
+    private func validateParentPOSIX(_ descriptor: Int32) throws {
         var status = stat()
         guard fstat(descriptor, &status) == 0 else {
             throw posixError(operation: "fstat-parent")
@@ -422,21 +438,8 @@ internal extension SecureKeyFile {
         guard status.st_uid == geteuid() else {
             throw SecureKeyFileError.wrongOwner
         }
-        if status.st_mode & mode_t(0o077) != 0 {
-            while fchmod(descriptor, mode_t(0o700)) != 0 {
-                if errno == EINTR {
-                    continue
-                }
-                throw posixError(operation: "fchmod-parent")
-            }
-            guard fstat(descriptor, &status) == 0 else {
-                throw posixError(operation: "fstat-parent-revalidate")
-            }
-        }
-        guard status.st_mode & mode_t(S_IFMT) == mode_t(S_IFDIR),
-              status.st_uid == geteuid(),
-              status.st_mode & mode_t(0o077) == 0 else {
-            throw SecureKeyFileError.securityUnproven
+        guard status.st_mode & mode_t(0o022) == 0 else {
+            throw SecureKeyFileError.insecurePermissions
         }
     }
 
@@ -535,7 +538,10 @@ internal extension SecureKeyFile {
                 if errno == EINTR {
                     continue
                 }
-                throw posixError(operation: "fchmod")
+                throw SecureKeyFileError.permissionRepairFailed(
+                    operation: "fchmod",
+                    code: errno
+                )
             }
             status = try validatedStatusPOSIX(descriptor)
         }
@@ -854,7 +860,7 @@ internal extension SecureKeyFile {
                         nil
                     )
                     guard result == DWORD(ERROR_SUCCESS) else {
-                        throw SecureKeyFileError.io(
+                        throw SecureKeyFileError.permissionRepairFailed(
                             operation: "SetSecurityInfo",
                             code: Int32(bitPattern: result)
                         )

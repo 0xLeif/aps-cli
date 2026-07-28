@@ -256,3 +256,13 @@ Acceptance Criteria
   adapter-specific context that preserves the original synchronization error.
 - The default encrypted adapter is a no-op and runs before envelope deletion,
   so an injected adapter failure leaves the exact existing envelope untouched.
+
+### REQ-state-store-024
+
+A successful string-name `StateStore.set(name:value:)` SHALL return the exact
+`SchemaKeyEntry` resolved while the schema lock is held.
+
+Acceptance Criteria
+- The returned entry equals the resolved schema definition used for the
+  successful storage mutation.
+- Callers that ignore the return value remain source-compatible.

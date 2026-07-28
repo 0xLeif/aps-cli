@@ -149,12 +149,20 @@ active on first write.
 
 The encrypted-file SecretStore SHALL serialize fresh `set` key creation,
 sealing, atomic envelope persistence, and read-back verification through
-`secret.store.lock`. Invalid key material SHALL never be deleted or replaced:
+`secret.store.lock`. Every repair-capable key load for get, set, or watch SHALL
+use that same lock. Invalid key material SHALL never be deleted or replaced:
 fresh writes map it to `persistenceFailed`, while existing-envelope unlock maps
 it to `secretUnlockFailed`. Passphrase-mode writes SHALL ignore stale
 `secret.key` paths. Fresh key-creation disk failures SHALL remain
 `persistenceFailed`. When an envelope exists, unlock paths SHALL NOT create or
 truncate `secret.key`.
+
+On POSIX, SecretStore SHALL canonicalize a symlinked state root once, preserve
+safe owned root modes such as `0755`, and reject group- or other-writable roots
+without changing their permissions. Encrypted watch SHALL reload and revalidate
+key-file recipients for each changed snapshot while retaining passphrase state.
+CLI get SHALL perform one encrypted read, and successful encrypted set output
+SHALL not perform a redundant post-commit decrypt.
 
 Acceptance Criteria
 - `secret` round-trips set/get/reset with ciphertext at rest in `secret.enc`;
@@ -283,3 +291,36 @@ Acceptance Criteria
 - Mutation statistics count only keys whose reset postcondition succeeded.
 - Documentation limits transaction guarantees to errors detected before API
   return and does not claim crash or power-loss atomicity.
+
+### REQ-aps-cli-031
+
+Every key-file load that may repair or create key material SHALL serialize
+through `secret.store.lock`, including get, set, and changed watch snapshots.
+Key-file watch SHALL reload and revalidate the key for every changed envelope;
+unchanged polls SHALL perform no recipient work.
+
+On POSIX, SecretStore SHALL canonicalize the configured state root once,
+preserve safe owned directory modes such as `0755`, and reject group- or
+other-writable roots without changing their permissions. Permission-repair
+failures SHALL return `insecure_secret_key_file`; unrelated I/O failures retain
+their persistence mapping.
+
+CLI get SHALL perform one encrypted read. After SecretStore successfully
+persists and decrypt-verifies an encrypted set, CLI output SHALL use the
+verified submitted value without another decrypt.
+
+The v2 KDF wire keys remain `algorithm`, `salt`, `rounds`, `blockSize`,
+`parallelism`, and `outputByteCount`. Unsupported versions or recipient modes
+SHALL return `unsupported_secret_envelope`; malformed fields and KDF
+combinations SHALL return `decoding_failed`. Invalid existing key material
+SHALL never be truncated, replaced, or deleted.
+
+Acceptance Criteria
+- Get, set, and watch use one store lock for repair-capable key access.
+- Safe POSIX root modes are preserved; writable roots fail closed unchanged;
+  symlinked roots round-trip through one canonical target.
+- Changed key-file watch snapshots support coherent key/envelope rotation and
+  revalidate key privacy.
+- CLI get performs one decrypt and encrypted set output performs no
+  post-commit decrypt.
+- The full 234-test local lane and every hosted platform gate pass.

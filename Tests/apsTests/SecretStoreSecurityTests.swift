@@ -373,6 +373,30 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: fixture.keyFileURL), encodedKey)
     }
 
+    #if canImport(Darwin)
+    internal func testUnrepairableKeyPermissionsUseStableSecurityError() throws {
+        let fixture = try makeFixture()
+        try fixture.store.set("permission-error")
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o000],
+            ofItemAtPath: fixture.keyFileURL.path
+        )
+        defer {
+            try? FileManager.default.setAttributes(
+                [.posixPermissions: 0o600],
+                ofItemAtPath: fixture.keyFileURL.path
+            )
+        }
+
+        XCTAssertThrowsError(try fixture.store.get()) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .insecureSecretKeyFile(reason: "owner-only permissions could not be enforced")
+            )
+        }
+    }
+    #endif
+
     internal func testEncryptedSnapshotDoesNotInvokeKDF() throws {
         setSecretPassphrase("snapshot-passphrase")
         let recorder = KDFCallRecorder()
@@ -428,6 +452,88 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         XCTAssertEqual(derivationCountsAtPollStart, [1, 1, 1, 2, 2, 2])
         XCTAssertEqual(recorder.snapshot().count, 2)
     }
+
+    internal func testWatchReloadsKeyFileForChangedSnapshot() throws {
+        let fixture = try makeFixture()
+        try fixture.store.set("initial-key")
+        var session = try fixture.store.makeEncryptedWatchSession()
+        let initialSnapshot = try XCTUnwrap(fixture.store.encryptedSnapshot())
+        XCTAssertEqual(
+            try fixture.store.value(forEncryptedSnapshot: initialSnapshot, session: &session).value,
+            "initial-key"
+        )
+
+        let root = try XCTUnwrap(directoryURL)
+        let replacementDirectory = root.appendingPathComponent("rotated-key", isDirectory: true)
+        try FileManager.default.createDirectory(at: replacementDirectory, withIntermediateDirectories: true)
+        let replacement = try makeFixture(directory: replacementDirectory)
+        try replacement.store.set("rotated-key")
+        let replacementKey = try Data(contentsOf: replacement.keyFileURL)
+        let replacementEnvelope = try Data(contentsOf: replacement.envelopeURL)
+        try replacementKey.write(to: fixture.keyFileURL, options: .atomic)
+        #if !os(Windows)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: fixture.keyFileURL.path
+        )
+        #endif
+        try replacementEnvelope.write(to: fixture.envelopeURL, options: .atomic)
+
+        XCTAssertEqual(
+            try fixture.store.value(forEncryptedSnapshot: replacementEnvelope, session: &session).value,
+            "rotated-key"
+        )
+    }
+
+    #if !os(Windows)
+    internal func testWatchRevalidatesKeyFilePermissionsForChangedSnapshot() throws {
+        let fixture = try makeFixture()
+        try fixture.store.set("initial-permissions")
+        var session = try fixture.store.makeEncryptedWatchSession()
+        let initialSnapshot = try XCTUnwrap(fixture.store.encryptedSnapshot())
+        _ = try fixture.store.value(forEncryptedSnapshot: initialSnapshot, session: &session)
+
+        try fixture.store.set("changed-permissions")
+        let changedSnapshot = try XCTUnwrap(fixture.store.encryptedSnapshot())
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o644],
+            ofItemAtPath: fixture.keyFileURL.path
+        )
+
+        XCTAssertEqual(
+            try fixture.store.value(forEncryptedSnapshot: changedSnapshot, session: &session).value,
+            "changed-permissions"
+        )
+        let attributes = try FileManager.default.attributesOfItem(atPath: fixture.keyFileURL.path)
+        XCTAssertEqual(attributes[.posixPermissions] as? NSNumber, NSNumber(value: 0o600))
+    }
+
+    internal func testSymlinkedStateRootRoundTripsWithoutChangingTargetMode() throws {
+        let root = try XCTUnwrap(directoryURL)
+        let target = root.appendingPathComponent("state-target", isDirectory: true)
+        let link = root.appendingPathComponent("state-link", isDirectory: true)
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        try FileManager.default.setAttributes(
+            [.posixPermissions: 0o755],
+            ofItemAtPath: target.path
+        )
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: target)
+        let store = SecretStore(directory: link.path)
+
+        try store.set("linked-secret")
+
+        XCTAssertEqual(try store.get(), "linked-secret")
+        XCTAssertTrue(FileManager.default.fileExists(atPath: target.appendingPathComponent("secret.key").path))
+        XCTAssertTrue(FileManager.default.fileExists(atPath: target.appendingPathComponent("secret.enc").path))
+        let attributes = try FileManager.default.attributesOfItem(atPath: target.path)
+        XCTAssertEqual(attributes[.posixPermissions] as? NSNumber, NSNumber(value: 0o755))
+        XCTAssertTrue(try store.reset())
+        XCTAssertTrue(
+            try FileManager.default.destinationOfSymbolicLink(atPath: link.path)
+                .contains("state-target")
+        )
+    }
+    #endif
 
     @MainActor
     internal func testWatchReusesOneInteractivePassphrasePromptAcrossChanges() async throws {

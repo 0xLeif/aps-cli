@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 50,
-  "id": "CHG-0050-harden-passphrase-envelopes-and-existing-secret-key-validation-for-issue-118",
+  "sequence": 54,
+  "id": "CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re",
   "acknowledged_collisions": []
 }

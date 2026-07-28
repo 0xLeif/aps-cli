@@ -153,6 +153,12 @@ public struct SecretStore: Sendable {
             keyFileKey = key
             return key
         }
+
+        fileprivate mutating func prepareForWatchSnapshot() {
+            if mode == .keyFile {
+                keyFileKey = nil
+            }
+        }
     }
 
     /// Recipient state retained for the lifetime of one encrypted watch.
@@ -340,7 +346,7 @@ public struct SecretStore: Sendable {
     /// Store rooted at the configured FileState path (`secret.enc`).
     @MainActor
     public init() {
-        self.directory = FileManager.defaultFileStatePath
+        self.directory = Self.canonicalDirectory(FileManager.defaultFileStatePath)
         self.storeFileName = "secret.enc"
         self.keyName = "secret"
         self.deletionOperations = .live
@@ -351,7 +357,7 @@ public struct SecretStore: Sendable {
 
     /// Store rooted at an explicit directory (tests, tooling).
     public init(directory: String, storeFileName: String = "secret.enc", keyName: String = "secret") {
-        self.directory = directory
+        self.directory = Self.canonicalDirectory(directory)
         self.storeFileName = storeFileName
         self.keyName = keyName
         self.deletionOperations = .live
@@ -370,7 +376,7 @@ public struct SecretStore: Sendable {
         envelopeOperations: EnvelopeOperations = .live,
         interactivePassphraseOperations: InteractivePassphraseOperations = .live
     ) {
-        self.directory = directory
+        self.directory = Self.canonicalDirectory(directory)
         self.storeFileName = storeFileName
         self.keyName = keyName
         self.deletionOperations = deletionOperations
@@ -441,6 +447,7 @@ public struct SecretStore: Sendable {
         session: inout EncryptedWatchSession
     ) throws -> EncryptedWatchValue {
         _ = try validatedStoragePath()
+        session.operation.prepareForWatchSnapshot()
         let envelope = try decodeEnvelope(data)
         guard
             try envelopeKind(envelope) == .legacy,
@@ -540,6 +547,17 @@ public struct SecretStore: Sendable {
 
     private func validatedStoragePath() throws -> SchemaStoragePath {
         try SchemaStoragePath(storeFileName)
+    }
+
+    private static func canonicalDirectory(_ directory: String) -> String {
+        #if os(Windows)
+        return directory
+        #else
+        return URL(fileURLWithPath: directory)
+            .standardizedFileURL
+            .resolvingSymlinksInPath()
+            .path
+        #endif
     }
 
     // MARK: - Envelope cryptography
@@ -975,7 +993,7 @@ public struct SecretStore: Sendable {
     private func loadOrCreateKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {
         return try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: directory,
-            lockFileName: "secret.key.lock",
+            lockFileName: "secret.store.lock",
             resourceKey: keyName
         ) {
             try loadOrCreateKeyFileUnlocked()
@@ -1058,7 +1076,7 @@ public struct SecretStore: Sendable {
             return APSError.insecureSecretKeyFile(reason: "path is not a regular file")
         case .wrongOwner:
             return APSError.insecureSecretKeyFile(reason: "file is not owned by the current user")
-        case .insecurePermissions:
+        case .insecurePermissions, .permissionRepairFailed:
             return APSError.insecureSecretKeyFile(reason: "owner-only permissions could not be enforced")
         case .invalidSize(let actual):
             return APSError.insecureSecretKeyFile(reason: "unexpected size \(actual) bytes")

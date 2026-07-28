@@ -94,7 +94,6 @@ extension Aps {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
                 do {
-                    try StateStore.requireDecodableDiskState(forName: key)
                     let snapshot = try store.valueSnapshot(name: key)
                     if options.json {
                         let payload = CLIOutput.KeyValuePayload(
@@ -133,8 +132,13 @@ extension Aps {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
                 do {
-                    try store.set(name: key, value: value)
-                    let snapshot = try store.valueSnapshot(name: key)
+                    let entry = try store.set(name: key, value: value)
+                    let snapshot: (entry: SchemaKeyEntry, raw: String)
+                    if entry.storage == "EncryptedFile" {
+                        snapshot = (entry: entry, raw: value)
+                    } else {
+                        snapshot = try store.valueSnapshot(name: key)
+                    }
                     if options.json {
                         let payload = CLIOutput.KeyValuePayload(
                             key: snapshot.entry.name,
