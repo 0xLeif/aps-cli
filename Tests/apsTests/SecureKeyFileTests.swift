@@ -551,10 +551,24 @@ internal final class SecureKeyFileTests: XCTestCase {
         let expected = Data(repeating: 4, count: SecureKeyFile.expectedByteCount)
         let secureFile = SecureKeyFile(path: file.path)
         try secureFile.create(expected)
-        try makeWindowsDACLRepairOnly(file)
+        try makeWindowsDACLRepairOnly(file, includeSynchronization: true)
         defer { try? FileManager.default.removeItem(at: file) }
 
         XCTAssertEqual(try secureFile.load(), expected)
+    }
+
+    internal func testWindowsLoadRejectsACLWithoutSynchronizationAccess() throws {
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-key-repair-no-sync-\(UUID().uuidString)")
+        let expected = Data(repeating: 6, count: SecureKeyFile.expectedByteCount)
+        let secureFile = SecureKeyFile(path: file.path)
+        try secureFile.create(expected)
+        try makeWindowsDACLRepairOnly(file, includeSynchronization: false)
+        defer { try? FileManager.default.removeItem(at: file) }
+
+        XCTAssertThrowsError(try secureFile.load()) { error in
+            XCTAssertEqual(error as? SecureKeyFileError, .insecurePermissions)
+        }
     }
 
     internal func testWindowsLoadSharesExistingKeyForConcurrentReaders() throws {
@@ -646,8 +660,15 @@ internal final class SecureKeyFileTests: XCTestCase {
         }
     }
 
-    private func makeWindowsDACLRepairOnly(_ file: URL) throws {
+    private func makeWindowsDACLRepairOnly(
+        _ file: URL,
+        includeSynchronization: Bool
+    ) throws {
         try withCurrentWindowsUserSID { userSID in
+            var access = DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES)
+            if includeSynchronization {
+                access |= DWORD(SYNCHRONIZE)
+            }
             let sidLength = GetLengthSid(userSID)
             let aclSize = MemoryLayout<ACL>.size
                 + MemoryLayout<ACCESS_ALLOWED_ACE>.size
@@ -664,7 +685,7 @@ internal final class SecureKeyFileTests: XCTestCase {
                       acl,
                       DWORD(ACL_REVISION),
                       0,
-                      DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES),
+                      access,
                       userSID
                   ) else {
                 throw CocoaError(.fileWriteUnknown)
