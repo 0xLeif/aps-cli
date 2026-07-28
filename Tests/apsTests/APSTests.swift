@@ -2959,7 +2959,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    internal func testStoredStatePresentUndecodableCanonicalValueIsCorrupt() throws {
+    internal func testStoredStatePresentUndecodableCanonicalValueIsCorrupt() async throws {
         let defaults = try XCTUnwrap(hermeticDefaults)
         let entry = SchemaKeyEntry(
             name: "corruptCounter",
@@ -2980,7 +2980,7 @@ final class APSTests: XCTestCase {
     }
 
     @MainActor
-    internal func testStoredStatePresentUndecodableLegacyFlagIsCorrupt() throws {
+    internal func testStoredStatePresentUndecodableLegacyFlagIsCorrupt() async throws {
         let defaults = try XCTUnwrap(hermeticDefaults)
         let entry = try XCTUnwrap(UserSchema.defaultDocument().keys.first { $0.name == "flag" })
         let schema = UserSchemaDocument(keys: [entry])
