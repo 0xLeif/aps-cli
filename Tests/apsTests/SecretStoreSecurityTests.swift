@@ -468,15 +468,9 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         try FileManager.default.createDirectory(at: replacementDirectory, withIntermediateDirectories: true)
         let replacement = try makeFixture(directory: replacementDirectory)
         try replacement.store.set("rotated-key")
-        let replacementKey = try Data(contentsOf: replacement.keyFileURL)
         let replacementEnvelope = try Data(contentsOf: replacement.envelopeURL)
-        try replacementKey.write(to: fixture.keyFileURL, options: .atomic)
-        #if !os(Windows)
-        try FileManager.default.setAttributes(
-            [.posixPermissions: 0o600],
-            ofItemAtPath: fixture.keyFileURL.path
-        )
-        #endif
+        try FileManager.default.removeItem(at: fixture.keyFileURL)
+        try FileManager.default.moveItem(at: replacement.keyFileURL, to: fixture.keyFileURL)
         try replacementEnvelope.write(to: fixture.envelopeURL, options: .atomic)
 
         XCTAssertEqual(
