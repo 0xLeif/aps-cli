@@ -17,9 +17,9 @@
       "requirement_ids": [
         "REQ-aps-cli-019",
         "REQ-aps-cli-024",
-        "REQ-aps-cli-033",
+        "REQ-aps-cli-031",
         "REQ-state-store-022",
-        "REQ-state-store-026"
+        "REQ-state-store-024"
       ]
     },
     {
@@ -38,9 +38,9 @@
       "requirement_ids": [
         "REQ-aps-cli-019",
         "REQ-aps-cli-024",
-        "REQ-aps-cli-033",
+        "REQ-aps-cli-031",
         "REQ-state-store-022",
-        "REQ-state-store-026"
+        "REQ-state-store-024"
       ]
     },
     {
@@ -59,9 +59,9 @@
       "requirement_ids": [
         "REQ-aps-cli-019",
         "REQ-aps-cli-024",
-        "REQ-aps-cli-033",
+        "REQ-aps-cli-031",
         "REQ-state-store-022",
-        "REQ-state-store-026"
+        "REQ-state-store-024"
       ]
     },
     {
@@ -80,9 +80,9 @@
       "requirement_ids": [
         "REQ-aps-cli-019",
         "REQ-aps-cli-024",
-        "REQ-aps-cli-033",
+        "REQ-aps-cli-031",
         "REQ-state-store-022",
-        "REQ-state-store-026"
+        "REQ-state-store-024"
       ]
     },
     {
@@ -101,16 +101,37 @@
       "requirement_ids": [
         "REQ-aps-cli-019",
         "REQ-aps-cli-024",
+        "REQ-aps-cli-031",
+        "REQ-state-store-022",
+        "REQ-state-store-024"
+      ]
+    },
+    {
+      "timestamp": 1785266566,
+      "commit": "91426eb3af0c53a4ac52417c4f5d1493763c3c2b",
+      "contract_digest": "0377225f9b15d987d90315a1f8b33102546265e6b57cb219564603670452138d",
+      "workspace_digest": "f1c708da7ab387bbe6c2ef06844c6af418754e2d1b37d8c55c378a8aa9eda044",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-019",
+        "REQ-aps-cli-024",
         "REQ-aps-cli-033",
         "REQ-state-store-022",
         "REQ-state-store-026"
       ]
     },
     {
-      "timestamp": 1785164674,
-      "commit": "30f7f0fea54cda343bc706b0aa80d32f0740a89c",
-      "contract_digest": "4a6e6392c344b4cc1008f3203c8a41afd0e4d86d2440120ad7f7ff3b7dec25ac",
-      "workspace_digest": "5cbebfe72cf2597565f63f963f14cf2300c033558a2cfc6529682d8cde168f68",
+      "timestamp": 1785266687,
+      "commit": "91426eb3af0c53a4ac52417c4f5d1493763c3c2b",
+      "contract_digest": "0377225f9b15d987d90315a1f8b33102546265e6b57cb219564603670452138d",
+      "workspace_digest": "43c1f534d0c5cb3ecb74e100016d3713f3cc2990962dbe7540ad8d769732a861",
       "passed": true,
       "commands": [
         {
