@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r",
+  "slug": "close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r",
+  "title": "Close final PR 128 review gaps for malformed recipient modes, POSIX permission races, and pinned encrypted watch roots",
+  "description": "Close final PR 128 review gaps for malformed recipient modes, POSIX permission races, and pinned encrypted watch roots",
+  "kind": "bug_fix",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "b10728b81c4b718c239cd1119ded36b82ee60f17",
+  "created_at": 1785262108,
+  "updated_at": 1785264567,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/SecretStore.swift",
+    "Sources/aps/SecureKeyFile.swift",
+    "Sources/aps/StateStore+Registry.swift",
+    "Tests/apsTests/SecretStoreSecurityTests.swift",
+    "Tests/apsTests/SecureKeyFileTests.swift",
+    "specs/aps-cli/requirements.md",
+    "specs/aps-cli/testing.md",
+    "specs/state-store/requirements.md",
+    "specs/state-store/testing.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Missing or null v2 recipientMode returns decoding_failed before KDF work; unknown non-null modes remain unsupported_secret_envelope; POSIX key loads reject post-read permission widening; registered encrypted watch stays on its initial canonical root after configured symlink retargeting; 238 serial and parallel tests plus all hosted gates pass"
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}
