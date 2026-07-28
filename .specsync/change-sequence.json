@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 57,
-  "id": "CHG-0057-close-remaining-pr-129-validation-gaps-for-encrypted-watch-slice-shapes-bool-t",
+  "sequence": 58,
+  "id": "CHG-0058-reject-oversized-integral-json-without-rounding-and-validate-decrypted-plaintext",
   "acknowledged_collisions": []
 }

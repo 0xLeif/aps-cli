@@ -84,7 +84,9 @@ public enum SchemaJSON: Codable, Equatable, Sendable {
             self = .bool(value)
         } else if let value = try? container.decode(Int.self) {
             self = .int(value)
-        } else if let value = try? container.decode(Double.self), value.isFinite {
+        } else if let value = try? container.decode(Double.self),
+                  value.isFinite,
+                  value.rounded(.towardZero) != value || Int(exactly: value) != nil {
             self = .double(value)
         } else if let value = try? container.decode(String.self) {
             self = .string(value)

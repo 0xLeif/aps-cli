@@ -315,6 +315,69 @@
         "REQ-state-store-022",
         "REQ-state-store-026"
       ]
+    },
+    {
+      "timestamp": 1785275591,
+      "commit": "b9b9977e85a064f1b05e6077e87a3c8316a55290",
+      "contract_digest": "0377225f9b15d987d90315a1f8b33102546265e6b57cb219564603670452138d",
+      "workspace_digest": "8538a0393bbe2b3bb1458215d18a47c460428ec1952855ed5a8f23af801158a6",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-019",
+        "REQ-aps-cli-024",
+        "REQ-aps-cli-033",
+        "REQ-state-store-022",
+        "REQ-state-store-026"
+      ]
+    },
+    {
+      "timestamp": 1785276431,
+      "commit": "b9b9977e85a064f1b05e6077e87a3c8316a55290",
+      "contract_digest": "0377225f9b15d987d90315a1f8b33102546265e6b57cb219564603670452138d",
+      "workspace_digest": "bd1c3d4c7260faee1ae269ffa60c5b86f45b16109e65266abdf273141770da6b",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-019",
+        "REQ-aps-cli-024",
+        "REQ-aps-cli-033",
+        "REQ-state-store-022",
+        "REQ-state-store-026"
+      ]
+    },
+    {
+      "timestamp": 1785277043,
+      "commit": "b9b9977e85a064f1b05e6077e87a3c8316a55290",
+      "contract_digest": "0377225f9b15d987d90315a1f8b33102546265e6b57cb219564603670452138d",
+      "workspace_digest": "c4941ed0c11f0e49a793ede731693ac5934398145363e9541320abe5dbbdce8c",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-019",
+        "REQ-aps-cli-024",
+        "REQ-aps-cli-033",
+        "REQ-state-store-022",
+        "REQ-state-store-026"
+      ]
     }
   ]
 }

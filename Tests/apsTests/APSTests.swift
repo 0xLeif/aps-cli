@@ -553,6 +553,36 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(StateStore().get(.secret), "")
     }
 
+    @MainActor
+    func testEncryptedDiskPreflightRejectsSchemaIncompatiblePlaintext() async throws {
+        let store = StateStore()
+        let stringEntry = SchemaKeyEntry(
+            name: "shapedSecret",
+            type: "String",
+            storage: "EncryptedFile",
+            initial: .string(""),
+            path: "shaped-secret.enc",
+            doc: "encrypted schema preflight regression"
+        )
+        try store.addKey(stringEntry, force: false)
+        try store.set(name: stringEntry.name, value: "plaintext")
+
+        let objectEntry = SchemaKeyEntry(
+            name: stringEntry.name,
+            type: "object",
+            storage: stringEntry.storage,
+            initial: .object(["name": .string("initial")]),
+            path: stringEntry.path,
+            doc: stringEntry.doc,
+            objectShape: ["name": "String"]
+        )
+        try store.addKey(objectEntry, force: true)
+
+        XCTAssertThrowsError(try StateStore.requireDecodableDiskState(forName: objectEntry.name)) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: objectEntry.name))
+        }
+    }
+
 #if !os(Windows)
     @MainActor
     func testSecretPassphraseRoundTripAndWrongKey() async throws {

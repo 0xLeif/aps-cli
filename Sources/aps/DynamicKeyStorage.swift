@@ -304,7 +304,8 @@ enum DynamicKeyStorage {
         case "EncryptedFile":
             let store = try encryptedStore(entry, stateRoot: stateRoot)
             if store.hasSecret {
-                _ = try store.get()
+                let value = try store.get()
+                try validateReadValue(value, for: entry)
             }
         default:
             break

@@ -36,6 +36,12 @@ internal final class DynamicObjectTypingTests: XCTestCase {
         )
     }
 
+    internal func testOutOfRangeIntegralJSONIsRejectedInsteadOfRounded() {
+        let data = Data(#"{"value":9223372036854775809}"#.utf8)
+
+        XCTAssertThrowsError(try JSONDecoder().decode(SchemaJSON.self, from: data))
+    }
+
     internal func testNonFiniteJSONNumberCannotProduceInvalidWireJSON() {
         let value = SchemaJSON.double(.infinity)
 
