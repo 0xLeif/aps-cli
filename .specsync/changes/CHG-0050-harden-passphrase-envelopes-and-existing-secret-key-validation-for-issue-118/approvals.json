@@ -111,6 +111,13 @@
       "timestamp": 1785245899,
       "digest": "8540677e6becbcc964296331c5193f490075f3618ad4eca2687bea382ffc7754",
       "note": "Rejects all-zero X25519 shared secrets consistently across Swift Crypto implementations; strict verification passed at 1f4f313."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1785247576,
+      "digest": "718c5c9a6e10d6341033fd7ce34e88fdc2d1feea34137a26f7a1bc3a77fdd5fb",
+      "note": "Final review pass closes serialized key repair, POSIX/Windows handle races, encrypted-watch path revalidation, and hostile JSON depth; strict verification passed at 7c0c4b7."
     }
   ],
   "reopenings": [
