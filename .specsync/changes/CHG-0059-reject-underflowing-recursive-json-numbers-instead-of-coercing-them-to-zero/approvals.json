@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785278363,
+      "digest": "65e56f15c46ea1f8361d7dce59eb0301f8fb44ac6721295c6347f5470bcf98ca",
+      "note": "Existing recursive JSON value-preservation regression"
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785278487,
+      "digest": "f659a4541b83d86301fb6bd7f85dc319374ceb33ab76b0a0fd3a2ad296b30ade",
+      "note": "Declare aps-cli as the canonical owner without changing its contract"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785278573,
+      "digest": "b0d73b9aebac780ecf0a199a1397d3128b0bfbf02f4aab995bbe5c7e8cfa416a",
+      "note": "264-test gate passed with aps-cli ownership recorded"
+    }
+  ],
+  "reopenings": []
+}

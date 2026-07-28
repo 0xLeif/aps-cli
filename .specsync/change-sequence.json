@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 58,
-  "id": "CHG-0058-reject-oversized-integral-json-without-rounding-and-validate-decrypted-plaintext",
+  "sequence": 59,
+  "id": "CHG-0059-reject-underflowing-recursive-json-numbers-instead-of-coercing-them-to-zero",
   "acknowledged_collisions": []
 }

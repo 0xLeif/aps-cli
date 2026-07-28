@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785279233,
+  "timestamp": 1785278564,
   "commit": "01128bd8881938668233b830ce326f3f789fa035",
-  "contract_digest": "9855f306470652419d6b58b8759fd241b8905190aa5b4ac33e6469468ff40103",
+  "contract_digest": "f659a4541b83d86301fb6bd7f85dc319374ceb33ab76b0a0fd3a2ad296b30ade",
   "workspace_digest": "282b9db6357752177963fc6223bd1fced8e0aa1d4dbd745a1ae4af9338803a72",
-  "acceptance_input_digest": "41e8a235949fb755f1e5a17091f26060e029dc0c8f1a01023dc02f28904f5e28",
+  "acceptance_input_digest": "10efb5320957da48b377dfc50077cd34bfe2ac5caaaafb2876c889cd56312e71",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -11,20 +11,10 @@
         "path": ".specsync/change-sequence.json",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "037096932e69b61060a1aba27530d36f5e44c7c83e3220cb2c7ce68f5bc726d1",
-        "entry_digest": "410d01ea7d51328baf0ccef8749a45bd6284ba0ba092b72b70ead8c4b6181a8a",
+        "payload_digest": "ac415dcb9d4dea718324b5e41380efda4896f65eea9989265cbc69fe84e65d30",
+        "entry_digest": "56f5740d995262723c980b45d102c3073a3867b70782ed8b1919884336dd04db",
         "owners": [
           "@exact:delivery"
-        ]
-      },
-      {
-        "path": "Sources/aps/DynamicKeyStorage.swift",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "2a84526ed9df6c7158d262bfd4df0f14bb43ef7ced8b561bbc399f6a2a7e2b6d",
-        "entry_digest": "6b1506e9fa64712f13061f14813ff6e3dcc9d16fde4028237ac04690377d66d7",
-        "owners": [
-          "state-store"
         ]
       },
       {
@@ -35,16 +25,6 @@
         "entry_digest": "4a904b09be0badcff3883630f19306ca584996396071735b026a5019602ca2ad",
         "owners": [
           "aps-cli"
-        ]
-      },
-      {
-        "path": "Tests/apsTests/APSTests.swift",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "c9f288568c93ef840680735af1d4efd5f9068caced897cdd4414134104f4334c",
-        "entry_digest": "b0beb4f57fc2102937f341c25d6adef7b709acf6df70125157dc29606ed0a9c2",
-        "owners": [
-          "@exact:test"
         ]
       },
       {
@@ -106,56 +86,6 @@
         "owners": [
           "aps-cli"
         ]
-      },
-      {
-        "path": "specs/state-store/context.md",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
-        "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
-        "owners": [
-          "state-store"
-        ]
-      },
-      {
-        "path": "specs/state-store/requirements.md",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "5c06c13081abe5e026adb50b5cc67b25e4639f920ac8d90ded3f7f7815af1e74",
-        "entry_digest": "d4b25b84d08bd900beb11e91737306517b92a4ff727d98d5a37079f38d894aba",
-        "owners": [
-          "state-store"
-        ]
-      },
-      {
-        "path": "specs/state-store/state-store.spec.md",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "74dd30cd9825c4c968f0b146e8001a078e94680f5672304c6a93c25fb21e044d",
-        "entry_digest": "4664d05c20029c35debe6c5a4ab33f93e3f724dd1e41eba41eb0ab33308dbe48",
-        "owners": [
-          "state-store"
-        ]
-      },
-      {
-        "path": "specs/state-store/tasks.md",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
-        "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
-        "owners": [
-          "state-store"
-        ]
-      },
-      {
-        "path": "specs/state-store/testing.md",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
-        "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
-        "owners": [
-          "state-store"
-        ]
       }
     ]
   },
@@ -167,8 +97,5 @@
       "exit_code": 0
     }
   ],
-  "requirement_ids": [
-    "REQ-aps-cli-035",
-    "REQ-state-store-028"
-  ]
+  "requirement_ids": []
 }
