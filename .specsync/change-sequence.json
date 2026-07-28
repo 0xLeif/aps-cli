@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 60,
-  "id": "CHG-0060-reject-fractional-recursive-json-values-when-double-encoding-would-change-their",
+  "sequence": 61,
+  "id": "CHG-0061-accept-finite-recursive-json-doubles-beyond-decimal-exponent-range",
   "acknowledged_collisions": []
 }

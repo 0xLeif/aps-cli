@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785282001,
+      "digest": "d0dfa9d108d0c425ff2f0e82ee694f3d29c7c190260518186a2386a58e5e4050",
+      "note": "Restore existing finite Double range support"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785282101,
+      "digest": "42465da9bb3a8760632ed0c41ac0bbf397af5f6188d3e69d680521e05185e50c",
+      "note": "266-test gate passed with finite Double range restored"
+    }
+  ],
+  "reopenings": []
+}

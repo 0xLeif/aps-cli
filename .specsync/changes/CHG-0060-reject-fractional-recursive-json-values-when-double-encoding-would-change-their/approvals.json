@@ -13,7 +13,134 @@
       "timestamp": 1785280469,
       "digest": "a0f26a5d6045deaeb2ffae3f0e309823c82ebdf0137dd3934859c3045cda9df4",
       "note": "265-test gate passed with exact decimal preservation"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785282699,
+      "digest": "fc471fa2d936b3f88e46a5732fdbe72774b062f397c26cd962ec86d2ba6bc780",
+      "note": "Normalized against final finite Double range delivery state"
     }
   ],
-  "reopenings": []
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0060-reject-fractional-recursive-json-values-when-double-encoding-would-change-their",
+      "actor": "codex",
+      "reason": "Normalize predecessor evidence after finite Double range fix",
+      "timestamp": 1785282160,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785280469,
+        "digest": "a0f26a5d6045deaeb2ffae3f0e309823c82ebdf0137dd3934859c3045cda9df4",
+        "note": "265-test gate passed with exact decimal preservation"
+      },
+      "prior_verification": {
+        "timestamp": 1785280460,
+        "commit": "fd2b2ef5d5b95ff0b61895f7e1de8ee0996fa221",
+        "contract_digest": "a07b5175afea77b1400c8a23863e3259ecf131ab9dfcceec6b8490ec62b19df7",
+        "workspace_digest": "15e7baffe18234f900864ef59a92e7d3d767a4db85e3e2a30c0182561098068e",
+        "acceptance_input_digest": "3f4183233069bde2ffb0442d0b4bc63ce2677e0962650796fcfb98e72143e216",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "13956cdf44c6dbc661f12477f8b2bc6b69993a378419cc5ffef1174897ea900e",
+              "entry_digest": "335b64c3a4d3528c97b087d9b701525be929ee9c7226001d776cdd8ea3535fd6",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2f2e5f7b6d3c8c4e7942db8b4b570d1ec239655e0a7160278fca5a20dcf7c7e2",
+              "entry_digest": "5aab753773c6d3af049a32a931debe84c2a39a1f2ec0c68e251dd8558fcd50e1",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d28caa5147ecd77315113632273fdcfcc5518615810d03e3a3d2a7d5d36440a6",
+              "entry_digest": "1bf71d9d09f32e6b30c00094101a526a2cecea50c7eb8e70c02a8b40df4cd155",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "59972ed01be07e2c52d3d097481bd831b4513571d28d548c6ca66be7cb2ce28c",
+              "entry_digest": "4a2b674eebafa48b3b34158ffe381e71d4552e1c978ce8f0151c2e4c04b40648",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5d9a6a00bf9589e7fc5e7f6e1ec77f9c837e24557d7e48cfe59cd960e3957d6b",
+              "entry_digest": "fc077e8feedfb36d7ba2a3a850d21a6f0fff0f9e01d8108669dbee6b04d8222b",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": []
+      },
+      "stale_acceptance_input_digest": "3f4183233069bde2ffb0442d0b4bc63ce2677e0962650796fcfb98e72143e216",
+      "current_acceptance_input_digest": "850b051b2cd5ec0546965b36a3fa8da4f5705875cc907373e08be0d6645a5dae"
+    }
+  ]
 }

@@ -56,6 +56,14 @@ internal final class DynamicObjectTypingTests: XCTestCase {
         XCTAssertThrowsError(try JSONDecoder().decode(SchemaJSON.self, from: data))
     }
 
+    internal func testFiniteDoublesBeyondDecimalRangeRemainSupported() throws {
+        for rawValue in ["1e-200", "5e-324"] {
+            let data = Data(#"{"value":\#(rawValue)}"#.utf8)
+
+            XCTAssertNoThrow(try JSONDecoder().decode(SchemaJSON.self, from: data))
+        }
+    }
+
     internal func testNonFiniteJSONNumberCannotProduceInvalidWireJSON() {
         let value = SchemaJSON.double(.infinity)
 
