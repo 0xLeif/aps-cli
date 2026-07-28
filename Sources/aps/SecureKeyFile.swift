@@ -674,6 +674,7 @@ internal extension SecureKeyFile {
             access: Self.repairAccess,
             disposition: DWORD(OPEN_EXISTING),
             shareMode: Self.shareExistingReads,
+            flags: Self.openReparsePoint | DWORD(FILE_FLAG_OVERLAPPED),
             operation: "CreateFileW-repair"
         )
         guard let repairHandle else {
@@ -753,6 +754,7 @@ internal extension SecureKeyFile {
         access: DWORD,
         disposition: DWORD,
         shareMode: DWORD,
+        flags: DWORD = Self.openReparsePoint,
         operation: String
     ) throws -> HANDLE? {
         let handle = path.withCString(encodedAs: UTF16.self) { pathPointer in
@@ -762,7 +764,7 @@ internal extension SecureKeyFile {
                 shareMode,
                 nil,
                 disposition,
-                Self.openReparsePoint,
+                flags,
                 nil
             )
         }
