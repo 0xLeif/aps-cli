@@ -662,7 +662,7 @@ internal extension SecureKeyFile {
     private static let fileAllAccess = DWORD(0x001F01FF)
     private static let readAccess: DWORD = DWORD(GENERIC_READ)
     private static let repairAccess = DWORD(READ_CONTROL) | DWORD(WRITE_DAC)
-        | DWORD(FILE_READ_ATTRIBUTES) | DWORD(SYNCHRONIZE)
+        | DWORD(SYNCHRONIZE)
     private static let writeAccess: DWORD = DWORD(GENERIC_WRITE)
     private static let shareNone: DWORD = 0
     private static let shareExistingReads: DWORD = DWORD(FILE_SHARE_READ)

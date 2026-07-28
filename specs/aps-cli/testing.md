@@ -31,9 +31,9 @@
   repair, search-only owned parent directories, Darwin mode `0000` fail-closed
   restoration, injected repair errors, regular-file and symlink swaps,
   directory, FIFO, hostile umask, and exclusive creation. Windows covers
-  private create/load, ACL repair when data-read access is absent, fail-closed
-  security mapping when native handle synchronization access is absent, and
-  directory rejection.
+  private create/load, ACL repair when data-read and attribute access are
+  absent, fail-closed security mapping when native handle synchronization
+  access is absent, and directory rejection.
 - POSIX state-root tests preserve safe searchable and shared-read modes, reject
   writable roots without mutation, and round-trip through a symlinked root.
   Changed encrypted watch snapshots reload and revalidate key-file recipients.

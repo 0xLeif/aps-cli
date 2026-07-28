@@ -665,7 +665,7 @@ internal final class SecureKeyFileTests: XCTestCase {
         includeSynchronization: Bool
     ) throws {
         try withCurrentWindowsUserSID { userSID in
-            var access = DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES)
+            var access = DWORD(READ_CONTROL) | DWORD(WRITE_DAC)
             if includeSynchronization {
                 access |= DWORD(SYNCHRONIZE)
             }
