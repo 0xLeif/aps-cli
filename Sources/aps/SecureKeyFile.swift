@@ -465,6 +465,10 @@ internal extension SecureKeyFile {
               pathStatus.st_uid == geteuid() else {
             throw SecureKeyFileError.securityUnproven
         }
+        guard descriptorStatus.st_mode & mode_t(0o7777) == mode_t(0o600),
+              pathStatus.st_mode & mode_t(0o7777) == mode_t(0o600) else {
+            throw SecureKeyFileError.insecurePermissions
+        }
     }
 
     private func quarantineAndRemovePOSIX(

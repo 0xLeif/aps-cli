@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785263268,
+  "timestamp": 1785262813,
   "commit": "b10728b81c4b718c239cd1119ded36b82ee60f17",
-  "contract_digest": "b268178c5152948191beb11070d2db54ce2ecf301634418ae644f8e7e4121a59",
+  "contract_digest": "4da4c9c20f4afc69eb6bbf18d201214832c57c70b2fd7e13c39dba4c6f9e3e76",
   "workspace_digest": "2ec35274809739ede7944b5aa8a4fc3df01b5c886a2d1270e7dab4cda73e2795",
-  "acceptance_input_digest": "ba5857e462017fc73e813aeed8c9fa15be098b2316e100862276c0debdb4231d",
+  "acceptance_input_digest": "f44af6a327f9898d180ef4145cad8906fa18340d41cdf8d0771b5d95f0588e15",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -11,20 +11,10 @@
         "path": ".specsync/change-sequence.json",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "bbc2fa5dc4bca457807d8390bb675bcb68250254550f2d22406a1f516ed4faaf",
-        "entry_digest": "de9b9ae254d36fbede18c0c1ca6b12912923fa8186bdfc25fd054a1d17c53f97",
+        "payload_digest": "a1959f343731616a2ee3dda55234d6223d09d1dab98da079538a7e394cfc99a4",
+        "entry_digest": "420f27395b89681f389b72ff35110c51a1f832cd082d505d526c302cfe2046fc",
         "owners": [
           "@exact:delivery"
-        ]
-      },
-      {
-        "path": "Sources/aps/Aps.swift",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "e5416f3dcb8cf5b55c913f2d9526339d400240034a34c64174cb327e170d346c",
-        "entry_digest": "37d43add9e73c13dbd4f9a43ad4000d3d7e27d9bf593f0a7d69fb4460c21e9bd",
-        "owners": [
-          "aps-cli"
         ]
       },
       {
@@ -55,16 +45,6 @@
         "entry_digest": "063d6705ac6810766b22c9bb17595b7d059b3497a17eaa67c6f0d0e49e0731ed",
         "owners": [
           "state-store"
-        ]
-      },
-      {
-        "path": "Tests/apsTests/APSTests.swift",
-        "kind": "file",
-        "mode": 33188,
-        "payload_digest": "f3ba4a195d046100b111dd285d1eb52202b0dbfc82592396f64fd4929f6e209c",
-        "entry_digest": "a5535fba6f10aa3ff8b25f7ec1bee775c7b51df1197d02fbfab1e8be9696ab16",
-        "owners": [
-          "@exact:test"
         ]
       },
       {
@@ -198,7 +178,7 @@
     }
   ],
   "requirement_ids": [
-    "REQ-aps-cli-031",
-    "REQ-state-store-024"
+    "REQ-aps-cli-032",
+    "REQ-state-store-025"
   ]
 }

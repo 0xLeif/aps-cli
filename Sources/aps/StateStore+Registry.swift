@@ -505,13 +505,14 @@ extension StateStore {
             entry,
             stateRoot: stateRoot
         )
+        let watchStateRoot = initialSnapshotStore.canonicalStateRoot
         var lastEnvelope = try initialSnapshotStore.encryptedSnapshot()
         var session: SecretStore.EncryptedWatchSession?
         var lastValue: String
         if let snapshotData = lastEnvelope {
             let initialDecryptStore = try DynamicKeyStorage.encryptedStore(
                 entry,
-                stateRoot: stateRoot
+                stateRoot: watchStateRoot
             )
             var activeSession = try initialDecryptStore.makeEncryptedWatchSession()
             let opened = try initialDecryptStore.value(
@@ -531,7 +532,7 @@ extension StateStore {
             waitForWatchPoll(interval: slice, deadline: pollDeadline)
             let snapshotStore = try DynamicKeyStorage.encryptedStore(
                 entry,
-                stateRoot: stateRoot
+                stateRoot: watchStateRoot
             )
             let currentEnvelope = try snapshotStore.encryptedSnapshot()
             guard currentEnvelope != lastEnvelope else {
@@ -541,7 +542,7 @@ extension StateStore {
             if let currentEnvelope {
                 let decryptStore = try DynamicKeyStorage.encryptedStore(
                     entry,
-                    stateRoot: stateRoot
+                    stateRoot: watchStateRoot
                 )
                 var activeSession = try session ?? decryptStore.makeEncryptedWatchSession()
                 let opened = try decryptStore.value(

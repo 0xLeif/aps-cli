@@ -343,6 +343,11 @@ public struct SecretStore: Sendable {
     private let envelopeOperations: EnvelopeOperations
     private let interactivePassphraseOperations: InteractivePassphraseOperations
 
+    /// Canonical state-root target used by this store instance.
+    internal var canonicalStateRoot: String {
+        directory
+    }
+
     /// Store rooted at the configured FileState path (`secret.enc`).
     @MainActor
     public init() {
@@ -750,10 +755,10 @@ public struct SecretStore: Sendable {
         guard version == 2 else {
             throw APSError.unsupportedSecretEnvelope
         }
-        guard
-            let rawMode = envelope.recipientMode,
-            let mode = RecipientMode(rawValue: rawMode)
-        else {
+        guard let rawMode = envelope.recipientMode else {
+            throw APSError.decodingFailed
+        }
+        guard let mode = RecipientMode(rawValue: rawMode) else {
             throw APSError.unsupportedSecretEnvelope
         }
         switch mode {

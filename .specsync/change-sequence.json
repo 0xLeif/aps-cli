@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 54,
-  "id": "CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re",
+  "sequence": 55,
+  "id": "CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r",
   "acknowledged_collisions": []
 }

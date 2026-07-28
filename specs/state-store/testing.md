@@ -27,6 +27,9 @@
 - POSIX key-file tests cover exact `0600`, safe handle-based repair, no-follow
   symlink rejection, directories, FIFOs, hostile umask, exclusive-create races,
   and refusal to regenerate unsafe paths.
+- Registered encrypted watch pins its initial canonical state-root target
+  across configured root-symlink retargeting while continuing descendant
+  validation beneath that root.
 - Windows key-file tests cover private create/load/remove, current-user DACL
   repair and revalidation, and wrong-kind handle rejection.
 - Secret SET unlock-before-rewrite; parallel schema RMW under SchemaFileLock.

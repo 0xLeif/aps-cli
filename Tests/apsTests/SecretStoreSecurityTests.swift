@@ -308,6 +308,30 @@ internal final class SecretStoreSecurityTests: XCTestCase {
         XCTAssertTrue(recorder.snapshot().isEmpty)
     }
 
+    internal func testMissingAndNullVersion2RecipientModeAreMalformedBeforeKDF() throws {
+        setSecretPassphrase("malformed-mode")
+        let recorder = KDFCallRecorder()
+        let fixture = try makeFixture(recorder: recorder)
+        let encoded = try JSONEncoder().encode(validEnvelope())
+        guard let validObject = try JSONSerialization.jsonObject(with: encoded) as? [String: Any] else {
+            XCTFail("expected envelope object")
+            return
+        }
+        var missingMode = validObject
+        missingMode.removeValue(forKey: "recipientMode")
+        var nullMode = validObject
+        nullMode["recipientMode"] = NSNull()
+
+        for object in [missingMode, nullMode] {
+            let data = try JSONSerialization.data(withJSONObject: object)
+            try data.write(to: fixture.envelopeURL, options: .atomic)
+            XCTAssertThrowsError(try fixture.store.get()) { error in
+                XCTAssertEqual(error as? APSError, .decodingFailed)
+            }
+        }
+        XCTAssertTrue(recorder.snapshot().isEmpty)
+    }
+
     internal func testVersion2RecipientModeMismatchFailsWithoutChangingBytes() throws {
         setSecretPassphrase("mode-owner")
         let fixture = try makeFixture()
@@ -526,6 +550,62 @@ internal final class SecretStoreSecurityTests: XCTestCase {
             try FileManager.default.destinationOfSymbolicLink(atPath: link.path)
                 .contains("state-target")
         )
+    }
+
+    @MainActor
+    internal func testRegisteredEncryptedWatchPinsInitialCanonicalStateRoot() async throws {
+        let root = try XCTUnwrap(directoryURL)
+        let targetA = root.appendingPathComponent("watch-target-a", isDirectory: true)
+        let targetB = root.appendingPathComponent("watch-target-b", isDirectory: true)
+        let link = root.appendingPathComponent("watch-root", isDirectory: true)
+        try FileManager.default.createDirectory(at: targetA, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: targetB, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: link, withDestinationURL: targetA)
+        let originalStateRoot = FileManager.defaultFileStatePath
+        FileManager.defaultFileStatePath = link.path
+        defer { FileManager.defaultFileStatePath = originalStateRoot }
+
+        let store = StateStore()
+        let entry = SchemaKeyEntry(
+            name: "pinnedSecret",
+            type: "String",
+            storage: "EncryptedFile",
+            initial: .string(""),
+            path: "nested/secret.enc",
+            doc: "pinned encrypted watch"
+        )
+        try store.addKey(entry, force: false)
+        try store.set(name: entry.name, value: "target-a")
+        try SecretStore(
+            directory: targetB.path,
+            storeFileName: "nested/secret.enc",
+            keyName: entry.name
+        ).set("target-b")
+
+        var observed: [String] = []
+        var replacementError: Error?
+        var pollCount = 0
+        try store.watchBlocking(
+            name: entry.name,
+            pollInterval: 0,
+            shouldContinue: {
+                pollCount += 1
+                return pollCount <= 1
+            },
+            onChange: { value in
+                observed.append(value)
+                guard observed.count == 1 else { return }
+                do {
+                    try FileManager.default.removeItem(at: link)
+                    try FileManager.default.createSymbolicLink(at: link, withDestinationURL: targetB)
+                } catch {
+                    replacementError = error
+                }
+            }
+        )
+
+        XCTAssertNil(replacementError)
+        XCTAssertEqual(observed, ["target-a"])
     }
     #endif
 

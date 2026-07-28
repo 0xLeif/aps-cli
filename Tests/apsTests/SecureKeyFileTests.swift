@@ -96,6 +96,31 @@ internal final class SecureKeyFileTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: fixture.file), replacement)
     }
 
+    internal func testLoadRejectsPermissionWideningAfterReading() throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let expected = keyData(17)
+        try expected.write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o600)), 0)
+        let filePath = fixture.file.path
+        let secureFile = SecureKeyFile(
+            path: filePath,
+            raceHooks: SecureKeyFileRaceHooks(
+                beforeLoadPathVerification: {
+                    _ = chmod(filePath, mode_t(0o644))
+                }
+            )
+        )
+
+        XCTAssertThrowsError(try secureFile.load()) { error in
+            XCTAssertEqual(error as? SecureKeyFileError, .insecurePermissions)
+        }
+        XCTAssertEqual(try Data(contentsOf: fixture.file), expected)
+        var status = stat()
+        XCTAssertEqual(stat(filePath, &status), 0)
+        XCTAssertEqual(status.st_mode & mode_t(0o7777), mode_t(0o644))
+    }
+
     internal func testLoadPreservesOwnedParentDirectoryPermissions() throws {
         let fixture = try makeFixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
