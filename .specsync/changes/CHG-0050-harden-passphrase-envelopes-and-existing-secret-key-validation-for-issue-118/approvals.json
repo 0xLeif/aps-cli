@@ -104,6 +104,13 @@
       "timestamp": 1785171303,
       "digest": "829f7ca36486b89010c238f499b2ff6f51f113950c0391c238d424f8513579bd",
       "note": "Linux XCTest discovery fixed; strict verification and complete local trust lane passed at d7b99a2."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1785245899,
+      "digest": "8540677e6becbcc964296331c5193f490075f3618ad4eca2687bea382ffc7754",
+      "note": "Rejects all-zero X25519 shared secrets consistently across Swift Crypto implementations; strict verification passed at 1f4f313."
     }
   ],
   "reopenings": [
