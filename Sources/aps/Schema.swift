@@ -376,6 +376,18 @@ enum Schema {
                 hint: "Check APS_SECRET_PASSPHRASE or the secret.key file under the state root."
             ),
             ErrorEntry(
+                code: "unsupported_secret_envelope",
+                exitCode: 65,
+                meaning: "encrypted secret envelope version or recipient mode is unsupported",
+                hint: "Upgrade aps or restore a compatible state-root backup."
+            ),
+            ErrorEntry(
+                code: "insecure_secret_key_file",
+                exitCode: 77,
+                meaning: "secret.key is not a private current-user-owned regular file",
+                hint: "Replace secret.key with a current-user-owned regular file private to that user."
+            ),
+            ErrorEntry(
                 code: "encoding_failed",
                 exitCode: 70,
                 meaning: "internal bug: value could not be JSON-encoded",
@@ -391,7 +403,7 @@ enum Schema {
                 code: "rollback_failed",
                 exitCode: 73,
                 meaning: "an operation failed and its adapter, schema, StoredState value, "
-                    + "or staged file could not be restored",
+                    + "staged file, or encrypted envelope could not be restored",
                 hint: "Inspect the resource named in the error and its retained or staged data before retrying."
             ),
         ]

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re",
+  "slug": "finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re",
+  "title": "Finalize PR 128 review corrections for secure key lifecycle and CLI recipient reuse",
+  "description": "Finalize PR 128 review corrections for secure key lifecycle and CLI recipient reuse",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "f722964daaaeccd9c717ca8f490679a3cd9184dc",
+  "created_at": 1785254099,
+  "updated_at": 1785263302,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/Aps.swift",
+    "Sources/aps/SecretStore.swift",
+    "Sources/aps/SecureKeyFile.swift",
+    "Sources/aps/StateStore+Registry.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Tests/apsTests/SecretStoreSecurityTests.swift",
+    "Tests/apsTests/SecureKeyFileTests.swift",
+    "specs/aps-cli/requirements.md",
+    "specs/aps-cli/testing.md",
+    "specs/state-store/requirements.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "All repair-capable key loads share secret.store.lock; symlinked POSIX roots round-trip without mode mutation; writable roots fail closed; permission-repair failures map to insecure_secret_key_file; changed key-file watch snapshots reload and revalidate the key; CLI get performs one encrypted read and encrypted set performs no post-commit decrypt; StateStore set returns the exact resolved entry; corrected canonical contracts and 234 tests pass the full verify lane"
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

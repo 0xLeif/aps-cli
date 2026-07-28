@@ -17,10 +17,13 @@ This repository is gated by the [CorvidLabs trust toolchain](https://corvidlabs.
 | Serial and four-worker Swift verification lanes | Passing |
 | macOS, Linux, and Windows source CI | Active |
 | Homebrew and release packaging | Hardening before the next tag |
-| Dynamic schema safety | Safe paths, authoritative registry, and transactional destructive operations implemented |
+| Dynamic schema and secret safety | Safe paths, strict v2 envelopes, and transactional destructive operations |
 | SpecSync contracts | Passing with 2 active module specs |
 
-The current release remains useful for local AppState exploration. Treat passphrase secrets and production automation as advanced surfaces until the remaining items in [release readiness](docs/release-readiness.md) are closed.
+The current release remains useful for local AppState exploration. The next
+release hardens passphrase secrets for local use; production automation still
+depends on the remaining distribution items in
+[release readiness](docs/release-readiness.md).
 
 ## Install
 
@@ -117,13 +120,48 @@ data, so changing back can reveal it again.
 
 ### Encrypted-file secret store (`secret`)
 
-`secret` is backed by an age-style encrypted envelope under the state root (issue #35), not the Keychain: ephemeral X25519 ECDH + HKDF + ChaCha20-Poly1305 via [swift-crypto](https://github.com/apple/swift-crypto), the same construction as [AlgoChat](https://github.com/CorvidLabs/swift-algochat)'s message encryptor.
+`secret` is backed by a v2 encrypted envelope under the state root, not the
+Keychain. The payload uses ephemeral X25519 ECDH, HKDF-SHA256, and
+ChaCha20-Poly1305 through
+[swift-crypto](https://github.com/apple/swift-crypto).
 
-- **`secret.enc`** holds the encrypted envelope (ephemeral public key, nonce, ciphertext, tag, base64 JSON). Nothing plaintext at rest.
-- **Key file mode (default):** a recipient key is generated on first use at `<state-root>/secret.key` (base64 X25519, requested mode 0600), like an SSH key. It works headlessly on every OS. The key and ciphertext share a state root, so this mode protects against casual plaintext inspection, not compromise of the whole root.
-- **Passphrase mode (experimental):** set `APS_SECRET_PASSPHRASE` to derive the key from a passphrase via HKDF-SHA256 (no key file). HKDF is not a password-hardening KDF, so use a high-entropy generated value until the versioned Argon2id/scrypt envelope work in [release readiness](docs/release-readiness.md) lands. Wrong passphrases fail loudly with `secretUnlockFailed` on both get and set.
-- **Stateful gating:** until `secret.enc` exists, the first write seals with whichever recipient is active (key file or passphrase). After that, set must unlock the existing envelope before rewrite; a wrong passphrase cannot silently re-key.
-- A corrupt `secret.enc` envelope blocks both get and set with `decoding_failed` until you run `aps reset secret` (or repair the file).
+- **`secret.enc`:** v2 JSON records `recipientMode` plus the base64 ephemeral
+  public key, nonce, ciphertext, and tag. Nothing plaintext is written at rest.
+- **Key-file mode (default):** v2 records `recipientMode: "keyFile"` and omits
+  `kdf`. The X25519 key is generated at `<state-root>/secret.key`. POSIX access
+  uses no-follow handles, requires current-user ownership and exact mode `0600`,
+  and safely repairs permissions through the open handle. Windows rejects
+  reparse, directory, non-disk, and foreign-owned handles and requires a
+  protected private DACL for the current user. New files are exclusive and
+  private before key bytes are written. The key and ciphertext share a state
+  root, so this mode does not protect against compromise of the whole root.
+- **Passphrase mode:** set `APS_SECRET_PASSPHRASE`. Every seal creates a fresh
+  cryptographically random 16-byte salt and derives a 32-byte X25519 private key
+  with the public CryptoExtras scrypt API at `N=131072`, `r=8`, `p=1`. This
+  profile costs approximately 128 MiB per derivation. aps depends on
+  apple/swift-crypto `4.0.0..<4.4.0`; 4.4+ requires Swift tools 6.1 while aps
+  retains its Swift 6.0 floor.
+- **Strict metadata:** v2 validates the exact JSON shape, canonical base64,
+  cryptographic field lengths, mode/KDF combination, 16-byte salt, and fixed
+  KDF constants before invoking scrypt. Unknown version or mode returns
+  `unsupported_secret_envelope`; malformed metadata returns `decoding_failed`.
+- **Mode binding:** a v2 envelope opens only with its recorded recipient mode.
+  aps never falls back between passphrase and key-file modes. A mismatch or
+  wrong credential returns `secret_unlock_failed` without changing envelope or
+  key bytes.
+- **Legacy compatibility:** unversioned key-file envelopes remain readable and
+  upgrade on the next successful set. A successfully unlocked unversioned
+  passphrase envelope migrates once, under `secret.store.lock`, to v2 with a
+  fresh salt. A wrong passphrase does not migrate. Any detected migration
+  failure restores and verifies the exact original bytes before reporting
+  failure; a restoration failure returns `rollback_failed`.
+- **Bounded KDF work:** derived passphrase keys are cached only inside one
+  SecretStore operation and only for a validated salt and the fixed profile.
+  Encrypted watch compares complete envelope bytes first, so unchanged polls do
+  no decoding, decryption, or scrypt work.
+- An unsafe `secret.key` returns `insecure_secret_key_file` without following,
+  replacing, truncating, or deleting that path. Corrupt envelope data blocks
+  get and set until `aps reset secret` or repair.
 - **Interactive opt-in:** with `APS_SECRET_USE_PASSPHRASE=1` on a TTY, aps prompts once itself (its own getpass prompt, not macOS Keychain's).
 - `aps reset secret` takes the secret-store lock, stages and verifies deletion
   of `secret.enc`, restores the envelope after a detected verification failure,
@@ -148,6 +186,8 @@ data, so changing back can reveal it again.
 ## Requirements
 
 - Swift 6.0+
+- apple/swift-crypto `4.0.0..<4.4.0`, including the public `CryptoExtras`
+  scrypt product
 - macOS 14+ (primary CI on `macos-latest`). Linux smoke runs on `ubuntu-latest`. Windows smoke runs on `windows-latest` via `Scripts/smoke.ps1`.
 - For the trust gate locally: [corvid-trust](https://github.com/CorvidLabs/trust) (`brew install CorvidLabs/tap/corvid-trust`)
 - SpecSync **5.2.0** (see `.specsync/version`). Trust CI mirrors that exact release; brew `spec-sync` latest should match.
@@ -262,9 +302,11 @@ Domain errors always print a human line to stderr and keep stdout empty, with a 
 |------|---------|------|
 | 0 | success | stdout contract satisfied |
 | 64 | EX_USAGE | caller-fixable input: bad key/flags, invalid value, `unknown_key`, `schema_conflict` |
-| 65 | EX_DATAERR | corrupt or undecodable persisted state, or invalid `schema.json` (`schema_invalid`) |
+| 65 | EX_DATAERR | corrupt data, invalid schema, or `unsupported_secret_envelope` |
+| 69 | EX_UNAVAILABLE | the configured passphrase or key cannot unlock the envelope |
 | 70 | EX_SOFTWARE | internal bug |
 | 73 | EX_CANTCREAT | persistence or schema rollback did not complete |
+| 77 | EX_NOPERM | `secret.key` ownership, type, or privacy could not be proven |
 
 64 means fix the invocation; 65+ means environment or data; 70 means an aps bug. Missing state files are not errors: they mean the initial value.
 
@@ -274,7 +316,11 @@ With `--json` / `--jsonl`, or when `APS_ERROR_JSON=1`, stderr additionally gets 
 {"error":{"code":"invalid_value","hint":"Run `aps keys` to see expected types per key.","message":"Invalid value 'nope' for counter (Int)"}}
 ```
 
-`code` is stable and safe to match on: `invalid_value`, `encoding_failed`, `decoding_failed`, `persistence_failed`, `corrupt_state`, `schema_invalid`, `unknown_key`, `schema_conflict`, `secret_unlock_failed`, `rollback_failed`.
+`code` is stable and safe to match on: `invalid_value`, `encoding_failed`,
+`decoding_failed`, `persistence_failed`, `corrupt_state`, `schema_invalid`,
+`unknown_key`, `schema_conflict`, `secret_unlock_failed`,
+`unsupported_secret_envelope`, `insecure_secret_key_file`, and
+`rollback_failed`.
 
 ## Tests and smoke
 
@@ -336,7 +382,7 @@ The next release will:
 - make dynamic schema paths and destructive operations safe by construction;
 - make the runtime registry authoritative for every key;
 - align portable Linux, Homebrew, and GitHub Action distribution;
-- harden passphrase secrets and reset failure reporting;
+- ship the implemented v2 passphrase and key-file hardening;
 - rehearse installation from real release artifacts on clean hosts.
 
 The full evidence, blockers, and exit criteria live in [docs/release-readiness.md](docs/release-readiness.md).

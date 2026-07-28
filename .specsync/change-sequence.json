@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 49,
-  "id": "CHG-0049-make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113",
+  "sequence": 55,
+  "id": "CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r",
   "acknowledged_collisions": []
 }

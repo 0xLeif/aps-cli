@@ -43,7 +43,8 @@ extension StateStore {
     }
 
     @MainActor
-    public func set(name: String, value: String) throws {
+    @discardableResult
+    public func set(name: String, value: String) throws -> SchemaKeyEntry {
         try set(
             name: name,
             value: value,
@@ -67,6 +68,7 @@ extension StateStore {
 
     /// Storage seam used to prove the schema lock spans resolution and persistence.
     @MainActor
+    @discardableResult
     internal func set(
         name: String,
         value: String,
@@ -76,16 +78,18 @@ extension StateStore {
             String,
             UserSchemaDocument
         ) throws -> Void
-    ) throws {
+    ) throws -> SchemaKeyEntry {
         let root = stateRoot
-        try SchemaFileLock.withExclusiveLock(stateRoot: root) {
+        let entry = try SchemaFileLock.withExclusiveLock(stateRoot: root) {
             let schema = try UserSchema.loadOrMaterializeUnlocked(stateRoot: root)
             guard let entry = UserSchema.entry(named: name, in: schema) else {
                 throw APSError.unknownKey(name: name)
             }
             try storageOperation(entry, value, root, schema)
+            return entry
         }
         stats.recordMutation(key: name)
+        return entry
     }
 
     @MainActor
@@ -457,6 +461,17 @@ extension StateStore {
         guard let entry = UserSchema.entry(named: name, in: schema) else {
             throw APSError.unknownKey(name: name)
         }
+        if entry.storage == "EncryptedFile" {
+            try watchRegisteredEncryptedStore(
+                entry,
+                initialValue: entry.initial?.wireString ?? "",
+                pollInterval: pollInterval,
+                pollDeadline: pollDeadline,
+                shouldContinue: shouldContinue,
+                onChange: onChange
+            )
+            return
+        }
         var last = try DynamicKeyStorage.get(
             entry: entry,
             stateRoot: stateRoot,
@@ -474,6 +489,76 @@ extension StateStore {
             if current != last {
                 last = current
                 onChange(current)
+            }
+        }
+    }
+
+    private func watchRegisteredEncryptedStore(
+        _ entry: SchemaKeyEntry,
+        initialValue: String,
+        pollInterval: TimeInterval,
+        pollDeadline: Date?,
+        shouldContinue: () -> Bool,
+        onChange: (String) -> Void
+    ) throws {
+        let initialSnapshotStore = try DynamicKeyStorage.encryptedStore(
+            entry,
+            stateRoot: stateRoot
+        )
+        let watchStateRoot = initialSnapshotStore.canonicalStateRoot
+        var lastEnvelope = try initialSnapshotStore.encryptedSnapshot()
+        var session: SecretStore.EncryptedWatchSession?
+        var lastValue: String
+        if let snapshotData = lastEnvelope {
+            let initialDecryptStore = try DynamicKeyStorage.encryptedStore(
+                entry,
+                stateRoot: watchStateRoot
+            )
+            var activeSession = try initialDecryptStore.makeEncryptedWatchSession()
+            let opened = try initialDecryptStore.value(
+                forEncryptedSnapshot: snapshotData,
+                session: &activeSession
+            )
+            session = activeSession
+            lastValue = opened.value
+            lastEnvelope = opened.snapshot
+        } else {
+            lastValue = initialValue
+        }
+        onChange(lastValue)
+        let slice = max(pollInterval / 5.0, 0.05)
+
+        while shouldContinue() {
+            waitForWatchPoll(interval: slice, deadline: pollDeadline)
+            let snapshotStore = try DynamicKeyStorage.encryptedStore(
+                entry,
+                stateRoot: watchStateRoot
+            )
+            let currentEnvelope = try snapshotStore.encryptedSnapshot()
+            guard currentEnvelope != lastEnvelope else {
+                continue
+            }
+            let currentValue: String
+            if let currentEnvelope {
+                let decryptStore = try DynamicKeyStorage.encryptedStore(
+                    entry,
+                    stateRoot: watchStateRoot
+                )
+                var activeSession = try session ?? decryptStore.makeEncryptedWatchSession()
+                let opened = try decryptStore.value(
+                    forEncryptedSnapshot: currentEnvelope,
+                    session: &activeSession
+                )
+                session = activeSession
+                currentValue = opened.value
+                lastEnvelope = opened.snapshot
+            } else {
+                currentValue = initialValue
+                lastEnvelope = nil
+            }
+            if currentValue != lastValue {
+                lastValue = currentValue
+                onChange(currentValue)
             }
         }
     }

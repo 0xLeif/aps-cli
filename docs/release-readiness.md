@@ -2,17 +2,19 @@
 
 Status: **not ready to tag**
 
-Audited commit: `5a05e38a85975c4fba1aec2f916a1ab1764d52b8`
+Audit basis: current `origin/main` plus active issue #118 security hardening in
+SpecSync change `CHG-0050`.
 
 Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable installer Action, portable Linux packaging, dynamic schema behavior, concurrency fixes, and watch improvements.
 
 ## What is already strong
 
 - The fledge verification lane passes all seven steps.
-- 156 Swift tests pass, including four-worker isolation.
+- 213 Swift tests pass locally, including the issue #118 security regressions.
 - SpecSync passes with 2 specs, 0 errors, and 0 warnings.
 - macOS, Ubuntu, Linux smoke, Windows smoke, and Trust workflows run on main.
-- The repository has no active SpecSync changes after the latest archive housekeeping.
+- CHG-0050 is the only active SpecSync change and must be verified, accepted,
+  merged, and archived before the release tag.
 - Human, JSON, and JSONL output contracts are broadly exercised.
 
 Measured in-process source line coverage is 53.42%. Subprocess CLI tests are not attributed back to the instrumented test process, so that number understates command-path coverage. It still shows that registry, dynamic storage, command dispatch, and termination behavior need more direct tests.
@@ -69,15 +71,34 @@ Required outcome:
 
 ### 6. Harden passphrase secrets
 
-Passphrase mode derives its X25519 key using HKDF-SHA256 with fixed context. HKDF is not a password-hardening KDF and permits inexpensive offline guessing of low-entropy passphrases.
+Implemented for v1.1.0 by
+[#118](https://github.com/0xLeif/aps-cli/issues/118). Every new encrypted
+envelope is strict v2 and records `recipientMode`. Passphrase writes use a
+fresh random 16-byte salt and the public CryptoExtras scrypt implementation at
+`N=131072`, `r=8`, `p=1`, with 32 output bytes and approximately 128 MiB of
+memory per derivation. KDF metadata and cryptographic field bounds are checked
+before scrypt runs.
 
-Required outcome:
+Legacy key-file envelopes remain readable and upgrade on their next successful
+set. A successfully unlocked legacy passphrase envelope migrates once under
+`secret.store.lock`; wrong credentials do not migrate, and detected migration
+failure restores and verifies the exact legacy bytes. Recipient-mode mismatch
+never falls back or creates another key.
 
-- version the encrypted envelope;
-- use Argon2id or scrypt with a random per-store salt and documented parameters;
-- migrate or clearly reject legacy passphrase envelopes;
-- validate existing key-file ownership, type, and permissions;
-- propagate and verify secret reset failures.
+Passphrase derivation is cached only within one SecretStore operation.
+Encrypted watch compares complete envelope bytes before decryption, so unchanged
+polls do no KDF work. POSIX key-file access enforces current-user ownership,
+regular-file type, no-follow handles, and exact `0600`. Windows handle checks
+reject reparse and wrong-kind objects, require current-user ownership, and
+enforce a protected private DACL. Unsafe paths are not replaced or truncated.
+
+The stable error contract now distinguishes unsupported envelopes
+(`unsupported_secret_envelope`, exit 65), wrong credentials or mode
+(`secret_unlock_failed`, exit 69), and unprovable key-file privacy
+(`insecure_secret_key_file`, exit 77). Persistence and migration restoration
+failures retain `persistence_failed` and `rollback_failed` at exit 73.
+apple/swift-crypto is constrained to `4.0.0..<4.4.0` because 4.4+ raises its
+Swift tools floor to 6.1 while aps retains Swift 6.0.
 
 ## Release-candidate proof
 

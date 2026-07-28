@@ -43,12 +43,17 @@ Acceptance Criteria
 
 ### REQ-aps-cli-005
 
-`APSError` SHALL cover `invalidValue`, `encodingFailed`, `decodingFailed`, `persistenceFailed`, `secretUnlockFailed`, `corruptState`, `schemaInvalid`, `unknownKey`, and `schemaConflict`.
+`APSError` SHALL cover `invalidValue`, `encodingFailed`, `decodingFailed`,
+`persistenceFailed`, `secretUnlockFailed`, `unsupportedSecretEnvelope`,
+`insecureSecretKeyFile`, `corruptState`, `schemaInvalid`, `unknownKey`,
+`schemaConflict`, and `rollbackFailed`.
 
 Acceptance Criteria
 - Each case has an actionable `description`, stable `code`, and taxonomy `exitCode`.
 - `set note` surfaces `persistenceFailed` when the on-disk value does not match after write.
 - `corruptState` / `schemaInvalid` use exit 65; `unknownKey` / `schemaConflict` use exit 64.
+- `unsupportedSecretEnvelope` uses code `unsupported_secret_envelope` and exit 65.
+- `insecureSecretKeyFile` uses code `insecure_secret_key_file` and exit 77.
 
 ### REQ-aps-cli-010
 
@@ -142,26 +147,33 @@ file unchanged and surface `APSError.secretUnlockFailed`. Passphrase vs key-file
 mode remains stateful: a fresh or reset store seals with whichever recipient is
 active on first write.
 
-The encrypted-file SecretStore SHALL serialize fresh `set` key recovery or
-creation, sealing, atomic envelope persistence, and read-back verification
-through `secret.store.lock`. If no `secret.enc` exists, an invalid stale
-`secret.key` SHALL be removed before creating a replacement. Direct missing or
-invalid key access SHALL use `secret.key.lock`, while valid existing-key reads
-SHALL not require that lock. Passphrase-mode writes SHALL ignore stale
-`secret.key` paths. Existing-envelope SET SHALL preserve persistence failures
-from unreadable or missing envelopes while translating invalid-key failures to
-`secretUnlockFailed`. Fresh key-creation disk failures SHALL remain
+The encrypted-file SecretStore SHALL serialize fresh `set` key creation,
+sealing, atomic envelope persistence, and read-back verification through
+`secret.store.lock`. Every repair-capable key load for get, set, or watch SHALL
+use that same lock. Invalid key material SHALL never be deleted or replaced:
+fresh writes map it to `persistenceFailed`, while existing-envelope unlock maps
+it to `secretUnlockFailed`. Passphrase-mode writes SHALL ignore stale
+`secret.key` paths. Fresh key-creation disk failures SHALL remain
 `persistenceFailed`. When an envelope exists, unlock paths SHALL NOT create or
 truncate `secret.key`.
 
+On POSIX, SecretStore SHALL canonicalize a symlinked state root once, preserve
+safe owned root modes such as `0755`, and reject group- or other-writable roots
+without changing their permissions. Encrypted watch SHALL reload and revalidate
+key-file recipients for each changed snapshot while retaining passphrase state.
+CLI get SHALL perform one encrypted read, and successful encrypted set output
+SHALL not perform a redundant post-commit decrypt.
+
 Acceptance Criteria
-- `secret` round-trips set/get/reset with ciphertext at rest in `secret.enc`; the key file is mode 0600.
-- No Security.framework/Keychain imports; works on macOS and Linux.
+- `secret` round-trips set/get/reset with ciphertext at rest in `secret.enc`;
+  POSIX key files use exact mode `0600`.
+- No Security.framework/Keychain imports; works on macOS, Linux, and Windows.
 - Wrong passphrase on `get` fails with `APSError.secretUnlockFailed`; corrupt envelope fails with `APSError.decodingFailed`.
 - Wrong passphrase on `set` against an existing envelope fails with `secretUnlockFailed` and does not change ciphertext.
 - Passphrase entry is env-var based; an optional TTY getpass prompt exists when `APS_SECRET_USE_PASSPHRASE=1`.
 - Fresh and parallel SecretStore SET operations remain serialized and leave a decryptable envelope.
-- Invalid stale key material is recovered only when no envelope exists (including after empty TTY passphrase fallback).
+- Invalid stale key material is preserved byte-for-byte with a stable
+  operation-specific error.
 - Existing-envelope persistence failures remain `persistenceFailed`; invalid keys surface `secretUnlockFailed`.
 - Fresh key-creation write failures remain `persistenceFailed`; unlock never truncates an existing key path.
 
@@ -224,16 +236,16 @@ Acceptance Criteria
 
 ### REQ-aps-cli-026
 
-When no `secret.enc` envelope exists, a fresh SecretStore SET SHALL recover an
-invalid stale `secret.key` before creating replacement key material. The fresh
-SET operation SHALL remain serialized by `secret.store.lock`.
+When no `secret.enc` envelope exists, a fresh SecretStore SET SHALL create key
+material only when `secret.key` is absent. Invalid existing key material SHALL
+remain unchanged and fail as `persistenceFailed`. The fresh SET operation SHALL
+remain serialized by `secret.store.lock`.
 
 Acceptance Criteria
-- A partial `secret.key` does not make the first fresh SET fail with
-  `persistenceFailed`.
-- A successful recovery leaves a valid key and decryptable envelope.
-- A `secret.key` directory is never removed during recovery, and a corrupt
-  existing key with an envelope surfaces `secretUnlockFailed`.
+- A partial, malformed, or invalid `secret.key` is never removed or replaced.
+- An absent key path is exclusively created with a valid private key.
+- Invalid material without an envelope fails as `persistenceFailed`; invalid
+  material with an envelope fails as `secretUnlockFailed`.
 
 ### REQ-aps-cli-027
 
@@ -279,3 +291,57 @@ Acceptance Criteria
 - Mutation statistics count only keys whose reset postcondition succeeded.
 - Documentation limits transaction guarantees to errors detected before API
   return and does not claim crash or power-loss atomicity.
+
+### REQ-aps-cli-031
+
+Every key-file load that may repair or create key material SHALL serialize
+through `secret.store.lock`, including get, set, and changed watch snapshots.
+Key-file watch SHALL reload and revalidate the key for every changed envelope;
+unchanged polls SHALL perform no recipient work.
+
+On POSIX, SecretStore SHALL canonicalize the configured state root once,
+preserve safe owned directory modes such as searchable `0300` and shared-read
+`0755`, and reject group- or other-writable roots without changing their
+permissions. Permission-repair failures SHALL return
+`insecure_secret_key_file`; unrelated I/O failures retain their persistence
+mapping.
+
+CLI get SHALL perform one encrypted read. After SecretStore successfully
+persists and decrypt-verifies an encrypted set, CLI output SHALL use the
+verified submitted value without another decrypt.
+
+The v2 KDF wire keys remain `algorithm`, `salt`, `rounds`, `blockSize`,
+`parallelism`, and `outputByteCount`. Unsupported versions or recipient modes
+SHALL return `unsupported_secret_envelope`; malformed fields and KDF
+combinations SHALL return `decoding_failed`. Invalid existing key material
+SHALL never be truncated, replaced, or deleted.
+
+Acceptance Criteria
+- Get, set, and watch use one store lock for repair-capable key access.
+- Safe POSIX root modes are preserved; writable roots fail closed unchanged;
+  symlinked roots round-trip through one canonical target.
+- Changed key-file watch snapshots support coherent key/envelope rotation and
+  revalidate key privacy.
+- CLI get performs one decrypt and encrypted set output performs no
+  post-commit decrypt.
+- The full 235-test local lane and every hosted platform gate pass.
+
+### REQ-aps-cli-032
+
+A missing or null version 2 `recipientMode` SHALL return `decoding_failed`
+before KDF work. An unrecognized non-null recipient mode SHALL return
+`unsupported_secret_envelope`.
+
+POSIX key-file load and create SHALL revalidate exact `0600` mode through both
+descriptor and path immediately before accepting key material. A registered
+encrypted watch SHALL pin the canonical state-root target selected by its
+initial store for the watch lifetime while continuing descendant validation
+beneath that root.
+
+Acceptance Criteria
+- Missing and null version 2 modes perform zero KDF work and fail as malformed.
+- Unknown non-null recipient modes retain the unsupported-envelope error.
+- Post-read POSIX permission widening is rejected with exact bytes preserved.
+- Retargeting the configured state-root symlink cannot redirect a running
+  registered encrypted watch.
+- The full 238-test local lane and every hosted platform gate pass.

@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 33
+version: 37
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -111,6 +111,18 @@ and synchronize the default AppState dogfood surface before releasing the lock.
     adapter cache, reports no mutation for the failed key, and reports
     `rollbackFailed` if restoration cannot be proven. Bulk checkpoints are
     captured per key immediately before mutation.
+17. A successfully unlocked legacy passphrase envelope migrates once under
+    `secret.store.lock`; a wrong passphrase and a successfully rolled-back
+    migration preserve the exact legacy bytes.
+18. Legacy key-file envelopes read without mutation and upgrade to v2 only on
+    the next successful set.
+19. Passphrase derivation caching is scoped to one SecretStore operation and
+    one validated salt. Encrypted watch compares complete envelope bytes before
+    decryption and performs no KDF work for unchanged polls.
+20. Key-file reads, repair, and creation use validated native handles. POSIX
+    requires current-user ownership, regular-file type, no link following, and
+    exact `0600`; Windows requires a current-user owner SID, non-reparse disk
+    file, and protected private DACL.
 
 ## Behavioral Examples
 
@@ -147,10 +159,18 @@ preserve registry type and storage metadata, and include a timestamp field.
   conversion fails. Profile JSON parse failures surface as `APSError.invalidValue`.
 - Reset and purge persistence failures surface as `persistenceFailed`. If purge
   fails and schema restoration also fails, removal surfaces `rollbackFailed`.
+- Unsupported envelope version or mode surfaces `unsupportedSecretEnvelope`.
+  A malformed supported envelope surfaces `decodingFailed`.
+- Existing-envelope credential, recipient-mode, or invalid recipient-key
+  failures surface `secretUnlockFailed`.
+- An unsafe key-file handle surfaces `insecureSecretKeyFile`; the path remains
+  unchanged.
 
 ## Dependencies
 
 - AppState (`Application`, `State`, `StoredState`, `FileState`, `@AppDependency`)
+- SecretStore v2 recipient operations backed by apple/swift-crypto
+  `4.0.0..<4.4.0` and public CryptoExtras scrypt
 - Observation (`withObservationTracking`) for in-process watch delivery
 - Foundation (`UserDefaults`, `RunLoop` on Apple, `Thread.sleep` elsewhere, `JSONEncoder`)
 
@@ -187,3 +207,6 @@ preserve registry type and storage metadata, and include a timestamp field.
 | 2026-07-26 | CHG-0047-prevent-schema-controlled-paths-from-deleting-or-escaping-the-aps-state-root-for: Prevent schema-controlled paths from deleting or escaping the APS state root for issue 111 |
 | 2026-07-27 | CHG-0048-make-schema-json-authoritative-for-built-in-and-dynamic-key-names-for-issue-112: Make schema.json authoritative for built-in and dynamic key names for issue 112 |
 | 2026-07-27 | CHG-0049-make-reset-and-purge-transactional-and-truthfully-report-failures-for-issue-113: Make reset and purge transactional and truthfully report failures for issue 113 |
+| 2026-07-27 | CHG-0050-harden-passphrase-envelopes-and-existing-secret-key-validation-for-issue-118: Harden passphrase envelopes and existing secret-key validation for issue 118 |
+| 2026-07-28 | CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re: Finalize PR 128 review corrections for secure key lifecycle and CLI recipient reuse |
+| 2026-07-28 | CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r: Close final PR 128 review gaps for malformed recipient modes, POSIX permission races, and pinned encrypted watch roots |

@@ -256,3 +256,26 @@ Acceptance Criteria
   adapter-specific context that preserves the original synchronization error.
 - The default encrypted adapter is a no-op and runs before envelope deletion,
   so an injected adapter failure leaves the exact existing envelope untouched.
+
+### REQ-state-store-024
+
+A successful string-name `StateStore.set(name:value:)` SHALL return the exact
+`SchemaKeyEntry` resolved while the schema lock is held.
+
+Acceptance Criteria
+- The returned entry equals the resolved schema definition used for the
+  successful storage mutation.
+- Callers that ignore the return value remain source-compatible.
+
+### REQ-state-store-025
+
+Registered encrypted watch SHALL pin the canonical state-root target selected
+by its initial encrypted store for the watch lifetime. Each poll SHALL continue
+to reconstruct and validate the encrypted store beneath that pinned root so a
+configured root-symlink retarget cannot redirect the watch and descendant
+replacement remains detectable.
+
+Acceptance Criteria
+- A watch started through a root symlink emits only the initial target after
+  that symlink is retargeted.
+- Existing descendant-symlink replacement rejection remains covered.

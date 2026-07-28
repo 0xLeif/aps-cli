@@ -12,8 +12,26 @@
   path; `DynamicKeyStorage.resetProcessMemory()` between cases; parallel suite
   via `Scripts/test-parallel.sh`
 
-- Encrypted-file `secret` round-trip / wrong-passphrase `secretUnlockFailed` / corrupt envelope `decodingFailed`.
-- Encrypted-file `secret` parallel fresh writes share one atomically created `0600` key file.
+- Encrypted-file tests prove strict v2 mode metadata, fresh 16-byte passphrase
+  salts, fixed scrypt bounds, key-file KDF omission, and stable unsupported,
+  malformed, credential, mode-mismatch, and insecure-key errors.
+- Legacy passphrase fixtures prove successful one-way migration, wrong-password
+  byte preservation, exact rollback after replacement failure, and
+  `rollback_failed` when restoration cannot be proven.
+- Legacy key-file fixtures read without mutation and upgrade only on the next
+  successful set.
+- Counting-KDF tests prove one derivation per validated salt inside an operation
+  and no repeated scrypt or decrypt work for unchanged encrypted-watch polls.
+- Encrypted-file parallel fresh writes share one exclusively created private
+  key file.
+- POSIX key-file tests cover exact `0600`, safe handle-based repair, no-follow
+  symlink rejection, directories, FIFOs, hostile umask, exclusive-create races,
+  and refusal to regenerate unsafe paths.
+- Registered encrypted watch pins its initial canonical state-root target
+  across configured root-symlink retargeting while continuing descendant
+  validation beneath that root.
+- Windows key-file tests cover private create/load/remove, current-user DACL
+  repair and revalidation, and wrong-kind handle rejection.
 - Secret SET unlock-before-rewrite; parallel schema RMW under SchemaFileLock.
 - `resetAll` leaves user keys; `resetAllRegistered` clears them.
 - Slice `profileName` writes land in parent `profile` FileState.

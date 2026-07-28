@@ -824,7 +824,7 @@ enum DynamicKeyStorage {
         try store.set(value)
     }
 
-    private static func encryptedStore(
+    internal static func encryptedStore(
         _ entry: SchemaKeyEntry,
         stateRoot: String
     ) throws -> SecretStore {

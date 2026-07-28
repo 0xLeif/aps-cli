@@ -743,6 +743,17 @@ public final class StateStore {
         shouldContinue: () -> Bool = { true },
         onChange: (String) -> Void
     ) throws {
+        if key == .secret {
+            try watchEncryptedStore(
+                SecretStore(),
+                initialValue: "",
+                pollInterval: pollInterval,
+                pollDeadline: pollDeadline,
+                shouldContinue: shouldContinue,
+                onChange: onChange
+            )
+            return
+        }
         var last = try freshValue(key)
         onChange(last)
 
@@ -769,6 +780,60 @@ public final class StateStore {
                     }
                     break
                 }
+            }
+        }
+    }
+
+    /// Watches encrypted bytes and decrypts only after the envelope changes.
+    ///
+    /// This prevents unchanged polling from turning a memory-hard password KDF
+    /// into a continuous local denial of service.
+    internal func watchEncryptedStore(
+        _ store: SecretStore,
+        initialValue: String,
+        pollInterval: TimeInterval,
+        pollDeadline: Date?,
+        shouldContinue: () -> Bool,
+        onChange: (String) -> Void
+    ) throws {
+        var lastEnvelope = try store.encryptedSnapshot()
+        var session: SecretStore.EncryptedWatchSession?
+        var lastValue: String
+        if let snapshotData = lastEnvelope {
+            var activeSession = try store.makeEncryptedWatchSession()
+            let opened = try store.value(forEncryptedSnapshot: snapshotData, session: &activeSession)
+            session = activeSession
+            lastValue = opened.value
+            lastEnvelope = opened.snapshot
+        } else {
+            lastValue = initialValue
+        }
+        onChange(lastValue)
+        let slice = max(pollInterval / 5.0, 0.05)
+
+        while shouldContinue() {
+            waitForWatchPoll(interval: slice, deadline: pollDeadline)
+            let currentEnvelope = try store.encryptedSnapshot()
+            guard currentEnvelope != lastEnvelope else {
+                continue
+            }
+            let currentValue: String
+            if let currentEnvelope {
+                var activeSession = try session ?? store.makeEncryptedWatchSession()
+                let opened = try store.value(
+                    forEncryptedSnapshot: currentEnvelope,
+                    session: &activeSession
+                )
+                session = activeSession
+                currentValue = opened.value
+                lastEnvelope = opened.snapshot
+            } else {
+                currentValue = initialValue
+                lastEnvelope = nil
+            }
+            if currentValue != lastValue {
+                lastValue = currentValue
+                onChange(currentValue)
             }
         }
     }
