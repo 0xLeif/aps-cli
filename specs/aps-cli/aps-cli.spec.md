@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 42
+version: 43
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -67,7 +67,7 @@ self-describes that contract for agents through the `schema` command.
 | `profileName` | String Slice over `ProfileDocument.name`. |
 | `UserSchemaDocument` | On-disk schema.json document model. |
 | `SchemaKeyEntry` | One registry key entry (name/type/storage/initial/path/slice). |
-| `SchemaJSON` | Recursive, lossless JSON value shared by schema initials, object fields, and machine output. |
+| `SchemaJSON` | Recursive structural JSON value shared by schema initials, object fields, and machine output. |
 | `UserSchema` | Load / materialize / validate / write / hash helpers for schema.json. |
 | `SchemaFileLock` | Exclusive cross-process lock helper; Windows retries only lock acquisition and propagates protected-body errors unchanged. |
 | `withExclusiveLock` | Run a schema mutation body under the exclusive lock. |
@@ -314,3 +314,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-28 | CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re: Finalize PR 128 review corrections for secure key lifecycle and CLI recipient reuse |
 | 2026-07-28 | CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r: Close final PR 128 review gaps for malformed recipient modes, POSIX permission races, and pinned encrypted watch roots |
 | 2026-07-28 | CHG-0051-enforce-recursive-dynamic-object-and-slice-typing-and-restore-schema-metadata-fo: Enforce recursive dynamic object and Slice typing and restore schema metadata for issue 114 |
+| 2026-07-28 | CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a: Close final PR 129 review gaps for recursive JSON kinds, nonfinite validation, and corrupt StoredState reads |

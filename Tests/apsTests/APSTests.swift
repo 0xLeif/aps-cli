@@ -1492,6 +1492,14 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(event["type"] as? String, "object")
         XCTAssertNotNil(event["properties"])
         XCTAssertNotNil(event["required"])
+
+        let recursiveType = "null | boolean | integer | finite number | string | array | object (recursive)"
+        for payloadName in ["KeyValuePayload", "WatchEvent", "ResetPayload"] {
+            let payload = try XCTUnwrap(payloads[payloadName] as? [String: Any])
+            let properties = try XCTUnwrap(payload["properties"] as? [String: Any])
+            let value = try XCTUnwrap(properties["value"] as? [String: Any])
+            XCTAssertEqual(value["type"] as? String, recursiveType)
+        }
     }
 
     func testUserSchemaMaterializeAndKeyAdd() async throws {
@@ -2948,6 +2956,44 @@ final class APSTests: XCTestCase {
 
         try DynamicKeyStorage.reset(entry: entry, stateRoot: "/tmp", schema: schema)
         XCTAssertEqual(mockDefaults.object(forKey: "aps.user.testStoredStateKey") as? String, "initial_val")
+    }
+
+    @MainActor
+    internal func testStoredStatePresentUndecodableCanonicalValueIsCorrupt() throws {
+        let defaults = try XCTUnwrap(hermeticDefaults)
+        let entry = SchemaKeyEntry(
+            name: "corruptCounter",
+            type: "Int",
+            storage: "StoredState",
+            initial: .int(7)
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        let corrupt = try JSONEncoder().encode("not-an-int")
+        defaults.set(corrupt, forKey: "aps.user.corruptCounter")
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+        XCTAssertEqual(defaults.object(forKey: "aps.user.corruptCounter") as? Data, corrupt)
+    }
+
+    @MainActor
+    internal func testStoredStatePresentUndecodableLegacyFlagIsCorrupt() throws {
+        let defaults = try XCTUnwrap(hermeticDefaults)
+        let entry = try XCTUnwrap(UserSchema.defaultDocument().keys.first { $0.name == "flag" })
+        let schema = UserSchemaDocument(keys: [entry])
+        let corrupt = try JSONEncoder().encode("not-a-bool")
+        defaults.set(corrupt, forKey: "App/aps.flag")
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+        XCTAssertNil(defaults.object(forKey: "aps.user.flag"))
+        XCTAssertEqual(defaults.object(forKey: "App/aps.flag") as? Data, corrupt)
     }
 
 }

@@ -291,7 +291,8 @@ state-root precedence, every registered key and command, payload shapes, and the
 - When piped: `keys` is byte-stable TSV with no ANSI escapes, and all JSON is single-line compact.
 - Object values remain JSON objects in machine output. They are never
   stringified, and recursively nested arrays, objects, nulls, and numeric
-  values retain their JSON kinds.
+  values retain their structure and numeric value. Equivalent integral JSON
+  spellings such as `1`, `1.0`, and `1e0` may canonicalize to `1`.
 - `watch --json` is an alias for `--jsonl`; `keys --quiet` prints key names only (handy for `xargs aps reset`).
 - Shell completions: `aps --generate-completion-script bash|zsh|fish` (install into your shell's completion directory).
 

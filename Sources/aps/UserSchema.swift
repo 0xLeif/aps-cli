@@ -64,7 +64,9 @@ public struct SchemaKeyEntry: Codable, Equatable, Sendable {
     }
 }
 
-/// Lossless JSON value shared by `schema.json` and machine-readable CLI payloads.
+/// Recursive structural JSON value shared by `schema.json` and machine-readable CLI payloads.
+///
+/// Equivalent integral number spellings may canonicalize to `int` after Codable decoding.
 public enum SchemaJSON: Codable, Equatable, Sendable {
     case null
     case bool(Bool)
@@ -214,6 +216,9 @@ public enum SchemaJSON: Codable, Equatable, Sendable {
     ///
     /// Declared fields are required and recursively type-checked. Undeclared fields are preserved.
     public func matches(type: String, objectShape: [String: String]? = nil) -> Bool {
+        guard containsOnlyFiniteNumbers else {
+            return false
+        }
         switch (type, self) {
         case ("null", .null), ("Bool", .bool), ("Int", .int), ("String", .string):
             return true
@@ -233,6 +238,19 @@ public enum SchemaJSON: Codable, Equatable, Sendable {
             }
         default:
             return false
+        }
+    }
+
+    private var containsOnlyFiniteNumbers: Bool {
+        switch self {
+        case .double(let value):
+            return value.isFinite
+        case .array(let values):
+            return values.allSatisfy(\.containsOnlyFiniteNumbers)
+        case .object(let object):
+            return object.values.allSatisfy(\.containsOnlyFiniteNumbers)
+        case .null, .bool, .int, .string:
+            return true
         }
     }
 }

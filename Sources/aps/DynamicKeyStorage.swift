@@ -62,7 +62,7 @@ enum DynamicKeyStorage {
         case "State":
             value = memoryGet(entry)
         case "StoredState":
-            value = storedGet(entry)
+            value = try storedGet(entry)
         case "FileState":
             value = try fileGet(entry, stateRoot: stateRoot)
         case "EncryptedFile":
@@ -409,10 +409,14 @@ enum DynamicKeyStorage {
         return object as? String
     }
 
-    private static func storedGet(_ entry: SchemaKeyEntry) -> String {
-        storedPersistedValue(entry, in: userDefaults)
-            ?? entry.initial?.wireString
-            ?? storedFallbackValue(entry)
+    private static func storedGet(_ entry: SchemaKeyEntry) throws -> String {
+        guard let object = storedObject(entry, in: userDefaults) else {
+            return entry.initial?.wireString ?? storedFallbackValue(entry)
+        }
+        guard let value = decodeStoredValue(entry, object: object) else {
+            throw APSError.corruptState(key: entry.name)
+        }
+        return value
     }
 
     private static func resetStoredValue(
@@ -522,19 +526,29 @@ enum DynamicKeyStorage {
         _ entry: SchemaKeyEntry,
         in store: any UserDefaultsManaging
     ) -> String? {
+        guard let object = storedObject(entry, in: store) else {
+            return nil
+        }
+        return decodeStoredValue(entry, object: object)
+    }
+
+    private static func decodeStoredValue(
+        _ entry: SchemaKeyEntry,
+        object: Any
+    ) -> String? {
         switch entry.type {
         case "Int":
-            if let object = storedObject(entry, in: store), let intValue = decodeStoredInt(object) {
+            if let intValue = decodeStoredInt(object) {
                 return String(intValue)
             }
             return nil
         case "Bool":
-            if let object = storedObject(entry, in: store), let boolValue = decodeStoredBool(object) {
+            if let boolValue = decodeStoredBool(object) {
                 return boolValue ? "true" : "false"
             }
             return nil
         default:
-            if let object = storedObject(entry, in: store), let stringValue = decodeStoredString(object) {
+            if let stringValue = decodeStoredString(object) {
                 return stringValue
             }
             return nil

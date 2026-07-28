@@ -82,6 +82,11 @@
   corrupt state while preserving valid undeclared fields.
 - SchemaJSON tests cover null, Bool, Int, finite Double, String, array, and
   nested object Codable and wire round trips.
+- StoredState read tests distinguish absence from present undecodable canonical
+  or legacy objects: absence uses the initial, while corruption fails without
+  changing the stored object.
+- Recursive validation rejects nonfinite doubles nested in arrays and
+  undeclared open-object extensions.
 - Staged deletion restores FileState and secret envelope data when
   postcondition inspection fails.
 - Staged deletion requires both the original and staging leaves to be absent

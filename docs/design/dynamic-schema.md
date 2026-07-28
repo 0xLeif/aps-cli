@@ -184,7 +184,7 @@ Replace compile-time-only dispatch with a loaded registry:
 | Storage | Adapter idea |
 |---------|----------------|
 | `State` | Process-local map in `Application` / in-memory box keyed by name |
-| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; writes synchronize, type-check the canonical object, and restore its exact prior value after detected failure; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
+| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; writes synchronize, type-check the canonical object, and restore its exact prior value after detected failure; absent data uses the schema initial, while present undecodable data fails as `corrupt_state`; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
 | `FileState` | JSON file at `path` (string or object document) |
 | `EncryptedFile` | Reuse #35 envelope helpers with configurable filename |
 | `Slice` | Read/write parent object field |
@@ -314,6 +314,10 @@ Top-level registered key types remain intentionally small:
 Object values use a recursive structural representation: null, Bool, Int,
 finite Double, String, array, or object. Arrays, nulls, and doubles are not
 top-level registered key types; they are supported inside object values.
+Equivalent integral JSON spellings such as `1`, `1.0`, and `1e0` may
+canonicalize to Int because JSON and Foundation Codable do not expose a stable
+lexical numeric subtype. Numeric value and recursive structure remain stable.
+Nonfinite doubles are rejected at every recursive depth.
 Enums, timestamps, and a general JSON Schema engine remain deferred.
 
 ### 7. Migration path for demo keys

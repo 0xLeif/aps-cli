@@ -262,7 +262,9 @@ internal enum Schema {
     }
 
     private static func payloadNodes() -> [String: Node] {
-        let jsonValue = Node.prim("string | integer | boolean | object")
+        let jsonValue = Node.prim(
+            "null | boolean | integer | finite number | string | array | object (recursive)"
+        )
         let resetFailure = Node.obj([
             prop("key", .prim("string")),
             prop("code", .prim("string")),

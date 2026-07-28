@@ -18,12 +18,68 @@ internal final class DynamicObjectTypingTests: XCTestCase {
         XCTAssertEqual(decoded, value)
     }
 
+    internal func testIntegralFloatingJSONCanonicalizesWithoutChangingNumericValue() throws {
+        let value = SchemaJSON.object([
+            "count": .int(1),
+            "ratio": .double(1.0),
+        ])
+
+        let data = try JSONEncoder().encode(value)
+        let decoded = try JSONDecoder().decode(SchemaJSON.self, from: data)
+
+        XCTAssertEqual(
+            decoded,
+            .object([
+                "count": .int(1),
+                "ratio": .int(1),
+            ])
+        )
+    }
+
     internal func testNonFiniteJSONNumberCannotProduceInvalidWireJSON() {
         let value = SchemaJSON.double(.infinity)
 
         XCTAssertFalse(value.matches(type: "Double"))
         XCTAssertEqual(value.wireString, "null")
         XCTAssertThrowsError(try JSONEncoder().encode(value))
+    }
+
+    internal func testSchemaRejectsNonFiniteNumberInsideNestedArray() {
+        let document = UserSchemaDocument(keys: [
+            SchemaKeyEntry(
+                name: "settings",
+                type: "object",
+                storage: "FileState",
+                initial: .object([
+                    "name": .string("agent"),
+                    "nested": .array([
+                        .object(["ratio": .double(.infinity)]),
+                    ]),
+                ]),
+                path: "settings.json",
+                objectShape: ["name": "String"]
+            ),
+        ])
+
+        XCTAssertThrowsError(try UserSchema.validate(document))
+    }
+
+    internal func testSchemaRejectsNonFiniteNumberInOpenObjectExtension() {
+        let document = UserSchemaDocument(keys: [
+            SchemaKeyEntry(
+                name: "settings",
+                type: "object",
+                storage: "FileState",
+                initial: .object([
+                    "name": .string("agent"),
+                    "extension": .object(["ratio": .double(.nan)]),
+                ]),
+                path: "settings.json",
+                objectShape: ["name": "String"]
+            ),
+        ])
+
+        XCTAssertThrowsError(try UserSchema.validate(document))
     }
 
     internal func testCLIOutputPreservesArbitraryObjectAndExtraFields() throws {

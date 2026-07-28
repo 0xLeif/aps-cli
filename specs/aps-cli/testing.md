@@ -59,6 +59,9 @@
   metadata, watch, dump, reset scope, and typed output use `SchemaKeyEntry`.
 - Recursive JSON: Codable and wire round trips cover null, Bool, Int, finite
   Double, String, arrays, nested objects, and preservation of undeclared fields.
+- Recursive-value tests document integral numeric canonicalization, reject
+  nonfinite doubles at every array or object depth, and assert that schema
+  version 6 advertises every supported recursive JSON kind.
 - Open object shapes: every declared field is required and type-checked;
   malformed or scalar FileState object data fails loudly without mutation.
 - Key-add CLI tests cover repeatable `--field NAME=TYPE`, malformed and
