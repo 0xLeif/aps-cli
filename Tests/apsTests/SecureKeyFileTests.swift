@@ -68,6 +68,34 @@ internal final class SecureKeyFileTests: XCTestCase {
     }
     #endif
 
+    internal func testLoadRejectsPathReplacementAfterReading() throws {
+        let fixture = try makeFixture()
+        defer { try? FileManager.default.removeItem(at: fixture.directory) }
+        let original = keyData(15)
+        let replacement = keyData(16)
+        let displaced = fixture.directory.appendingPathComponent("displaced-after-read")
+        try original.write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o600)), 0)
+        let filePath = fixture.file.path
+        let displacedPath = displaced.path
+        let secureFile = SecureKeyFile(
+            path: filePath,
+            raceHooks: SecureKeyFileRaceHooks(
+                beforeLoadPathVerification: {
+                    _ = rename(filePath, displacedPath)
+                    _ = FileManager.default.createFile(atPath: filePath, contents: replacement)
+                    _ = chmod(filePath, mode_t(0o600))
+                }
+            )
+        )
+
+        XCTAssertThrowsError(try secureFile.load()) { error in
+            XCTAssertEqual(error as? SecureKeyFileError, .securityUnproven)
+        }
+        XCTAssertEqual(try Data(contentsOf: displaced), original)
+        XCTAssertEqual(try Data(contentsOf: fixture.file), replacement)
+    }
+
     internal func testLoadRepairsOwnedParentDirectoryPermissions() throws {
         let fixture = try makeFixture()
         defer { try? FileManager.default.removeItem(at: fixture.directory) }
@@ -153,6 +181,48 @@ internal final class SecureKeyFileTests: XCTestCase {
         var status = stat()
         XCTAssertEqual(lstat(fixture.file.path, &status), 0)
         XCTAssertEqual(status.st_mode & mode_t(S_IFMT), mode_t(S_IFIFO))
+    }
+
+    internal func testLoadRejectsSocketAsUnsafeFileType() throws {
+        let directory = URL(fileURLWithPath: "/private/tmp/a\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: false)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let socketPath = directory.appendingPathComponent("key").path
+        #if canImport(Glibc)
+        let socketType = Int32(SOCK_STREAM.rawValue)
+        #else
+        let socketType = SOCK_STREAM
+        #endif
+        let descriptor = socket(AF_UNIX, socketType, 0)
+        XCTAssertGreaterThanOrEqual(descriptor, 0)
+        defer { _ = close(descriptor) }
+        var address = sockaddr_un()
+        address.sun_family = sa_family_t(AF_UNIX)
+        let pathBytes = Array(socketPath.utf8CString)
+        let copied = withUnsafeMutableBytes(of: &address.sun_path) { destination -> Bool in
+            guard pathBytes.count <= destination.count else {
+                return false
+            }
+            pathBytes.withUnsafeBytes { source in
+                destination.copyBytes(from: source)
+            }
+            return true
+        }
+        XCTAssertTrue(copied)
+        let bindResult = withUnsafePointer(to: &address) { pointer in
+            pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) {
+                #if canImport(Glibc)
+                Glibc.bind(descriptor, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
+                #else
+                Darwin.bind(descriptor, $0, socklen_t(MemoryLayout<sockaddr_un>.size))
+                #endif
+            }
+        }
+        XCTAssertEqual(bindResult, 0)
+
+        XCTAssertThrowsError(try SecureKeyFile(path: socketPath).load()) { error in
+            XCTAssertEqual(error as? SecureKeyFileError, .unsafeFileType)
+        }
     }
 
     internal func testCreateUses0600UnderHostileUmask() throws {
@@ -414,6 +484,44 @@ internal final class SecureKeyFileTests: XCTestCase {
         XCTAssertEqual(try secureFile.load(), expected)
     }
 
+    internal func testWindowsLoadRepairsACLThatBlocksDataRead() throws {
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-key-repair-read-\(UUID().uuidString)")
+        let expected = Data(repeating: 4, count: SecureKeyFile.expectedByteCount)
+        let secureFile = SecureKeyFile(path: file.path)
+        try secureFile.create(expected)
+        try makeWindowsDACLRepairOnly(file)
+        defer { try? FileManager.default.removeItem(at: file) }
+
+        XCTAssertEqual(try secureFile.load(), expected)
+    }
+
+    internal func testWindowsLoadSharesExistingKeyForConcurrentReaders() throws {
+        let file = FileManager.default.temporaryDirectory
+            .appendingPathComponent("aps-key-concurrent-read-\(UUID().uuidString)")
+        let expected = Data(repeating: 5, count: SecureKeyFile.expectedByteCount)
+        let secureFile = SecureKeyFile(path: file.path)
+        try secureFile.create(expected)
+        defer { try? FileManager.default.removeItem(at: file) }
+        let heldReadHandle = file.path.withCString(encodedAs: UTF16.self) { pathPointer in
+            CreateFileW(
+                pathPointer,
+                DWORD(GENERIC_READ) | DWORD(READ_CONTROL),
+                DWORD(FILE_SHARE_READ) | DWORD(FILE_SHARE_WRITE) | DWORD(FILE_SHARE_DELETE),
+                nil,
+                DWORD(OPEN_EXISTING),
+                DWORD(FILE_ATTRIBUTE_NORMAL),
+                nil
+            )
+        }
+        guard heldReadHandle != INVALID_HANDLE_VALUE, let heldReadHandle else {
+            throw CocoaError(.fileReadUnknown)
+        }
+        defer { _ = CloseHandle(heldReadHandle) }
+
+        XCTAssertEqual(try secureFile.load(), expected)
+    }
+
     internal func testWindowsLoadRejectsOversizedFileBeforeReading() throws {
         let file = FileManager.default.temporaryDirectory
             .appendingPathComponent("aps-key-oversized-\(UUID().uuidString)")
@@ -475,6 +583,97 @@ internal final class SecureKeyFileTests: XCTestCase {
         guard result == DWORD(ERROR_SUCCESS) else {
             throw CocoaError(.fileWriteUnknown)
         }
+    }
+
+    private func makeWindowsDACLRepairOnly(_ file: URL) throws {
+        try withCurrentWindowsUserSID { userSID in
+            let sidLength = GetLengthSid(userSID)
+            let aclSize = MemoryLayout<ACL>.size
+                + MemoryLayout<ACCESS_ALLOWED_ACE>.size
+                - MemoryLayout<DWORD>.size
+                + Int(sidLength)
+            let aclBuffer = UnsafeMutableRawPointer.allocate(
+                byteCount: aclSize,
+                alignment: MemoryLayout<ACL>.alignment
+            )
+            defer { aclBuffer.deallocate() }
+            let acl = aclBuffer.bindMemory(to: ACL.self, capacity: 1)
+            guard InitializeAcl(acl, DWORD(aclSize), DWORD(ACL_REVISION)),
+                  AddAccessAllowedAceEx(
+                      acl,
+                      DWORD(ACL_REVISION),
+                      0,
+                      DWORD(READ_CONTROL) | DWORD(WRITE_DAC),
+                      userSID
+                  ) else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            let handle = file.path.withCString(encodedAs: UTF16.self) { pathPointer in
+                CreateFileW(
+                    pathPointer,
+                    DWORD(READ_CONTROL) | DWORD(WRITE_DAC),
+                    DWORD(FILE_SHARE_READ) | DWORD(FILE_SHARE_WRITE) | DWORD(FILE_SHARE_DELETE),
+                    nil,
+                    DWORD(OPEN_EXISTING),
+                    DWORD(FILE_ATTRIBUTE_NORMAL),
+                    nil
+                )
+            }
+            guard handle != INVALID_HANDLE_VALUE, let handle else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+            defer { _ = CloseHandle(handle) }
+            let result = SetSecurityInfo(
+                handle,
+                SE_FILE_OBJECT,
+                SECURITY_INFORMATION(
+                    UInt32(bitPattern: DACL_SECURITY_INFORMATION)
+                        | UInt32(PROTECTED_DACL_SECURITY_INFORMATION)
+                ),
+                nil,
+                nil,
+                acl,
+                nil
+            )
+            guard result == DWORD(ERROR_SUCCESS) else {
+                throw CocoaError(.fileWriteUnknown)
+            }
+        }
+    }
+
+    private func withCurrentWindowsUserSID<Output>(
+        _ body: (PSID) throws -> Output
+    ) throws -> Output {
+        var token: HANDLE?
+        guard OpenProcessToken(GetCurrentProcess(), DWORD(TOKEN_QUERY), &token),
+              let token else {
+            throw CocoaError(.fileReadUnknown)
+        }
+        defer { _ = CloseHandle(token) }
+        var requiredLength: DWORD = 0
+        _ = GetTokenInformation(token, TokenUser, nil, 0, &requiredLength)
+        guard requiredLength > 0 else {
+            throw CocoaError(.fileReadUnknown)
+        }
+        let buffer = UnsafeMutableRawPointer.allocate(
+            byteCount: Int(requiredLength),
+            alignment: MemoryLayout<TOKEN_USER>.alignment
+        )
+        defer { buffer.deallocate() }
+        guard GetTokenInformation(
+            token,
+            TokenUser,
+            buffer,
+            requiredLength,
+            &requiredLength
+        ) else {
+            throw CocoaError(.fileReadUnknown)
+        }
+        let tokenUser = buffer.bindMemory(to: TOKEN_USER.self, capacity: 1)
+        guard IsValidSid(tokenUser.pointee.User.Sid) else {
+            throw CocoaError(.fileReadUnknown)
+        }
+        return try body(tokenUser.pointee.User.Sid)
     }
     #endif
 }

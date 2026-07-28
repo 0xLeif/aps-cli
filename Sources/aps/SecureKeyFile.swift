@@ -36,15 +36,18 @@ internal enum SecureKeyFileError: Error, Equatable, Sendable {
 /// Test-only synchronization points for deterministic pathname race coverage.
 internal struct SecureKeyFileRaceHooks: Sendable {
     internal let beforeCreatePathVerification: @Sendable () -> Void
+    internal let beforeLoadPathVerification: @Sendable () -> Void
     internal let beforeUnreadableQuarantineRename: @Sendable () -> Void
     internal let beforeUnreadablePermissionRepair: @Sendable () throws -> Void
 
     internal init(
         beforeCreatePathVerification: @escaping @Sendable () -> Void = {},
+        beforeLoadPathVerification: @escaping @Sendable () -> Void = {},
         beforeUnreadableQuarantineRename: @escaping @Sendable () -> Void = {},
         beforeUnreadablePermissionRepair: @escaping @Sendable () throws -> Void = {}
     ) {
         self.beforeCreatePathVerification = beforeCreatePathVerification
+        self.beforeLoadPathVerification = beforeLoadPathVerification
         self.beforeUnreadableQuarantineRename = beforeUnreadableQuarantineRename
         self.beforeUnreadablePermissionRepair = beforeUnreadablePermissionRepair
     }
@@ -109,7 +112,14 @@ internal extension SecureKeyFile {
 
             try validateAndRepairPOSIX(descriptor)
             try validateSizePOSIX(descriptor)
-            return try readAllPOSIX(descriptor)
+            let data = try readAllPOSIX(descriptor)
+            raceHooks.beforeLoadPathVerification()
+            try validatePathIdentityPOSIX(
+                parentDescriptor: parentDescriptor,
+                fileName: fileName,
+                descriptor: descriptor
+            )
+            return data
         }
     }
 
@@ -131,14 +141,34 @@ internal extension SecureKeyFile {
         if errno == ELOOP {
             throw SecureKeyFileError.unsafeFileType
         }
-        guard errno == EACCES else {
-            throw posixError(operation: "openat")
+        let openError = errno
+        guard openError == EACCES else {
+            try classifyUnopenablePOSIX(
+                parentDescriptor: parentDescriptor,
+                fileName: fileName,
+                operation: "openat",
+                code: openError
+            )
         }
 
         return try repairAndOpenUnreadablePOSIX(
             parentDescriptor: parentDescriptor,
             fileName: fileName
         )
+    }
+
+    private func classifyUnopenablePOSIX(
+        parentDescriptor: Int32,
+        fileName: String,
+        operation: String,
+        code: Int32
+    ) throws -> Never {
+        var status = stat()
+        if fstatat(parentDescriptor, fileName, &status, AT_SYMLINK_NOFOLLOW) == 0,
+           status.st_mode & mode_t(S_IFMT) != mode_t(S_IFREG) {
+            throw SecureKeyFileError.unsafeFileType
+        }
+        throw SecureKeyFileError.io(operation: operation, code: code)
     }
 
     private func repairAndOpenUnreadablePOSIX(
@@ -622,21 +652,43 @@ internal extension SecureKeyFile {
     private static let readAccess: DWORD = DWORD(GENERIC_READ)
     private static let writeAccess: DWORD = DWORD(GENERIC_WRITE)
     private static let shareNone: DWORD = 0
+    private static let shareExistingReads: DWORD = DWORD(FILE_SHARE_READ)
     private static let openReparsePoint: DWORD = DWORD(FILE_FLAG_OPEN_REPARSE_POINT)
         | DWORD(FILE_FLAG_BACKUP_SEMANTICS)
 
     private func loadWindows() throws -> Data? {
-        let handle = try openWindows(
-            access: Self.readAccess | DWORD(READ_CONTROL) | DWORD(WRITE_DAC),
-            disposition: DWORD(OPEN_EXISTING)
+        let repairHandle = try openWindows(
+            access: DWORD(READ_CONTROL) | DWORD(WRITE_DAC),
+            disposition: DWORD(OPEN_EXISTING),
+            shareMode: Self.shareExistingReads
         )
-        guard let handle else {
+        guard let repairHandle else {
             return nil
         }
-        defer { _ = CloseHandle(handle) }
-        try validateAndRepairWindows(handle)
-        try validateSizeWindows(handle)
-        return try readAllWindows(handle)
+        let expectedIdentity: WindowsFileIdentity
+        do {
+            try validateAndRepairWindows(repairHandle)
+            expectedIdentity = try windowsIdentity(repairHandle)
+        } catch {
+            _ = CloseHandle(repairHandle)
+            throw error
+        }
+        _ = CloseHandle(repairHandle)
+
+        guard let readHandle = try openWindows(
+            access: Self.readAccess | DWORD(READ_CONTROL),
+            disposition: DWORD(OPEN_EXISTING),
+            shareMode: Self.shareExistingReads
+        ) else {
+            throw SecureKeyFileError.securityUnproven
+        }
+        defer { _ = CloseHandle(readHandle) }
+        try validateWindowsSecurity(readHandle)
+        guard try windowsIdentity(readHandle) == expectedIdentity else {
+            throw SecureKeyFileError.securityUnproven
+        }
+        try validateSizeWindows(readHandle)
+        return try readAllWindows(readHandle)
     }
 
     private func createWindows(_ data: Data) throws {
@@ -684,13 +736,14 @@ internal extension SecureKeyFile {
 
     private func openWindows(
         access: DWORD,
-        disposition: DWORD
+        disposition: DWORD,
+        shareMode: DWORD
     ) throws -> HANDLE? {
         let handle = path.withCString(encodedAs: UTF16.self) { pathPointer in
             CreateFileW(
                 pathPointer,
                 access,
-                Self.shareNone,
+                shareMode,
                 nil,
                 disposition,
                 Self.openReparsePoint,
@@ -708,6 +761,24 @@ internal extension SecureKeyFile {
             throw SecureKeyFileError.io(operation: "CreateFileW", code: Int32(bitPattern: code))
         }
         return handle
+    }
+
+    private func windowsIdentity(_ handle: HANDLE) throws -> WindowsFileIdentity {
+        var information = BY_HANDLE_FILE_INFORMATION()
+        guard GetFileInformationByHandle(handle, &information) else {
+            throw windowsError(operation: "GetFileInformationByHandle-identity")
+        }
+        return WindowsFileIdentity(
+            volumeSerialNumber: information.dwVolumeSerialNumber,
+            fileIndexHigh: information.nFileIndexHigh,
+            fileIndexLow: information.nFileIndexLow
+        )
+    }
+
+    private struct WindowsFileIdentity: Equatable, Sendable {
+        private let volumeSerialNumber: DWORD
+        private let fileIndexHigh: DWORD
+        private let fileIndexLow: DWORD
     }
 
     private func createWindowsHandle(

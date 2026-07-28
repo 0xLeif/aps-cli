@@ -167,6 +167,8 @@ public struct SecretStore: Sendable {
     }
 
     private struct DuplicateKeyJSONValidator {
+        private static let maximumNestingDepth = 32
+
         private let bytes: [UInt8]
         private var index: Int = 0
 
@@ -176,22 +178,28 @@ public struct SecretStore: Sendable {
 
         fileprivate mutating func validate() throws {
             skipWhitespace()
-            try parseValue()
+            try parseValue(depth: 0)
             skipWhitespace()
             guard index == bytes.count else {
                 throw APSError.decodingFailed
             }
         }
 
-        private mutating func parseValue() throws {
+        private mutating func parseValue(depth: Int) throws {
             guard index < bytes.count else {
                 throw APSError.decodingFailed
             }
             switch bytes[index] {
             case 0x7B:
-                try parseObject()
+                guard depth < Self.maximumNestingDepth else {
+                    throw APSError.decodingFailed
+                }
+                try parseObject(depth: depth)
             case 0x5B:
-                try parseArray()
+                guard depth < Self.maximumNestingDepth else {
+                    throw APSError.decodingFailed
+                }
+                try parseArray(depth: depth)
             case 0x22:
                 _ = try parseString()
             default:
@@ -199,7 +207,7 @@ public struct SecretStore: Sendable {
             }
         }
 
-        private mutating func parseObject() throws {
+        private mutating func parseObject(depth: Int) throws {
             index += 1
             skipWhitespace()
             if consume(0x7D) {
@@ -216,7 +224,7 @@ public struct SecretStore: Sendable {
                     throw APSError.decodingFailed
                 }
                 skipWhitespace()
-                try parseValue()
+                try parseValue(depth: depth + 1)
                 skipWhitespace()
                 if consume(0x7D) {
                     return
@@ -228,14 +236,14 @@ public struct SecretStore: Sendable {
             }
         }
 
-        private mutating func parseArray() throws {
+        private mutating func parseArray(depth: Int) throws {
             index += 1
             skipWhitespace()
             if consume(0x5D) {
                 return
             }
             while true {
-                try parseValue()
+                try parseValue(depth: depth + 1)
                 skipWhitespace()
                 if consume(0x5D) {
                     return
@@ -965,11 +973,6 @@ public struct SecretStore: Sendable {
     }
 
     private func loadOrCreateKeyFile() throws -> Curve25519.KeyAgreement.PrivateKey {
-        let invalidError = invalidKeyMaterialError()
-        if let key = try loadKeyFileIfValid(invalidError: invalidError) {
-            return key
-        }
-
         return try SchemaFileLock.withExclusiveStorageLock(
             stateRoot: directory,
             lockFileName: "secret.key.lock",
