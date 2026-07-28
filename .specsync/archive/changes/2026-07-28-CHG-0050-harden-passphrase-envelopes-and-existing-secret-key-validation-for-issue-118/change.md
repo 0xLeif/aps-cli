@@ -1,6 +1,6 @@
 ---
 id: CHG-0050-harden-passphrase-envelopes-and-existing-secret-key-validation-for-issue-118
-state: accepted
+state: archived
 type: migration
 base_commit: c365187d9f2baadf097aaedafcb144f60a7a0fa8
 ---

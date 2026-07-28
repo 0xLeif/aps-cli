@@ -1,6 +1,6 @@
 ---
 id: CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r
-state: accepted
+state: archived
 type: bug_fix
 base_commit: b10728b81c4b718c239cd1119ded36b82ee60f17
 ---

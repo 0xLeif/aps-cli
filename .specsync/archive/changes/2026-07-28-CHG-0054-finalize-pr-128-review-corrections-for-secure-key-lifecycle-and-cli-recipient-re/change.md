@@ -1,6 +1,6 @@
 ---
 id: CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re
-state: accepted
+state: archived
 type: bug_fix
 base_commit: f722964daaaeccd9c717ca8f490679a3cd9184dc
 ---
