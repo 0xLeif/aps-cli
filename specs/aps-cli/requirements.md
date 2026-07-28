@@ -300,10 +300,11 @@ Key-file watch SHALL reload and revalidate the key for every changed envelope;
 unchanged polls SHALL perform no recipient work.
 
 On POSIX, SecretStore SHALL canonicalize the configured state root once,
-preserve safe owned directory modes such as `0755`, and reject group- or
-other-writable roots without changing their permissions. Permission-repair
-failures SHALL return `insecure_secret_key_file`; unrelated I/O failures retain
-their persistence mapping.
+preserve safe owned directory modes such as searchable `0300` and shared-read
+`0755`, and reject group- or other-writable roots without changing their
+permissions. Permission-repair failures SHALL return
+`insecure_secret_key_file`; unrelated I/O failures retain their persistence
+mapping.
 
 CLI get SHALL perform one encrypted read. After SecretStore successfully
 persists and decrypt-verifies an encrypted set, CLI output SHALL use the
@@ -323,4 +324,4 @@ Acceptance Criteria
   revalidate key privacy.
 - CLI get performs one decrypt and encrypted set output performs no
   post-commit decrypt.
-- The full 234-test local lane and every hosted platform gate pass.
+- The full 235-test local lane and every hosted platform gate pass.

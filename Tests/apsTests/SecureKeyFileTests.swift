@@ -109,6 +109,24 @@ internal final class SecureKeyFileTests: XCTestCase {
         XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o755))
     }
 
+    internal func testLoadPreservesSearchOnlyOwnedParentDirectory() throws {
+        let fixture = try makeFixture()
+        defer {
+            _ = chmod(fixture.directory.path, mode_t(0o700))
+            try? FileManager.default.removeItem(at: fixture.directory)
+        }
+        let expected = keyData(15)
+        try expected.write(to: fixture.file)
+        XCTAssertEqual(chmod(fixture.file.path, mode_t(0o600)), 0)
+        XCTAssertEqual(chmod(fixture.directory.path, mode_t(0o300)), 0)
+
+        XCTAssertEqual(try fixture.secureFile.load(), expected)
+
+        var status = stat()
+        XCTAssertEqual(stat(fixture.directory.path, &status), 0)
+        XCTAssertEqual(status.st_mode & mode_t(0o777), mode_t(0o300))
+    }
+
     internal func testLoadSupportsSymlinkedOwnedParentDirectory() throws {
         let fixture = try makeFixture()
         let linkedDirectory = fixture.directory
@@ -646,8 +664,7 @@ internal final class SecureKeyFileTests: XCTestCase {
                       acl,
                       DWORD(ACL_REVISION),
                       0,
-                      DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES)
-                          | DWORD(SYNCHRONIZE),
+                      DWORD(READ_CONTROL) | DWORD(WRITE_DAC) | DWORD(FILE_READ_ATTRIBUTES),
                       userSID
                   ) else {
                 throw CocoaError(.fileWriteUnknown)

@@ -412,9 +412,14 @@ internal extension SecureKeyFile {
         let resolvedParentPath = URL(fileURLWithPath: unresolvedParentPath)
             .resolvingSymlinksInPath()
             .path
+        #if canImport(Glibc)
+        let parentAccessMode = linuxOpenPathFlag
+        #else
+        let parentAccessMode = O_SEARCH
+        #endif
         let parentDescriptor = open(
             resolvedParentPath,
-            O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC
+            parentAccessMode | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC
         )
         guard parentDescriptor >= 0 else {
             if errno == ELOOP || errno == ENOTDIR {
@@ -657,7 +662,7 @@ internal extension SecureKeyFile {
     private static let fileAllAccess = DWORD(0x001F01FF)
     private static let readAccess: DWORD = DWORD(GENERIC_READ)
     private static let repairAccess = DWORD(READ_CONTROL) | DWORD(WRITE_DAC)
-        | DWORD(FILE_READ_ATTRIBUTES) | DWORD(SYNCHRONIZE)
+        | DWORD(FILE_READ_ATTRIBUTES)
     private static let writeAccess: DWORD = DWORD(GENERIC_WRITE)
     private static let shareNone: DWORD = 0
     private static let shareExistingReads: DWORD = DWORD(FILE_SHARE_READ)
