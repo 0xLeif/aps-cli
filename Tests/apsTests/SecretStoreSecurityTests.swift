@@ -610,6 +610,98 @@ internal final class SecretStoreSecurityTests: XCTestCase {
     #endif
 
     @MainActor
+    internal func testRegisteredEncryptedWatchRejectsInvalidInitialDecryptedValueBeforeEmission() async throws {
+        setSecretPassphrase("typed-initial-watch")
+        let root = try XCTUnwrap(directoryURL)
+        let originalStateRoot = FileManager.defaultFileStatePath
+        FileManager.defaultFileStatePath = root.path
+        defer { FileManager.defaultFileStatePath = originalStateRoot }
+
+        let store = StateStore()
+        let entry = SchemaKeyEntry(
+            name: "typedInitialSecret",
+            type: "Bool",
+            storage: "EncryptedFile",
+            initial: .bool(false),
+            path: "typed-initial.enc",
+            doc: "typed encrypted watch"
+        )
+        try store.addKey(entry, force: false)
+        try SecretStore(
+            directory: root.path,
+            storeFileName: "typed-initial.enc",
+            keyName: entry.name
+        ).set("not-a-bool")
+
+        var observed: [String] = []
+        XCTAssertThrowsError(
+            try store.watchBlocking(
+                name: entry.name,
+                pollInterval: 0,
+                shouldContinue: { false },
+                onChange: { observed.append($0) }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+        XCTAssertTrue(observed.isEmpty)
+    }
+
+    @MainActor
+    internal func testRegisteredEncryptedWatchRejectsInvalidUpdatedDecryptedValueBeforeEmission() async throws {
+        setSecretPassphrase("typed-updated-watch")
+        let root = try XCTUnwrap(directoryURL)
+        let originalStateRoot = FileManager.defaultFileStatePath
+        FileManager.defaultFileStatePath = root.path
+        defer { FileManager.defaultFileStatePath = originalStateRoot }
+
+        let store = StateStore()
+        let entry = SchemaKeyEntry(
+            name: "typedUpdatedSecret",
+            type: "Bool",
+            storage: "EncryptedFile",
+            initial: .bool(false),
+            path: "typed-updated.enc",
+            doc: "typed encrypted watch"
+        )
+        try store.addKey(entry, force: false)
+        try store.set(name: entry.name, value: "true")
+        let directStore = SecretStore(
+            directory: root.path,
+            storeFileName: "typed-updated.enc",
+            keyName: entry.name
+        )
+
+        var observed: [String] = []
+        var replacementError: Error?
+        var pollCount = 0
+        XCTAssertThrowsError(
+            try store.watchBlocking(
+                name: entry.name,
+                pollInterval: 0,
+                shouldContinue: {
+                    pollCount += 1
+                    return pollCount <= 1
+                },
+                onChange: { value in
+                    observed.append(value)
+                    guard observed.count == 1 else { return }
+                    do {
+                        try directStore.set("not-a-bool")
+                    } catch {
+                        replacementError = error
+                    }
+                }
+            )
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+
+        XCTAssertNil(replacementError)
+        XCTAssertEqual(observed, ["true"])
+    }
+
+    @MainActor
     internal func testWatchReusesOneInteractivePassphrasePromptAcrossChanges() async throws {
         let promptRecorder = PassphrasePromptRecorder(passphrase: "interactive-watch")
         setUsePassphrase("1")

@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 43
+version: 44
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -110,6 +110,8 @@ self-describes that contract for agents through the `schema` command.
 | `int` | SchemaJSON int case. |
 | `double` | SchemaJSON finite floating-point case. |
 | `bool` | SchemaJSON bool case. |
+| `array` | SchemaJSON recursive array case. |
+| `object` | SchemaJSON recursive object case. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
@@ -315,3 +317,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-28 | CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r: Close final PR 128 review gaps for malformed recipient modes, POSIX permission races, and pinned encrypted watch roots |
 | 2026-07-28 | CHG-0051-enforce-recursive-dynamic-object-and-slice-typing-and-restore-schema-metadata-fo: Enforce recursive dynamic object and Slice typing and restore schema metadata for issue 114 |
 | 2026-07-28 | CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a: Close final PR 129 review gaps for recursive JSON kinds, nonfinite validation, and corrupt StoredState reads |
+| 2026-07-28 | CHG-0057-close-remaining-pr-129-validation-gaps-for-encrypted-watch-slice-shapes-bool-t: Close remaining PR 129 validation gaps for encrypted watch, Slice shapes, Bool tokens, and StoredState numeric kinds |

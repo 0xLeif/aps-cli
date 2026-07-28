@@ -73,8 +73,8 @@ public enum SchemaJSON: Codable, Equatable, Sendable {
     case int(Int)
     case double(Double)
     case string(String)
-    indirect case array([SchemaJSON])
-    indirect case object([String: SchemaJSON])
+    case array([SchemaJSON])
+    case object([String: SchemaJSON])
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -162,14 +162,7 @@ public enum SchemaJSON: Codable, Equatable, Sendable {
         case "Int":
             value = Int(raw).map(SchemaJSON.int)
         case "Bool":
-            switch raw.lowercased() {
-            case "true", "1", "yes", "on":
-                value = .bool(true)
-            case "false", "0", "no", "off":
-                value = .bool(false)
-            default:
-                value = nil
-            }
+            value = StateStore.parseBool(raw).map(SchemaJSON.bool)
         case "Double":
             if let parsed = Double(raw), parsed.isFinite {
                 value = .double(parsed)
@@ -472,6 +465,7 @@ public enum UserSchema {
         for entry in document.keys where entry.storage == "Slice" {
             try validateSlice(entry, in: document)
         }
+        try validateSiblingSliceShapes(in: document)
     }
 
     /// Validates a JSON value against a declared aps type and an optional open object shape.
@@ -576,6 +570,44 @@ public enum UserSchema {
             objectShape: entry.objectShape,
             key: entry.name
         )
+        if entry.type == "object" {
+            guard
+                case .object(let parentInitial) = parent.initial,
+                let parentFieldInitial = parentInitial[field]
+            else {
+                throw APSError.schemaInvalid(
+                    reason: "\(entry.name) requires \(parentName).\(field) object initial"
+                )
+            }
+            try validate(
+                parentFieldInitial,
+                declaredType: fieldType,
+                objectShape: entry.objectShape,
+                key: "\(parentName).\(field)"
+            )
+        }
+    }
+
+    private static func validateSiblingSliceShapes(in document: UserSchemaDocument) throws {
+        var shapesByParentAndField: [String: [String: (name: String, shape: [String: String])]] = [:]
+        for entry in document.keys where entry.storage == "Slice" && entry.type == "object" {
+            guard
+                let parentName = entry.sliceOf,
+                let field = entry.sliceField,
+                let shape = entry.objectShape
+            else {
+                continue
+            }
+            if let sibling = shapesByParentAndField[parentName]?[field], sibling.shape != shape {
+                throw APSError.schemaInvalid(
+                    reason: "\(entry.name) objectShape must match sibling Slice '\(sibling.name)' "
+                        + "for \(parentName).\(field)"
+                )
+            }
+            var shapesByField = shapesByParentAndField[parentName] ?? [:]
+            shapesByField[field] = (name: entry.name, shape: shape)
+            shapesByParentAndField[parentName] = shapesByField
+        }
     }
 
     public static func isSafeRelativePath(_ path: String) -> Bool {

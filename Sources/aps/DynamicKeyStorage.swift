@@ -82,7 +82,13 @@ enum DynamicKeyStorage {
         stateRoot: String,
         schema: UserSchemaDocument
     ) throws {
-        _ = try requestedValue(value, for: entry)
+        let requested = try requestedValue(value, for: entry)
+        try validateParentWrite(
+            requested,
+            rawValue: value,
+            for: entry,
+            schema: schema
+        )
         switch entry.storage {
         case "State":
             try memorySet(entry, value: value)
@@ -96,6 +102,26 @@ enum DynamicKeyStorage {
             try sliceSet(entry: entry, value: value, stateRoot: stateRoot, schema: schema)
         default:
             throw APSError.schemaInvalid(reason: "unsupported storage \(entry.storage)")
+        }
+    }
+
+    private static func validateParentWrite(
+        _ value: SchemaJSON,
+        rawValue: String,
+        for entry: SchemaKeyEntry,
+        schema: UserSchemaDocument
+    ) throws {
+        guard entry.storage == "FileState", case .object(let object) = value else {
+            return
+        }
+        for slice in schema.keys where slice.storage == "Slice" && slice.sliceOf == entry.name {
+            guard
+                let field = slice.sliceField,
+                let fieldValue = object[field],
+                fieldValue.matches(type: slice.type, objectShape: slice.objectShape)
+            else {
+                throw APSError.invalidValue(key: entry.name, value: rawValue)
+            }
         }
     }
 
@@ -221,7 +247,7 @@ enum DynamicKeyStorage {
         return value
     }
 
-    private static func validateReadValue(
+    internal static func validateReadValue(
         _ rawValue: String,
         for entry: SchemaKeyEntry
     ) throws {
@@ -380,6 +406,10 @@ enum DynamicKeyStorage {
         if let data = object as? Data {
             return try? JSONDecoder().decode(Int.self, from: data)
         }
+        if let number = object as? NSNumber,
+           CFGetTypeID(number) == CFBooleanGetTypeID() {
+            return nil
+        }
         if let intValue = object as? Int {
             return intValue
         }
@@ -392,6 +422,10 @@ enum DynamicKeyStorage {
     private static func decodeStoredBool(_ object: Any) -> Bool? {
         if let data = object as? Data {
             return try? JSONDecoder().decode(Bool.self, from: data)
+        }
+        if let number = object as? NSNumber,
+           CFGetTypeID(number) != CFBooleanGetTypeID() {
+            return nil
         }
         if let boolValue = object as? Bool {
             return boolValue

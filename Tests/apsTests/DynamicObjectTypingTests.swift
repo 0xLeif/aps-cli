@@ -44,6 +44,13 @@ internal final class DynamicObjectTypingTests: XCTestCase {
         XCTAssertThrowsError(try JSONEncoder().encode(value))
     }
 
+    internal func testBoolParserPreservesCommonShortTokens() {
+        XCTAssertEqual(SchemaJSON.parse("y", as: "Bool"), .bool(true))
+        XCTAssertEqual(SchemaJSON.parse("Y", as: "Bool"), .bool(true))
+        XCTAssertEqual(SchemaJSON.parse("n", as: "Bool"), .bool(false))
+        XCTAssertEqual(SchemaJSON.parse("N", as: "Bool"), .bool(false))
+    }
+
     internal func testSchemaRejectsNonFiniteNumberInsideNestedArray() {
         let document = UserSchemaDocument(keys: [
             SchemaKeyEntry(
@@ -202,6 +209,171 @@ internal final class DynamicObjectTypingTests: XCTestCase {
         ])
 
         XCTAssertNoThrow(try UserSchema.validate(document))
+    }
+
+    internal func testSchemaRejectsParentInitialThatViolatesObjectSliceShape() {
+        let document = UserSchemaDocument(keys: [
+            SchemaKeyEntry(
+                name: "metadata",
+                type: "object",
+                storage: "Slice",
+                initial: .object(["name": .string("")]),
+                objectShape: ["name": "String"],
+                sliceOf: "profile",
+                sliceField: "metadata"
+            ),
+            SchemaKeyEntry(
+                name: "profile",
+                type: "object",
+                storage: "FileState",
+                initial: .object([
+                    "metadata": .object(["enabled": .bool(true)]),
+                ]),
+                path: "profile.json",
+                objectShape: ["metadata": "object"]
+            ),
+        ])
+
+        XCTAssertThrowsError(try UserSchema.validate(document)) { error in
+            XCTAssertTrue(String(describing: error).contains("profile.metadata"))
+            XCTAssertTrue(String(describing: error).contains("name"))
+        }
+    }
+
+    internal func testSchemaRejectsDifferentShapesForSiblingObjectSlices() {
+        let document = UserSchemaDocument(keys: [
+            SchemaKeyEntry(
+                name: "metadataSummary",
+                type: "object",
+                storage: "Slice",
+                initial: .object(["name": .string("")]),
+                objectShape: ["name": "String"],
+                sliceOf: "profile",
+                sliceField: "metadata"
+            ),
+            SchemaKeyEntry(
+                name: "metadataDetails",
+                type: "object",
+                storage: "Slice",
+                initial: .object([
+                    "name": .string(""),
+                    "retries": .int(0),
+                ]),
+                objectShape: [
+                    "name": "String",
+                    "retries": "Int",
+                ],
+                sliceOf: "profile",
+                sliceField: "metadata"
+            ),
+            SchemaKeyEntry(
+                name: "profile",
+                type: "object",
+                storage: "FileState",
+                initial: .object([
+                    "metadata": .object([
+                        "name": .string(""),
+                        "retries": .int(0),
+                    ]),
+                ]),
+                path: "profile.json",
+                objectShape: ["metadata": "object"]
+            ),
+        ])
+
+        XCTAssertThrowsError(try UserSchema.validate(document)) { error in
+            XCTAssertTrue(String(describing: error).contains("sibling Slice"))
+            XCTAssertTrue(String(describing: error).contains("profile.metadata"))
+        }
+    }
+
+    internal func testSchemaAcceptsMatchingShapesForSiblingObjectSlices() throws {
+        let sharedShape = [
+            "name": "String",
+            "retries": "Int",
+        ]
+        let sharedInitial = SchemaJSON.object([
+            "name": .string(""),
+            "retries": .int(0),
+        ])
+        let document = UserSchemaDocument(keys: [
+            SchemaKeyEntry(
+                name: "metadataPrimary",
+                type: "object",
+                storage: "Slice",
+                initial: sharedInitial,
+                objectShape: sharedShape,
+                sliceOf: "profile",
+                sliceField: "metadata"
+            ),
+            SchemaKeyEntry(
+                name: "metadataSecondary",
+                type: "object",
+                storage: "Slice",
+                initial: sharedInitial,
+                objectShape: sharedShape,
+                sliceOf: "profile",
+                sliceField: "metadata"
+            ),
+            SchemaKeyEntry(
+                name: "profile",
+                type: "object",
+                storage: "FileState",
+                initial: .object(["metadata": sharedInitial]),
+                path: "profile.json",
+                objectShape: ["metadata": "object"]
+            ),
+        ])
+
+        XCTAssertNoThrow(try UserSchema.validate(document))
+    }
+
+    @MainActor
+    internal func testParentWriteRejectsObjectThatViolatesSliceShapeBeforeMutation() async throws {
+        let stateRoot = try temporaryStateRoot()
+        defer { try? FileManager.default.removeItem(atPath: stateRoot) }
+        let parent = SchemaKeyEntry(
+            name: "profile",
+            type: "object",
+            storage: "FileState",
+            initial: .object([
+                "metadata": .object(["name": .string("")]),
+            ]),
+            path: "profile.json",
+            objectShape: ["metadata": "object"]
+        )
+        let slice = SchemaKeyEntry(
+            name: "metadata",
+            type: "object",
+            storage: "Slice",
+            initial: .object(["name": .string("")]),
+            objectShape: ["name": "String"],
+            sliceOf: "profile",
+            sliceField: "metadata"
+        )
+        let schema = UserSchemaDocument(keys: [parent, slice])
+        try UserSchema.validate(schema)
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.set(
+                entry: parent,
+                value: #"{"metadata":{}}"#,
+                stateRoot: stateRoot,
+                schema: schema
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .invalidValue(key: parent.name, value: #"{"metadata":{}}"#)
+            )
+        }
+        XCTAssertFalse(
+            FileManager.default.fileExists(
+                atPath: URL(fileURLWithPath: stateRoot)
+                    .appendingPathComponent("profile.json")
+                    .path
+            )
+        )
     }
 
     @MainActor

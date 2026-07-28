@@ -2996,6 +2996,44 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(defaults.object(forKey: "App/aps.flag") as? Data, corrupt)
     }
 
+    @MainActor
+    internal func testStoredStateIntRejectsNSNumberBooleanKind() async throws {
+        let defaults = try XCTUnwrap(hermeticDefaults)
+        let entry = SchemaKeyEntry(
+            name: "numberKindCounter",
+            type: "Int",
+            storage: "StoredState",
+            initial: .int(7)
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        defaults.set(NSNumber(value: true), forKey: "aps.user.\(entry.name)")
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+    }
+
+    @MainActor
+    internal func testStoredStateBoolRejectsNSNumberIntegerKind() async throws {
+        let defaults = try XCTUnwrap(hermeticDefaults)
+        let entry = SchemaKeyEntry(
+            name: "numberKindFlag",
+            type: "Bool",
+            storage: "StoredState",
+            initial: .bool(false)
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        defaults.set(NSNumber(value: 1), forKey: "aps.user.\(entry.name)")
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+    }
+
 }
 
 extension APSTests {

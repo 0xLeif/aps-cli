@@ -409,3 +409,19 @@ Acceptance Criteria
 - KeyValuePayload, WatchEvent, and ResetPayload advertise the complete
   recursive JSON kind set.
 - Focused regressions and the full quality lane pass.
+
+### REQ-aps-cli-035
+
+Dynamic Bool parsing SHALL accept the same tokens as the central Bool parser,
+including `y` and `n`. Object Slice schemas SHALL require a parent initial that
+satisfies every nested Slice shape and identical shapes for sibling object
+Slices targeting one parent field. Direct parent writes SHALL satisfy every
+targeting Slice constraint before mutation. Canonical terminology SHALL list
+every public recursive SchemaJSON case.
+
+Acceptance Criteria
+- Dynamic Bool values accept `y`, `Y`, `n`, and `N`.
+- Invalid parent initials and incompatible sibling Slice shapes are rejected.
+- Invalid direct parent writes fail without creating or changing storage.
+- Canonical terminology includes array and object cases.
+- Focused regressions and the full quality lane pass.
