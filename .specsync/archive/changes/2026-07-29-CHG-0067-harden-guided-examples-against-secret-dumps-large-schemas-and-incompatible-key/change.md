@@ -1,6 +1,6 @@
 ---
 id: CHG-0067-harden-guided-examples-against-secret-dumps-large-schemas-and-incompatible-key
-state: accepted
+state: archived
 type: bug_fix
 base_commit: 488b54ab6170c05fa44aa43842aac14aad9c5133
 ---
