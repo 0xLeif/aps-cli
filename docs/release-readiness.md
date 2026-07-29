@@ -2,21 +2,19 @@
 
 Status: **not ready to tag**
 
-Audit basis: current `origin/main`, issue #118 security hardening in SpecSync
-change `CHG-0050`, and the stacked issue #114 dynamic object typing work in
-SpecSync change `CHG-0051`.
+Audit basis: current `origin/main` plus issue #119 release provenance in
+SpecSync change `CHG-0052`.
 
 Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable installer Action, portable Linux packaging, dynamic schema behavior, concurrency fixes, and watch improvements.
 
 ## What is already strong
 
-- The stacked issue #114 fledge verification lane passes all seven steps.
-- The stacked issue #114 implementation passes 222 Swift tests locally,
-  including recursive structural JSON and strict Slice schema regressions.
-- The issue #114 Trust and hosted lanes have not yet been run.
+- The fledge verification lane passes all eight steps.
+- 266 Swift tests pass, including recursive structural JSON, strict Slice schema,
+  transactional reset, secret hardening, and four-worker isolation regressions.
 - macOS, Ubuntu, Linux smoke, Windows smoke, and Trust workflows run on main.
-- CHG-0050 and stacked CHG-0051 must each be verified, accepted, merged, and
-  archived before the release tag.
+- Existing merged SpecSync changes are archived; release provenance remains
+  active until accepted.
 - Human, JSON, and JSONL output contracts are broadly exercised.
 
 Measured in-process source line coverage is 53.42%. Subprocess CLI tests are not attributed back to the instrumented test process, so that number understates command-path coverage. It still shows that registry, dynamic storage, command dispatch, and termination behavior need more direct tests.
@@ -33,13 +31,12 @@ Implemented for v1.1.0 by [#112](https://github.com/0xLeif/aps-cli/issues/112). 
 
 ### 3. Enforce recursive object and Slice typing
 
-Issue [#114](https://github.com/0xLeif/aps-cli/issues/114) is implemented on
-the active stacked branch but is not yet release evidence. It adds recursive
-structural JSON values, open object shapes whose declared fields are required
-and type-checked, preservation of undeclared fields, repeatable
-`--field NAME=TYPE` declarations, strict matching Slice fields, live
-`userSchema.keyCount`, and static `schemaVersion` 6. Its Trust and hosted
-verification, review, merge, and SpecSync acceptance/archive remain required.
+Implemented for v1.1.0 by
+[#114](https://github.com/0xLeif/aps-cli/issues/114). Recursive structural JSON
+values, open object shapes whose declared fields are required and type-checked,
+preservation of undeclared fields, repeatable `--field NAME=TYPE`
+declarations, strict matching Slice fields, live `userSchema.keyCount`, and
+static `schemaVersion` 6 are covered by unit, smoke, and hosted regressions.
 
 ### 4. Make reset and purge report the truth
 
@@ -110,27 +107,48 @@ failures retain `persistence_failed` and `rollback_failed` at exit 73.
 apple/swift-crypto is constrained to `4.0.0..<4.4.0` because 4.4+ raises its
 Swift tools floor to 6.1 while aps retains Swift 6.0.
 
+### 8. Enforce release provenance
+
+In progress for v1.1.0 under
+[#119](https://github.com/0xLeif/aps-cli/issues/119). Pull request provenance
+remains soft so contributors do not need the release key. The proposed artifact
+publication gate uses `.attest-release.json`: the exact selected tag commit must
+have passing-test evidence with a valid Ed25519 signature from the pinned
+`human:leif` identity.
+
+Tag pushes and manual backfills share the gate. Tests and builds use the one
+resolved commit SHA, and the publication job refreshes and compares the tag
+binding immediately before upload. The deterministic contract test covers
+missing notes, failed tests, unsigned records, invalid signatures, untrusted
+keys, valid signed evidence, and moved tags. Backup, recovery, compromise, and
+rotation procedures are in [release provenance](release-provenance.md).
+This blocker is not closed until the change is accepted, hosted Actions pass,
+the protected `v*` tag ruleset is enabled, and the `release` Environment has a
+required owner review with administrator bypass disabled plus deployment
+policies that admit both `v*` tag pushes and default-branch manual backfills.
+
 ## Release-candidate proof
 
 After the blockers merge:
 
 1. Run `fledge lanes run verify` and `fledge trust verify`.
-2. Require every main check to finish successfully.
-3. Run the release dry run from a clean checkout and inspect version plus notes.
-4. Publish the candidate artifacts.
-5. Verify every checksum sidecar.
-6. Execute both macOS binaries.
-7. Extract and execute the Linux bundle without a Swift toolchain.
-8. Install the final formula on macOS and Linux.
-9. Run a separate workflow using `0xLeif/aps-cli@<tag>` and exercise a real command.
-10. Confirm `aps --version`, `aps schema`, plugin version, release tag, and documentation all agree.
+2. Sign the exact candidate commit with passing-test evidence and verify
+   `.attest-release.json`.
+3. Push `refs/notes/attest` before the tag.
+4. Require every main check to finish successfully.
+5. Run the release dry run from a clean checkout and inspect version plus notes.
+6. Publish the candidate artifacts.
+7. Verify every checksum sidecar.
+8. Execute both macOS binaries.
+9. Extract and execute the Linux bundle without a Swift toolchain.
+10. Install the final formula on macOS and Linux.
+11. Run a separate workflow using `0xLeif/aps-cli@<tag>` and exercise a real command.
+12. Confirm `aps --version`, `aps schema`, plugin version, release tag, and documentation all agree.
 
 ## Quality work after the safety release
 
 - Enforce explicit access control, descriptive generic names, line length, and the production `try!` prohibition in CI.
 - Add the explicit StrictConcurrency package setting required by repository conventions.
 - Split command parsing, persistence, watching, and serialization into focused files.
-- Pin release-critical GitHub Actions by commit.
-- Turn attestation, test, and signature requirements on, or narrow the documented provenance claim.
 - Publish a Windows asset and add installer parity when Windows distribution becomes a product promise.
 - Decide whether process-local `State` and `stats` need a session mode or should remain explicitly documented dogfood demonstrations.

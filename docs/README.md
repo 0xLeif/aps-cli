@@ -9,6 +9,7 @@ aps is a Swift CLI for exploring AppState outside SwiftUI and exposing typed sta
 | Install and use the CLI | [Project README](../README.md) |
 | Understand user-defined keys | [Dynamic schema design](design/dynamic-schema.md) |
 | Decide whether the next tag is ready | [Release readiness](release-readiness.md) |
+| Operate signed releases and recover provenance | [Release provenance](release-provenance.md) |
 | Understand platform coverage | [Windows and tri-OS readiness](windows-readiness.md) |
 | Review non-goals | [SyncState spike](spikes/syncstate-feasibility.md) and [ModelState spike](spikes/modelstate-feasibility.md) |
 | Inspect normative behavior | [`specs/aps-cli`](../specs/aps-cli/) and [`specs/state-store`](../specs/state-store/) |
@@ -46,4 +47,5 @@ Code and specs change together. Follow [`AGENTS.md`](../AGENTS.md) for Swift con
 - Keep machine-contract examples byte-accurate.
 - Separate shipped behavior from proposed hardening.
 - Link design decisions to normative SpecSync requirements.
-- Do not describe soft provenance or partial platform distribution as stronger than it is.
+- Distinguish soft pull request provenance from the strict release publication gate.
+- Do not describe partial platform distribution as stronger than it is.

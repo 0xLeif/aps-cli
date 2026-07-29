@@ -11,7 +11,7 @@ name: Release
 #   version. The post-release-formula workflow has the same recovery lever.
 
 permissions:
-  contents: write
+  contents: read
 
 on:
   push:
@@ -25,19 +25,84 @@ on:
         type: string
 
 jobs:
+  provenance:
+    name: Release provenance gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      tag: ${{ steps.resolve.outputs.tag }}
+      commit: ${{ steps.resolve.outputs.commit }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # Dispatch may target a tag that predates this gate. Use current main
+          # as the trusted control plane. Tag pushes use the immutable event
+          # commit rather than resolving a tag that may have moved while queued.
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Fetch selected tag and attest notes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          authorization="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
+            fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
+            fetch origin "+refs/notes/attest:refs/notes/attest"
+
+      - name: Resolve exact tag commit
+        id: resolve
+        env:
+          EVENT_COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: ./Scripts/release-provenance-gate.sh --resolve-only "$RELEASE_TAG" "$EVENT_COMMIT"
+
+      - name: Confirm candidate is reachable from the protected default branch
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_COMMIT: ${{ steps.resolve.outputs.commit }}
+        run: |
+          authorization="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
+            fetch origin \
+            "refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
+          git merge-base --is-ancestor \
+            "$RELEASE_COMMIT" "refs/remotes/origin/${DEFAULT_BRANCH}"
+
+      - name: Verify signed release evidence
+        id: attest
+        uses: CorvidLabs/attest@e8a2d928eb4b9a33185c32ba7b8e9b3a985987f2 # 1.0.0
+        with:
+          version: "1.0.0"
+          range: ${{ steps.resolve.outputs.commit }}^!
+          policy: .attest-release.json
+
+      - name: Confirm exact tag binding
+        env:
+          ATTEST_BIN: ${{ steps.attest.outputs.binary }}
+          RELEASE_TAG: ${{ steps.resolve.outputs.tag }}
+          RELEASE_COMMIT: ${{ steps.resolve.outputs.commit }}
+        run: ./Scripts/release-provenance-gate.sh "$RELEASE_TAG" "$RELEASE_COMMIT"
+
   test:
     name: Test gate
+    needs: provenance
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ needs.provenance.outputs.commit }}
+          persist-credentials: false
       - run: swift build
       - run: swift test
 
   build:
-    needs: [test]
+    needs: [provenance, test]
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -53,13 +118,14 @@ jobs:
             arch: ""
             artifact: aps-linux-x86_64-portable.tar.gz
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          ref: ${{ inputs.tag || github.ref }}
+          ref: ${{ needs.provenance.outputs.commit }}
+          persist-credentials: false
 
       - name: Install Swift (Linux)
         if: runner.os == 'Linux'
-        uses: swift-actions/setup-swift@v2
+        uses: swift-actions/setup-swift@7ca6abe6b3b0e8b5421b88be48feee39cbf52c6a # v2
         with:
           swift-version: "6.0"
 
@@ -100,16 +166,28 @@ jobs:
           fi
           "$BIN_DIR/aps" --version
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: ${{ matrix.artifact }}
           path: ${{ matrix.artifact }}
 
   release:
-    needs: [build]
+    needs: [provenance, build]
     runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # Manual backfills use the current trusted gate even for old tags.
+          # Tag pushes use the immutable commit already verified by provenance,
+          # so a moved tag cannot replace the gate or release policy.
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || needs.provenance.outputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           path: artifacts
           merge-multiple: true
@@ -121,9 +199,50 @@ jobs:
             sha256sum "$file" | sed "s|.*/||" > "${file}.sha256"
           done
           cat -- ./*.sha256
-      - name: Attach to release
-        uses: softprops/action-gh-release@v2
+
+      - name: Refresh release tag and attest notes
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.provenance.outputs.tag }}
+        run: |
+          authorization="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
+            fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
+            fetch origin "+refs/notes/attest:refs/notes/attest"
+
+      - name: Reverify signed release evidence
+        id: attest
+        uses: CorvidLabs/attest@e8a2d928eb4b9a33185c32ba7b8e9b3a985987f2 # 1.0.0
         with:
-          tag_name: ${{ inputs.tag || github.ref_name }}
+          version: "1.0.0"
+          range: ${{ needs.provenance.outputs.commit }}^!
+          policy: .attest-release.json
+
+      - name: Recheck exact tag binding before publication
+        env:
+          ATTEST_BIN: ${{ steps.attest.outputs.binary }}
+          RELEASE_TAG: ${{ needs.provenance.outputs.tag }}
+          RELEASE_COMMIT: ${{ needs.provenance.outputs.commit }}
+        run: ./Scripts/release-provenance-gate.sh "$RELEASE_TAG" "$RELEASE_COMMIT"
+
+      - name: Attach to release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2
+        with:
+          tag_name: ${{ needs.provenance.outputs.tag }}
           generate_release_notes: true
           files: artifacts/*
+
+      - name: Verify remote tag after publication
+        env:
+          ATTEST_BIN: ${{ steps.attest.outputs.binary }}
+          GITHUB_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.provenance.outputs.tag }}
+          RELEASE_COMMIT: ${{ needs.provenance.outputs.commit }}
+        run: |
+          authorization="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)"
+          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
+            fetch --force origin \
+            "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          ./Scripts/release-provenance-gate.sh \
+            "$RELEASE_TAG" "$RELEASE_COMMIT"

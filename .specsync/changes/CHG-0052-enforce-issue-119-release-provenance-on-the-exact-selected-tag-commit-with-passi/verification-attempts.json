@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "attempts": [
+    {
+      "timestamp": 1785285798,
+      "commit": "ecb493f44161386b99bda11536b39842a4f2901c",
+      "contract_digest": "f20ab6ba71d14d49f43414e2878916ee0d3020f80d7fa0bf0e71c12ed9be51a3",
+      "workspace_digest": "1c52dbf30cd89df488cae91a9c7f40526d0bbc8464b0cfa6b4f806ecaa7be8a4",
+      "passed": false,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": false,
+          "exit_code": 1
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-036"
+      ]
+    },
+    {
+      "timestamp": 1785285924,
+      "commit": "ecb493f44161386b99bda11536b39842a4f2901c",
+      "contract_digest": "f20ab6ba71d14d49f43414e2878916ee0d3020f80d7fa0bf0e71c12ed9be51a3",
+      "workspace_digest": "1c52dbf30cd89df488cae91a9c7f40526d0bbc8464b0cfa6b4f806ecaa7be8a4",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-036"
+      ]
+    },
+    {
+      "timestamp": 1785286141,
+      "commit": "ecb493f44161386b99bda11536b39842a4f2901c",
+      "contract_digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
+      "workspace_digest": "1c52dbf30cd89df488cae91a9c7f40526d0bbc8464b0cfa6b4f806ecaa7be8a4",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-036"
+      ]
+    },
+    {
+      "timestamp": 1785287058,
+      "commit": "2207fbf06eb514ab9749164189484cd525a77ecd",
+      "contract_digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
+      "workspace_digest": "e86e1da44b45aa6e09541968442be9db5332d62ebf757f079ef976abfc5831b9",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-036"
+      ]
+    },
+    {
+      "timestamp": 1785288030,
+      "commit": "f9d4acdaf4de509e2f3197299530c1295e8be14b",
+      "contract_digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
+      "workspace_digest": "bb7a0f62cf0ab68e5b8fd556088535ef7cf58445041376ec9efc0ecdd8b3b783",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-036"
+      ]
+    },
+    {
+      "timestamp": 1785288897,
+      "commit": "be97bd121a3a7ba7c0fe1cfee6de05e95a36c9bf",
+      "contract_digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
+      "workspace_digest": "bfca1a3fb4c5867880d1863e10261341c119c026993b3d2584c9cd93c5529d2c",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-036"
+      ]
+    },
+    {
+      "timestamp": 1785289810,
+      "commit": "fd3e7cb78f462486734458a7b82d9ebb25e1db44",
+      "contract_digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
+      "workspace_digest": "c3699de676bbebfb7f88957d57afb45dc7a17935533b22e9d1db12549d502a6b",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": [
+        "REQ-aps-cli-036"
+      ]
+    }
+  ]
+}
