@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 64,
-  "id": "CHG-0064-fix-release-workflow-fetch-authentication-so-signed-tags-and-attest-notes-can-be",
+  "sequence": 65,
+  "id": "CHG-0065-add-runnable-agent-ci-swift-integration-and-release-pipeline-examples-with-re",
   "acknowledged_collisions": []
 }

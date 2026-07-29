@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785333894,
+      "digest": "9bdf8ff587d75556004f03fb32a3fba0459c1a48a7ec4357d5f6f99080f94e7b",
+      "note": "Approved runnable examples and documentation coverage for the shipped v1.1.0 contract."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785334291,
+      "digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
+      "note": "Definition reconfirmed after examples and verification tasks were finalized; fledge verify passed all 12 steps."
+    }
+  ],
+  "reopenings": []
+}

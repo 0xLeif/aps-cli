@@ -4,11 +4,9 @@
 
 aps is a small Swift CLI that brings [AppState](https://github.com/0xLeif/AppState) outside SwiftUI. Declare typed state, read it, change it, watch it, and expose the same stable contract to humans, agents, and CI.
 
-Source version: **1.1.0**. The latest published tag remains
-**1.0.0** until the reviewed v1.1.0 candidate is signed and published; see
-[release readiness](docs/release-readiness.md). The source and CI target
-**macOS**, **Linux**, and **Windows**, while published binary availability
-varies by platform.
+Source version: **1.1.0**. This is also the current published release. The source and CI target **macOS**, **Linux**, and
+**Windows**. Published binaries are available for macOS arm64, macOS x86_64,
+and Linux x86_64; Windows currently builds and tests from source.
 
 Keys live in `<state-root>/schema.json`, with demo defaults materialized on first use. Start with the [documentation map](docs/README.md) or the [dynamic schema design](docs/design/dynamic-schema.md).
 
@@ -25,14 +23,14 @@ gate before artifact upload. See the [release provenance runbook](docs/release-p
 | --- | --- |
 | Serial and four-worker Swift verification lanes | Passing |
 | macOS, Linux, and Windows source CI | Active |
-| Homebrew and release packaging | Portable bundle contract prepared for v1.1.0 |
+| Homebrew and release packaging | v1.1.0 published with verified checksums |
 | Dynamic schema and secret safety | Safe paths, strict v2 envelopes, and transactional destructive operations |
 | SpecSync contracts | Passing with 2 active module specs |
 
-The current release remains useful for local AppState exploration. The next
-release hardens passphrase secrets for local use; production automation still
-depends on the remaining distribution items in
-[release readiness](docs/release-readiness.md).
+The current release supports project-local state, resumable agent memory,
+portable Linux CI installation, structured Swift integration tests, and
+observable release checkpoints. Start with the [guided examples](examples/)
+or the [use-case guide](docs/use-cases.md).
 
 ## Install
 
@@ -66,13 +64,25 @@ cd aps-cli && swift build -c release
 **Foreign GitHub Actions workflows:** use the reusable composite Action to install the release binary without a Swift toolchain:
 
 ```yaml
-- uses: 0xLeif/aps-cli/.github/actions/install-aps@8e2108601b182584e59b3e534b67199247593a0a
+- uses: 0xLeif/aps-cli/.github/actions/install-aps@7373d124ebb3823c1f7f19651dfffe4d7ed83f51
   with:
     version: 1.1.0
 - run: aps set note "run-${{ github.run_id }}"
 ```
 
-The Action selects the release asset for Linux x64, macOS x64, or macOS arm64, verifies its `.sha256` sidecar before moving it into the job-scoped `${RUNNER_TEMP}/aps/bin`, and adds that directory to `PATH`. Linux releases are portable tar bundles containing the Swift runtime libraries, so no Swift toolchain is needed. The existing v1.0.0 release predates this Action and does not contain the portable Linux bundle; use a release built by the current release workflow for Linux. The Action defaults `APS_HOME` to `${RUNNER_TEMP}/aps-home` through `GITHUB_ENV`; an existing `APS_HOME` is preserved. Pin the Action to a release tag or pass an explicit semantic `version`. Windows is not supported until a Windows release asset is published.
+The Action selects the release asset for Linux x64, macOS x64, or macOS arm64, verifies its `.sha256` sidecar before moving it into the job-scoped `${RUNNER_TEMP}/aps/bin`, and adds that directory to `PATH`. Linux releases are portable tar bundles containing the Swift runtime libraries, so no Swift toolchain is needed. Release v1.1.0 and newer include the portable Linux bundle. The Action defaults `APS_HOME` to `${RUNNER_TEMP}/aps-home` through `GITHUB_ENV`; an existing `APS_HOME` is preserved. Pin the Action to a release tag or pass an explicit semantic `version`. Windows is not supported until a Windows release asset is published.
+
+## Guided examples
+
+| Workflow | What it shows |
+| --- | --- |
+| [Agent memory](examples/agent-memory/) | Isolated, resumable state for Codex, Cursor, Kimi, or another agent |
+| [GitHub Actions](examples/github-actions/) | Typed state across steps and jobs without a Swift toolchain |
+| [Swift harness](examples/swift-harness/) | A Swift integration test driving the AppState-backed CLI |
+| [Release pipeline](examples/release-pipeline/) | Observable version, commit, test, risk, and phase checkpoints |
+
+See [Using aps in projects, agents, and CI](docs/use-cases.md) for selection
+guidance, state-root layouts, multi-writer limits, and secret-handling rules.
 
 ## Commands
 
@@ -397,8 +407,11 @@ Sources/aps/
 Tests/apsTests/
 specs/
 docs/design/
+docs/use-cases.md
+examples/
 Scripts/smoke.sh
 Scripts/smoke.ps1
+Scripts/test-examples.sh
 Scripts/release-provenance-gate.sh
 Scripts/test-release-provenance.sh
 GOAL.md
@@ -406,20 +419,21 @@ LICENSE
 .github/workflows/{ci,linux-smoke,windows-smoke,trust,release,post-release-formula}.yml
 ```
 
-## Next goal
+## Release history and next work
 
-**1.0.0** is shipped and public: [release v1.0.0](https://github.com/0xLeif/aps-cli/releases/tag/v1.0.0) and [`GOAL.md`](GOAL.md) record.
+**1.1.0** is shipped with signed provenance, portable Linux and macOS assets,
+verified checksum sidecars, and a converged Homebrew formula:
+[release v1.1.0](https://github.com/0xLeif/aps-cli/releases/tag/v1.1.0).
+The completed safety review remains available in
+[release readiness](docs/release-readiness.md).
 
-The next release will:
+Post-release work is incremental:
 
-- make dynamic schema paths and destructive operations safe by construction;
-- make the runtime registry authoritative for every key;
-- align portable Linux, Homebrew, and GitHub Action distribution;
-- ship the implemented v2 passphrase and key-file hardening;
-- require signed passing-test provenance on the exact release commit;
-- rehearse installation from real release artifacts on clean hosts.
-
-The full evidence, blockers, and exit criteria live in [docs/release-readiness.md](docs/release-readiness.md).
+- publish a Windows binary and installer path
+- increase direct in-process coverage for command dispatch and persistence
+- enforce the repository Swift style and StrictConcurrency settings in CI
+- decide whether process-local State and stats need explicit session semantics
+- keep the guided examples aligned with each published CLI contract
 
 ## Product site design system
 

@@ -15,6 +15,7 @@ version-contract-test = "./Scripts/test-version-contract.sh"
 ox-vendor-test = "./Scripts/test-0x-vendor.sh"
 ox-update = "./Scripts/sync-0x.sh"
 release-provenance-test = "./Scripts/test-release-provenance.sh"
+examples-test = "./Scripts/test-examples.sh"
 # Manifest-only: warns if `.build/release/aps` is missing (created by release/install hooks).
 plugin-validate = "fledge plugins validate ."
 # Keep specsync out of lanes.verify: Trust/SpecSync run it as a top-level gate
@@ -35,5 +36,6 @@ steps = [
     "version-contract-test",
     "ox-vendor-test",
     "release-provenance-test",
+    "examples-test",
     "plugin-validate",
 ]
