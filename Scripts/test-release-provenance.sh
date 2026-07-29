@@ -271,8 +271,19 @@ grep -Fq 'needs: [provenance, test]' "$workflow"
 grep -Fq "environment: release" "$workflow"
 grep -Fq "git merge-base --is-ancestor" "$workflow"
 grep -Fq "Verify remote tag after publication" "$workflow"
+token_env_count="$(grep -Fc 'GITHUB_TOKEN: ${{ github.token }}' "$workflow")"
+if [[ "$token_env_count" -ne 4 ]]; then
+    echo "release provenance contract: every explicit fetch step must receive the job token" >&2
+    exit 1
+fi
 # shellcheck disable=SC2016
-grep -Fq 'git fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"' "$workflow"
+authenticated_fetch_count="$(grep -Fc 'http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}' "$workflow")"
+if [[ "$authenticated_fetch_count" -ne 6 ]]; then
+    echo "release provenance contract: every private-repository fetch must use command-scoped authentication" >&2
+    exit 1
+fi
+# shellcheck disable=SC2016
+grep -Fq 'fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"' "$workflow"
 # shellcheck disable=SC2016
 grep -Fq '"$RELEASE_TAG" "$RELEASE_COMMIT"' "$workflow"
 grep -Fq "release-provenance-test" "$repo_root/fledge.toml"

@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785288030,
-  "commit": "f9d4acdaf4de509e2f3197299530c1295e8be14b",
+  "timestamp": 1785288897,
+  "commit": "be97bd121a3a7ba7c0fe1cfee6de05e95a36c9bf",
   "contract_digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
-  "workspace_digest": "bb7a0f62cf0ab68e5b8fd556088535ef7cf58445041376ec9efc0ecdd8b3b783",
-  "acceptance_input_digest": "ae907c6d204d5b3454e0bd134ad42740f60f472684f5054e3f508f262b264664",
+  "workspace_digest": "bfca1a3fb4c5867880d1863e10261341c119c026993b3d2584c9cd93c5529d2c",
+  "acceptance_input_digest": "23d67404bfb1d5a4fe42c81c05efe4a5945f43651e83074169dd201f0e3e321d",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -21,8 +21,8 @@
         "path": ".github/workflows/release.yml",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "2522ce07484b044479b485ad902d3772406c1955cfe778645e595db885757827",
-        "entry_digest": "4604467e6c7e2188823b7dc9370d910d75464b13f970e518c83e3c393e673531",
+        "payload_digest": "e29a42b009d0a0a4c0d21bb9e393beb4369b35653e7a620a3afe9aad93927126",
+        "entry_digest": "d133214a77340a1cd9e72150eed77d9cfa89b84a7add981ebce9fd47a48f70ce",
         "owners": [
           "@exact:delivery"
         ]
@@ -71,8 +71,8 @@
         "path": "Scripts/test-release-provenance.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "a8bc34a13cdc7c0e2a59bb3a31391a29b637276e838c470a00f4baabb1398a77",
-        "entry_digest": "af4982013bc11d18c9e439f337a93749798c9425c25fdf9476c6df85460ccb92",
+        "payload_digest": "2af461127592cd8b41a2b16bb60d2ebb12f355a5ec288e15b5b78c8a9736e6fc",
+        "entry_digest": "86eacd0058fdd629c7cea992a3f5e2f33ae860a61c7a8d6da672a281f0fe7789",
         "owners": [
           "@exact:delivery"
         ]
@@ -91,8 +91,8 @@
         "path": "docs/release-provenance.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "b7f7295fa5b6cc18174a9612698cdea354d81036ab08273cd1bb9b8e61484b86",
-        "entry_digest": "d3406cea8b2c17cbb29b2c3ae73753c5fc27c0945fc595e4da389c8de433de83",
+        "payload_digest": "94aa993b89d5d4056e763b6aab93a41058d57004c99cf1179be70353ebd508df",
+        "entry_digest": "cd4d87ecd9bee6c2fae371707d11986f9ede22e955acfcdab52cdeec026bf581",
         "owners": [
           "@exact:delivery"
         ]

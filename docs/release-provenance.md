@@ -132,9 +132,11 @@ If the private key may be exposed:
 4. Replace both `trustedKeys` and `signerPinning.human:leif` in
    `.attest-release.json` through a reviewed pull request.
 5. Sign new release evidence only after the policy change reaches main.
-6. Do not backfill an older tag whose embedded policy still trusts the
-   compromised key. Review and replace that release through an explicit
-   incident plan.
+6. Do not repush an older tag whose embedded workflow or policy still trusts
+   the compromised key. A manual backfill is permitted only after its exact
+   commit receives fresh evidence signed by the replacement key and the
+   dispatch verifies that evidence against the rotated policy on the current
+   protected default branch.
 
 Deleting a note does not make already downloaded artifacts disappear. If
 published artifacts are suspect, remove them from the GitHub release, notify
