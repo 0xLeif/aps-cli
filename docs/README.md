@@ -7,6 +7,8 @@ aps is a Swift CLI for exploring AppState outside SwiftUI and exposing typed sta
 | Goal | Read |
 | --- | --- |
 | Install and use the CLI | [Project README](../README.md) |
+| Choose an integration pattern | [Projects, agents, and CI](use-cases.md) |
+| Run complete workflows | [Examples](../examples/) |
 | Understand user-defined keys | [Dynamic schema design](design/dynamic-schema.md) |
 | Decide whether the next tag is ready | [Release readiness](release-readiness.md) |
 | Operate signed releases and recover provenance | [Release provenance](release-provenance.md) |

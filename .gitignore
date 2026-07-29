@@ -10,5 +10,12 @@ DerivedData/
 *.swp
 *~
 
+# Repository-local state roots created by guided examples
+/.agents/
+/.release-state/
+/.aps-agent-example/
+/.aps-release-example/
+/.aps-swift-harness-example/
+
 # CorvidLabs trust toolchain
 augur.json

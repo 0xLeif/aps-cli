@@ -1,11 +1,13 @@
 # Release readiness
 
-Status: **release preparation in progress**
+Status: **v1.1.0 released on 2026-07-29**
 
-Audit basis: current `origin/main` plus issue #119 release provenance in
-SpecSync change `CHG-0052`.
+This document is the completed safety-release audit. The implementation,
+release authentication recovery, checksum repair, signed publication, and
+Homebrew convergence are archived in SpecSync.
 
-Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable installer Action, portable Linux packaging, dynamic schema behavior, concurrency fixes, and watch improvements.
+Target release line: **1.1.0**. This release added a reusable installer Action, portable Linux
+packaging, dynamic schema behavior, concurrency fixes, and watch improvements.
 
 ## What is already strong
 
@@ -19,7 +21,7 @@ Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable ins
 
 Measured in-process source line coverage is 53.42%. Subprocess CLI tests are not attributed back to the instrumented test process, so that number understates command-path coverage. It still shows that registry, dynamic storage, command dispatch, and termination behavior need more direct tests.
 
-## Must close before the next tag
+## Closed for v1.1.0
 
 ### 1. Make schema paths safe by construction
 
@@ -127,9 +129,10 @@ rotation procedures are in [release provenance](release-provenance.md).
 The protected `v*` tag ruleset and `release` Environment remain operator-owned
 GitHub settings. Confirm them immediately before signing and pushing the tag.
 
-## Release-candidate proof
+## Release proof
 
-After the blockers merge:
+The v1.1.0 release completed this procedure. Keep it as the reproducible
+operator checklist for a future release:
 
 1. Run `Scripts/prepare-version.py --check`,
    `fledge lanes run verify`, and
@@ -139,7 +142,7 @@ After the blockers merge:
 3. Push `refs/notes/attest` before the tag.
 4. Require every main check to finish successfully.
 5. Run `fledge release minor --no-bump --dry-run` from a clean checkout and
-   confirm it targets v1.1.0 without edits.
+   confirm it targets the intended release version without edits.
 6. Publish the candidate artifacts.
 7. Verify every checksum sidecar.
 8. Execute both macOS binaries.

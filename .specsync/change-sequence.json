@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 64,
-  "id": "CHG-0064-fix-release-workflow-fetch-authentication-so-signed-tags-and-attest-notes-can-be",
+  "sequence": 66,
+  "id": "CHG-0066-document-and-ignore-repository-local-state-roots-generated-by-guided-examples",
   "acknowledged_collisions": []
 }
