@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 66,
-  "id": "CHG-0066-document-and-ignore-repository-local-state-roots-generated-by-guided-examples",
+  "sequence": 67,
+  "id": "CHG-0067-harden-guided-examples-against-secret-dumps-large-schemas-and-incompatible-key",
   "acknowledged_collisions": []
 }

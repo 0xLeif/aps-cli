@@ -22,8 +22,7 @@ Give each agent a dedicated root:
 
 ```bash
 export APS_HOME="$PWD/.agents/codex"
-aps schema --json
-aps dump --json
+APS_BIN="${APS_BIN:-aps}" ./examples/agent-memory/run.sh
 ```
 
 At the start of a session, the agent rediscovers the live schema and values. At

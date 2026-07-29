@@ -34,6 +34,23 @@ APS_HOME="$fixture_root/agent" \
 test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get currentIssue)" = "321"
 test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get workingBranch)" = "agent/example"
 test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get testsPassed)" = "true"
+REAL_APS_BIN="$aps_bin" \
+APS_BIN="$repo_root/examples/test-support/aps-large-inventory.sh" \
+APS_HOME="$fixture_root/agent" \
+    "$repo_root/examples/agent-memory/run.sh" > "$fixture_root/agent-large-inventory.json"
+grep -Fq '"key":"currentIssue"' "$fixture_root/agent-large-inventory.json"
+
+collision_root="$fixture_root/agent-collision"
+APS_HOME="$collision_root" "$aps_bin" key add currentIssue \
+    --type String --storage FileState --path wrong-current-issue.json \
+    --initial sentinel --doc "Issue currently owned by this agent" >/dev/null
+if APS_BIN="$aps_bin" APS_HOME="$collision_root" \
+    "$repo_root/examples/agent-memory/run.sh" > "$fixture_root/agent-collision.json" 2>/dev/null
+then
+    echo "Agent example accepted an incompatible checkpoint key" >&2
+    exit 1
+fi
+test "$(APS_HOME="$collision_root" "$aps_bin" get currentIssue)" = "sentinel"
 
 APS_BIN="$aps_bin" \
 APS_HOME="$fixture_root/release" \
@@ -49,6 +66,18 @@ fi
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseVersion)" = "9.8.7"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "false"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "pending"
+
+release_collision_root="$fixture_root/release-collision"
+APS_HOME="$release_collision_root" "$aps_bin" key add releaseVersion \
+    --type String --storage FileState --path wrong-release-version.json \
+    --initial sentinel --doc "Release version under evaluation" >/dev/null
+if APS_BIN="$aps_bin" APS_HOME="$release_collision_root" \
+    "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release-collision.json" 2>/dev/null
+then
+    echo "Release example accepted an incompatible checkpoint path" >&2
+    exit 1
+fi
+test "$(APS_HOME="$release_collision_root" "$aps_bin" get releaseVersion)" = "sentinel"
 APS_BIN="$aps_bin" \
 APS_HOME="$fixture_root/release" \
 RELEASE_PHASE=published \
@@ -114,6 +143,17 @@ grep -Fq '../examples/' "$repo_root/docs/README.md"
 grep -Fq './examples/agent-memory/run.sh' "$repo_root/examples/agent-memory/README.md"
 grep -Fq '${APS_BIN:-aps}' "$repo_root/examples/release-pipeline/README.md"
 grep -Fq 'StoredState values live in platform UserDefaults' "$repo_root/docs/use-cases.md"
+if grep -Fq 'aps dump --json' "$repo_root/docs/use-cases.md"; then
+    echo "Agent startup documentation contains an unfiltered state dump" >&2
+    exit 1
+fi
+if grep -Fq 'grep -Fxq' \
+    "$repo_root/examples/agent-memory/run.sh" \
+    "$repo_root/examples/release-pipeline/run.sh"
+then
+    echo "Example key inventory check can short-circuit its producer" >&2
+    exit 1
+fi
 for ignored_root in \
     /.agents/ \
     /.release-state/ \
