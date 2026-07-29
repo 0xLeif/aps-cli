@@ -5,10 +5,11 @@
   "title": "Add runnable agent, CI, Swift integration, and release pipeline examples with README and documentation navigation",
   "description": "Add runnable agent, CI, Swift integration, and release pipeline examples with README and documentation navigation",
   "kind": "documentation",
-  "state": "verifying",
+  "state": "accepted",
+  "canonical_applied": true,
   "base_commit": "5a14806518b38ffdb5143c3115f1761689f8c749",
   "created_at": 1785333608,
-  "updated_at": 1785336296,
+  "updated_at": 1785338981,
   "affected_specs": [
     "aps-cli"
   ],

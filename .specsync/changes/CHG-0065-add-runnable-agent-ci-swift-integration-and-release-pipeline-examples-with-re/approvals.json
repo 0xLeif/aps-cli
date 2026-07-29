@@ -13,6 +13,13 @@
       "timestamp": 1785334291,
       "digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
       "note": "Definition reconfirmed after examples and verification tasks were finalized; fledge verify passed all 12 steps."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785338981,
+      "digest": "450caacdb1eefddd9c1dda3c36368b6e0a7ca84d074a5f55a43bec4f8c6b9ead",
+      "note": "Closing approval after the 12-step Fledge lane passed and GitHub platform checks confirmed macOS, Linux, and Windows behavior."
     }
   ],
   "reopenings": []

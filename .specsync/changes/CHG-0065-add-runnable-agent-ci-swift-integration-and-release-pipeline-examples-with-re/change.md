@@ -1,6 +1,6 @@
 ---
 id: CHG-0065-add-runnable-agent-ci-swift-integration-and-release-pipeline-examples-with-re
-state: implementing
+state: accepted
 type: documentation
 base_commit: 5a14806518b38ffdb5143c3115f1761689f8c749
 ---
