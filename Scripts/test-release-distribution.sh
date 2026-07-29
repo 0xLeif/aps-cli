@@ -33,7 +33,22 @@ grep -Fq 'APS_VERSION="${RELEASE_TAG#v}"' "$workflow"
 grep -Fq 'test "$RELEASE_TAG" = "v$(cat VERSION)"' "$workflow"
 grep -Fq 'test "$("$BIN_DIR/aps" --version)" = "${RELEASE_TAG#v}"' "$workflow"
 test "$(grep -c 'persist-credentials: true' "$workflow")" -eq 2
-! grep -Fq 'authorization="$(printf' "$workflow"
+if grep -Fq 'authorization="$(printf' "$workflow"; then
+    echo "release workflow constructs a manual Authorization header" >&2
+    exit 1
+fi
+grep -Fq 'sha256sum "$file" > "${file}.sha256"' "$workflow"
+grep -Fq 'sha256sum --check "${file}.sha256"' "$workflow"
+
+checksum_fixture="$fixture_root/checksum-fixture"
+printf 'aps release fixture\n' > "$checksum_fixture"
+sha256sum "$checksum_fixture" > "$checksum_fixture.sha256"
+sha256sum --check "$checksum_fixture.sha256"
+checksum_value="$(awk '{print $1}' "$checksum_fixture.sha256")"
+if [[ ! "$checksum_value" =~ ^[0-9a-f]{64}$ ]]; then
+    echo "release checksum sidecar does not begin with a SHA-256 digest" >&2
+    exit 1
+fi
 grep -Fq 'fetch aps-linux-x86_64-portable.tar.gz' "$formula_workflow"
 grep -Fq 'Scripts/render-homebrew-formula.py' "$formula_workflow"
 grep -Fq 'Homebrew formula updates require a stable SemVer tag' "$formula_workflow"

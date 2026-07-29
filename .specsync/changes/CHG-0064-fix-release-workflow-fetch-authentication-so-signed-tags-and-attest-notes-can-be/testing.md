@@ -6,7 +6,9 @@ artifact: testing
 # Testing
 
 - `Scripts/test-release-distribution.sh` asserts both release checkouts persist
-  their job credential and rejects manual Authorization-header construction.
+  their job credential, rejects manual Authorization-header construction, and
+  exercises the checksum sidecar format consumed by the formula updater.
 - `fledge lanes run verify` exercises the release distribution contract.
 - A `workflow_dispatch` run for `v1.1.0` proves tag, default-branch, and attest
-  note fetches succeed on the GitHub-hosted runner.
+  note fetches succeed on the GitHub-hosted runner and replaces the release
+  assets with verified checksum sidecars.

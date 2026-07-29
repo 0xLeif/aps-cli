@@ -284,15 +284,17 @@ grep -Fq 'needs: [provenance, test]' "$workflow"
 grep -Fq "environment: release" "$workflow"
 grep -Fq "git merge-base --is-ancestor" "$workflow"
 grep -Fq "Verify remote tag after publication" "$workflow"
-token_env_count="$(grep -Fc 'GITHUB_TOKEN: ${{ github.token }}' "$workflow")"
-if [[ "$token_env_count" -ne 1 ]]; then
-    echo "release provenance contract: only remote tag verification needs an explicit job token" >&2
+token_env_count="$(grep -Fc 'GITHUB_TOKEN: ${{ github.token }}' "$workflow" || true)"
+if [[ "$token_env_count" -ne 0 ]]; then
+    echo "release provenance contract: checkout-managed credentials must authenticate all release fetches" >&2
     exit 1
 fi
 # shellcheck disable=SC2016
-authenticated_fetch_count="$(grep -Fc 'http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}' "$workflow")"
-if [[ "$authenticated_fetch_count" -ne 1 ]]; then
-    echo "release provenance contract: only post-publication verification uses command-scoped authentication" >&2
+authenticated_fetch_count="$(
+    grep -Fc 'http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}' "$workflow" || true
+)"
+if [[ "$authenticated_fetch_count" -ne 0 ]]; then
+    echo "release provenance contract: release fetches must not construct command-scoped authentication" >&2
     exit 1
 fi
 # shellcheck disable=SC2016

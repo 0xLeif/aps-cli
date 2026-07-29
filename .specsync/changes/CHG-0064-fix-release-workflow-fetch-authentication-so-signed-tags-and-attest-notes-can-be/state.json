@@ -19,9 +19,9 @@
     ".specsync/change-sequence.json"
   ],
   "no_spec_change": true,
-  "no_spec_change_rationale": "This repairs CI authentication plumbing without changing the aps CLI contract or release artifact semantics.",
+  "no_spec_change_rationale": "This repairs CI authentication and checksum-generation plumbing without changing the aps CLI contract or release artifact semantics.",
   "acceptance_criteria": [
-    "Release fetches use one checkout-managed credential, the release distribution contract rejects manual duplicate Authorization headers, and a v1.1.0 workflow dispatch passes provenance."
+    "Release fetches use one checkout-managed credential, the release distribution contract rejects manual duplicate Authorization headers, generated checksum sidecars begin with valid SHA-256 digests, and a v1.1.0 workflow dispatch passes through publication."
   ],
   "selected_artifacts": [
     "context",

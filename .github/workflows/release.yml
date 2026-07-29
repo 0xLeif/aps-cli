@@ -221,7 +221,8 @@ jobs:
           cd artifacts
           for file in ./*; do
             [ -f "$file" ] || continue
-            sha256sum "$file" | sed "s|.*/||" > "${file}.sha256"
+            sha256sum "$file" > "${file}.sha256"
+            sha256sum --check "${file}.sha256"
           done
           cat -- ./*.sha256
 
@@ -257,13 +258,10 @@ jobs:
       - name: Verify remote tag after publication
         env:
           ATTEST_BIN: ${{ steps.attest.outputs.binary }}
-          GITHUB_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.provenance.outputs.tag }}
           RELEASE_COMMIT: ${{ needs.provenance.outputs.commit }}
         run: |
-          authorization="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
-            fetch --force origin \
+          git fetch --force origin \
             "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
           ./Scripts/release-provenance-gate.sh \
             "$RELEASE_TAG" "$RELEASE_COMMIT"
