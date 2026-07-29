@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785343551,
-  "commit": "699bdd6b6b3584e67b8525aa447ddfe4dc5dda0f",
+  "timestamp": 1785344234,
+  "commit": "c4e7d71ad334ebefb35cbbb669f54abfee0d8935",
   "contract_digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
-  "workspace_digest": "2d134d41619b9a533b9a6cf98ed352a25e4b069b6a7ec7b7a1ecf99597e1a808",
-  "acceptance_input_digest": "af1b0bf8e1c3816c0bd9b53728835fabc60e6ffaea2a214332724c9dbd2c689c",
+  "workspace_digest": "5a4c3896bd0c89603c4686ab7888831af46a383104cb00b983448b7e36f07ce2",
+  "acceptance_input_digest": "3767af6467f4424cd0fc682f8de755cf6ef0ea3c1afc1cde9f7751227af6a392",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -31,8 +31,8 @@
         "path": "Scripts/test-examples.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "7d31b7e608a745927bcdd5345c32d5e3107480911ef4e7a984a7398ceb77de5d",
-        "entry_digest": "9a973ad6f6ced02d419adc9f48dbd0173f7b4086d7812bc290776a37a5e5ca0f",
+        "payload_digest": "e6e809f675109335cefd4603c6e62ef4a29f0f04236cf7004b196b75ce206853",
+        "entry_digest": "11b2cfe1d878e29052ae3ed5eda81b2ca3c44095653270e8bf1c05fcaeb1a1ac",
         "owners": [
           "@exact:delivery"
         ]
@@ -151,8 +151,8 @@
         "path": "examples/agent-memory/README.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "ce5cffc97271f61d417f3996f3ef5abac12ba5afaea42b1d14858f6adccec5b2",
-        "entry_digest": "ba688656a02caa548cb996b4f7eb826646fb9c6fbbf2cee0f5cd9a6b0358f766",
+        "payload_digest": "86e3ee21bd27ec8101812d50bba3edb03d852524181f131671ead1efac7b4ade",
+        "entry_digest": "685026fda5c58ad6e141a1d66b8b5d424b4d9f2df775f8839f215c8a85889c6b",
         "owners": [
           "@exact:delivery"
         ]
@@ -161,8 +161,8 @@
         "path": "examples/agent-memory/run.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "ebe6fb98670f7650378f277ce39a49f476d815eb503d5adce3b637cca6779caa",
-        "entry_digest": "7df235104e29e50a6746fae689a53059ed7f6bc9256694e765cc9d262fb8f649",
+        "payload_digest": "8170050a9d43811c6adbb65be0360ecd4f0fe1158e9f4a0e39417ab74a8685d0",
+        "entry_digest": "2254ef9bcdb7b42baa2d3c027d22442c7db2caef8adf06dbbdbd39a4b7097b4f",
         "owners": [
           "@exact:delivery"
         ]
@@ -191,8 +191,8 @@
         "path": "examples/release-pipeline/README.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "0e71466a197fa8891b53094a2ec36d73f2dff142ecf0733ff2e72793970074a8",
-        "entry_digest": "cdd895463c0aaf8941a8e05d4b2692809b8fa872c6b458d8055bcc45553f8e40",
+        "payload_digest": "b29bdf02f8861bfdfa0f4616a09ae672ac4bd293863eaa01c36015d7806ab7be",
+        "entry_digest": "3f080322f506676594e4e6324c3b8e7470984b56b6455d5559f4b03ea265424e",
         "owners": [
           "@exact:delivery"
         ]
@@ -201,8 +201,8 @@
         "path": "examples/release-pipeline/run.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "03f97fc7786320f470db9c7795bb2726e9ff9cf2f9e9ea39e05830afe7fd6d17",
-        "entry_digest": "bbaf4d8009f7e596fc912618ede87ddd7a8c980e8842f32222467eb63cd182d2",
+        "payload_digest": "507139d7a5035fd4c8cfe641afdabc377e4c223885692dbb2a014ad5162bf3af",
+        "entry_digest": "954c414c0fdcc014854aef1b76916d6a31f6df51394901039cede5e432dde104",
         "owners": [
           "@exact:delivery"
         ]
@@ -221,8 +221,8 @@
         "path": "examples/swift-harness/StateHarness.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "44d92e57d926164e8d7a7e7a3c375ebc2d7fc411988778804ead9c45327a3d8a",
-        "entry_digest": "f05317c8732996279ca925b56b976e1101224a6fe4e427893b03304b81c4a2a6",
+        "payload_digest": "55085dea0290145f4b6e70ad1106b5d3da13005b7a82b659870c4f3e6092f935",
+        "entry_digest": "fbd78e671ee4ed799c9e3578026453fe722bb957f82314f3c246a22eabc5858e",
         "owners": [
           "@exact:delivery"
         ]
