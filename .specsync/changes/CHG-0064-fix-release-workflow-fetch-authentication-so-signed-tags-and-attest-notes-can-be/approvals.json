@@ -13,6 +13,13 @@
       "timestamp": 1785303960,
       "digest": "88f806418c29a76c109b528f669ea49b8ecef20b3bfab2d16fb8a15626339ff3",
       "note": "Refreshed after adding the provenance regression contract to affected paths."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785331046,
+      "digest": "bcc2722fe679c60135b60195f92a084146a758b34a1a1d38cebe7bebfb02d439",
+      "note": "Refreshed after expanding the release recovery contract to validate checksum sidecars."
     }
   ],
   "reopenings": []
