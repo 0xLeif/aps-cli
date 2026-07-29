@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0062-update-security-sensitive-site-dependencies-in-pr-108-and-verify-lint-hosting-b",
+  "slug": "update-security-sensitive-site-dependencies-in-pr-108-and-verify-lint-hosting-b",
+  "title": "Update security-sensitive site dependencies in PR 108 and verify lint, hosting builds, rendered output, and production audit",
+  "description": "Update security-sensitive site dependencies in PR 108 and verify lint, hosting builds, rendered output, and production audit",
+  "kind": "operations",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "3f2bc4febce1d28a85c9fde41b610263cbbcf63e",
+  "created_at": 1785294529,
+  "updated_at": 1785295912,
+  "affected_specs": [],
+  "affected_paths": [
+    "site/package.json",
+    "site/package-lock.json",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "Dependency resolution and vulnerability remediation do not change the normative aps CLI or StateStore contracts.",
+  "acceptance_criteria": [
+    "PR 108 is rebased onto current main; Vite, Cloudflare tooling, fast-uri, js-yaml, undici, and ws security updates are installed from the committed lockfile; site lint, GitHub Pages build and export test, Cloudflare build and rendered HTML test, and production dependency audit pass; hosted Trust passes without bypassing SpecSync."
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing",
+    "research",
+    "design",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "no"
+  }
+}

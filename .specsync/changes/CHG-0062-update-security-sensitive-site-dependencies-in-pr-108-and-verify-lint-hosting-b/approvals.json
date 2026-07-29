@@ -1,0 +1,40 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785294606,
+      "digest": "e81c99a2a259818340bc639b373afdb57916dd0816f3d98c100c7f09cb40e09b",
+      "note": "Approved to land the existing security dependency PR as part of the requested v1.1.0 release preparation."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785295082,
+      "digest": "37ab0c5175d7f81e45435f3cc9c4bcf759016d3b2e815c26486fff649e51487f",
+      "note": "Reapproved after recording final dependency security research, validation results, and the rejected incompatible override."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785295803,
+      "digest": "16c2df5150091adba661287f0cbca7cef9558af7e50f261dd03e885c73d53a70",
+      "note": "Definition refreshed after local verification and trust evidence."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785295825,
+      "digest": "cb45b8a07b4bb338c3ba8f81639025d6ce1588ea626fd163d8167f8e436eb7ef",
+      "note": "Definition finalized with implementation tasks complete; PR publication and merge remain external delivery steps."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785295912,
+      "digest": "3092a0c965c6d688d265f805130526c088329643a58390efe34a8c4d73b21700",
+      "note": "Local site checks, production audit, native verify lane, and full trust gate passed."
+    }
+  ],
+  "reopenings": []
+}
