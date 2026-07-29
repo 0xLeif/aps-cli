@@ -79,6 +79,8 @@ contract. Ignore runtime values while allowing the schema:
 ```
 
 For agent-local roots, normally ignore the complete `.agents/` directory.
+The guided examples use named local state roots that this repository already
+excludes in `.gitignore`.
 
 ## Safety boundaries
 
