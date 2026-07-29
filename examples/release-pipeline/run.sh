@@ -42,6 +42,7 @@ if [[ -n "${CANDIDATE_COMMIT+x}" ]]; then
     "$aps_bin" set candidateCommit "$CANDIDATE_COMMIT" >/dev/null
 fi
 if [[ "$candidate_changed" == true ]]; then
+    "$aps_bin" set releasePhase planned >/dev/null
     "$aps_bin" set releaseTestsPassed false >/dev/null
     "$aps_bin" set riskVerdict pending >/dev/null
 fi

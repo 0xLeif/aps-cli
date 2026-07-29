@@ -20,6 +20,6 @@ APS_HOME="$PWD/.release-state" "${APS_BIN:-aps}" watch releasePhase --jsonl --ti
 
 aps records operational state. Signed provenance still belongs in Attest, the
 release tag remains the version authority, and CI remains the test authority.
-Changing the release version or candidate commit resets `releaseTestsPassed` to
-`false` and `riskVerdict` to `pending`; provide new gate results only after
-evaluating that candidate.
+Changing the release version or candidate commit resets `releasePhase` to
+`planned`, `releaseTestsPassed` to `false`, and `riskVerdict` to `pending`.
+Provide new phase and gate results only after evaluating that candidate.

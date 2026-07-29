@@ -61,9 +61,14 @@ fresh aps process.
 Release automation can expose its current candidate and phase:
 
 ```bash
-aps set releasePhase verifying
-aps set releaseTestsPassed true
-aps set riskVerdict proceed
+APS_HOME="$PWD/.release-state" \
+RELEASE_VERSION=1.1.0 \
+CANDIDATE_COMMIT="$(git rev-parse HEAD)" \
+./examples/release-pipeline/run.sh >/dev/null
+
+APS_HOME="$PWD/.release-state" "${APS_BIN:-aps}" set releasePhase verifying
+APS_HOME="$PWD/.release-state" "${APS_BIN:-aps}" set releaseTestsPassed true
+APS_HOME="$PWD/.release-state" "${APS_BIN:-aps}" set riskVerdict proceed
 ```
 
 This makes a local release script observable to agents and terminal dashboards.

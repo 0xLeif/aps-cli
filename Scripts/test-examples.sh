@@ -41,6 +41,7 @@ test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "pending"
 APS_BIN="$aps_bin" \
 APS_HOME="$fixture_root/release" \
+RELEASE_PHASE=published \
 RELEASE_TESTS_PASSED=true \
 RISK_VERDICT=proceed \
     "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release-gates.json"
@@ -48,6 +49,7 @@ APS_BIN="$aps_bin" \
 APS_HOME="$fixture_root/release" \
     "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release-resume.json"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseVersion)" = "9.8.7"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releasePhase)" = "published"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "true"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "proceed"
 APS_BIN="$aps_bin" \
@@ -56,6 +58,7 @@ RELEASE_VERSION=9.8.8 \
 CANDIDATE_COMMIT=fedcba9876543210 \
     "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release-new-candidate.json"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseVersion)" = "9.8.8"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releasePhase)" = "planned"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "false"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "pending"
 
@@ -69,6 +72,8 @@ grep -Fq 'version: 1.1.0' "$workflow"
 grep -Fq 'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02' "$workflow"
 grep -Fq 'actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093' "$workflow"
 grep -Fq 'APS_HOME: ${{ runner.temp }}/aps-home' "$workflow"
+test "$(grep -Fc 'APS_HOME: ${{ runner.temp }}/aps-home' "$workflow")" -eq 2
+test "$(grep -Fc 'path: ${{ runner.temp }}/aps-home' "$workflow")" -eq 2
 test "$(grep -Fc '7373d124ebb3823c1f7f19651dfffe4d7ed83f51' "$workflow")" -eq 2
 if grep -Eq 'uses: actions/[^[:space:]@]+@v[0-9]+' "$workflow"; then
     echo "GitHub Actions example contains a mutable first-party action reference" >&2

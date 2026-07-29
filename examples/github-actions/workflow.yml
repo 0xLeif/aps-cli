@@ -9,14 +9,14 @@ permissions:
 jobs:
   prepare:
     runs-on: ubuntu-latest
-    env:
-      APS_HOME: ${{ runner.temp }}/aps-home
     steps:
       - uses: 0xLeif/aps-cli/.github/actions/install-aps@7373d124ebb3823c1f7f19651dfffe4d7ed83f51
         with:
           version: 1.1.0
 
       - name: Record build state
+        env:
+          APS_HOME: ${{ runner.temp }}/aps-home
         run: |
           aps key add phase \
             --type String --storage FileState --path phase.json \
@@ -31,13 +31,11 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: aps-state
-          path: ${{ env.APS_HOME }}
+          path: ${{ runner.temp }}/aps-home
 
   consume:
     needs: prepare
     runs-on: ubuntu-latest
-    env:
-      APS_HOME: ${{ runner.temp }}/aps-home
     steps:
       - uses: 0xLeif/aps-cli/.github/actions/install-aps@7373d124ebb3823c1f7f19651dfffe4d7ed83f51
         with:
@@ -46,9 +44,11 @@ jobs:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: aps-state
-          path: ${{ env.APS_HOME }}
+          path: ${{ runner.temp }}/aps-home
 
       - name: Read state in a new job
+        env:
+          APS_HOME: ${{ runner.temp }}/aps-home
         run: |
           aps schema --json
           test "$(aps get phase)" = "testing"
