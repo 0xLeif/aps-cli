@@ -2,19 +2,21 @@
 
 Status: **not ready to tag**
 
-Audit basis: current `origin/main` plus active issue #118 security hardening in
-SpecSync change `CHG-0050`.
+Audit basis: current `origin/main`, issue #118 security hardening in SpecSync
+change `CHG-0050`, and the stacked issue #114 dynamic object typing work in
+SpecSync change `CHG-0051`.
 
 Target release line: **1.1.0**, because the work since 1.0.0 adds a reusable installer Action, portable Linux packaging, dynamic schema behavior, concurrency fixes, and watch improvements.
 
 ## What is already strong
 
-- The fledge verification lane passes all seven steps.
-- 213 Swift tests pass locally, including the issue #118 security regressions.
-- SpecSync passes with 2 specs, 0 errors, and 0 warnings.
+- The stacked issue #114 fledge verification lane passes all seven steps.
+- The stacked issue #114 implementation passes 222 Swift tests locally,
+  including recursive structural JSON and strict Slice schema regressions.
+- The issue #114 Trust and hosted lanes have not yet been run.
 - macOS, Ubuntu, Linux smoke, Windows smoke, and Trust workflows run on main.
-- CHG-0050 is the only active SpecSync change and must be verified, accepted,
-  merged, and archived before the release tag.
+- CHG-0050 and stacked CHG-0051 must each be verified, accepted, merged, and
+  archived before the release tag.
 - Human, JSON, and JSONL output contracts are broadly exercised.
 
 Measured in-process source line coverage is 53.42%. Subprocess CLI tests are not attributed back to the instrumented test process, so that number understates command-path coverage. It still shows that registry, dynamic storage, command dispatch, and termination behavior need more direct tests.
@@ -29,9 +31,17 @@ Implemented for v1.1.0 by [#111](https://github.com/0xLeif/aps-cli/issues/111). 
 
 Implemented for v1.1.0 by [#112](https://github.com/0xLeif/aps-cli/issues/112). Every registered name, including seed names replaced with `key add --force`, now uses its current schema entry for type, storage, path, initial value, Slice metadata, watch behavior, dump behavior, and output typing. Registry snapshots are coherent and legacy flag fallback is limited to the unchanged default seed definition.
 
-Recursive arbitrary object values remain tracked separately and do not weaken authority over the object shapes currently supported by the schema.
+### 3. Enforce recursive object and Slice typing
 
-### 3. Make reset and purge report the truth
+Issue [#114](https://github.com/0xLeif/aps-cli/issues/114) is implemented on
+the active stacked branch but is not yet release evidence. It adds recursive
+structural JSON values, open object shapes whose declared fields are required
+and type-checked, preservation of undeclared fields, repeatable
+`--field NAME=TYPE` declarations, strict matching Slice fields, live
+`userSchema.keyCount`, and static `schemaVersion` 6. Its Trust and hosted
+verification, review, merge, and SpecSync acceptance/archive remain required.
+
+### 4. Make reset and purge report the truth
 
 Implemented for v1.1.0 by
 [#113](https://github.com/0xLeif/aps-cli/issues/113). Reset APIs throw,
@@ -48,7 +58,7 @@ for process crashes or power loss. Bulk reset remains deterministic and
 fail-fast while returning an explicit report of reset, failed, and
 not-attempted keys; mutation stats count only verified successes.
 
-### 4. Repair Linux and Homebrew distribution
+### 5. Repair Linux and Homebrew distribution
 
 The release workflow currently copies the Linux binary before rebuilding it with the portable `$ORIGIN/lib` rpath. The post-release formula workflow also requests the old `aps-linux-x86_64.sha256` while releases now publish `aps-linux-x86_64-portable.tar.gz`.
 
@@ -59,7 +69,7 @@ Required outcome:
 - update the Homebrew formula to preserve the executable and bundled libraries together;
 - assert that release, installer, and formula asset names agree.
 
-### 5. Make versioning atomic
+### 6. Make versioning atomic
 
 The version appears in Swift source, schema output, smoke scripts, tests, specs, README, and `plugin.toml`. The current fledge release plan only bumps the plugin manifest.
 
@@ -69,7 +79,7 @@ Required outcome:
 - smoke and schema tests prove the new version;
 - the final release uses `fledge release ... --no-bump` from clean main.
 
-### 6. Harden passphrase secrets
+### 7. Harden passphrase secrets
 
 Implemented for v1.1.0 by
 [#118](https://github.com/0xLeif/aps-cli/issues/118). Every new encrypted

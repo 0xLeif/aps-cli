@@ -553,6 +553,36 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(StateStore().get(.secret), "")
     }
 
+    @MainActor
+    func testEncryptedDiskPreflightRejectsSchemaIncompatiblePlaintext() async throws {
+        let store = StateStore()
+        let stringEntry = SchemaKeyEntry(
+            name: "shapedSecret",
+            type: "String",
+            storage: "EncryptedFile",
+            initial: .string(""),
+            path: "shaped-secret.enc",
+            doc: "encrypted schema preflight regression"
+        )
+        try store.addKey(stringEntry, force: false)
+        try store.set(name: stringEntry.name, value: "plaintext")
+
+        let objectEntry = SchemaKeyEntry(
+            name: stringEntry.name,
+            type: "object",
+            storage: stringEntry.storage,
+            initial: .object(["name": .string("initial")]),
+            path: stringEntry.path,
+            doc: stringEntry.doc,
+            objectShape: ["name": "String"]
+        )
+        try store.addKey(objectEntry, force: true)
+
+        XCTAssertThrowsError(try StateStore.requireDecodableDiskState(forName: objectEntry.name)) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: objectEntry.name))
+        }
+    }
+
 #if !os(Windows)
     @MainActor
     func testSecretPassphraseRoundTripAndWrongKey() async throws {
@@ -652,7 +682,10 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(try CLIOutput.typedValue(for: .flag, store: store), .bool(true))
         XCTAssertEqual(
             try CLIOutput.typedValue(for: .profile, store: store),
-            .object(ProfileDocument(name: "n", version: 2))
+            .object([
+                "name": .string("n"),
+                "version": .int(2),
+            ])
         )
 
         let payload = CLIOutput.KeyValuePayload(
@@ -821,8 +854,20 @@ final class APSTests: XCTestCase {
         }
 
         XCTAssertEqual(events.count, 2)
-        XCTAssertEqual(events[0].value, .object(ProfileDocument(name: "before", version: 3)))
-        XCTAssertEqual(events[1].value, .object(ProfileDocument(name: "leif", version: 4)))
+        XCTAssertEqual(
+            events[0].value,
+            .object([
+                "name": .string("before"),
+                "version": .int(3),
+            ])
+        )
+        XCTAssertEqual(
+            events[1].value,
+            .object([
+                "name": .string("leif"),
+                "version": .int(4),
+            ])
+        )
     }
 
     @MainActor
@@ -897,7 +942,10 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(try CLIOutput.typedValue(for: .note, from: "hi"), .string("hi"))
         XCTAssertEqual(
             try CLIOutput.typedValue(for: .profile, from: #"{"name":"a","version":2}"#),
-            .object(ProfileDocument(name: "a", version: 2))
+            .object([
+                "name": .string("a"),
+                "version": .int(2),
+            ])
         )
     }
 
@@ -1402,9 +1450,10 @@ final class APSTests: XCTestCase {
     func testSchemaDocumentCoversAllKeysAndCommands() throws {
         let document = Schema.staticDocument()
 
-        XCTAssertEqual(document.schemaVersion, 5)
+        XCTAssertEqual(document.schemaVersion, 6)
         XCTAssertEqual(document.cliVersion, "1.0.0")
         XCTAssertEqual(document.keys.map(\.name), DemoKey.allCases.map(\.rawValue))
+        XCTAssertEqual(document.userSchema.keyCount, document.keys.count)
         XCTAssertEqual(document.stateRoot.precedence, ["--state-dir", "APS_HOME", "~/.aps"])
 
         let commandNames = document.commands.map(\.name)
@@ -1413,6 +1462,8 @@ final class APSTests: XCTestCase {
         }
         let reset = document.commands.first { $0.name == "reset" }
         XCTAssertTrue(reset?.flags.contains("--registered") == true)
+        let key = document.commands.first { $0.name == "key" }
+        XCTAssertTrue(key?.flags.contains("--field") == true)
 
         let secret = document.keys.first { $0.name == "secret" }
         XCTAssertEqual(secret?.path, "<state-root>/secret.enc")
@@ -1448,7 +1499,10 @@ final class APSTests: XCTestCase {
         let data = try XCTUnwrap(json.data(using: .utf8))
         let object = try JSONSerialization.jsonObject(with: data) as? [String: Any]
 
-        XCTAssertEqual(object?["schemaVersion"] as? Int, 5)
+        XCTAssertEqual(object?["schemaVersion"] as? Int, 6)
+        let userSchema = try XCTUnwrap(object?["userSchema"] as? [String: Any])
+        let keys = try XCTUnwrap(object?["keys"] as? [[String: Any]])
+        XCTAssertEqual(userSchema["keyCount"] as? Int, keys.count)
         let payloads = try XCTUnwrap(object?["payloads"] as? [String: Any])
         for name in [
             "KeyValuePayload",
@@ -1468,6 +1522,14 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(event["type"] as? String, "object")
         XCTAssertNotNil(event["properties"])
         XCTAssertNotNil(event["required"])
+
+        let recursiveType = "null | boolean | integer | finite number | string | array | object (recursive)"
+        for payloadName in ["KeyValuePayload", "WatchEvent", "ResetPayload"] {
+            let payload = try XCTUnwrap(payloads[payloadName] as? [String: Any])
+            let properties = try XCTUnwrap(payload["properties"] as? [String: Any])
+            let value = try XCTUnwrap(properties["value"] as? [String: Any])
+            XCTAssertEqual(value["type"] as? String, recursiveType)
+        }
     }
 
     func testUserSchemaMaterializeAndKeyAdd() async throws {
@@ -2926,6 +2988,82 @@ final class APSTests: XCTestCase {
         XCTAssertEqual(mockDefaults.object(forKey: "aps.user.testStoredStateKey") as? String, "initial_val")
     }
 
+    @MainActor
+    internal func testStoredStatePresentUndecodableCanonicalValueIsCorrupt() async throws {
+        let defaults = try XCTUnwrap(hermeticDefaults)
+        let entry = SchemaKeyEntry(
+            name: "corruptCounter",
+            type: "Int",
+            storage: "StoredState",
+            initial: .int(7)
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        let corrupt = try JSONEncoder().encode("not-an-int")
+        defaults.set(corrupt, forKey: "aps.user.corruptCounter")
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+        XCTAssertEqual(defaults.object(forKey: "aps.user.corruptCounter") as? Data, corrupt)
+    }
+
+    @MainActor
+    internal func testStoredStatePresentUndecodableLegacyFlagIsCorrupt() async throws {
+        let defaults = try XCTUnwrap(hermeticDefaults)
+        let entry = try XCTUnwrap(UserSchema.defaultDocument().keys.first { $0.name == "flag" })
+        let schema = UserSchemaDocument(keys: [entry])
+        let corrupt = try JSONEncoder().encode("not-a-bool")
+        defaults.set(corrupt, forKey: "App/aps.flag")
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+        XCTAssertNil(defaults.object(forKey: "aps.user.flag"))
+        XCTAssertEqual(defaults.object(forKey: "App/aps.flag") as? Data, corrupt)
+    }
+
+    @MainActor
+    internal func testStoredStateIntRejectsNSNumberBooleanKind() async throws {
+        let defaults = try XCTUnwrap(hermeticDefaults)
+        let entry = SchemaKeyEntry(
+            name: "numberKindCounter",
+            type: "Int",
+            storage: "StoredState",
+            initial: .int(7)
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        defaults.set(NSNumber(value: true), forKey: "aps.user.\(entry.name)")
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+    }
+
+    @MainActor
+    internal func testStoredStateBoolRejectsNSNumberIntegerKind() async throws {
+        let defaults = try XCTUnwrap(hermeticDefaults)
+        let entry = SchemaKeyEntry(
+            name: "numberKindFlag",
+            type: "Bool",
+            storage: "StoredState",
+            initial: .bool(false)
+        )
+        let schema = UserSchemaDocument(keys: [entry])
+        defaults.set(NSNumber(value: 1), forKey: "aps.user.\(entry.name)")
+
+        XCTAssertThrowsError(
+            try DynamicKeyStorage.get(entry: entry, stateRoot: "/tmp", schema: schema)
+        ) { error in
+            XCTAssertEqual(error as? APSError, .corruptState(key: entry.name))
+        }
+    }
+
 }
 
 extension APSTests {
@@ -3118,12 +3256,12 @@ extension APSTests {
     }
 
     @MainActor
-    internal func testBulkResetRejectsDifferentEffectiveSiblingSliceTypesWithEqualInitials() async throws {
+    internal func testSchemaRejectsDifferentSiblingSliceTypesForOneDeclaredField() async {
         let first = SchemaKeyEntry(
             name: "firstValue",
             type: "Int",
             storage: "Slice",
-            initial: .string("1"),
+            initial: .int(1),
             doc: "integer child",
             sliceOf: "parent",
             sliceField: "value"
@@ -3141,31 +3279,29 @@ extension APSTests {
             name: "parent",
             type: "object",
             storage: "FileState",
-            initial: .object(["value": .string("current")]),
+            initial: .object(["value": .int(1)]),
             path: "parent.json",
-            doc: "unshaped parent",
-            objectShape: [:]
+            doc: "typed parent",
+            objectShape: ["value": "Int"]
         )
         let root = FileManager.defaultFileStatePath
-        try UserSchema.write(UserSchemaDocument(keys: [first, second, parent]), stateRoot: root)
-        let store = StateStore()
-
-        XCTAssertThrowsError(try store.resetAllRegistered()) { error in
-            guard let bulkError = error as? BulkResetError else {
-                return XCTFail("Expected BulkResetError, got \(error)")
-            }
-            XCTAssertEqual(bulkError.report.reset, [])
-            XCTAssertEqual(bulkError.report.failed?.key, first.name)
-            XCTAssertEqual(bulkError.report.failed?.code, "schema_invalid")
-            XCTAssertEqual(bulkError.report.notAttempted, [second.name, parent.name])
+        XCTAssertThrowsError(
+            try UserSchema.write(
+                UserSchemaDocument(keys: [first, second, parent]),
+                stateRoot: root
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .schemaInvalid(
+                    reason: "secondValue type 'String' must match parent.value type 'Int'"
+                )
+            )
         }
-
-        XCTAssertEqual(try store.get(name: "parent"), #"{"value":"current"}"#)
-        XCTAssertEqual(store.statsSnapshot().mutationCount, 0)
     }
 
     @MainActor
-    internal func testBulkResetAcceptsMissingParentFieldUsingSliceInitialFallback() async throws {
+    internal func testSchemaRejectsMissingDeclaredParentInitialField() async {
         let parent = SchemaKeyEntry(
             name: "parent",
             type: "object",
@@ -3185,15 +3321,17 @@ extension APSTests {
             sliceField: "name"
         )
         let root = FileManager.defaultFileStatePath
-        try UserSchema.write(UserSchemaDocument(keys: [parent, slice]), stateRoot: root)
-        let store = StateStore()
-        try store.set(name: "parent", value: #"{"name":"current"}"#)
-
-        let report = try store.resetAllRegistered()
-
-        XCTAssertEqual(report, .success(reset: ["parent", "childName"]))
-        XCTAssertEqual(try store.get(name: "parent"), #"{"name":"slice-initial"}"#)
-        XCTAssertEqual(try store.get(name: "childName"), "slice-initial")
+        XCTAssertThrowsError(
+            try UserSchema.write(
+                UserSchemaDocument(keys: [parent, slice]),
+                stateRoot: root
+            )
+        ) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .schemaInvalid(reason: "parent object initial requires field 'name'")
+            )
+        }
     }
 
     @MainActor
@@ -3602,7 +3740,7 @@ extension APSTests {
     }
 
     @MainActor
-    internal func testUnshapedBoolSliceRejectsJSONInteger() async throws {
+    internal func testSchemaRejectsUnshapedBoolSlice() async {
         let parent = SchemaKeyEntry(
             name: "preferences",
             type: "object",
@@ -3622,24 +3760,19 @@ extension APSTests {
             sliceField: "enabled"
         )
         let schema = UserSchemaDocument(keys: [parent, slice])
-        let root = FileManager.defaultFileStatePath
 
-        try DynamicKeyStorage.set(
-            entry: parent,
-            value: #"{"enabled":1}"#,
-            stateRoot: root,
-            schema: schema
-        )
-
-        XCTAssertThrowsError(
-            try DynamicKeyStorage.get(entry: slice, stateRoot: root, schema: schema)
-        ) { error in
-            XCTAssertEqual(error as? APSError, .corruptState(key: parent.name))
+        XCTAssertThrowsError(try UserSchema.validate(schema)) { error in
+            XCTAssertEqual(
+                error as? APSError,
+                .schemaInvalid(
+                    reason: "enabled sliceField 'enabled' must be declared by preferences.objectShape"
+                )
+            )
         }
     }
 
     @MainActor
-    internal func testUnshapedSlicesUseDeclaredTypesForSetAndResetRoundTrips() async throws {
+    internal func testShapedSlicesUseDeclaredTypesForSetAndResetRoundTrips() async throws {
         let parent = SchemaKeyEntry(
             name: "settings",
             type: "object",
@@ -3651,15 +3784,20 @@ extension APSTests {
                 "metadata": .object(["state": .string("initial")]),
             ]),
             path: "settings.json",
-            doc: "Unshaped Slice parent",
-            objectShape: [:]
+            doc: "Typed Slice parent",
+            objectShape: [
+                "label": "String",
+                "count": "Int",
+                "enabled": "Bool",
+                "metadata": "object",
+            ]
         )
         let stringSlice = SchemaKeyEntry(
             name: "settingsLabel",
             type: "String",
             storage: "Slice",
             initial: .string("reset"),
-            doc: "Unshaped String Slice",
+            doc: "Typed String Slice",
             sliceOf: parent.name,
             sliceField: "label"
         )
@@ -3668,7 +3806,7 @@ extension APSTests {
             type: "Int",
             storage: "Slice",
             initial: .int(2),
-            doc: "Unshaped Int Slice",
+            doc: "Typed Int Slice",
             sliceOf: parent.name,
             sliceField: "count"
         )
@@ -3677,7 +3815,7 @@ extension APSTests {
             type: "Bool",
             storage: "Slice",
             initial: .bool(false),
-            doc: "Unshaped Bool Slice",
+            doc: "Typed Bool Slice",
             sliceOf: parent.name,
             sliceField: "enabled"
         )
@@ -3686,7 +3824,8 @@ extension APSTests {
             type: "object",
             storage: "Slice",
             initial: .object(["state": .string("reset")]),
-            doc: "Unshaped object Slice",
+            doc: "Typed object Slice",
+            objectShape: ["state": "String"],
             sliceOf: parent.name,
             sliceField: "metadata"
         )
@@ -3697,6 +3836,7 @@ extension APSTests {
             boolSlice,
             objectSlice,
         ])
+        try UserSchema.validate(schema)
         let root = FileManager.defaultFileStatePath
         let cases: [(entry: SchemaKeyEntry, set: String, reset: String)] = [
             (stringSlice, "set", "reset"),

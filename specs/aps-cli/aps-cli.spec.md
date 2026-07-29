@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 41
+version: 45
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -67,7 +67,7 @@ self-describes that contract for agents through the `schema` command.
 | `profileName` | String Slice over `ProfileDocument.name`. |
 | `UserSchemaDocument` | On-disk schema.json document model. |
 | `SchemaKeyEntry` | One registry key entry (name/type/storage/initial/path/slice). |
-| `SchemaJSON` | JSON value used for schema initials and object fields. |
+| `SchemaJSON` | Recursive structural JSON value shared by schema initials, object fields, and machine output. |
 | `UserSchema` | Load / materialize / validate / write / hash helpers for schema.json. |
 | `SchemaFileLock` | Exclusive cross-process lock helper; Windows retries only lock acquisition and propagates protected-body errors unchanged. |
 | `withExclusiveLock` | Run a schema mutation body under the exclusive lock. |
@@ -95,17 +95,23 @@ self-describes that contract for agents through the `schema` command.
 | `initial` | SchemaKeyEntry initial SchemaJSON. |
 | `path` | Relative file path for FileState/EncryptedFile. |
 | `doc` | Optional key documentation string. |
-| `objectShape` | Field types for object keys. |
+| `objectShape` | Required declared field types for an open object shape; undeclared fields remain valid. |
 | `sliceOf` | Parent key name for Slice entries. |
 | `sliceField` | Parent field name for Slice entries. |
 | `detail` | One-line description for `keys`. |
 | `lifetime` | Process vs persisted lifetime label. |
-| `wireString` | SchemaJSON rendered as a CLI wire string. |
+| `wireString` | SchemaJSON rendered as a stable CLI wire string. |
+| `parse` | Parses a CLI wire value as a declared JSON type. |
+| `defaultValue` | Returns the conventional empty initial for a declared JSON type. |
+| `matches` | Validates a recursive JSON value against a declared type and optional open object shape. |
 | `encode` | SchemaJSON Codable encode. |
+| `null` | SchemaJSON null case. |
 | `string` | SchemaJSON string case. |
 | `int` | SchemaJSON int case. |
+| `double` | SchemaJSON finite floating-point case. |
 | `bool` | SchemaJSON bool case. |
-| `object` | SchemaJSON object case. |
+| `array` | SchemaJSON recursive array case. |
+| `object` | SchemaJSON recursive object case. |
 | `invalidValue` | Value could not parse for the key type. |
 | `encodingFailed` | UTF-8 JSON encode failure. |
 | `decodingFailed` | UTF-8 JSON decode failure. |
@@ -144,7 +150,8 @@ Command tree (informational): `APSEntrypoint` peels root `--state-dir` then
 dispatches to `Aps` with get, set, watch, dump, keys, key, stats, reset, and
 schema. `schema` prints one cacheable JSON document (`SchemaDocument`):
 cliVersion, integer schemaVersion (bumped when the document shape changes;
-currently 5), state-root precedence, live registry keys, userSchema meta,
+currently 6), state-root precedence, live registry keys, userSchema meta
+(including a keyCount equal to the projected registry key count),
 commands, payload shapes, and the error table. Live state stays in `dump`.
 `reset --all` restores seed names that remain registered through their current
 entries; `reset --registered` restores every registry key. Bulk resets execute
@@ -191,6 +198,14 @@ report.
     and KDF constants are validated before KDF or key agreement.
 16. v2 never falls back between recipient modes. Wrong credentials or mode
     mismatch leave envelope and key-file bytes unchanged.
+17. Machine output preserves recursive object values structurally, including
+    null, Bool, Int, finite Double, String, array, and nested object values.
+18. `key add` accepts repeatable `--field NAME=TYPE` declarations only for
+    object entries. Every declared field is required and type-checked, while
+    undeclared object fields are preserved.
+19. Every Slice has a typed initial and names an explicitly declared,
+    type-compatible field on an existing FileState object parent. Invalid
+    Slice schemas fail before storage mutation.
 
 ## Behavioral Examples
 
@@ -216,6 +231,12 @@ Then it exits non-zero with an invalid-value error naming `counter` and `Int`.
 Given `aps watch note` is running
 When another process runs `aps set note changed`
 Then the watcher prints `changed` within one poll interval.
+```
+
+```
+Given an object key declared with `--field name=String --field retries=Int`
+When a nested object with additional array, null, and finite Double fields is set
+Then JSON get, set, dump, watch, and reset output retains the complete structure.
 ```
 
 ## Error Cases
@@ -294,3 +315,7 @@ Exit codes (sysexits-aligned):
 | 2026-07-27 | CHG-0050-harden-passphrase-envelopes-and-existing-secret-key-validation-for-issue-118: Harden passphrase envelopes and existing secret-key validation for issue 118 |
 | 2026-07-28 | CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re: Finalize PR 128 review corrections for secure key lifecycle and CLI recipient reuse |
 | 2026-07-28 | CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r: Close final PR 128 review gaps for malformed recipient modes, POSIX permission races, and pinned encrypted watch roots |
+| 2026-07-28 | CHG-0051-enforce-recursive-dynamic-object-and-slice-typing-and-restore-schema-metadata-fo: Enforce recursive dynamic object and Slice typing and restore schema metadata for issue 114 |
+| 2026-07-28 | CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a: Close final PR 129 review gaps for recursive JSON kinds, nonfinite validation, and corrupt StoredState reads |
+| 2026-07-28 | CHG-0057-close-remaining-pr-129-validation-gaps-for-encrypted-watch-slice-shapes-bool-t: Close remaining PR 129 validation gaps for encrypted watch, Slice shapes, Bool tokens, and StoredState numeric kinds |
+| 2026-07-28 | CHG-0058-reject-oversized-integral-json-without-rounding-and-validate-decrypted-plaintext: Reject oversized integral JSON without rounding and validate decrypted plaintext during encrypted disk-state preflight |

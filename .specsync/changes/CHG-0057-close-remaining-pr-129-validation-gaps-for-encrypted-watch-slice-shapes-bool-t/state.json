@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0057-close-remaining-pr-129-validation-gaps-for-encrypted-watch-slice-shapes-bool-t",
+  "slug": "close-remaining-pr-129-validation-gaps-for-encrypted-watch-slice-shapes-bool-t",
+  "title": "Close remaining PR 129 validation gaps for encrypted watch, Slice shapes, Bool tokens, and StoredState numeric kinds",
+  "description": "Close remaining PR 129 validation gaps for encrypted watch, Slice shapes, Bool tokens, and StoredState numeric kinds",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "058730a6bbf22e4a9d1bda3755b12e5a8040dec7",
+  "created_at": 1785270951,
+  "updated_at": 1785282684,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/DynamicKeyStorage.swift",
+    "Sources/aps/StateStore+Registry.swift",
+    "Sources/aps/UserSchema.swift",
+    "Tests/apsTests/APSTests.swift",
+    "Tests/apsTests/DynamicObjectTypingTests.swift",
+    "Tests/apsTests/SecretStoreSecurityTests.swift",
+    "specs/aps-cli/aps-cli.spec.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Encrypted watch rejects invalid initial and updated decrypted values before emission; schema validation rejects parent initials and sibling Slice definitions with incompatible nested object shapes; direct parent writes satisfy every Slice shape before mutation; Bool parsing accepts y and n consistently; StoredState rejects Bool and Int NSNumber cross-kind bridging; canonical specs list every SchemaJSON case; all serial, parallel, smoke, and trust gates pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

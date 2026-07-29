@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0058-reject-oversized-integral-json-without-rounding-and-validate-decrypted-plaintext",
+  "slug": "reject-oversized-integral-json-without-rounding-and-validate-decrypted-plaintext",
+  "title": "Reject oversized integral JSON without rounding and validate decrypted plaintext during encrypted disk-state preflight",
+  "description": "Reject oversized integral JSON without rounding and validate decrypted plaintext during encrypted disk-state preflight",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "b9b9977e85a064f1b05e6077e87a3c8316a55290",
+  "created_at": 1785275904,
+  "updated_at": 1785282689,
+  "affected_specs": [
+    "aps-cli",
+    "state-store"
+  ],
+  "affected_paths": [
+    "Sources/aps/UserSchema.swift",
+    "Sources/aps/DynamicKeyStorage.swift",
+    "Tests/apsTests/DynamicObjectTypingTests.swift",
+    "Tests/apsTests/APSTests.swift",
+    "specs/aps-cli/requirements.md",
+    "specs/state-store/requirements.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Out-of-range integral JSON decoding fails instead of rounding through Double; encrypted disk-state preflight rejects decryptable schema-incompatible plaintext as corrupt_state; focused regressions and the full quality lane pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks",
+    "design",
+    "requirements",
+    "docs",
+    "research",
+    "plan"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

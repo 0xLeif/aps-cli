@@ -1,0 +1,2789 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785267874,
+      "digest": "69b76d9883e45b4a2f58314809b88a9676cb4c79c19b04c9db3f186c1fcd614b",
+      "note": "Approve final PR 129 review corrections and explicit JSON-standard numeric semantics"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785268046,
+      "digest": "aa78e9a9b05a1f10fb971bf4de76a0868ba8f65280d6f612b3883dfed6541348",
+      "note": "Reapprove final 252-test definition and completed implementation artifacts"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785268156,
+      "digest": "571ddb4d466dbb9652f60d691d598d6993c2675a28c29bead8ba0a6b33d4c818",
+      "note": "Approve completed task ledger before final verification"
+    },
+    {
+      "gate": "definition",
+      "actor": "Codex",
+      "timestamp": 1785268264,
+      "digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+      "note": "Approve explicit requirement evidence mapping for final verification"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1785268334,
+      "digest": "b4022875a0e890e63c6c079731bc9d3246d7884e7bccef44a5a5a8e810cab009",
+      "note": "All 252 serial and parallel tests, smoke, CI dogfood, installer contract, and plugin validation passed"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "Codex",
+      "timestamp": 1785268439,
+      "digest": "c18778977e903946910f8b00cd834afe3c14d94562b3c972642b2d069232ae04",
+      "note": "Canonical formatting normalized; all 252 serial and parallel tests and full lane passed again"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785269852,
+      "digest": "c4d2feaef83c9f6a6230ce044d25876ad32f0799a2c6f18e4ab51aa742f2801d",
+      "note": "Reverified after Linux XCTest discovery fix"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785271777,
+      "digest": "df9e7ac7a4bf2b1c58abdd832b28452a26f392bff0d64d2cb61b4acf371642d9",
+      "note": "Reverified after accepted CHG-0057 review corrections"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785272480,
+      "digest": "bab0b71f93c410a312622767708a30e0933a5436d3fcb929c422f04dc42207f7",
+      "note": "Final exact acceptance after canonical EOF normalization"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785273321,
+      "digest": "bfe87f117e1b1b40f3bd27e40a0aff7bb7e8ab69811f100f80a1b4537c1d7aaf",
+      "note": "Linux CoreFoundation import verified through the full native gate"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785274426,
+      "digest": "8b44b31885cf93a5897cb008761d8cf27974047c8a954adcce851ee2df158d83",
+      "note": "Conditional CoreFoundation and Windows NSNumber fallback passed the full native gate"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785275767,
+      "digest": "64d9df10e56719fcf21248c51b43666bde8103cdf32d877c9f3693fd6f6dabc1",
+      "note": "Final review regressions passed 263-test serial and parallel gates"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785276644,
+      "digest": "dbeaebedffe3cea41105079d14ecf20317b824908ca2523d67282d408af4dffb",
+      "note": "Normalized against final CHG-0058 canonical spec history"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785277298,
+      "digest": "ac80984855b9ff706609bb520d4ee75034c3ad81fb07d019481d4bbc9952bc18",
+      "note": "Byte-final canonical requirements verified for PR 129"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785279265,
+      "digest": "1570e9f0e3a9a771d90ccbab31c565380fb24a5929e8cec314ea84a651e2331c",
+      "note": "Normalized against final underflow delivery state"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785280936,
+      "digest": "57dfaaf15ce940f90cec7ebcf5e8bb0ac47703e5bb7f1b42f68dbd425ab201b3",
+      "note": "Normalized against final exact-decimal delivery state"
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785282678,
+      "digest": "d953be63f109be1897bdea9931e836c697bca671c1642e8770f5f3c8273ad0da",
+      "note": "Normalized against final finite Double range delivery state"
+    }
+  ],
+  "reopenings": [
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "Codex",
+      "reason": "Normalize generated canonical requirement EOF formatting before final PR 129 delivery",
+      "timestamp": 1785268362,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "Codex",
+        "timestamp": 1785268334,
+        "digest": "b4022875a0e890e63c6c079731bc9d3246d7884e7bccef44a5a5a8e810cab009",
+        "note": "All 252 serial and parallel tests, smoke, CI dogfood, installer contract, and plugin validation passed"
+      },
+      "prior_verification": {
+        "timestamp": 1785268327,
+        "commit": "65b8b5c01859dcec3610fc5b747a48f9fdca378e",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "398eec199673718e8b3bf8eb084e927c630f9e82d5e85db7d5e0b17f62766bf2",
+        "acceptance_input_digest": "f1d318a6d665cf413c661b982f36e8814b3b4d12c0605588c2e0b682c7f75693",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "744c7173a0de6ae8b23859c249db7d2f52750768e83cff1f05004450981ab787",
+              "entry_digest": "f097cf0dc19413333eb0a3deca5cb97abcbd6a82e7e6b4abb4d694aafc52713a",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "632718f542f76ca875e0cdbe91ff93986a459f9319a7da2b3ca7ce53d291e7b4",
+              "entry_digest": "de3297d0e20e381a7b75494805457e0e0bf7cda0d39a8eae0ba027d253d56c82",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a9ad9c6ce4916c69b0fb630752358018d1c542ed80ac23509919e3b49693ba0d",
+              "entry_digest": "6e61151d4ea6014fcb2fdca113963dbb396ab8cda87f3ad26dac3c6a8b94ed2e",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9b793d98ae1daa5306845b872eed7d1cf2d6bfa020dbd8dc5456315ce937bf71",
+              "entry_digest": "d04eb97ca679fefa58395f3efcc15cfc78679c32b1bb0a33782eb864b188a0ab",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "82ff334c65f2f0bd70b65f67cf3c815e6a52586ef224e8e077a9fbebcc668c28",
+              "entry_digest": "237404ca6cdd085a66fb109926bfd676371a2ed3d9adbdfaa3e4243ec707ab29",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "e6edf7ed7ec3f21ee267f70b5f8481d51f5cf91cd65ea55d6cb38a5f5c648839",
+              "entry_digest": "89d88853784f5725583220a39b33ff65bc6c840b464813a3a2707c07d147cc63",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a3b51dc8892613379ff1b90bbad4ea1c2d68d3fa55914c66a8e6b4bc39ef4a5c",
+              "entry_digest": "3fad5ffa86ca43423ead5a586750dba6a2ace3bc02f0312e98d44f3b4b2cf1a4",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0b808324b60992581e56f4c16f6a3c13aca4faa3ac055c3e8b4e8ef15eced500",
+              "entry_digest": "4097a2d694bfd4922bfba99ef590047a62643b86a87ec875e5588494e5676eb7",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "f1d318a6d665cf413c661b982f36e8814b3b4d12c0605588c2e0b682c7f75693",
+      "current_acceptance_input_digest": "0494345ad9f4a0e620fdd8f051c81863631895c6a24e327c79eb66b65cd0a4d6"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Refresh exact verification after Linux XCTest discovery fix",
+      "timestamp": 1785269700,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "Codex",
+        "timestamp": 1785268439,
+        "digest": "c18778977e903946910f8b00cd834afe3c14d94562b3c972642b2d069232ae04",
+        "note": "Canonical formatting normalized; all 252 serial and parallel tests and full lane passed again"
+      },
+      "prior_verification": {
+        "timestamp": 1785268431,
+        "commit": "65b8b5c01859dcec3610fc5b747a48f9fdca378e",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "748864d610b5848887ad558959e148fc6efdfe17e36c46c2654a37435eb1f1ce",
+        "acceptance_input_digest": "0494345ad9f4a0e620fdd8f051c81863631895c6a24e327c79eb66b65cd0a4d6",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "744c7173a0de6ae8b23859c249db7d2f52750768e83cff1f05004450981ab787",
+              "entry_digest": "f097cf0dc19413333eb0a3deca5cb97abcbd6a82e7e6b4abb4d694aafc52713a",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "632718f542f76ca875e0cdbe91ff93986a459f9319a7da2b3ca7ce53d291e7b4",
+              "entry_digest": "de3297d0e20e381a7b75494805457e0e0bf7cda0d39a8eae0ba027d253d56c82",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a9ad9c6ce4916c69b0fb630752358018d1c542ed80ac23509919e3b49693ba0d",
+              "entry_digest": "6e61151d4ea6014fcb2fdca113963dbb396ab8cda87f3ad26dac3c6a8b94ed2e",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9b793d98ae1daa5306845b872eed7d1cf2d6bfa020dbd8dc5456315ce937bf71",
+              "entry_digest": "d04eb97ca679fefa58395f3efcc15cfc78679c32b1bb0a33782eb864b188a0ab",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "82ff334c65f2f0bd70b65f67cf3c815e6a52586ef224e8e077a9fbebcc668c28",
+              "entry_digest": "237404ca6cdd085a66fb109926bfd676371a2ed3d9adbdfaa3e4243ec707ab29",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9fca5cb42786b815cb72d07ffb0c0e8dc36f40a0aa17cc90266d91c5918b6a0d",
+              "entry_digest": "bbaf4e00729002f90b57812b2cdb03ff2bdecce5288bd29c327cee60adaa9fe3",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "20e767251f70b77c38462a9908b77fb73f94a196cf700d2feb6063e42a37d9d9",
+              "entry_digest": "4b7b359aa2f70181d2809cbdd3f409f97101e01dc283eda82c0a844a01b2e330",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0b808324b60992581e56f4c16f6a3c13aca4faa3ac055c3e8b4e8ef15eced500",
+              "entry_digest": "4097a2d694bfd4922bfba99ef590047a62643b86a87ec875e5588494e5676eb7",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "0494345ad9f4a0e620fdd8f051c81863631895c6a24e327c79eb66b65cd0a4d6",
+      "current_acceptance_input_digest": "21a9309ab5baaf37eb96574cd8c036352addf5438a9a6b0663682cb62aefcbc5"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Refresh exact evidence after accepted CHG-0057 review corrections",
+      "timestamp": 1785271599,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785269852,
+        "digest": "c4d2feaef83c9f6a6230ce044d25876ad32f0799a2c6f18e4ab51aa742f2801d",
+        "note": "Reverified after Linux XCTest discovery fix"
+      },
+      "prior_verification": {
+        "timestamp": 1785269836,
+        "commit": "c5ccc63c8419cb649eb985d813c390bccd933447",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "0ea7fdbca1a0edb85e23638aaf231709d975cad8a6adbd7885aeeb99d5eed993",
+        "acceptance_input_digest": "21a9309ab5baaf37eb96574cd8c036352addf5438a9a6b0663682cb62aefcbc5",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "744c7173a0de6ae8b23859c249db7d2f52750768e83cff1f05004450981ab787",
+              "entry_digest": "f097cf0dc19413333eb0a3deca5cb97abcbd6a82e7e6b4abb4d694aafc52713a",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "632718f542f76ca875e0cdbe91ff93986a459f9319a7da2b3ca7ce53d291e7b4",
+              "entry_digest": "de3297d0e20e381a7b75494805457e0e0bf7cda0d39a8eae0ba027d253d56c82",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "bc929d03063a8d97939ed0bc77bf1f7427d33be58a744b9d983ebbabb4dc2925",
+              "entry_digest": "279eb12389d815e13854901850a90ca5d2db5facd78b42356cb79451174512ff",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9b793d98ae1daa5306845b872eed7d1cf2d6bfa020dbd8dc5456315ce937bf71",
+              "entry_digest": "d04eb97ca679fefa58395f3efcc15cfc78679c32b1bb0a33782eb864b188a0ab",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "82ff334c65f2f0bd70b65f67cf3c815e6a52586ef224e8e077a9fbebcc668c28",
+              "entry_digest": "237404ca6cdd085a66fb109926bfd676371a2ed3d9adbdfaa3e4243ec707ab29",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9fca5cb42786b815cb72d07ffb0c0e8dc36f40a0aa17cc90266d91c5918b6a0d",
+              "entry_digest": "bbaf4e00729002f90b57812b2cdb03ff2bdecce5288bd29c327cee60adaa9fe3",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "20e767251f70b77c38462a9908b77fb73f94a196cf700d2feb6063e42a37d9d9",
+              "entry_digest": "4b7b359aa2f70181d2809cbdd3f409f97101e01dc283eda82c0a844a01b2e330",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0b808324b60992581e56f4c16f6a3c13aca4faa3ac055c3e8b4e8ef15eced500",
+              "entry_digest": "4097a2d694bfd4922bfba99ef590047a62643b86a87ec875e5588494e5676eb7",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "21a9309ab5baaf37eb96574cd8c036352addf5438a9a6b0663682cb62aefcbc5",
+      "current_acceptance_input_digest": "9c4e1a98efa46ab1f93ef24511ebed3f57b752f4473b8305b75b8f4e328b1605"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Normalize canonical requirement EOF before final acceptance",
+      "timestamp": 1785272237,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785271777,
+        "digest": "df9e7ac7a4bf2b1c58abdd832b28452a26f392bff0d64d2cb61b4acf371642d9",
+        "note": "Reverified after accepted CHG-0057 review corrections"
+      },
+      "prior_verification": {
+        "timestamp": 1785271760,
+        "commit": "058730a6bbf22e4a9d1bda3755b12e5a8040dec7",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "083b24654548d7899f3782b8e6d857a86e41c19845843060eed8d05a2049fd43",
+        "acceptance_input_digest": "9c4e1a98efa46ab1f93ef24511ebed3f57b752f4473b8305b75b8f4e328b1605",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f23375958656abb605bee28547103ad824b8817169ee4b732a800483fdc5a39",
+              "entry_digest": "39446e9cd48d30221c531b226639aa86af49de9df85b74113b8f409ab35a87a0",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a65b2082cf23cfad9a32b44366c5af6306a6b40441537dd7a8f440bb20b23081",
+              "entry_digest": "b79fff73a2c4e5a00d546498549fab7b788ad396332d2b91e360f8d273cbdd97",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a029c1b2fad08c85209690f5e5c761304c41b97e17fc309eea42fdd9024bfd7f",
+              "entry_digest": "12d1628b5337d0ad9f7ddcd231a3326b1f723ec88c31673d8619215e0907422d",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ce6a19452d5a644e31a1d6fa711f2a63cb18d13386f7ac8f29dbd8e95ca6a6e4",
+              "entry_digest": "d34868ad92119d4788fb2d1babf9d8391a7c6c0c1200b7a37d4222a9ec2e7d93",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2e3c7ee15f4abdc49824cefa636127016c2b32d255fec148eaaf24ca6d2acf65",
+              "entry_digest": "6ac4851b0439c9efdb3dce5b01826fc7ceeea8e758a2b6593f24b321c9c7581a",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "acc21c3172f27f76560aa038a1cabce96eda5732060dbc57643bbb73f4df262f",
+              "entry_digest": "fb1cd60c921e5ac76ffc5293d3d230a4b01d1d31c7f9bfb0ffaff7937ab6b92e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "df8684a40b45ea9fb2acd8261015c3981e6beee7677bf5f214a7f830f7c487f2",
+              "entry_digest": "e776a0af71a452a8980dccb467f3573c2ccef7813ce2d6b0850871355756c167",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "39ee269f7cfa28012862d44c4bce0765a0e6f2dab24626b3727fb204a834bf0d",
+              "entry_digest": "9e9deaa8418cf8ebea37c82abf8f152409e9709b58997b84e46a738e536ba050",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "9c4e1a98efa46ab1f93ef24511ebed3f57b752f4473b8305b75b8f4e328b1605",
+      "current_acceptance_input_digest": "79734ad66669aa95c729137c4df364d4e2fb90300538244d3d4d8cd0f3240840"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Add explicit CoreFoundation import required by Linux for NSNumber kind validation",
+      "timestamp": 1785273014,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785272480,
+        "digest": "bab0b71f93c410a312622767708a30e0933a5436d3fcb929c422f04dc42207f7",
+        "note": "Final exact acceptance after canonical EOF normalization"
+      },
+      "prior_verification": {
+        "timestamp": 1785272396,
+        "commit": "058730a6bbf22e4a9d1bda3755b12e5a8040dec7",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "6b639f984cfe46cefbfb9568556777ce83219fea73bfaeb4bd0b5b16043cd35d",
+        "acceptance_input_digest": "79734ad66669aa95c729137c4df364d4e2fb90300538244d3d4d8cd0f3240840",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f23375958656abb605bee28547103ad824b8817169ee4b732a800483fdc5a39",
+              "entry_digest": "39446e9cd48d30221c531b226639aa86af49de9df85b74113b8f409ab35a87a0",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a65b2082cf23cfad9a32b44366c5af6306a6b40441537dd7a8f440bb20b23081",
+              "entry_digest": "b79fff73a2c4e5a00d546498549fab7b788ad396332d2b91e360f8d273cbdd97",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a029c1b2fad08c85209690f5e5c761304c41b97e17fc309eea42fdd9024bfd7f",
+              "entry_digest": "12d1628b5337d0ad9f7ddcd231a3326b1f723ec88c31673d8619215e0907422d",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ce6a19452d5a644e31a1d6fa711f2a63cb18d13386f7ac8f29dbd8e95ca6a6e4",
+              "entry_digest": "d34868ad92119d4788fb2d1babf9d8391a7c6c0c1200b7a37d4222a9ec2e7d93",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2e3c7ee15f4abdc49824cefa636127016c2b32d255fec148eaaf24ca6d2acf65",
+              "entry_digest": "6ac4851b0439c9efdb3dce5b01826fc7ceeea8e758a2b6593f24b321c9c7581a",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "64fb02d8005e0e26d92a2edc92c0223547b425ac87f313b73c8a1dae474b405c",
+              "entry_digest": "3bf4b71452c4ec8943f541f8d24c3afe4d58b4251dd067def873eda531c3c8ca",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f9ca8e6e9c0c9a938593413b0750d2f5d382edae9d78829f6a56364bf4029300",
+              "entry_digest": "2a4986ea2cb755e1210e542c11caf3c93fe9e1c5e09e365385937ee78dd5a409",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "39ee269f7cfa28012862d44c4bce0765a0e6f2dab24626b3727fb204a834bf0d",
+              "entry_digest": "9e9deaa8418cf8ebea37c82abf8f152409e9709b58997b84e46a738e536ba050",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "79734ad66669aa95c729137c4df364d4e2fb90300538244d3d4d8cd0f3240840",
+      "current_acceptance_input_digest": "274984311f28381c116b673747702f7437fa117436a9d63f31d46cb38ed9bb74"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Use a conditional CoreFoundation import and Foundation NSNumber encoding on Windows",
+      "timestamp": 1785274160,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785273321,
+        "digest": "bfe87f117e1b1b40f3bd27e40a0aff7bb7e8ab69811f100f80a1b4537c1d7aaf",
+        "note": "Linux CoreFoundation import verified through the full native gate"
+      },
+      "prior_verification": {
+        "timestamp": 1785273228,
+        "commit": "24aeb9192d604b9cea6345eef699cb25ff8a6ec4",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "cec51395827308c989c5f72777a44594e9c1878a52dd70c7ac1a7c0bb12923b5",
+        "acceptance_input_digest": "274984311f28381c116b673747702f7437fa117436a9d63f31d46cb38ed9bb74",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8dbd95585877d3e64aee5649c1ef00ec2c1a782b983745899d29d4b1cc398e4e",
+              "entry_digest": "d1cccc19d3cadeeed3fab4e09e8fef5201499db22d6e608ab89ca36f08699160",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a65b2082cf23cfad9a32b44366c5af6306a6b40441537dd7a8f440bb20b23081",
+              "entry_digest": "b79fff73a2c4e5a00d546498549fab7b788ad396332d2b91e360f8d273cbdd97",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a029c1b2fad08c85209690f5e5c761304c41b97e17fc309eea42fdd9024bfd7f",
+              "entry_digest": "12d1628b5337d0ad9f7ddcd231a3326b1f723ec88c31673d8619215e0907422d",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ce6a19452d5a644e31a1d6fa711f2a63cb18d13386f7ac8f29dbd8e95ca6a6e4",
+              "entry_digest": "d34868ad92119d4788fb2d1babf9d8391a7c6c0c1200b7a37d4222a9ec2e7d93",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2e3c7ee15f4abdc49824cefa636127016c2b32d255fec148eaaf24ca6d2acf65",
+              "entry_digest": "6ac4851b0439c9efdb3dce5b01826fc7ceeea8e758a2b6593f24b321c9c7581a",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "64fb02d8005e0e26d92a2edc92c0223547b425ac87f313b73c8a1dae474b405c",
+              "entry_digest": "3bf4b71452c4ec8943f541f8d24c3afe4d58b4251dd067def873eda531c3c8ca",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f9ca8e6e9c0c9a938593413b0750d2f5d382edae9d78829f6a56364bf4029300",
+              "entry_digest": "2a4986ea2cb755e1210e542c11caf3c93fe9e1c5e09e365385937ee78dd5a409",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "39ee269f7cfa28012862d44c4bce0765a0e6f2dab24626b3727fb204a834bf0d",
+              "entry_digest": "9e9deaa8418cf8ebea37c82abf8f152409e9709b58997b84e46a738e536ba050",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "274984311f28381c116b673747702f7437fa117436a9d63f31d46cb38ed9bb74",
+      "current_acceptance_input_digest": "d0dde355e468e6249794ebf3f7bc80f450b0cf41159a9a0356069429ed5da6fd"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Close final PR review gaps for oversized integral JSON and encrypted disk preflight",
+      "timestamp": 1785275435,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785274426,
+        "digest": "8b44b31885cf93a5897cb008761d8cf27974047c8a954adcce851ee2df158d83",
+        "note": "Conditional CoreFoundation and Windows NSNumber fallback passed the full native gate"
+      },
+      "prior_verification": {
+        "timestamp": 1785274332,
+        "commit": "495b377cfb58a77f709bb4fad5f6989764c52b7b",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "0518093d31f1326302b20295b25ccd5478c301cbb9038486e16125f9bc3c9bc1",
+        "acceptance_input_digest": "d0dde355e468e6249794ebf3f7bc80f450b0cf41159a9a0356069429ed5da6fd",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b75e930721e3ed8a25b0f04aaf67b43f4069f706c44190e4cb72f80c1aa02817",
+              "entry_digest": "c71d5630dff995c9444f2228de009e5eb7245c8a8bdf6ec15a948665e84688c4",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a65b2082cf23cfad9a32b44366c5af6306a6b40441537dd7a8f440bb20b23081",
+              "entry_digest": "b79fff73a2c4e5a00d546498549fab7b788ad396332d2b91e360f8d273cbdd97",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "a029c1b2fad08c85209690f5e5c761304c41b97e17fc309eea42fdd9024bfd7f",
+              "entry_digest": "12d1628b5337d0ad9f7ddcd231a3326b1f723ec88c31673d8619215e0907422d",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ce6a19452d5a644e31a1d6fa711f2a63cb18d13386f7ac8f29dbd8e95ca6a6e4",
+              "entry_digest": "d34868ad92119d4788fb2d1babf9d8391a7c6c0c1200b7a37d4222a9ec2e7d93",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2e3c7ee15f4abdc49824cefa636127016c2b32d255fec148eaaf24ca6d2acf65",
+              "entry_digest": "6ac4851b0439c9efdb3dce5b01826fc7ceeea8e758a2b6593f24b321c9c7581a",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "64fb02d8005e0e26d92a2edc92c0223547b425ac87f313b73c8a1dae474b405c",
+              "entry_digest": "3bf4b71452c4ec8943f541f8d24c3afe4d58b4251dd067def873eda531c3c8ca",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "f9ca8e6e9c0c9a938593413b0750d2f5d382edae9d78829f6a56364bf4029300",
+              "entry_digest": "2a4986ea2cb755e1210e542c11caf3c93fe9e1c5e09e365385937ee78dd5a409",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "39ee269f7cfa28012862d44c4bce0765a0e6f2dab24626b3727fb204a834bf0d",
+              "entry_digest": "9e9deaa8418cf8ebea37c82abf8f152409e9709b58997b84e46a738e536ba050",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "d0dde355e468e6249794ebf3f7bc80f450b0cf41159a9a0356069429ed5da6fd",
+      "current_acceptance_input_digest": "ea3ae711641b367633e40b67dd84c0156424d9e5055d1e2b40e708c2a0cb13a3"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Normalize predecessor evidence after CHG-0058 advanced canonical spec history",
+      "timestamp": 1785276347,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785275767,
+        "digest": "64d9df10e56719fcf21248c51b43666bde8103cdf32d877c9f3693fd6f6dabc1",
+        "note": "Final review regressions passed 263-test serial and parallel gates"
+      },
+      "prior_verification": {
+        "timestamp": 1785275672,
+        "commit": "b9b9977e85a064f1b05e6077e87a3c8316a55290",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "8538a0393bbe2b3bb1458215d18a47c460428ec1952855ed5a8f23af801158a6",
+        "acceptance_input_digest": "ea3ae711641b367633e40b67dd84c0156424d9e5055d1e2b40e708c2a0cb13a3",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2a84526ed9df6c7158d262bfd4df0f14bb43ef7ced8b561bbc399f6a2a7e2b6d",
+              "entry_digest": "6b1506e9fa64712f13061f14813ff6e3dcc9d16fde4028237ac04690377d66d7",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9bfc5d7a3a86c53e72ad57dbbb7b95be5e700e513b96e3e17294cb2de85171ac",
+              "entry_digest": "1e1d2b144dadbb4a6ba5b1106cff003bce59baee4c2ddb67808f3f2d512043d9",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c9f288568c93ef840680735af1d4efd5f9068caced897cdd4414134104f4334c",
+              "entry_digest": "b0beb4f57fc2102937f341c25d6adef7b709acf6df70125157dc29606ed0a9c2",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ecf8918c416241df3faf2aa20bb2658069a48c0f3c3ef34f94839378abd151cb",
+              "entry_digest": "e73b1a57fc7f53cdee7018b04215c98d39609414e7f38eeec85fe87324a5aeec",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2e3c7ee15f4abdc49824cefa636127016c2b32d255fec148eaaf24ca6d2acf65",
+              "entry_digest": "6ac4851b0439c9efdb3dce5b01826fc7ceeea8e758a2b6593f24b321c9c7581a",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5d9a6a00bf9589e7fc5e7f6e1ec77f9c837e24557d7e48cfe59cd960e3957d6b",
+              "entry_digest": "fc077e8feedfb36d7ba2a3a850d21a6f0fff0f9e01d8108669dbee6b04d8222b",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5c06c13081abe5e026adb50b5cc67b25e4639f920ac8d90ded3f7f7815af1e74",
+              "entry_digest": "d4b25b84d08bd900beb11e91737306517b92a4ff727d98d5a37079f38d894aba",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "39ee269f7cfa28012862d44c4bce0765a0e6f2dab24626b3727fb204a834bf0d",
+              "entry_digest": "9e9deaa8418cf8ebea37c82abf8f152409e9709b58997b84e46a738e536ba050",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "ea3ae711641b367633e40b67dd84c0156424d9e5055d1e2b40e708c2a0cb13a3",
+      "current_acceptance_input_digest": "7b21c52b5e70443d8022c6d46c217078f5f1a657e2577fb209624750b350d203"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Normalize canonical requirement EOF before final PR commit",
+      "timestamp": 1785276944,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785276644,
+        "digest": "dbeaebedffe3cea41105079d14ecf20317b824908ca2523d67282d408af4dffb",
+        "note": "Normalized against final CHG-0058 canonical spec history"
+      },
+      "prior_verification": {
+        "timestamp": 1785276520,
+        "commit": "b9b9977e85a064f1b05e6077e87a3c8316a55290",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "bd1c3d4c7260faee1ae269ffa60c5b86f45b16109e65266abdf273141770da6b",
+        "acceptance_input_digest": "7b21c52b5e70443d8022c6d46c217078f5f1a657e2577fb209624750b350d203",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2a84526ed9df6c7158d262bfd4df0f14bb43ef7ced8b561bbc399f6a2a7e2b6d",
+              "entry_digest": "6b1506e9fa64712f13061f14813ff6e3dcc9d16fde4028237ac04690377d66d7",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9bfc5d7a3a86c53e72ad57dbbb7b95be5e700e513b96e3e17294cb2de85171ac",
+              "entry_digest": "1e1d2b144dadbb4a6ba5b1106cff003bce59baee4c2ddb67808f3f2d512043d9",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c9f288568c93ef840680735af1d4efd5f9068caced897cdd4414134104f4334c",
+              "entry_digest": "b0beb4f57fc2102937f341c25d6adef7b709acf6df70125157dc29606ed0a9c2",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ecf8918c416241df3faf2aa20bb2658069a48c0f3c3ef34f94839378abd151cb",
+              "entry_digest": "e73b1a57fc7f53cdee7018b04215c98d39609414e7f38eeec85fe87324a5aeec",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "59972ed01be07e2c52d3d097481bd831b4513571d28d548c6ca66be7cb2ce28c",
+              "entry_digest": "4a2b674eebafa48b3b34158ffe381e71d4552e1c978ce8f0151c2e4c04b40648",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9e52cc3ba551304707ab7ef43abab38975f485006ec4a5cfe771518745768663",
+              "entry_digest": "2175ae4b25df7f42927d18c70623b79f0d0647ddca330646edcd93a4f6eef914",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "87a2b4b3f818dbf33a0c05d0bd9ec3090195806e7d16e647c99df7819bbb3d78",
+              "entry_digest": "326a06559d940288860f90e121023f77bb01d5ed29a23ff77301b854521ac3b4",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "74dd30cd9825c4c968f0b146e8001a078e94680f5672304c6a93c25fb21e044d",
+              "entry_digest": "4664d05c20029c35debe6c5a4ab33f93e3f724dd1e41eba41eb0ab33308dbe48",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "7b21c52b5e70443d8022c6d46c217078f5f1a657e2577fb209624750b350d203",
+      "current_acceptance_input_digest": "cf017d5a7a93c27bad4d2d20b2260090f7cc79e8e891dcf9d9573ea4e2e3f536"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Normalize predecessor evidence after final underflow fix",
+      "timestamp": 1785278852,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785277298,
+        "digest": "ac80984855b9ff706609bb520d4ee75034c3ad81fb07d019481d4bbc9952bc18",
+        "note": "Byte-final canonical requirements verified for PR 129"
+      },
+      "prior_verification": {
+        "timestamp": 1785277123,
+        "commit": "b9b9977e85a064f1b05e6077e87a3c8316a55290",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "c4941ed0c11f0e49a793ede731693ac5934398145363e9541320abe5dbbdce8c",
+        "acceptance_input_digest": "cf017d5a7a93c27bad4d2d20b2260090f7cc79e8e891dcf9d9573ea4e2e3f536",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2a84526ed9df6c7158d262bfd4df0f14bb43ef7ced8b561bbc399f6a2a7e2b6d",
+              "entry_digest": "6b1506e9fa64712f13061f14813ff6e3dcc9d16fde4028237ac04690377d66d7",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9bfc5d7a3a86c53e72ad57dbbb7b95be5e700e513b96e3e17294cb2de85171ac",
+              "entry_digest": "1e1d2b144dadbb4a6ba5b1106cff003bce59baee4c2ddb67808f3f2d512043d9",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c9f288568c93ef840680735af1d4efd5f9068caced897cdd4414134104f4334c",
+              "entry_digest": "b0beb4f57fc2102937f341c25d6adef7b709acf6df70125157dc29606ed0a9c2",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "ecf8918c416241df3faf2aa20bb2658069a48c0f3c3ef34f94839378abd151cb",
+              "entry_digest": "e73b1a57fc7f53cdee7018b04215c98d39609414e7f38eeec85fe87324a5aeec",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "59972ed01be07e2c52d3d097481bd831b4513571d28d548c6ca66be7cb2ce28c",
+              "entry_digest": "4a2b674eebafa48b3b34158ffe381e71d4552e1c978ce8f0151c2e4c04b40648",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5d9a6a00bf9589e7fc5e7f6e1ec77f9c837e24557d7e48cfe59cd960e3957d6b",
+              "entry_digest": "fc077e8feedfb36d7ba2a3a850d21a6f0fff0f9e01d8108669dbee6b04d8222b",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5c06c13081abe5e026adb50b5cc67b25e4639f920ac8d90ded3f7f7815af1e74",
+              "entry_digest": "d4b25b84d08bd900beb11e91737306517b92a4ff727d98d5a37079f38d894aba",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "74dd30cd9825c4c968f0b146e8001a078e94680f5672304c6a93c25fb21e044d",
+              "entry_digest": "4664d05c20029c35debe6c5a4ab33f93e3f724dd1e41eba41eb0ab33308dbe48",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "cf017d5a7a93c27bad4d2d20b2260090f7cc79e8e891dcf9d9573ea4e2e3f536",
+      "current_acceptance_input_digest": "186b71772e46928e772c2e9ff63c328e8850722250a45def0ca378c1a7f83689"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Normalize predecessor evidence after exact-decimal preservation fix",
+      "timestamp": 1785280495,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785279265,
+        "digest": "1570e9f0e3a9a771d90ccbab31c565380fb24a5929e8cec314ea84a651e2331c",
+        "note": "Normalized against final underflow delivery state"
+      },
+      "prior_verification": {
+        "timestamp": 1785279029,
+        "commit": "01128bd8881938668233b830ce326f3f789fa035",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "282b9db6357752177963fc6223bd1fced8e0aa1d4dbd745a1ae4af9338803a72",
+        "acceptance_input_digest": "186b71772e46928e772c2e9ff63c328e8850722250a45def0ca378c1a7f83689",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2a84526ed9df6c7158d262bfd4df0f14bb43ef7ced8b561bbc399f6a2a7e2b6d",
+              "entry_digest": "6b1506e9fa64712f13061f14813ff6e3dcc9d16fde4028237ac04690377d66d7",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "13b33fef9b8fd8f8c032753e4ebe6c19d96510e6e95b511b95bc94a22c15f017",
+              "entry_digest": "4a904b09be0badcff3883630f19306ca584996396071735b026a5019602ca2ad",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c9f288568c93ef840680735af1d4efd5f9068caced897cdd4414134104f4334c",
+              "entry_digest": "b0beb4f57fc2102937f341c25d6adef7b709acf6df70125157dc29606ed0a9c2",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "fbc1fc5ead32fd019cfb3192508c8afe466893ccc0c062d0e91c30cf003c0293",
+              "entry_digest": "2108f7c1a7ef2da81b0192caab48760169ae98597dc68747a1adfbe2048db16d",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "59972ed01be07e2c52d3d097481bd831b4513571d28d548c6ca66be7cb2ce28c",
+              "entry_digest": "4a2b674eebafa48b3b34158ffe381e71d4552e1c978ce8f0151c2e4c04b40648",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5d9a6a00bf9589e7fc5e7f6e1ec77f9c837e24557d7e48cfe59cd960e3957d6b",
+              "entry_digest": "fc077e8feedfb36d7ba2a3a850d21a6f0fff0f9e01d8108669dbee6b04d8222b",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5c06c13081abe5e026adb50b5cc67b25e4639f920ac8d90ded3f7f7815af1e74",
+              "entry_digest": "d4b25b84d08bd900beb11e91737306517b92a4ff727d98d5a37079f38d894aba",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "74dd30cd9825c4c968f0b146e8001a078e94680f5672304c6a93c25fb21e044d",
+              "entry_digest": "4664d05c20029c35debe6c5a4ab33f93e3f724dd1e41eba41eb0ab33308dbe48",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "186b71772e46928e772c2e9ff63c328e8850722250a45def0ca378c1a7f83689",
+      "current_acceptance_input_digest": "6ce89d4a45b057a51a2ac697b9728237702e85195ea414c885e11f7d441cd6bc"
+    },
+    {
+      "schema_version": 1,
+      "change_id": "CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a",
+      "actor": "codex",
+      "reason": "Normalize predecessor evidence after finite Double range fix",
+      "timestamp": 1785282127,
+      "from_state": "accepted",
+      "to_state": "verifying",
+      "superseded_approval": {
+        "gate": "acceptance",
+        "actor": "codex",
+        "timestamp": 1785280936,
+        "digest": "57dfaaf15ce940f90cec7ebcf5e8bb0ac47703e5bb7f1b42f68dbd425ab201b3",
+        "note": "Normalized against final exact-decimal delivery state"
+      },
+      "prior_verification": {
+        "timestamp": 1785280671,
+        "commit": "fd2b2ef5d5b95ff0b61895f7e1de8ee0996fa221",
+        "contract_digest": "01fd759525e194eee886f7d60dcb481c8f59f9aa8ab2058f923c89e0fe905ff7",
+        "workspace_digest": "15e7baffe18234f900864ef59a92e7d3d767a4db85e3e2a30c0182561098068e",
+        "acceptance_input_digest": "6ce89d4a45b057a51a2ac697b9728237702e85195ea414c885e11f7d441cd6bc",
+        "acceptance_manifest": {
+          "schema_version": 1,
+          "entries": [
+            {
+              "path": ".specsync/change-sequence.json",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "be72dd0bb7e8d6d4ecec918519913733c128d96dc1f075187170fe9eddbfad56",
+              "entry_digest": "a7cf75e7c97e7408cd70c9f90df956228c44640b77fa9d25040dc634d4a7d25b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "README.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "6b07548b11ac51e2a394c32784324443becfe4c039a985879c747ebb848e4fc6",
+              "entry_digest": "f712f2e29609c4a6e86d8ebbfc2189c7b0972e5ae6995cd47d938d66a343a277",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "Sources/aps/DynamicKeyStorage.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2a84526ed9df6c7158d262bfd4df0f14bb43ef7ced8b561bbc399f6a2a7e2b6d",
+              "entry_digest": "6b1506e9fa64712f13061f14813ff6e3dcc9d16fde4028237ac04690377d66d7",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "Sources/aps/Schema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "8c414d8c91cfca7647b8af9ed60183771abf372809d9960cdb634fce5400fa7d",
+              "entry_digest": "9eb3c05552b6f17c8f539ccd7f0737601e18751054639bfba11eee8aca1a415e",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Sources/aps/UserSchema.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "2f2e5f7b6d3c8c4e7942db8b4b570d1ec239655e0a7160278fca5a20dcf7c7e2",
+              "entry_digest": "5aab753773c6d3af049a32a931debe84c2a39a1f2ec0c68e251dd8558fcd50e1",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/APSTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "c9f288568c93ef840680735af1d4efd5f9068caced897cdd4414134104f4334c",
+              "entry_digest": "b0beb4f57fc2102937f341c25d6adef7b709acf6df70125157dc29606ed0a9c2",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "Tests/apsTests/DynamicObjectTypingTests.swift",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "d28caa5147ecd77315113632273fdcfcc5518615810d03e3a3d2a7d5d36440a6",
+              "entry_digest": "1bf71d9d09f32e6b30c00094101a526a2cecea50c7eb8e70c02a8b40df4cd155",
+              "owners": [
+                "@exact:test"
+              ]
+            },
+            {
+              "path": "docs/design/dynamic-schema.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "58247f2bb4d49868f6f0c05e0974887cb15fac74b04250b088248c09304d6d38",
+              "entry_digest": "af0efabd551276d72a241557d6a21925a604752344e53cf2ccd26e3b84f0422b",
+              "owners": [
+                "@exact:delivery"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/aps-cli.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "59972ed01be07e2c52d3d097481bd831b4513571d28d548c6ca66be7cb2ce28c",
+              "entry_digest": "4a2b674eebafa48b3b34158ffe381e71d4552e1c978ce8f0151c2e4c04b40648",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "b6b45cae19244f96b97854129adc5794b76623aa0547b5b5ba27fd20e522948f",
+              "entry_digest": "3d95dbf704bd5d40be4f8f4c95897cf6e5549152b4cdaab0adc43328febf8b90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5d9a6a00bf9589e7fc5e7f6e1ec77f9c837e24557d7e48cfe59cd960e3957d6b",
+              "entry_digest": "fc077e8feedfb36d7ba2a3a850d21a6f0fff0f9e01d8108669dbee6b04d8222b",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "83d2620192191bceccaa4a8758b8c7120300db800d7595309ddbc96ec6591525",
+              "entry_digest": "16ee871a59dd92753ba0d3be7f10aff13bd6a0d622abfada0d67073e6ccf0c90",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/aps-cli/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "adf0eef7df26d362d10062c886390a5fb518d457d84095fb3bf3e91ab7962fbc",
+              "entry_digest": "75ac0e1c823cbe6c2b5d97fd77e4e5f21176588ca6484893cc989c08e6d9b2cf",
+              "owners": [
+                "aps-cli"
+              ]
+            },
+            {
+              "path": "specs/state-store/context.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "9148fb7ca2a5c078d57b477c4b84625dbe9e6a19c4d764854f3232e8ab48595b",
+              "entry_digest": "052b5cac0066e6399cd129acf2f35f018337005a79425a0e6e7e64e08c725e1e",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/requirements.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "5c06c13081abe5e026adb50b5cc67b25e4639f920ac8d90ded3f7f7815af1e74",
+              "entry_digest": "d4b25b84d08bd900beb11e91737306517b92a4ff727d98d5a37079f38d894aba",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/state-store.spec.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "74dd30cd9825c4c968f0b146e8001a078e94680f5672304c6a93c25fb21e044d",
+              "entry_digest": "4664d05c20029c35debe6c5a4ab33f93e3f724dd1e41eba41eb0ab33308dbe48",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/tasks.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "0f02b782887467b358568bf22c2d68f39c40a00d56143bd6c64abdf8198cf433",
+              "entry_digest": "8f828f3625d4f24c3c71852bd28f76aac97cd31ace2a18d1a901a3d34642de8d",
+              "owners": [
+                "state-store"
+              ]
+            },
+            {
+              "path": "specs/state-store/testing.md",
+              "kind": "file",
+              "mode": 33188,
+              "payload_digest": "4841c45f6b0c4c0906596343440c1ace445f5a376cb06f0bdc4fdffb95a0bb6c",
+              "entry_digest": "1e1869ddeb349124775101444cf727de818a7ae3acc724ccc57445428d695dc4",
+              "owners": [
+                "state-store"
+              ]
+            }
+          ]
+        },
+        "passed": true,
+        "commands": [
+          {
+            "command": "fledge lanes run verify",
+            "success": true,
+            "exit_code": 0
+          }
+        ],
+        "requirement_ids": [
+          "REQ-aps-cli-034",
+          "REQ-state-store-027"
+        ]
+      },
+      "stale_acceptance_input_digest": "6ce89d4a45b057a51a2ac697b9728237702e85195ea414c885e11f7d441cd6bc",
+      "current_acceptance_input_digest": "8238a096f558f5888842407c8b0325a245b66de7d0aeff65e85e7d8c4a8aea26"
+    }
+  ]
+}

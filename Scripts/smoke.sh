@@ -193,8 +193,14 @@ if grep -vq '^{' "$APS_HOME/watch.out"; then
 fi
 
 # aps schema emits the self-describing contract (compact JSON when piped).
-"$bin" schema | grep -q '"schemaVersion":5'
-"$bin" schema | grep -q '"userSchema"'
+SCHEMA_JSON="$("$bin" schema)"
+echo "$SCHEMA_JSON" | grep -q '"schemaVersion":6'
+echo "$SCHEMA_JSON" | grep -q '"userSchema"'
+SCHEMA_KEY_COUNT="$(echo "$SCHEMA_JSON" | sed -n 's/.*"userSchema":{[^}]*"keyCount":\([0-9][0-9]*\).*/\1/p')"
+SCHEMA_KEYS="$(echo "$SCHEMA_JSON" | sed -n 's/.*"keys":\[\(.*\)\],"payloads":.*/\1/p')"
+SCHEMA_KEYS_LENGTH="$(echo "$SCHEMA_KEYS" | grep -o '"name":' | wc -l | tr -d ' ')"
+test -n "$SCHEMA_KEY_COUNT"
+test "$SCHEMA_KEY_COUNT" = "$SCHEMA_KEYS_LENGTH"
 "$bin" schema | grep -q '"name":"profile"'
 "$bin" schema | grep -q '"name":"secret"'
 "$bin" schema | grep -q '"code":"corrupt_state"'
@@ -213,6 +219,44 @@ test -f "$APS_HOME/schema.json"
 "$bin" set smokeNote "from-smoke"
 test "$("$bin" get smokeNote)" = "from-smoke"
 "$bin" schema | grep -q '"name":"smokeNote"'
+
+# Open object shapes validate declared fields while preserving recursive extras.
+"$bin" key add smokeSettings \
+  --type object \
+  --storage FileState \
+  --path smoke-settings.json \
+  --field name=String \
+  --field revision=Int \
+  --field alias=String \
+  --initial '{"name":"seed","revision":1,"alias":"seed-alias"}'
+"$bin" set smokeSettings \
+  '{"name":"agent","revision":2,"alias":"live","extra":{"tags":["swift",null,3],"ratio":1.5}}' \
+  >/dev/null
+SETTINGS_JSON="$("$bin" get smokeSettings --json)"
+echo "$SETTINGS_JSON" | grep -q '"value":{'
+echo "$SETTINGS_JSON" | grep -q '"tags":\["swift",null,3\]'
+echo "$SETTINGS_JSON" | grep -q '"ratio":1.5'
+
+# Slice keys require an explicitly declared parent field of the same type.
+"$bin" key add smokeAlias \
+  --type String \
+  --storage Slice \
+  --initial seed-alias \
+  --slice-of smokeSettings \
+  --slice-field alias
+test "$("$bin" set smokeAlias slice-value)" = "slice-value"
+test "$("$bin" get smokeAlias)" = "slice-value"
+"$bin" get smokeSettings --json | grep -q '"alias":"slice-value"'
+"$bin" reset smokeAlias >/dev/null
+test "$("$bin" get smokeAlias)" = "seed-alias"
+"$bin" get smokeSettings --json | grep -q '"alias":"seed-alias"'
+
+# userSchema.keyCount stays synchronized with the emitted keys array.
+SCHEMA_JSON="$("$bin" schema)"
+SCHEMA_KEY_COUNT="$(echo "$SCHEMA_JSON" | sed -n 's/.*"userSchema":{[^}]*"keyCount":\([0-9][0-9]*\).*/\1/p')"
+SCHEMA_KEYS="$(echo "$SCHEMA_JSON" | sed -n 's/.*"keys":\[\(.*\)\],"payloads":.*/\1/p')"
+SCHEMA_KEYS_LENGTH="$(echo "$SCHEMA_KEYS" | grep -o '"name":' | wc -l | tr -d ' ')"
+test "$SCHEMA_KEY_COUNT" = "$SCHEMA_KEYS_LENGTH"
 
 # A forced seed entry is governed by schema.json, not its compiled DemoKey.
 "$bin" key add counter \

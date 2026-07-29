@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0059-reject-underflowing-recursive-json-numbers-instead-of-coercing-them-to-zero",
+  "slug": "reject-underflowing-recursive-json-numbers-instead-of-coercing-them-to-zero",
+  "title": "Reject underflowing recursive JSON numbers instead of coercing them to zero",
+  "description": "Reject underflowing recursive JSON numbers instead of coercing them to zero",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "01128bd8881938668233b830ce326f3f789fa035",
+  "created_at": 1785278328,
+  "updated_at": 1785282694,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    "Sources/aps/UserSchema.swift",
+    "Tests/apsTests/DynamicObjectTypingTests.swift",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This enforces the existing recursive JSON value-preservation contract without changing public API or documented behavior.",
+  "acceptance_criteria": [
+    "Recursive JSON values containing 1e-400 or -1e-400 fail decoding instead of becoming integer zero; ordinary zero and supported numeric values still decode; focused regressions and the full quality lane pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0060-reject-fractional-recursive-json-values-when-double-encoding-would-change-their",
+  "slug": "reject-fractional-recursive-json-values-when-double-encoding-would-change-their",
+  "title": "Reject fractional recursive JSON values when Double encoding would change their decimal value",
+  "description": "Reject fractional recursive JSON values when Double encoding would change their decimal value",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "fd2b2ef5d5b95ff0b61895f7e1de8ee0996fa221",
+  "created_at": 1785280315,
+  "updated_at": 1785282699,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    "Sources/aps/UserSchema.swift",
+    "Tests/apsTests/DynamicObjectTypingTests.swift",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This enforces the existing recursive JSON exact-value contract without changing the public API or canonical requirement.",
+  "acceptance_criteria": [
+    "A fractional JSON value such as 1.0000000000000000001 fails decoding instead of becoming 1.0; supported finite numbers retain their decimal value after Double encoding; focused regressions and the full quality lane pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

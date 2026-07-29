@@ -3,6 +3,8 @@ import Foundation
 
 /// Shared machine-readable / human CLI output helpers.
 enum CLIOutput {
+    internal typealias JSONValue = SchemaJSON
+
     struct KeyValuePayload: Encodable {
         let key: String
         let type: String
@@ -101,28 +103,6 @@ enum CLIOutput {
             self.mutationCount = snapshot.mutationCount
             self.lastMutatedKey = snapshot.lastMutatedKey
             self.storage = "ObservedDependency"
-        }
-    }
-
-    /// Typed JSON leaf used so dump/get preserve Int/Bool instead of stringifying.
-    enum JSONValue: Encodable, Equatable {
-        case string(String)
-        case int(Int)
-        case bool(Bool)
-        case object(ProfileDocument)
-
-        func encode(to encoder: Encoder) throws {
-            var container = encoder.singleValueContainer()
-            switch self {
-            case .string(let value):
-                try container.encode(value)
-            case .int(let value):
-                try container.encode(value)
-            case .bool(let value):
-                try container.encode(value)
-            case .object(let value):
-                try container.encode(value)
-            }
         }
     }
 
@@ -317,11 +297,13 @@ enum CLIOutput {
             guard let data = raw.data(using: .utf8) else {
                 throw APSError.decodingFailed
             }
-            do {
-                return .object(try JSONDecoder().decode(ProfileDocument.self, from: data))
-            } catch {
+            guard
+                let value = try? JSONDecoder().decode(SchemaJSON.self, from: data),
+                case .object = value
+            else {
                 throw APSError.invalidValue(key: key.rawValue, value: raw)
             }
+            return value
         }
     }
 
@@ -341,11 +323,19 @@ enum CLIOutput {
             guard let data = raw.data(using: .utf8) else {
                 throw APSError.decodingFailed
             }
-            // Prefer ProfileDocument when shape matches; else keep as string envelope.
-            if let document = try? JSONDecoder().decode(ProfileDocument.self, from: data) {
-                return .object(document)
+            guard
+                let value = try? JSONDecoder().decode(SchemaJSON.self, from: data),
+                case .object = value
+            else {
+                throw APSError.invalidValue(key: entry.name, value: raw)
             }
-            return .string(raw)
+            try UserSchema.validate(
+                value,
+                declaredType: entry.type,
+                objectShape: entry.objectShape,
+                key: entry.name
+            )
+            return value
         default:
             return .string(raw)
         }

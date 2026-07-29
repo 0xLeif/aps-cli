@@ -6,7 +6,10 @@ Authors: agent:cursor (2026-07-19)
 Depends on: error contract ([#31](https://github.com/0xLeif/aps-cli/issues/31)), `aps schema` ([#32](https://github.com/0xLeif/aps-cli/issues/32))  
 Milestone: v1.0.0
 
-> Release-readiness note: the current implementation enforces the path-safety, Slice-reference, registry-authority, and destructive-operation invariants below. Recursive arbitrary object values remain a separate extension. Track remaining release closure criteria in [release readiness](../release-readiness.md).
+> Release-readiness note: the current implementation enforces the path-safety,
+> recursive object typing, Slice-reference, registry-authority, and
+> destructive-operation invariants below. The complete release still depends
+> on the remaining closure criteria in [release readiness](../release-readiness.md).
 
 ## Verdict
 
@@ -131,8 +134,8 @@ Rules:
 | Reserved names | The design treats demo names as ordinary entries; the implementation must either honor that through registry-only dispatch or explicitly revise this decision and reserve them |
 | `storage` | Closed enum for 1.0: `State`, `StoredState`, `FileState`, `EncryptedFile`, `Slice` |
 | `type` | Closed enum for 1.0: `Int`, `String`, `Bool`, `object` |
-| `object` | Requires `objectShape` (flat string->primitive map for 1.0; nested objects deferred) |
-| `Slice` | Requires `sliceOf` + `sliceField` pointing at an `object` key |
+| `object` | Open `objectShape`: declared fields are required/type-checked; extra recursive JSON is preserved |
+| `Slice` | `sliceOf` + `sliceField`; parent shape must declare the field with the Slice's type |
 | `path` | Required for `FileState` / `EncryptedFile`; canonical regular-file location contained below the state root, not reserved, shared, a directory, or reachable through a symlink escape |
 | `initial` | Required; used by `reset` and first read |
 
@@ -149,6 +152,20 @@ Missing `schema.json` on an existing state root: **materialize the built-in defa
 | `aps key remove <name>` | Removes entry; does **not** delete data files by default (`--purge` opt-in) |
 | `aps key list [--json]` | Human/agent listing (subset of `aps keys`) |
 | Hand-editing `schema.json` | Supported; next `aps` command validates and fails with `invalid_value` / dedicated `schema_invalid` if needed |
+
+Object declarations use repeatable `--field NAME=TYPE` options:
+
+```bash
+aps key add settings --type object --storage FileState --path settings.json \
+  --field name=String --field retries=Int \
+  --initial '{"name":"agent","retries":3,"features":{"watch":true}}'
+```
+
+Malformed or duplicate field declarations fail without mutating the registry.
+An object initial value must contain every declared field with its declared
+type. Extra fields may recursively contain nulls, booleans, integers, finite
+doubles, strings, arrays, and objects, and remain present through set/get
+round-trips.
 
 `aps keys` remains the agent-facing inventory (name/type/storage/detail). It
 reads the registry rather than `DemoKey.allCases`. The same rule applies to
@@ -167,16 +184,18 @@ Replace compile-time-only dispatch with a loaded registry:
 | Storage | Adapter idea |
 |---------|----------------|
 | `State` | Process-local map in `Application` / in-memory box keyed by name |
-| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; writes synchronize, type-check the canonical object, and restore its exact prior value after detected failure; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
+| `StoredState` | UserDefaults key under a stable prefix `aps.user.<name>`; writes synchronize, type-check the canonical object, and restore its exact prior value after detected failure; absent data uses the schema initial, while present undecodable data fails as `corrupt_state`; the unchanged Bool/StoredState `flag` can read legacy `App/aps.flag` data when the canonical key is absent |
 | `FileState` | JSON file at `path` (string or object document) |
 | `EncryptedFile` | Reuse #35 envelope helpers with configurable filename |
 | `Slice` | Read/write parent object field |
 
 Slice reads decode the parent field against the type declared by
-`objectShape`. When the parent shape omits the field, the Slice entry's `type`
-is authoritative. A JSON integer is therefore never accepted as a Bool through
-Foundation numeric bridging. Slice set and reset use the same fallback and
-encode String, Int, Bool, and object fields as their declared JSON types.
+`objectShape`. The parent must explicitly declare that field, and the
+declaration must match the Slice entry's `type`; there is no inferred or
+unshaped fallback. A JSON integer is therefore never accepted as a Bool
+through Foundation numeric bridging. Slice set and reset encode String, Int,
+Bool, and object fields as their declared JSON types. Object Slice initials
+also require their own `objectShape`.
 
 `get` / `set` / `watch` / `reset` / `dump` take **string key names** resolved
 through the registry. `DemoKey` is seed inventory and a low-level AppState
@@ -212,9 +231,9 @@ verification fails, aps restores the exact present bytes or prior absence and
 verifies that rollback before returning. EncryptedFile reset uses
 `secret.store.lock`, removes only the envelope, verifies its absence, and
 preserves `secret.key`.
-Parent and Slice reset initials compare as typed `SchemaJSON` values when the
-parent field is present. Only an omitted parent field selects the Slice initial
-as its fallback.
+Parent and Slice reset initials compare as typed `SchemaJSON` values. A missing
+required parent field is corrupt state, not a request to infer or substitute a
+different field type.
 Default FileState adapters then reload the current disk value under the same
 storage lock. They update the AppState cache without deleting or replacing a
 valid write that arrived after the registry reset.
@@ -246,19 +265,22 @@ Unknown key: exit **64** (`invalid_value` or a dedicated `unknown_key` code adde
 
 ### 4. Relationship to `aps schema` (#32)
 
-Today `aps schema` emits a **static** contract (`Schema.schemaVersion`, fixed key list, commands, payloads, errors).
-
-After this RFC:
+`aps schema` combines a compiled contract with a live registry projection:
 
 | Field | Source |
 |-------|--------|
 | `cliVersion`, commands, payloads, errors, stateRoot precedence | Still static (compiled contract) |
 | `keys` | **Dynamic:** projection of `schema.json` |
 | `schemaVersion` | Static integer for the *contract document shape* (commands/payloads/errors). Bump when the CLI contract changes, not when a user adds a key |
-| New: `userSchema.formatVersion` | Echo of `schema.json`'s `formatVersion` |
-| New: `userSchema.hash` (optional) | Stable hash of canonicalized `schema.json` so agents detect key-set drift without diffing the whole keys array |
+| `userSchema.formatVersion` | Echo of `schema.json`'s `formatVersion` |
+| `userSchema.keyCount` | Live count of entries projected into `keys` |
+| `userSchema.hash` | Stable canonical-schema hash for detecting registry drift |
 
-Agents that cached `aps schema` must treat `keys` as mutable. Equality checks on `schemaVersion` alone are no longer enough to assume the key list is unchanged; they should compare `userSchema.hash` or re-fetch `keys`.
+The current static contract version is `6`. Agents that cached `aps schema`
+must treat `keys` as mutable. Equality checks on `schemaVersion` alone are no
+longer enough to assume the key list is unchanged; they should compare
+`userSchema.hash` or re-fetch `keys`. `userSchema.keyCount` must equal the
+number of projected keys.
 
 ### 5. SpecSync / specs strategy
 
@@ -268,24 +290,35 @@ Agents that cached `aps schema` must treat `keys` as mutable. Equality checks on
 | Concrete demo key names in default schema | Documented as **default seed data**, not as an open-ended requirement that forbids other keys |
 | User-added keys at runtime | **Out of SpecSync enum scope**; verified by tests that add a temporary key under a temp state root |
 
-Implementation SpecSync change (future, not this RFC) should:
+The implementation's SpecSync contracts:
 
-- MODIFY purpose text: fixed demo schema -> registry-backed schema with demo defaults.
-- ADD requirements for `schema.json` validation, `aps key add/remove`, and migration/materialization.
-- Keep export tables for core types (`APSError`, payload structs); stop requiring every key name as a Swift enum case forever.
+- describe the registry-backed schema with demo defaults;
+- require `schema.json` validation, `aps key add/remove`, and
+  migration/materialization;
+- contract recursive values, open object-shape validation, strict Slice
+  references, and structural machine output;
+- keep export tables for core types (`APSError`, payload structs) without
+  requiring every runtime key name to be a Swift enum case.
 
-### 6. Type system (1.0)
+### 6. Type system
 
-Reuse the current value surface:
+Top-level registered key types remain intentionally small:
 
 | Type | Wire form (set/get string CLI) | Notes |
 |------|-------------------------------|-------|
 | `Int` | decimal string | Same as `counter` |
 | `String` | raw string | |
 | `Bool` | `true`/`false`/`1`/`0` (existing `parseBool`) | |
-| `object` | JSON object string | Flat fields only in 1.0 |
+| `object` | JSON object string | Open shape with required declared fields and preserved recursive extras |
 
-Deferred: arrays, nested objects, enums, decimals, timestamps as first-class types.
+Object values use a recursive structural representation: null, Bool, Int,
+finite Double, String, array, or object. Arrays, nulls, and doubles are not
+top-level registered key types; they are supported inside object values.
+Equivalent integral JSON spellings such as `1`, `1.0`, and `1e0` may
+canonicalize to Int because JSON and Foundation Codable do not expose a stable
+lexical numeric subtype. Numeric value and recursive structure remain stable.
+Nonfinite doubles are rejected at every recursive depth.
+Enums, timestamps, and a general JSON Schema engine remain deferred.
 
 ### 7. Migration path for demo keys
 
@@ -343,7 +376,9 @@ Ordered work once this RFC merges:
 1. **Schema file IO + validation** (load/materialize/write, path safety, slice refs).
 2. **Registry resolve** for get/set/reset/dump/keys against string names (complete, including forced seed replacements).
 3. **`aps key add|remove|list`** sugar with JSON errors.
-4. **Dynamic `aps schema` keys projection** + `userSchema.hash`; bump static `schemaVersion` when the contract document gains fields.
+4. **Dynamic `aps schema` projection** with `userSchema.keyCount` and
+   `userSchema.hash`; bump static `schemaVersion` when the contract document
+   gains fields.
 5. **Watch** against registry keys (poll path first; Match current signal/TTY behavior).
 6. **Docs + smoke**: seed schema in smoke state roots; add/remove round-trip in `Scripts/smoke.sh` / `smoke.ps1`.
 7. **Remove CLI `DemoKey` argument dispatch** after parity (complete).
@@ -357,7 +392,8 @@ Suggested tracking: open implementation issues from this list when starting 1.0 
 - `object` + `Slice` round-trip (`profile` / `profileName` seed remains green).
 - Invalid schema file -> exit 65 / `schema_invalid`.
 - Unknown key -> exit 64.
-- `aps schema` keys reflect add/remove; `schemaVersion` unchanged on key add; `userSchema.hash` changes.
+- `aps schema` keys and `userSchema.keyCount` reflect add/remove;
+  `schemaVersion` remains unchanged on key add; `userSchema.hash` changes.
 - Windows + Linux smoke still pass.
 
 ## Open questions (non-blocking)
@@ -373,7 +409,7 @@ Suggested tracking: open implementation issues from this list when starting 1.0 
 | Ship the RFC now? | **Go** |
 | Start implementation immediately after merge? | **Go**, as a separate SpecSync change series under milestone v1.0.0 |
 | Block on #40 public flip? | **No** |
-| Block on expanding types beyond Int/String/Bool/object? | **No** (defer) |
+| Expand top-level types beyond Int/String/Bool/object? | **No** (defer); recursive objects support every JSON kind |
 
 ## Related
 

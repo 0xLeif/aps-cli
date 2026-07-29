@@ -206,22 +206,31 @@ Acceptance Criteria
 
 ### REQ-aps-cli-024
 
-`aps schema` SHALL advertise root-or-subcommand `--state-dir`, reset `--registered`,
-bulk reset report payloads, and integer `schemaVersion` 5 for this contract shape.
+`aps schema` SHALL advertise root-or-subcommand `--state-dir`, reset
+`--registered`, repeatable key-add `--field NAME=TYPE`, bulk reset report
+payloads, and integer `schemaVersion` 6 for this contract shape.
 
 Acceptance Criteria
-- `aps schema` emits `"schemaVersion":5`.
+- `aps schema` emits `"schemaVersion":6`.
 - The `reset` command entry lists flags including `--registered`.
+- The `key add` command entry lists flags including `--field`.
 
 ### REQ-aps-cli-019
 
-`aps schema` SHALL emit one cacheable JSON document describing the CLI contract: cliVersion, integer schemaVersion (bumped when the document shape changes), state-root precedence, live registered keys, `userSchema` meta (formatVersion, keyCount, hash), commands, payload shapes, and the error table.
+`aps schema` SHALL emit one cacheable JSON document describing the CLI
+contract: cliVersion, integer schemaVersion (bumped when the document shape
+changes), state-root precedence, live registered keys, `userSchema` meta
+(formatVersion, keyCount, hash), commands, payload shapes, and the error table.
 
 Acceptance Criteria
-- Output is valid JSON with top-level integer `schemaVersion` equal to 5 after this change.
-- Keys cover every entry in the active `schema.json`; commands cover every subcommand including `key`.
+- Output is valid JSON with top-level integer `schemaVersion` equal to 6 after
+  this change.
+- Keys cover every entry in the active `schema.json`; commands cover every
+  subcommand including `key`.
 - `cliVersion` equals `aps --version`.
 - `userSchema.hash` changes when the registry changes.
+- `userSchema.keyCount` equals both the active registry key count and the
+  number of projected key contracts.
 - Live values stay in `dump`.
 
 ### REQ-aps-cli-025
@@ -345,3 +354,76 @@ Acceptance Criteria
 - Retargeting the configured state-root symlink cannot redirect a running
   registered encrypted watch.
 - The full 238-test local lane and every hosted platform gate pass.
+
+### REQ-aps-cli-033
+
+APS SHALL preserve registered object values as recursive structural JSON in
+every machine-output path. Get, set, dump, watch, and reset SHALL retain all
+null, boolean, integer, finite floating-point, string, array, and object values
+without a domain-model coercion or JSON string envelope.
+
+`aps key add` SHALL accept repeatable `--field NAME=TYPE` declarations for
+object shapes. It SHALL reject malformed, duplicate, unsupported, or
+non-object field declarations before mutating `schema.json`. Object initials
+SHALL match their declared type and every declared shape field. Undeclared
+object fields MAY be retained.
+
+Slice entries SHALL name a declared field on an existing FileState object
+parent. The parent field type, Slice type, and typed Slice initial SHALL agree.
+Invalid or formerly unshaped Slice definitions SHALL fail as `schema_invalid`
+before storage mutation.
+
+`aps schema` SHALL publish `schemaVersion` 6 and
+`userSchema.keyCount`. `keyCount` SHALL equal both the active registry key
+count and the number of projected key contracts.
+
+Acceptance Criteria
+- Arbitrary nested objects with profile-like and extra fields round-trip through
+  all machine outputs without field loss or stringification.
+- Recursive JSON tests cover null, Bool, Int, finite Double, String, arrays,
+  and nested objects.
+- `key add --field name=String --field retries=Int` persists a usable shape;
+  malformed and duplicate declarations fail without changing the registry.
+- Schema loading rejects initial/type/shape mismatches and invalid Slice
+  parent, field, type, or initial combinations.
+- The default seven-key schema and profile/profileName behavior remain
+  compatible.
+- `aps schema` reports version 6 and a `keyCount` equal to `keys.count`.
+
+### REQ-aps-cli-034
+
+APS machine output SHALL preserve recursive JSON structure and numeric value.
+Equivalent integral JSON spellings such as `1`, `1.0`, and `1e0` MAY
+canonicalize to an integer because JSON and Foundation Codable do not expose a
+stable lexical numeric subtype.
+
+Schema validation SHALL reject nonfinite doubles at every recursive array or
+object depth, including undeclared fields preserved by an open object shape.
+Schema version 6 SHALL advertise null, boolean, integer, finite number, string,
+array, and object for every recursive value-bearing payload.
+
+Acceptance Criteria
+- Integral numeric spellings have documented canonical semantics while
+  nonintegral finite values retain their numeric value.
+- Nested infinity and NaN values fail schema validation.
+- KeyValuePayload, WatchEvent, and ResetPayload advertise the complete
+  recursive JSON kind set.
+- Focused regressions and the full quality lane pass.
+
+### REQ-aps-cli-035
+
+Dynamic Bool parsing SHALL accept the same tokens as the central Bool parser,
+including `y` and `n`. Object Slice schemas SHALL require a parent initial that
+satisfies every nested Slice shape and identical shapes for sibling object
+Slices targeting one parent field. Direct parent writes SHALL satisfy every
+targeting Slice constraint before mutation. Canonical terminology SHALL list
+every public recursive SchemaJSON case. Recursive JSON decoding SHALL reject
+integral numeric values that cannot be represented exactly as native Int values.
+
+Acceptance Criteria
+- Dynamic Bool values accept `y`, `Y`, `n`, and `N`.
+- Invalid parent initials and incompatible sibling Slice shapes are rejected.
+- Invalid direct parent writes fail without creating or changing storage.
+- Canonical terminology includes array and object cases.
+- Out-of-range integral JSON is rejected instead of rounded through Double.
+- Focused regressions and the full quality lane pass.

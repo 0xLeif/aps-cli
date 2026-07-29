@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0061-accept-finite-recursive-json-doubles-beyond-decimal-exponent-range",
+  "slug": "accept-finite-recursive-json-doubles-beyond-decimal-exponent-range",
+  "title": "Accept finite recursive JSON doubles beyond Decimal exponent range",
+  "description": "Accept finite recursive JSON doubles beyond Decimal exponent range",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "28a9781e057e5c019a7ff1fe08931246761e968e",
+  "created_at": 1785281970,
+  "updated_at": 1785282101,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    "Sources/aps/UserSchema.swift",
+    "Tests/apsTests/DynamicObjectTypingTests.swift",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This restores finite Double support promised by the existing recursive JSON contract without changing public API or canonical requirements.",
+  "acceptance_criteria": [
+    "Finite Double values such as 1e-200 and 5e-324 decode successfully; underflowing 1e-400 remains rejected; Decimal-range precision checks remain enforced; focused regressions and the full quality lane pass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

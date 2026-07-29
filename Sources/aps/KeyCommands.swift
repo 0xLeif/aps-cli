@@ -2,8 +2,8 @@ import ArgumentParser
 import Foundation
 
 extension Aps {
-    struct Key: ParsableCommand {
-        static let configuration = CommandConfiguration(
+    internal struct Key: ParsableCommand {
+        internal static let configuration = CommandConfiguration(
             commandName: "key",
             abstract: "Edit the state-root schema.json registry (add/remove/list).",
             subcommands: [Add.self, Remove.self, List.self]
@@ -12,47 +12,58 @@ extension Aps {
 }
 
 extension Aps.Key {
-    struct Add: ParsableCommand {
-        static let configuration = CommandConfiguration(
+    internal struct Add: ParsableCommand {
+        internal static let configuration = CommandConfiguration(
             abstract: "Add or replace a key in schema.json."
         )
 
         @Argument(help: "Key name ([A-Za-z][A-Za-z0-9_]*).")
-        var name: String
+        internal var name: String
 
         @Option(name: .long, help: "Value type: Int | String | Bool | object")
-        var type: String
+        internal var type: String
 
         @Option(name: .long, help: "Storage: State | StoredState | FileState | EncryptedFile | Slice")
-        var storage: String
+        internal var storage: String
 
         @Option(name: .long, help: "Initial value (string/bool/int wire form, or JSON object).")
-        var initial: String?
+        internal var initial: String?
 
         @Option(name: .long, help: "Relative file path for FileState / EncryptedFile.")
-        var path: String?
+        internal var path: String?
 
         @Option(name: .long, help: "Short documentation string.")
-        var doc: String?
+        internal var doc: String?
+
+        @Option(
+            name: .long,
+            help: "Object field declaration NAME=TYPE; repeat for additional fields."
+        )
+        internal var field: [String] = []
 
         @Option(name: .long, help: "Parent object key for Slice storage.")
-        var sliceOf: String?
+        internal var sliceOf: String?
 
         @Option(name: .long, help: "Field name on the parent object for Slice storage.")
-        var sliceField: String?
+        internal var sliceField: String?
 
         @Flag(name: .long, help: "Replace an existing schema entry with the same name.")
-        var force: Bool = false
+        internal var force: Bool = false
 
         @OptionGroup
-        var options: StateOptions
+        internal var options: StateOptions
 
-        func run() throws {
+        internal func run() throws {
             try onMainThread {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
                 do {
-                    let initialJSON = try Self.parseInitial(initial, type: type, storage: storage)
+                    let objectShape = try Self.parseObjectShape(field, type: type)
+                    let initialJSON = try Self.parseInitial(
+                        initial,
+                        type: type,
+                        objectShape: objectShape
+                    )
                     let entry = SchemaKeyEntry(
                         name: name,
                         type: type,
@@ -60,7 +71,7 @@ extension Aps.Key {
                         initial: initialJSON,
                         path: path,
                         doc: doc,
-                        objectShape: type == "object" ? [:] : nil,
+                        objectShape: objectShape,
                         sliceOf: sliceOf,
                         sliceField: sliceField
                     )
@@ -90,58 +101,87 @@ extension Aps.Key {
         private static func parseInitial(
             _ raw: String?,
             type: String,
-            storage: String
+            objectShape: [String: String]?
         ) throws -> SchemaJSON? {
-            if storage == "Slice" {
-                return raw.map { .string($0) } ?? .string("")
-            }
-            guard let raw else {
-                switch type {
-                case "Int": return .int(0)
-                case "Bool": return .bool(false)
-                case "object": return .object([:])
-                default: return .string("")
-                }
-            }
-            switch type {
-            case "Int":
-                guard let value = Int(raw) else {
+            let parsed: SchemaJSON
+            if let raw {
+                guard let value = SchemaJSON.parse(raw, as: type) else {
                     throw APSError.invalidValue(key: "initial", value: raw)
                 }
-                return .int(value)
-            case "Bool":
-                guard let value = StateStore.parseBool(raw) else {
-                    throw APSError.invalidValue(key: "initial", value: raw)
+                parsed = value
+            } else {
+                guard type != "object" || objectShape?.isEmpty != false else {
+                    throw APSError.invalidValue(key: "initial", value: "(missing)")
                 }
-                return .bool(value)
-            case "object":
-                guard let data = raw.data(using: .utf8),
-                      let object = try? JSONDecoder().decode([String: SchemaJSON].self, from: data)
+                guard let value = SchemaJSON.defaultValue(for: type) else {
+                    throw APSError.invalidValue(key: "type", value: type)
+                }
+                parsed = value
+            }
+
+            guard parsed.matches(type: type, objectShape: objectShape) else {
+                throw APSError.invalidValue(key: "initial", value: raw ?? "(default)")
+            }
+            return parsed
+        }
+
+        private static func parseObjectShape(
+            _ declarations: [String],
+            type: String
+        ) throws -> [String: String]? {
+            guard type == "object" else {
+                guard declarations.isEmpty else {
+                    throw APSError.invalidValue(
+                        key: "field",
+                        value: declarations.joined(separator: ",")
+                    )
+                }
+                return nil
+            }
+
+            var shape: [String: String] = [:]
+            let nameExpression = try? NSRegularExpression(pattern: UserSchema.namePattern)
+            for declaration in declarations {
+                let parts = declaration.split(
+                    separator: "=",
+                    maxSplits: 1,
+                    omittingEmptySubsequences: false
+                )
+                guard parts.count == 2 else {
+                    throw APSError.invalidValue(key: "field", value: declaration)
+                }
+                let name = String(parts[0])
+                let fieldType = String(parts[1])
+                let range = NSRange(name.startIndex..., in: name)
+                guard
+                    let nameExpression,
+                    nameExpression.firstMatch(in: name, range: range) != nil,
+                    UserSchema.allowedTypes.contains(fieldType),
+                    shape[name] == nil
                 else {
-                    throw APSError.invalidValue(key: "initial", value: raw)
+                    throw APSError.invalidValue(key: "field", value: declaration)
                 }
-                return .object(object)
-            default:
-                return .string(raw)
+                shape[name] = fieldType
             }
+            return shape
         }
     }
 
-    struct Remove: ParsableCommand {
-        static let configuration = CommandConfiguration(
+    internal struct Remove: ParsableCommand {
+        internal static let configuration = CommandConfiguration(
             abstract: "Remove a key from schema.json."
         )
 
         @Argument(help: "Key name to remove.")
-        var name: String
+        internal var name: String
 
         @Flag(name: .long, help: "Also delete FileState / EncryptedFile / StoredState data.")
-        var purge: Bool = false
+        internal var purge: Bool = false
 
         @OptionGroup
-        var options: StateOptions
+        internal var options: StateOptions
 
-        func run() throws {
+        internal func run() throws {
             try onMainThread {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()
@@ -159,15 +199,15 @@ extension Aps.Key {
         }
     }
 
-    struct List: ParsableCommand {
-        static let configuration = CommandConfiguration(
+    internal struct List: ParsableCommand {
+        internal static let configuration = CommandConfiguration(
             abstract: "List keys from schema.json (same inventory as aps keys)."
         )
 
         @OptionGroup
-        var options: StateOptions
+        internal var options: StateOptions
 
-        func run() throws {
+        internal func run() throws {
             try onMainThread {
                 boot(stateDir: options.stateDir)
                 let store = StateStore()

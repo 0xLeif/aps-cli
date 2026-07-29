@@ -1,6 +1,6 @@
 ---
 module: state-store
-version: 37
+version: 41
 status: active
 files:
   - Sources/aps/StateStore.swift
@@ -123,6 +123,15 @@ and synchronize the default AppState dogfood surface before releasing the lock.
     requires current-user ownership, regular-file type, no link following, and
     exact `0600`; Windows requires a current-user owner SID, non-reparse disk
     file, and protected private DACL.
+21. Dynamic storage validates a value against its declared type and open object
+    shape before mutation and after persistence reads. FileState object roots
+    that are scalar, arrays, or shape-invalid surface as `corruptState`.
+22. Object shapes require every declared field while preserving undeclared
+    recursive JSON fields. Supported recursive values are null, Bool, Int,
+    finite Double, String, array, and object.
+23. Slice entries have typed initials and resolve only to explicitly declared,
+    type-compatible fields on FileState object parents. Validation supports
+    forward references and rejects invalid schemas before storage mutation.
 
 ## Behavioral Examples
 
@@ -149,6 +158,12 @@ Given dump() after set(.counter, value: "41") and set(.message, value: "hi")
 When decoding the JSON
 Then the default State entries expose the live AppState adapter values 41 and "hi",
 preserve registry type and storage metadata, and include a timestamp field.
+```
+
+```
+Given a FileState object with declared fields and additional recursive fields
+When it is set and read through DynamicKeyStorage
+Then declared fields are validated and all undeclared fields are preserved.
 ```
 
 ## Error Cases
@@ -210,3 +225,7 @@ preserve registry type and storage metadata, and include a timestamp field.
 | 2026-07-27 | CHG-0050-harden-passphrase-envelopes-and-existing-secret-key-validation-for-issue-118: Harden passphrase envelopes and existing secret-key validation for issue 118 |
 | 2026-07-28 | CHG-0054-finalize-pr-128-review-corrections-for-secure-key-lifecycle-and-cli-recipient-re: Finalize PR 128 review corrections for secure key lifecycle and CLI recipient reuse |
 | 2026-07-28 | CHG-0055-close-final-pr-128-review-gaps-for-malformed-recipient-modes-posix-permission-r: Close final PR 128 review gaps for malformed recipient modes, POSIX permission races, and pinned encrypted watch roots |
+| 2026-07-28 | CHG-0051-enforce-recursive-dynamic-object-and-slice-typing-and-restore-schema-metadata-fo: Enforce recursive dynamic object and Slice typing and restore schema metadata for issue 114 |
+| 2026-07-28 | CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a: Close final PR 129 review gaps for recursive JSON kinds, nonfinite validation, and corrupt StoredState reads |
+| 2026-07-28 | CHG-0057-close-remaining-pr-129-validation-gaps-for-encrypted-watch-slice-shapes-bool-t: Close remaining PR 129 validation gaps for encrypted watch, Slice shapes, Bool tokens, and StoredState numeric kinds |
+| 2026-07-28 | CHG-0058-reject-oversized-integral-json-without-rounding-and-validate-decrypted-plaintext: Reject oversized integral JSON without rounding and validate decrypted plaintext during encrypted disk-state preflight |

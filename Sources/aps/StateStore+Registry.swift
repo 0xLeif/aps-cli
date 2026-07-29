@@ -519,11 +519,13 @@ extension StateStore {
                 forEncryptedSnapshot: snapshotData,
                 session: &activeSession
             )
+            try DynamicKeyStorage.validateReadValue(opened.value, for: entry)
             session = activeSession
             lastValue = opened.value
             lastEnvelope = opened.snapshot
         } else {
             lastValue = initialValue
+            try DynamicKeyStorage.validateReadValue(lastValue, for: entry)
         }
         onChange(lastValue)
         let slice = max(pollInterval / 5.0, 0.05)
@@ -549,11 +551,13 @@ extension StateStore {
                     forEncryptedSnapshot: currentEnvelope,
                     session: &activeSession
                 )
+                try DynamicKeyStorage.validateReadValue(opened.value, for: entry)
                 session = activeSession
                 currentValue = opened.value
                 lastEnvelope = opened.snapshot
             } else {
                 currentValue = initialValue
+                try DynamicKeyStorage.validateReadValue(currentValue, for: entry)
                 lastEnvelope = nil
             }
             if currentValue != lastValue {
