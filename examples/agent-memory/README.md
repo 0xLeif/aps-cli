@@ -12,8 +12,11 @@ TESTS_PASSED=false \
 BLOCKER="" \
 ./examples/agent-memory/run.sh
 
-APS_HOME="$PWD/.agents/codex" "${APS_BIN:-aps}" dump --json
+APS_HOME="$PWD/.agents/codex" ./examples/agent-memory/run.sh
 ```
+
+The script emits one JSON checkpoint containing only these example keys. It
+does not dump unrelated keys or secrets that may exist in the same state root.
 
 The example records:
 

@@ -8,8 +8,21 @@ ensure_key() {
     local name="$1"
     shift
     if ! "$aps_bin" keys --quiet | grep -Fxq "$name"; then
-        "$aps_bin" key add "$name" "$@"
+        "$aps_bin" key add "$name" "$@" >/dev/null
     fi
+}
+
+emit_checkpoint() {
+    local keys=(currentIssue workingBranch phase testsPassed blocker)
+    local separator=""
+
+    printf '{"checkpoint":['
+    for key in "${keys[@]}"; do
+        printf '%s' "$separator"
+        "$aps_bin" get "$key" --json
+        separator=","
+    done
+    printf ']}\n'
 }
 
 ensure_key currentIssue \
@@ -44,4 +57,4 @@ if [[ -n "${BLOCKER+x}" ]]; then
     "$aps_bin" set blocker "$BLOCKER" >/dev/null
 fi
 
-"$aps_bin" dump --json
+emit_checkpoint

@@ -55,14 +55,6 @@ internal struct StateHarness {
         let fileManager = FileManager.default
         let environment = ProcessInfo.processInfo.environment
 
-        if executable.contains("/") || executable.contains("\\") {
-            let directURL = URL(fileURLWithPath: executable).standardizedFileURL
-            guard isExecutable(directURL, fileManager: fileManager) else {
-                throw HarnessError.executableNotFound(executable)
-            }
-            return directURL
-        }
-
         #if os(Windows)
         let pathSeparator: Character = ";"
         let extensions = (environment["PATHEXT"] ?? ".EXE;.CMD;.BAT")
@@ -73,13 +65,26 @@ internal struct StateHarness {
         let extensions = [""]
         #endif
 
+        let executableNames = [executable] + extensions
+            .filter { !$0.isEmpty }
+            .map { executable + $0 }
+        if executable.contains("/") || executable.contains("\\") {
+            for executableName in executableNames {
+                let directURL = URL(fileURLWithPath: executableName).standardizedFileURL
+                if isExecutable(directURL, fileManager: fileManager) {
+                    return directURL
+                }
+            }
+            throw HarnessError.executableNotFound(executable)
+        }
+
         let pathEntries = (environment["PATH"] ?? "")
             .split(separator: pathSeparator)
             .map(String.init)
         for pathEntry in pathEntries {
-            for extensionName in extensions {
+            for executableName in executableNames {
                 let candidate = URL(fileURLWithPath: pathEntry)
-                    .appendingPathComponent(executable + extensionName)
+                    .appendingPathComponent(executableName)
                 if isExecutable(candidate, fileManager: fileManager) {
                     return candidate
                 }

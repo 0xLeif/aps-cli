@@ -8,8 +8,21 @@ ensure_key() {
     local name="$1"
     shift
     if ! "$aps_bin" keys --quiet | grep -Fxq "$name"; then
-        "$aps_bin" key add "$name" "$@"
+        "$aps_bin" key add "$name" "$@" >/dev/null
     fi
+}
+
+emit_checkpoint() {
+    local keys=(releaseVersion candidateCommit releasePhase releaseTestsPassed riskVerdict)
+    local separator=""
+
+    printf '{"checkpoint":['
+    for key in "${keys[@]}"; do
+        printf '%s' "$separator"
+        "$aps_bin" get "$key" --json
+        separator=","
+    done
+    printf ']}\n'
 }
 
 ensure_key releaseVersion \
@@ -33,18 +46,22 @@ if [[ -n "${RELEASE_VERSION+x}" ]]; then
     if [[ "$("$aps_bin" get releaseVersion)" != "$RELEASE_VERSION" ]]; then
         candidate_changed=true
     fi
-    "$aps_bin" set releaseVersion "$RELEASE_VERSION" >/dev/null
 fi
 if [[ -n "${CANDIDATE_COMMIT+x}" ]]; then
     if [[ "$("$aps_bin" get candidateCommit)" != "$CANDIDATE_COMMIT" ]]; then
         candidate_changed=true
     fi
-    "$aps_bin" set candidateCommit "$CANDIDATE_COMMIT" >/dev/null
 fi
 if [[ "$candidate_changed" == true ]]; then
     "$aps_bin" set releasePhase planned >/dev/null
     "$aps_bin" set releaseTestsPassed false >/dev/null
     "$aps_bin" set riskVerdict pending >/dev/null
+fi
+if [[ -n "${RELEASE_VERSION+x}" ]]; then
+    "$aps_bin" set releaseVersion "$RELEASE_VERSION" >/dev/null
+fi
+if [[ -n "${CANDIDATE_COMMIT+x}" ]]; then
+    "$aps_bin" set candidateCommit "$CANDIDATE_COMMIT" >/dev/null
 fi
 if [[ -n "${RELEASE_PHASE+x}" ]]; then
     "$aps_bin" set releasePhase "$RELEASE_PHASE" >/dev/null
@@ -56,4 +73,4 @@ if [[ -n "${RISK_VERDICT+x}" ]]; then
     "$aps_bin" set riskVerdict "$RISK_VERDICT" >/dev/null
 fi
 
-"$aps_bin" dump --json
+emit_checkpoint

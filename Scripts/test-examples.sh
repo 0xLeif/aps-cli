@@ -21,6 +21,11 @@ WORKING_BRANCH=agent/example \
 TESTS_PASSED=true \
     "$repo_root/examples/agent-memory/run.sh" > "$fixture_root/agent.json"
 grep -Fq '"key":"currentIssue"' "$fixture_root/agent.json"
+test "$(head -c 1 "$fixture_root/agent.json")" = "{"
+if grep -Fq '"key":"secret"' "$fixture_root/agent.json"; then
+    echo "Agent checkpoint output contains unrelated secret state" >&2
+    exit 1
+fi
 test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get currentIssue)" = "321"
 test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get testsPassed)" = "true"
 APS_BIN="$aps_bin" \
@@ -36,6 +41,11 @@ RELEASE_VERSION=9.8.7 \
 CANDIDATE_COMMIT=0123456789abcdef \
     "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release.json"
 grep -Fq '"key":"releaseVersion"' "$fixture_root/release.json"
+test "$(head -c 1 "$fixture_root/release.json")" = "{"
+if grep -Fq '"key":"secret"' "$fixture_root/release.json"; then
+    echo "Release checkpoint output contains unrelated secret state" >&2
+    exit 1
+fi
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseVersion)" = "9.8.7"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "false"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "pending"
@@ -101,7 +111,7 @@ do
     grep -Fq "../examples/$example/" "$repo_root/docs/use-cases.md"
 done
 grep -Fq '../examples/' "$repo_root/docs/README.md"
-grep -Fq '${APS_BIN:-aps}' "$repo_root/examples/agent-memory/README.md"
+grep -Fq './examples/agent-memory/run.sh' "$repo_root/examples/agent-memory/README.md"
 grep -Fq '${APS_BIN:-aps}' "$repo_root/examples/release-pipeline/README.md"
 grep -Fq 'StoredState values live in platform UserDefaults' "$repo_root/docs/use-cases.md"
 for ignored_root in \

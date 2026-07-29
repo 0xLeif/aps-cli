@@ -14,7 +14,7 @@ test result, and risk verdict. A release script, agent, or terminal dashboard
 can inspect it with:
 
 ```bash
-APS_HOME="$PWD/.release-state" "${APS_BIN:-aps}" dump --json
+APS_HOME="$PWD/.release-state" ./examples/release-pipeline/run.sh
 APS_HOME="$PWD/.release-state" "${APS_BIN:-aps}" watch releasePhase --jsonl --timeout 300
 ```
 
