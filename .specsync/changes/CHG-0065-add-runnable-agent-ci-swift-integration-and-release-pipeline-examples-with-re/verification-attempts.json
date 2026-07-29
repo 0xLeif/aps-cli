@@ -60,6 +60,36 @@
         }
       ],
       "requirement_ids": []
+    },
+    {
+      "timestamp": 1785340853,
+      "commit": "2f13cde531c3953d1f821b15a699449d0a1e6f03",
+      "contract_digest": "afa9871e790e9cfa628d4fbff52f86d5c47ee4fb1722fa5f1cf59571ad303453",
+      "workspace_digest": "da4c8bb24a069922d6e6f698130660938df9fbc76db2e9ff4d2251b568164b5c",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": []
+    },
+    {
+      "timestamp": 1785340957,
+      "commit": "2f13cde531c3953d1f821b15a699449d0a1e6f03",
+      "contract_digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
+      "workspace_digest": "da4c8bb24a069922d6e6f698130660938df9fbc76db2e9ff4d2251b568164b5c",
+      "passed": true,
+      "commands": [
+        {
+          "command": "fledge lanes run verify",
+          "success": true,
+          "exit_code": 0
+        }
+      ],
+      "requirement_ids": []
     }
   ]
 }

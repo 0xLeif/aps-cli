@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785339903,
-  "commit": "7a151837dded09817eff7fc71431404ac8bdcfc5",
+  "timestamp": 1785340957,
+  "commit": "2f13cde531c3953d1f821b15a699449d0a1e6f03",
   "contract_digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
-  "workspace_digest": "54a1b9dc8f2bf6184fb2cfa677ca4b9acc3a5387d9833ebbedde53c19249e212",
-  "acceptance_input_digest": "d222b59dbf9b7d7bb9c8a974f01273f6c22e104be6e74dca9c0be0dd4568c357",
+  "workspace_digest": "da4c8bb24a069922d6e6f698130660938df9fbc76db2e9ff4d2251b568164b5c",
+  "acceptance_input_digest": "df73ff87f4058a7fee196224182a05cd5c1bc9bd7dab39cd43ca61b33e360d46",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -111,8 +111,8 @@
         "path": "docs/use-cases.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "82a1554d63738a65e02bb501cdfe07e90712cdbdb25e622f5d1a286600274d67",
-        "entry_digest": "f4ea707d5bbcf300cab5f530302195afb223e941a7a8c071cc930595931df13c",
+        "payload_digest": "591c2d0cf018503f1c8e287e4882463d54a1a7203f41d3165d6ccb9408f98865",
+        "entry_digest": "38ea652296f0d51aa743ebaf1d9a1fe528a83d7737fef1fa668a75fbf6fc7d04",
         "owners": [
           "@exact:delivery"
         ]
