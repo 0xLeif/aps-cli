@@ -23,6 +23,12 @@ TESTS_PASSED=true \
 grep -Fq '"key":"currentIssue"' "$fixture_root/agent.json"
 test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get currentIssue)" = "321"
 test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get testsPassed)" = "true"
+APS_BIN="$aps_bin" \
+APS_HOME="$fixture_root/agent" \
+    "$repo_root/examples/agent-memory/run.sh" > "$fixture_root/agent-resume.json"
+test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get currentIssue)" = "321"
+test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get workingBranch)" = "agent/example"
+test "$(APS_HOME="$fixture_root/agent" "$aps_bin" get testsPassed)" = "true"
 
 APS_BIN="$aps_bin" \
 APS_HOME="$fixture_root/release" \
@@ -31,6 +37,18 @@ CANDIDATE_COMMIT=0123456789abcdef \
     "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release.json"
 grep -Fq '"key":"releaseVersion"' "$fixture_root/release.json"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseVersion)" = "9.8.7"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "false"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "pending"
+APS_BIN="$aps_bin" \
+APS_HOME="$fixture_root/release" \
+RELEASE_TESTS_PASSED=true \
+RISK_VERDICT=proceed \
+    "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release-gates.json"
+APS_BIN="$aps_bin" \
+APS_HOME="$fixture_root/release" \
+    "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release-resume.json"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseVersion)" = "9.8.7"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "true"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "proceed"
 
 APS_BIN="$aps_bin" \
@@ -66,5 +84,14 @@ do
     grep -Fq "../examples/$example/" "$repo_root/docs/use-cases.md"
 done
 grep -Fq '../examples/' "$repo_root/docs/README.md"
+for ignored_root in \
+    /.agents/ \
+    /.release-state/ \
+    /.aps-agent-example/ \
+    /.aps-release-example/ \
+    /.aps-swift-harness-example/
+do
+    grep -Fxq "$ignored_root" "$repo_root/.gitignore"
+done
 
 echo "example contract checks passed"

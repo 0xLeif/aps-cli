@@ -28,10 +28,20 @@ ensure_key blocker \
     --type String --storage FileState --path blocker.json --initial "" \
     --doc "Current blocker, or an empty string"
 
-"$aps_bin" set currentIssue "${CURRENT_ISSUE:-142}" >/dev/null
-"$aps_bin" set workingBranch "${WORKING_BRANCH:-agent/issue-142}" >/dev/null
-"$aps_bin" set phase "${WORK_PHASE:-implementing}" >/dev/null
-"$aps_bin" set testsPassed "${TESTS_PASSED:-false}" >/dev/null
-"$aps_bin" set blocker "${BLOCKER:-}" >/dev/null
+if [[ -n "${CURRENT_ISSUE+x}" ]]; then
+    "$aps_bin" set currentIssue "$CURRENT_ISSUE" >/dev/null
+fi
+if [[ -n "${WORKING_BRANCH+x}" ]]; then
+    "$aps_bin" set workingBranch "$WORKING_BRANCH" >/dev/null
+fi
+if [[ -n "${WORK_PHASE+x}" ]]; then
+    "$aps_bin" set phase "$WORK_PHASE" >/dev/null
+fi
+if [[ -n "${TESTS_PASSED+x}" ]]; then
+    "$aps_bin" set testsPassed "$TESTS_PASSED" >/dev/null
+fi
+if [[ -n "${BLOCKER+x}" ]]; then
+    "$aps_bin" set blocker "$BLOCKER" >/dev/null
+fi
 
 "$aps_bin" dump --json

@@ -28,10 +28,20 @@ ensure_key riskVerdict \
     --type String --storage FileState --path risk-verdict.json --initial pending \
     --doc "Latest deterministic risk verdict"
 
-"$aps_bin" set releaseVersion "${RELEASE_VERSION:-1.1.0}" >/dev/null
-"$aps_bin" set candidateCommit "${CANDIDATE_COMMIT:-local}" >/dev/null
-"$aps_bin" set releasePhase "${RELEASE_PHASE:-verifying}" >/dev/null
-"$aps_bin" set releaseTestsPassed "${RELEASE_TESTS_PASSED:-true}" >/dev/null
-"$aps_bin" set riskVerdict "${RISK_VERDICT:-proceed}" >/dev/null
+if [[ -n "${RELEASE_VERSION+x}" ]]; then
+    "$aps_bin" set releaseVersion "$RELEASE_VERSION" >/dev/null
+fi
+if [[ -n "${CANDIDATE_COMMIT+x}" ]]; then
+    "$aps_bin" set candidateCommit "$CANDIDATE_COMMIT" >/dev/null
+fi
+if [[ -n "${RELEASE_PHASE+x}" ]]; then
+    "$aps_bin" set releasePhase "$RELEASE_PHASE" >/dev/null
+fi
+if [[ -n "${RELEASE_TESTS_PASSED+x}" ]]; then
+    "$aps_bin" set releaseTestsPassed "$RELEASE_TESTS_PASSED" >/dev/null
+fi
+if [[ -n "${RISK_VERDICT+x}" ]]; then
+    "$aps_bin" set riskVerdict "$RISK_VERDICT" >/dev/null
+fi
 
 "$aps_bin" dump --json

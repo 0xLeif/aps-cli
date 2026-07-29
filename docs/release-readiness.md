@@ -142,7 +142,7 @@ operator checklist for a future release:
 3. Push `refs/notes/attest` before the tag.
 4. Require every main check to finish successfully.
 5. Run `fledge release minor --no-bump --dry-run` from a clean checkout and
-   confirm it targets v1.1.0 without edits.
+   confirm it targets the intended release version without edits.
 6. Publish the candidate artifacts.
 7. Verify every checksum sidecar.
 8. Execute both macOS binaries.

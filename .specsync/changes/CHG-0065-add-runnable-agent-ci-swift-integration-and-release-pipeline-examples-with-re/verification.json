@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785338977,
-  "commit": "eb55402e4b5d52ee0231ea306a3edcccd6ae038c",
+  "timestamp": 1785339903,
+  "commit": "7a151837dded09817eff7fc71431404ac8bdcfc5",
   "contract_digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
-  "workspace_digest": "d63ebd72a27f20abfe97f164f13694afd85de075f3cc6ee7b84bf932183f3b62",
-  "acceptance_input_digest": "42ff76dbd92601452f2ec02a15af8de446da7c2a8df8f9dcee4d1d5840323405",
+  "workspace_digest": "54a1b9dc8f2bf6184fb2cfa677ca4b9acc3a5387d9833ebbedde53c19249e212",
+  "acceptance_input_digest": "d222b59dbf9b7d7bb9c8a974f01273f6c22e104be6e74dca9c0be0dd4568c357",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -31,8 +31,8 @@
         "path": "Scripts/test-examples.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "2015740715c7a5d1866dd6be70e818cd12056c9220aa7555c4ae411662b6c6ea",
-        "entry_digest": "9d7f455a1c3613b7947d623cd0494d639da5a8945383082ff2197aebf6356bec",
+        "payload_digest": "77a4dbd5d03be0f93cd0bb1fa6a1c1970053749cbd490392e5e8f59c2db77a1e",
+        "entry_digest": "9e766466f2a742baefbd9daa57126ed48dd4272af55268dd9c3341de43188754",
         "owners": [
           "@exact:delivery"
         ]
@@ -81,8 +81,8 @@
         "path": "docs/release-readiness.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "a5b23fd43cf629d46776db5cc5829651ced7359f5edc3c4e5a65b9a1a18eabef",
-        "entry_digest": "936a3d9b9e763c7855b3c7ee1c92a661591a99203bcd98a8cc30a0d1539d69bb",
+        "payload_digest": "7d768abd0e96f40bbccb21c1b69e2f5b335c0cf1c35f961678e5b173e2270973",
+        "entry_digest": "070bc714092221df81ac815fae17911058df58b31f92dcb5c01e2d3c4a5d9030",
         "owners": [
           "@exact:delivery"
         ]
@@ -161,8 +161,8 @@
         "path": "examples/agent-memory/run.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "84e7adca79611ef1ddd16cbe9a40f9a063e5d8a84ea1286cef135f1f385c32f3",
-        "entry_digest": "ba4c604859e2d47691fbf9f17b2e66c0a570ac7e2f77709ee0a7774c837c699e",
+        "payload_digest": "ebe6fb98670f7650378f277ce39a49f476d815eb503d5adce3b637cca6779caa",
+        "entry_digest": "7df235104e29e50a6746fae689a53059ed7f6bc9256694e765cc9d262fb8f649",
         "owners": [
           "@exact:delivery"
         ]
@@ -201,8 +201,8 @@
         "path": "examples/release-pipeline/run.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "b77c50c4cabe31a8ddb172c0f715b735961db528ccdf6abbe1f47025c4ab7d73",
-        "entry_digest": "82c3a9b2ba04a0e0463f40f7512c9d1cba94d22e6bdde982875fbf4e851aacf6",
+        "payload_digest": "3ebc618325038a9a71f71278de56a897bcc536848bd00f77541f29a61f1d3ddd",
+        "entry_digest": "87d4b5c6702ff0ad0d4c10d42f8e6ee72480a6fad5e2ac72fdf75f48a6e0c7b8",
         "owners": [
           "@exact:delivery"
         ]
