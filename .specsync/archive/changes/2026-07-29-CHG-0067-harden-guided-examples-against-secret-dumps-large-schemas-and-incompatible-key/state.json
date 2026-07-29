@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0067-harden-guided-examples-against-secret-dumps-large-schemas-and-incompatible-key",
+  "slug": "harden-guided-examples-against-secret-dumps-large-schemas-and-incompatible-key",
+  "title": "Harden guided examples against secret dumps, large schemas, and incompatible key collisions",
+  "description": "Harden guided examples against secret dumps, large schemas, and incompatible key collisions",
+  "kind": "bug_fix",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "488b54ab6170c05fa44aa43842aac14aad9c5133",
+  "created_at": 1785344967,
+  "updated_at": 1785346385,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    "examples",
+    "docs/use-cases.md",
+    "Scripts/test-examples.sh",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This hardens runnable examples and documentation without changing the aps CLI contract.",
+  "acceptance_criteria": [
+    "Agent startup avoids full-state dumps; both helpers consume complete key inventories; incompatible pre-existing checkpoint keys fail safely; regression tests cover each boundary."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}
