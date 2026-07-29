@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785340957,
-  "commit": "2f13cde531c3953d1f821b15a699449d0a1e6f03",
+  "timestamp": 1785342053,
+  "commit": "5574c48824513a06961699b3da0d6728b7b372d3",
   "contract_digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
-  "workspace_digest": "da4c8bb24a069922d6e6f698130660938df9fbc76db2e9ff4d2251b568164b5c",
-  "acceptance_input_digest": "df73ff87f4058a7fee196224182a05cd5c1bc9bd7dab39cd43ca61b33e360d46",
+  "workspace_digest": "e8184fcdb2e7740e5655c36f62b737aec4a60f11498d32a613d04b47a6230972",
+  "acceptance_input_digest": "5e7f0b5431c16fba6939b6209cf2b4447268ce93fa88aff554ca28ceee944842",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -31,8 +31,8 @@
         "path": "Scripts/test-examples.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "77a4dbd5d03be0f93cd0bb1fa6a1c1970053749cbd490392e5e8f59c2db77a1e",
-        "entry_digest": "9e766466f2a742baefbd9daa57126ed48dd4272af55268dd9c3341de43188754",
+        "payload_digest": "6ef42d0fb8ca6b2282c75a25c9c10f6ce54b32f60fc569647adb04cb9d20eabc",
+        "entry_digest": "6ad985cbc5bb9558a1d43919659a0d46ef59f3fc819f60a2955a3acd1ec8f700",
         "owners": [
           "@exact:delivery"
         ]
@@ -111,8 +111,8 @@
         "path": "docs/use-cases.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "591c2d0cf018503f1c8e287e4882463d54a1a7203f41d3165d6ccb9408f98865",
-        "entry_digest": "38ea652296f0d51aa743ebaf1d9a1fe528a83d7737fef1fa668a75fbf6fc7d04",
+        "payload_digest": "6e866d95079eefd6656b0750fe5c157d5a09a10a30a304788861b7ce6c712e48",
+        "entry_digest": "093728cc13bd86bab3f36fa7fc0d30c74ef4d9c6b159631a87456fcc53ad0367",
         "owners": [
           "@exact:delivery"
         ]
@@ -151,8 +151,8 @@
         "path": "examples/agent-memory/README.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "292f24548e6e460525e0b9bb184b689a6dbab3cf56519d98f6c2637bdbc7845a",
-        "entry_digest": "2a375f0176f357aad9e71c705d977aae2203506944278098658f1f5df1d2dc2f",
+        "payload_digest": "ce5cffc97271f61d417f3996f3ef5abac12ba5afaea42b1d14858f6adccec5b2",
+        "entry_digest": "ba688656a02caa548cb996b4f7eb826646fb9c6fbbf2cee0f5cd9a6b0358f766",
         "owners": [
           "@exact:delivery"
         ]
@@ -191,8 +191,8 @@
         "path": "examples/release-pipeline/README.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "9390614a85b20add9e5c0e617ffc39d38a27af03af1951a6c23705dbc90f0ef2",
-        "entry_digest": "ed13c8f6ac65192a5f8f68dfadd3c837d86d2e4c31bffb0eb3424bb5bf486e4b",
+        "payload_digest": "c7bc04262eb8c6f21b4d8e57b7e4d3f911af2c90d373458766ad92f3b6ae9f5d",
+        "entry_digest": "aa71cb5703ad1ae27d76ec2e243d48d60c1a1f16686892639f73763ac7489330",
         "owners": [
           "@exact:delivery"
         ]
@@ -201,8 +201,8 @@
         "path": "examples/release-pipeline/run.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "3ebc618325038a9a71f71278de56a897bcc536848bd00f77541f29a61f1d3ddd",
-        "entry_digest": "87d4b5c6702ff0ad0d4c10d42f8e6ee72480a6fad5e2ac72fdf75f48a6e0c7b8",
+        "payload_digest": "ecad9bf48d87168f04e720d16950b256876a3cac0728efdfec660e8fe0ac8553",
+        "entry_digest": "03a9bce4bdb9b0345402d2af8be837ed395f665d8b1d42d658c3bc1c5b12529a",
         "owners": [
           "@exact:delivery"
         ]
