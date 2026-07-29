@@ -20,6 +20,20 @@
       "timestamp": 1785331046,
       "digest": "bcc2722fe679c60135b60195f92a084146a758b34a1a1d38cebe7bebfb02d439",
       "note": "Refreshed after expanding the release recovery contract to validate checksum sidecars."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785332275,
+      "digest": "e9cf36e22ba5c24c46985cf13d22af0918100b98395662a0eaa3bbf5d0d0fb34",
+      "note": "Release workflow, corrected assets, and Homebrew formula update completed successfully."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785332430,
+      "digest": "219dc193013d771c252ef0a97798cf85d88d22ccaa6fd463072279d8321e75fc",
+      "note": "Accepted after v1.1.0 release recovery, asset checksum validation, and Homebrew formula convergence passed."
     }
   ],
   "reopenings": []

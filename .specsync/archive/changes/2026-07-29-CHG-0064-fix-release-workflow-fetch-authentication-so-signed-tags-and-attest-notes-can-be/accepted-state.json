@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0064-fix-release-workflow-fetch-authentication-so-signed-tags-and-attest-notes-can-be",
+  "slug": "fix-release-workflow-fetch-authentication-so-signed-tags-and-attest-notes-can-be",
+  "title": "Fix release workflow fetch authentication so signed tags and attest notes can be fetched on GitHub-hosted runners",
+  "description": "Fix release workflow fetch authentication so signed tags and attest notes can be fetched on GitHub-hosted runners",
+  "kind": "bug_fix",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "7373d124ebb3823c1f7f19651dfffe4d7ed83f51",
+  "created_at": 1785303663,
+  "updated_at": 1785332430,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    ".github/workflows/release.yml",
+    "Scripts/test-release-distribution.sh",
+    "Scripts/test-release-provenance.sh",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": true,
+  "no_spec_change_rationale": "This repairs CI authentication and checksum-generation plumbing without changing the aps CLI contract or release artifact semantics.",
+  "acceptance_criteria": [
+    "Release fetches use one checkout-managed credential, the release distribution contract rejects manual duplicate Authorization headers, generated checksum sidecars begin with valid SHA-256 digests, and a v1.1.0 workflow dispatch passes through publication."
+  ],
+  "selected_artifacts": [
+    "context",
+    "testing",
+    "tasks"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "no",
+    "public_contract": "no"
+  }
+}

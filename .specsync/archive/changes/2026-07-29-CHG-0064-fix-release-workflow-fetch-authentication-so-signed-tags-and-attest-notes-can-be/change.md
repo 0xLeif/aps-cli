@@ -1,6 +1,6 @@
 ---
 id: CHG-0064-fix-release-workflow-fetch-authentication-so-signed-tags-and-attest-notes-can-be
-state: implementing
+state: archived
 type: bug_fix
 base_commit: 7373d124ebb3823c1f7f19651dfffe4d7ed83f51
 ---

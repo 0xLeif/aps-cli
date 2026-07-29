@@ -5,10 +5,11 @@
   "title": "Fix release workflow fetch authentication so signed tags and attest notes can be fetched on GitHub-hosted runners",
   "description": "Fix release workflow fetch authentication so signed tags and attest notes can be fetched on GitHub-hosted runners",
   "kind": "bug_fix",
-  "state": "implementing",
+  "state": "archived",
+  "canonical_applied": true,
   "base_commit": "7373d124ebb3823c1f7f19651dfffe4d7ed83f51",
   "created_at": 1785303663,
-  "updated_at": 1785303960,
+  "updated_at": 1785332437,
   "affected_specs": [
     "aps-cli"
   ],
