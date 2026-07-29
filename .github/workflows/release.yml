@@ -36,8 +36,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # Dispatch may target a tag that predates this gate. Use current main
-          # as the trusted control plane while tests/builds use the target SHA.
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.ref }}
+          # as the trusted control plane. Tag pushes use the immutable event
+          # commit rather than resolving a tag that may have moved while queued.
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.sha }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -55,8 +56,9 @@ jobs:
       - name: Resolve exact tag commit
         id: resolve
         env:
+          EVENT_COMMIT: ${{ github.event_name == 'push' && github.sha || '' }}
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
-        run: ./Scripts/release-provenance-gate.sh --resolve-only "$RELEASE_TAG"
+        run: ./Scripts/release-provenance-gate.sh --resolve-only "$RELEASE_TAG" "$EVENT_COMMIT"
 
       - name: Confirm candidate is reachable from the protected default branch
         env:

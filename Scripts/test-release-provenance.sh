@@ -187,11 +187,18 @@ invalid_tags=(
     v1.2.3+..
 )
 for invalid_tag in "${invalid_tags[@]}"; do
-    if (
+    invalid_output="$fixture_root/invalid-tag.output"
+    set +e
+    (
         cd "$case_repo"
         "$gate" --resolve-only "$invalid_tag"
-    ) >/dev/null 2>&1; then
-        echo "release provenance contract: invalid tag $invalid_tag unexpectedly passed" >&2
+    ) >"$invalid_output" 2>&1
+    invalid_status=$?
+    set -e
+    if [[ "$invalid_status" -ne 64 ]] ||
+        ! grep -Fq "release provenance: invalid semantic release tag '$invalid_tag'" "$invalid_output"; then
+        echo "release provenance contract: invalid tag $invalid_tag did not fail semantic validation" >&2
+        cat "$invalid_output" >&2
         exit 1
     fi
 done
@@ -243,6 +250,11 @@ if [[ "$control_plane_count" -ne 2 ]]; then
     echo "release provenance contract: dispatch control-plane checkout is not applied twice" >&2
     exit 1
 fi
+# shellcheck disable=SC2016
+grep -Fq "github.event.repository.default_branch || github.sha" "$workflow"
+# shellcheck disable=SC2016
+grep -Fq "EVENT_COMMIT: \${{ github.event_name == 'push' && github.sha || '' }}" "$workflow"
+grep -Fq 'release-provenance-gate.sh --resolve-only "$RELEASE_TAG" "$EVENT_COMMIT"' "$workflow"
 # shellcheck disable=SC2016
 grep -Fq "github.event.repository.default_branch || needs.provenance.outputs.commit" "$workflow"
 if grep -Eq 'uses: [^[:space:]@]+@(v|main|master)' "$workflow"; then

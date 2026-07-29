@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785288897,
-  "commit": "be97bd121a3a7ba7c0fe1cfee6de05e95a36c9bf",
+  "timestamp": 1785289810,
+  "commit": "fd3e7cb78f462486734458a7b82d9ebb25e1db44",
   "contract_digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
-  "workspace_digest": "bfca1a3fb4c5867880d1863e10261341c119c026993b3d2584c9cd93c5529d2c",
-  "acceptance_input_digest": "23d67404bfb1d5a4fe42c81c05efe4a5945f43651e83074169dd201f0e3e321d",
+  "workspace_digest": "c3699de676bbebfb7f88957d57afb45dc7a17935533b22e9d1db12549d502a6b",
+  "acceptance_input_digest": "c5784cfbd8a7b07ab90c5247a6a4b0be97f9e157931c317dcb64126c30d517ad",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -21,8 +21,8 @@
         "path": ".github/workflows/release.yml",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "e29a42b009d0a0a4c0d21bb9e393beb4369b35653e7a620a3afe9aad93927126",
-        "entry_digest": "d133214a77340a1cd9e72150eed77d9cfa89b84a7add981ebce9fd47a48f70ce",
+        "payload_digest": "d7577ad01635db4605f5571bd9a3c8d6c222394e0db064fbbed0cbbd519a81e9",
+        "entry_digest": "c0209748d9ae36d7933f41ab46d660b2b1aba47edfee101dacbeaf5dfff34c56",
         "owners": [
           "@exact:delivery"
         ]
@@ -71,8 +71,8 @@
         "path": "Scripts/test-release-provenance.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "2af461127592cd8b41a2b16bb60d2ebb12f355a5ec288e15b5b78c8a9736e6fc",
-        "entry_digest": "86eacd0058fdd629c7cea992a3f5e2f33ae860a61c7a8d6da672a281f0fe7789",
+        "payload_digest": "8ed907e5e16ecfba12ccd03dbf006ecce7c9eb7cccdd6bdd74861761fe588cd5",
+        "entry_digest": "8ee5d2cd6461f378a201260f50a72a6d3b2b049ca95ab95bb820dbd4a6c4b70f",
         "owners": [
           "@exact:delivery"
         ]
