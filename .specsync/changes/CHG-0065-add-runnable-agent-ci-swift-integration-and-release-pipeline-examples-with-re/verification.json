@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785342971,
-  "commit": "27eec40659a5756d53758309214059164f0b4286",
+  "timestamp": 1785343551,
+  "commit": "699bdd6b6b3584e67b8525aa447ddfe4dc5dda0f",
   "contract_digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
-  "workspace_digest": "7a25a434cb66ec5e457160fc5b866feb36e0a9368b491c46a0276063ad096dc9",
-  "acceptance_input_digest": "bfdb3ed138189aad5daabce46e422de41aba234613632b7149a1bcc062e03705",
+  "workspace_digest": "2d134d41619b9a533b9a6cf98ed352a25e4b069b6a7ec7b7a1ecf99597e1a808",
+  "acceptance_input_digest": "af1b0bf8e1c3816c0bd9b53728835fabc60e6ffaea2a214332724c9dbd2c689c",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -31,8 +31,8 @@
         "path": "Scripts/test-examples.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "d3d36199917c72e8e8f0e8656c933f2de25a62d8478b075185330dd526df68f0",
-        "entry_digest": "b21aebf65ebf45e3932d52d12b9114268dae065c584d188e0075e1e60d8c731d",
+        "payload_digest": "7d31b7e608a745927bcdd5345c32d5e3107480911ef4e7a984a7398ceb77de5d",
+        "entry_digest": "9a973ad6f6ced02d419adc9f48dbd0173f7b4086d7812bc290776a37a5e5ca0f",
         "owners": [
           "@exact:delivery"
         ]
@@ -221,8 +221,8 @@
         "path": "examples/swift-harness/StateHarness.swift",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "5843d8e5acca74dc6441bc0b406c51516eeef12761e2bd37075013f9b21a6c27",
-        "entry_digest": "7d1f5ca64655ae4f786957dde41529e50dc09e88872af38d2d40d45ced215d31",
+        "payload_digest": "44d92e57d926164e8d7a7e7a3c375ebc2d7fc411988778804ead9c45327a3d8a",
+        "entry_digest": "f05317c8732996279ca925b56b976e1101224a6fe4e427893b03304b81c4a2a6",
         "owners": [
           "@exact:delivery"
         ]

@@ -9,7 +9,7 @@
   "canonical_applied": true,
   "base_commit": "5a14806518b38ffdb5143c3115f1761689f8c749",
   "created_at": 1785333608,
-  "updated_at": 1785342976,
+  "updated_at": 1785343556,
   "affected_specs": [
     "aps-cli"
   ],
