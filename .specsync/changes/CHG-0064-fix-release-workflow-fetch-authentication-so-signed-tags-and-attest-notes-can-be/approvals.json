@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785303728,
+      "digest": "ad92603b2d7a23f5d3a0a33ed40e518bbc335ea1ce30fbc2333a163a310f9c23",
+      "note": "Approved targeted CI authentication repair after two identical release fetch failures."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785303960,
+      "digest": "88f806418c29a76c109b528f669ea49b8ecef20b3bfab2d16fb8a15626339ff3",
+      "note": "Refreshed after adding the provenance regression contract to affected paths."
+    }
+  ],
+  "reopenings": []
+}

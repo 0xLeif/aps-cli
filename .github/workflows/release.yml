@@ -40,18 +40,14 @@ jobs:
           # commit rather than resolving a tag that may have moved while queued.
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.sha }}
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Fetch selected tag and attest notes
         env:
-          GITHUB_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: |
-          authorization="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
-            fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
-            fetch origin "+refs/notes/attest:refs/notes/attest"
+          git fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git fetch origin "+refs/notes/attest:refs/notes/attest"
 
       - name: Resolve exact tag commit
         id: resolve
@@ -63,12 +59,9 @@ jobs:
       - name: Confirm candidate is reachable from the protected default branch
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          GITHUB_TOKEN: ${{ github.token }}
           RELEASE_COMMIT: ${{ steps.resolve.outputs.commit }}
         run: |
-          authorization="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
-            fetch origin \
+          git fetch origin \
             "refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
           git merge-base --is-ancestor \
             "$RELEASE_COMMIT" "refs/remotes/origin/${DEFAULT_BRANCH}"
@@ -217,7 +210,7 @@ jobs:
           # so a moved tag cannot replace the gate or release policy.
           ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || needs.provenance.outputs.commit }}
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
 
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
@@ -234,14 +227,10 @@ jobs:
 
       - name: Refresh release tag and attest notes
         env:
-          GITHUB_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ needs.provenance.outputs.tag }}
         run: |
-          authorization="$(printf 'x-access-token:%s' "$GITHUB_TOKEN" | base64)"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
-            fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
-          git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic ${authorization}" \
-            fetch origin "+refs/notes/attest:refs/notes/attest"
+          git fetch --force origin "refs/tags/${RELEASE_TAG}:refs/tags/${RELEASE_TAG}"
+          git fetch origin "+refs/notes/attest:refs/notes/attest"
 
       - name: Reverify signed release evidence
         id: attest
