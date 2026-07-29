@@ -1,6 +1,6 @@
 ---
 id: CHG-0066-document-and-ignore-repository-local-state-roots-generated-by-guided-examples
-state: accepted
+state: archived
 type: documentation
 base_commit: 8735d094eed5ce7428b5b9173593ece7f9e3f96b
 ---
