@@ -1,6 +1,6 @@
 ---
 id: CHG-0063-prepare-aps-v1-1-0-atomically-build-and-test-a-portable-linux-bundle-align-hom
-state: accepted
+state: archived
 type: operations
 base_commit: e3da1b694441d0fcc9277d6adb2333f8f440eea9
 ---
