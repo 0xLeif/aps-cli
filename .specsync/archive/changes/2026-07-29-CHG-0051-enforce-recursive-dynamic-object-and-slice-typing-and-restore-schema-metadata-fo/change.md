@@ -1,6 +1,6 @@
 ---
 id: CHG-0051-enforce-recursive-dynamic-object-and-slice-typing-and-restore-schema-metadata-fo
-state: accepted
+state: archived
 type: bug_fix
 base_commit: ebedc5994e59454ef688f7206236207a9f6f9ac3
 ---

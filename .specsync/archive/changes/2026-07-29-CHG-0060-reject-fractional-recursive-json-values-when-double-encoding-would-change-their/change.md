@@ -1,6 +1,6 @@
 ---
 id: CHG-0060-reject-fractional-recursive-json-values-when-double-encoding-would-change-their
-state: accepted
+state: archived
 type: bug_fix
 base_commit: fd2b2ef5d5b95ff0b61895f7e1de8ee0996fa221
 ---
