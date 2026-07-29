@@ -10,7 +10,7 @@ DerivedData/
 *.swp
 *~
 
-# Guided example state
+# Guided example state roots
 /.agents/
 /.release-state/
 /.aps-agent-example/
