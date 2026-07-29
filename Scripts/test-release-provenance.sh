@@ -177,9 +177,13 @@ invalid_tags=(
     v1.2.03
     v1.2
     v1.2.3-
+    v1.2.3-rc.
+    v1.2.3-.rc
     v1.2.3-01
     v1.2.3-..
     v1.2.3+
+    v1.2.3+build.
+    v1.2.3+.build
     v1.2.3+..
 )
 for invalid_tag in "${invalid_tags[@]}"; do
@@ -239,6 +243,8 @@ if [[ "$control_plane_count" -ne 2 ]]; then
     echo "release provenance contract: dispatch control-plane checkout is not applied twice" >&2
     exit 1
 fi
+# shellcheck disable=SC2016
+grep -Fq "github.event.repository.default_branch || needs.provenance.outputs.commit" "$workflow"
 if grep -Eq 'uses: [^[:space:]@]+@(v|main|master)' "$workflow"; then
     echo "release provenance contract: release workflow contains a mutable action reference" >&2
     exit 1

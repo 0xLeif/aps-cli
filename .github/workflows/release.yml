@@ -172,7 +172,9 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # Manual backfills use the current trusted gate even for old tags.
-          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || github.ref }}
+          # Tag pushes use the immutable commit already verified by provenance,
+          # so a moved tag cannot replace the gate or release policy.
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.repository.default_branch || needs.provenance.outputs.commit }}
           fetch-depth: 0
           persist-credentials: false
 

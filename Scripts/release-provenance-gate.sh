@@ -18,9 +18,10 @@ valid_semver_tag() {
         build="${version#*+}"
         version="${version%%+*}"
         [[ -n "$build" ]] || return 1
+        [[ "$build" =~ ^[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*$ ]] || return 1
         IFS='.' read -r -a identifiers <<< "$build"
         for identifier in "${identifiers[@]}"; do
-            [[ "$identifier" =~ ^[0-9A-Za-z-]+$ ]] || return 1
+            [[ -n "$identifier" ]] || return 1
         done
     fi
 
@@ -28,9 +29,9 @@ valid_semver_tag() {
         prerelease="${version#*-}"
         version="${version%%-*}"
         [[ -n "$prerelease" ]] || return 1
+        [[ "$prerelease" =~ ^[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*$ ]] || return 1
         IFS='.' read -r -a identifiers <<< "$prerelease"
         for identifier in "${identifiers[@]}"; do
-            [[ "$identifier" =~ ^[0-9A-Za-z-]+$ ]] || return 1
             if [[ "$identifier" =~ ^[0-9]+$ ]] && [[ "$identifier" != "0" ]] && [[ "$identifier" == 0* ]]; then
                 return 1
             fi
