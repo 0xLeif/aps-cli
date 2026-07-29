@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 63,
-  "id": "CHG-0063-prepare-aps-v1-1-0-atomically-build-and-test-a-portable-linux-bundle-align-hom",
+  "sequence": 64,
+  "id": "CHG-0064-fix-release-workflow-fetch-authentication-so-signed-tags-and-attest-notes-can-be",
   "acknowledged_collisions": []
 }

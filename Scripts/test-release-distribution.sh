@@ -32,6 +32,8 @@ grep -Fq 'RELEASE_TAG: ${{ needs.provenance.outputs.tag }}' "$workflow"
 grep -Fq 'APS_VERSION="${RELEASE_TAG#v}"' "$workflow"
 grep -Fq 'test "$RELEASE_TAG" = "v$(cat VERSION)"' "$workflow"
 grep -Fq 'test "$("$BIN_DIR/aps" --version)" = "${RELEASE_TAG#v}"' "$workflow"
+test "$(grep -c 'persist-credentials: true' "$workflow")" -eq 2
+! grep -Fq 'authorization="$(printf' "$workflow"
 grep -Fq 'fetch aps-linux-x86_64-portable.tar.gz' "$formula_workflow"
 grep -Fq 'Scripts/render-homebrew-formula.py' "$formula_workflow"
 grep -Fq 'Homebrew formula updates require a stable SemVer tag' "$formula_workflow"
