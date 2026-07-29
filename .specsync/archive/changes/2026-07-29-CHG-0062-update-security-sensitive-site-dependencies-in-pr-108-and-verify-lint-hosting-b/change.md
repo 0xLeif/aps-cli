@@ -1,6 +1,6 @@
 ---
 id: CHG-0062-update-security-sensitive-site-dependencies-in-pr-108-and-verify-lint-hosting-b
-state: accepted
+state: archived
 type: operations
 base_commit: 3f2bc4febce1d28a85c9fde41b610263cbbcf63e
 ---
