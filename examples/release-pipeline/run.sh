@@ -6,9 +6,36 @@ export APS_HOME="${APS_HOME:-$PWD/.aps-release-example}"
 
 ensure_key() {
     local name="$1"
-    shift
-    if ! "$aps_bin" keys --quiet | grep -Fxq "$name"; then
-        "$aps_bin" key add "$name" "$@" >/dev/null
+    local type="$2"
+    local path="$3"
+    local doc="$4"
+    shift 4
+    local inventory
+    local metadata
+
+    inventory="$("$aps_bin" keys --quiet)"
+    if ! printf '%s\n' "$inventory" | grep -Fx "$name" >/dev/null; then
+        "$aps_bin" key add "$name" \
+            --type "$type" --storage FileState --path "$path" --doc "$doc" \
+            "$@" >/dev/null
+    fi
+
+    metadata="$("$aps_bin" key list --json)"
+    if ! printf '%s\n' "$metadata" |
+        grep -F "\"detail\":\"$doc\",\"key\":\"$name\",\"storage\":\"FileState\",\"type\":\"$type\"" >/dev/null
+    then
+        echo "Existing key '$name' is incompatible with the release checkpoint" >&2
+        return 65
+    fi
+    if ! awk -v key="$name" -v expected_path="$path" '
+        index($0, "\"name\" : \"" key "\"") { in_entry = 1; found = 1 }
+        in_entry && index($0, "\"path\" : \"" expected_path "\"") { path_matches = 1 }
+        in_entry && /^    }/ { exit(path_matches ? 0 : 1) }
+        END { if (!found || !path_matches) exit 1 }
+    ' "$APS_HOME/schema.json"
+    then
+        echo "Existing key '$name' uses an incompatible backing path" >&2
+        return 65
     fi
 }
 
@@ -25,21 +52,16 @@ emit_checkpoint() {
     printf ']}\n'
 }
 
-ensure_key releaseVersion \
-    --type String --storage FileState --path release-version.json --initial "" \
-    --doc "Release version under evaluation"
-ensure_key candidateCommit \
-    --type String --storage FileState --path candidate-commit.json --initial "" \
-    --doc "Exact release candidate commit"
-ensure_key releasePhase \
-    --type String --storage FileState --path release-phase.json --initial planned \
-    --doc "Current release phase"
-ensure_key releaseTestsPassed \
-    --type Bool --storage FileState --path release-tests-passed.json --initial false \
-    --doc "Whether release verification passed"
-ensure_key riskVerdict \
-    --type String --storage FileState --path risk-verdict.json --initial pending \
-    --doc "Latest deterministic risk verdict"
+ensure_key releaseVersion String release-version.json \
+    "Release version under evaluation" --initial ""
+ensure_key candidateCommit String candidate-commit.json \
+    "Exact release candidate commit" --initial ""
+ensure_key releasePhase String release-phase.json \
+    "Current release phase" --initial planned
+ensure_key releaseTestsPassed Bool release-tests-passed.json \
+    "Whether release verification passed" --initial false
+ensure_key riskVerdict String risk-verdict.json \
+    "Latest deterministic risk verdict" --initial pending
 
 candidate_changed=false
 if [[ -n "${RELEASE_VERSION+x}" ]]; then

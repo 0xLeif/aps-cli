@@ -1,0 +1,26 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785344997,
+      "digest": "1136a3520ccdeba574c86d51b475f2c8ce62bf9884a00912d2a953a66df330de",
+      "note": "Approve focused post-merge hardening for the three exact-head review findings."
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785345134,
+      "digest": "e46442bc80076cc2e8164db72a55b525f8790fb53ac48b42df94700062cda652",
+      "note": "Approve completed hardening artifacts and regression plan before verification."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785345506,
+      "digest": "25b882f0fc37bd81e359e927143b8f08b4f3b8342e29bd3feda209283cc02868",
+      "note": "Closing approval after full verification of post-merge example hardening."
+    }
+  ],
+  "reopenings": []
+}
