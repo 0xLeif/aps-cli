@@ -66,6 +66,10 @@ APS_BIN="$aps_bin" \
 APS_HOME="$fixture_root/swift" \
     "$repo_root/examples/swift-harness/run.sh" > "$fixture_root/swift.json"
 grep -Fq '"name":"swift-harness"' "$fixture_root/swift.json"
+if grep -Fq '/usr/bin/env' "$repo_root/examples/swift-harness/StateHarness.swift"; then
+    echo "Swift harness contains a Unix-only process launcher" >&2
+    exit 1
+fi
 
 workflow="$repo_root/examples/github-actions/workflow.yml"
 grep -Fq 'version: 1.1.0' "$workflow"
