@@ -1,6 +1,6 @@
 ---
 id: CHG-0059-reject-underflowing-recursive-json-numbers-instead-of-coercing-them-to-zero
-state: accepted
+state: archived
 type: bug_fix
 base_commit: 01128bd8881938668233b830ce326f3f789fa035
 ---

@@ -1,6 +1,6 @@
 ---
 id: CHG-0058-reject-oversized-integral-json-without-rounding-and-validate-decrypted-plaintext
-state: accepted
+state: archived
 type: bug_fix
 base_commit: b9b9977e85a064f1b05e6077e87a3c8316a55290
 ---

@@ -1,6 +1,6 @@
 ---
 id: CHG-0056-close-final-pr-129-review-gaps-for-recursive-json-kinds-nonfinite-validation-a
-state: accepted
+state: archived
 type: bug_fix
 base_commit: 65b8b5c01859dcec3610fc5b747a48f9fdca378e
 ---

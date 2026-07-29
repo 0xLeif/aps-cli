@@ -1,6 +1,6 @@
 ---
 id: CHG-0061-accept-finite-recursive-json-doubles-beyond-decimal-exponent-range
-state: accepted
+state: archived
 type: bug_fix
 base_commit: 28a9781e057e5c019a7ff1fe08931246761e968e
 ---

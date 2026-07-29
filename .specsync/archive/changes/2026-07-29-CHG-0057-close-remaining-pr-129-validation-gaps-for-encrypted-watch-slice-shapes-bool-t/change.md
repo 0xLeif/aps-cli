@@ -1,6 +1,6 @@
 ---
 id: CHG-0057-close-remaining-pr-129-validation-gaps-for-encrypted-watch-slice-shapes-bool-t
-state: accepted
+state: archived
 type: bug_fix
 base_commit: 058730a6bbf22e4a9d1bda3755b12e5a8040dec7
 ---
