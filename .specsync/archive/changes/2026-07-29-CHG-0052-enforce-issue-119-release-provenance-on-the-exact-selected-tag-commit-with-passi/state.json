@@ -1,0 +1,53 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0052-enforce-issue-119-release-provenance-on-the-exact-selected-tag-commit-with-passi",
+  "slug": "enforce-issue-119-release-provenance-on-the-exact-selected-tag-commit-with-passi",
+  "title": "Enforce issue 119 release provenance on the exact selected tag commit with passing tests and a valid signature from the pinned trusted human signer before artifact publication, including manual backfills, deterministic contract tests, and recovery and key rotation documentation",
+  "description": "Enforce issue 119 release provenance on the exact selected tag commit with passing tests and a valid signature from the pinned trusted human signer before artifact publication, including manual backfills, deterministic contract tests, and recovery and key rotation documentation",
+  "kind": "operations",
+  "state": "archived",
+  "canonical_applied": true,
+  "base_commit": "4ece8fd08dd7a76ccd327ba43df036b35c7d3778",
+  "created_at": 1785164309,
+  "updated_at": 1785290631,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    ".github/workflows/release.yml",
+    ".github/workflows/trust.yml",
+    "Scripts/release-provenance-gate.sh",
+    "Scripts/test-release-provenance.sh",
+    ".attest-release.json",
+    "docs/README.md",
+    "docs/release-provenance.md",
+    "docs/release-readiness.md",
+    "fledge.toml",
+    "README.md",
+    "specs/aps-cli/aps-cli.spec.md",
+    "specs/aps-cli/requirements.md",
+    "specs/aps-cli/tasks.md",
+    "specs/aps-cli/testing.md",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "Tag-push and manual-backfill releases resolve and propagate one exact tag commit, publication fails when that commit lacks an attestation or passing-test evidence or a valid signature from the pinned human:leif key, publication succeeds for valid signed evidence, the tag binding is rechecked immediately before upload, ordinary pull-request Trust remains soft, deterministic contract tests cover missing note failed tests unsigned invalid signature untrusted signer and valid evidence, operator documentation covers note backup recovery compromise response and key rotation"
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing",
+    "design",
+    "tasks",
+    "requirements",
+    "docs",
+    "research"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}
