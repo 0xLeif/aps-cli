@@ -7,5 +7,6 @@ artifact: tasks
 
 - [x] Replace manual Authorization headers with checkout-managed credentials.
 - [x] Add a regression contract for the release authentication configuration.
+- [x] Generate and validate complete SHA-256 sidecars for release assets.
 - [x] Run the local verification lane.
 - [ ] Merge the repair and dispatch the existing v1.1.0 tag.

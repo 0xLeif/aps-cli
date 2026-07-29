@@ -17,8 +17,8 @@ Fix release workflow fetch authentication so signed tags and attest notes can be
 
 ## Acceptance Criteria
 
-- Release fetches use one checkout-managed credential, the release distribution contract rejects manual duplicate Authorization headers, and a v1.1.0 workflow dispatch passes provenance.
+- Release fetches use one checkout-managed credential, the release distribution contract rejects manual duplicate Authorization headers, generated checksum sidecars begin with valid SHA-256 digests, and a v1.1.0 workflow dispatch passes through publication.
 
 ## No-spec Rationale
 
-This repairs CI authentication plumbing without changing the aps CLI contract or release artifact semantics.
+This repairs CI authentication and checksum-generation plumbing without changing the aps CLI contract or release artifact semantics.

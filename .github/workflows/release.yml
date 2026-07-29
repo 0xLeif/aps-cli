@@ -221,7 +221,8 @@ jobs:
           cd artifacts
           for file in ./*; do
             [ -f "$file" ] || continue
-            sha256sum "$file" | sed "s|.*/||" > "${file}.sha256"
+            sha256sum "$file" > "${file}.sha256"
+            sha256sum --check "${file}.sha256"
           done
           cat -- ./*.sha256
 
