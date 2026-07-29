@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "id": "CHG-0063-prepare-aps-v1-1-0-atomically-build-and-test-a-portable-linux-bundle-align-hom",
+  "slug": "prepare-aps-v1-1-0-atomically-build-and-test-a-portable-linux-bundle-align-hom",
+  "title": "Prepare aps v1.1.0 atomically: build and test a portable Linux bundle, align Homebrew and installer asset contracts, synchronize every public version surface, and adopt tofu-ux/0x as the site design-system source",
+  "description": "Prepare aps v1.1.0 atomically: build and test a portable Linux bundle, align Homebrew and installer asset contracts, synchronize every public version surface, and adopt tofu-ux/0x as the site design-system source",
+  "kind": "operations",
+  "state": "accepted",
+  "canonical_applied": true,
+  "base_commit": "e3da1b694441d0fcc9277d6adb2333f8f440eea9",
+  "created_at": 1785298031,
+  "updated_at": 1785301379,
+  "affected_specs": [
+    "aps-cli"
+  ],
+  "affected_paths": [
+    ".github/workflows",
+    ".github/actions/install-aps",
+    "Scripts",
+    "Formula",
+    "Sources/aps/Aps.swift",
+    "Sources/aps/Schema.swift",
+    "Tests/apsTests/APSTests.swift",
+    "specs/aps-cli",
+    "README.md",
+    "docs",
+    "plugin.toml",
+    "VERSION",
+    "site",
+    ".specsync/change-sequence.json"
+  ],
+  "no_spec_change": false,
+  "no_spec_change_rationale": null,
+  "acceptance_criteria": [
+    "The Linux release executable is built with $ORIGIN/lib before archival; readelf verifies the archived rpath; a clean Linux container runs the extracted bundle without Swift; the installer verifies the archive checksum and preserves aps plus lib; release, installer, Homebrew template, and formula workflow use aps-linux-x86_64-portable.tar.gz; Homebrew installs the Linux bundle under libexec and exposes a wrapper; VERSION and every runtime, schema, test, smoke, plugin, spec, README, docs, and site version surface agree on 1.1.0; a deterministic version-contract test fails on drift; fledge release minor --no-bump --dry-run targets v1.1.0 without edits; the site imports the pinned upstream tofu-ux/0x tokens and components, implements the standard no-flash accessible theme toggle, preserves aps-specific state-tape identity, and passes lint, static hosting builds, rendered-output tests, and accessibility checks; SpecSync strict, Fledge verify, and Trust all pass without bypass."
+  ],
+  "selected_artifacts": [
+    "context",
+    "plan",
+    "testing",
+    "design",
+    "tasks",
+    "requirements",
+    "docs",
+    "research"
+  ],
+  "dependencies": [],
+  "answers": {
+    "architecture_risk": "yes",
+    "public_contract": "yes"
+  }
+}

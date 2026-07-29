@@ -54,6 +54,14 @@ jobs:
         working-directory: site
         run: npm run build:pages
 
+      - name: Install accessibility browser
+        working-directory: site
+        run: npx playwright install --with-deps chromium
+
+      - name: Test accessibility
+        working-directory: site
+        run: npm run test:a11y
+
       - name: Configure GitHub Pages
         if: github.event_name != 'pull_request'
         uses: actions/configure-pages@v5

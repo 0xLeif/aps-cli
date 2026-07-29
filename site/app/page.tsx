@@ -1,4 +1,19 @@
+import { ThemeToggle } from "./theme-toggle";
+
 const installCommand = "brew install 0xLeif/tap/aps";
+const productVersion = "1.1.0";
+
+function OxMark() {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true">
+      <path
+        fill="currentColor"
+        fillRule="evenodd"
+        d="M32 4 L60 32 L32 60 L4 32 Z M22.6 17.2 L28.4 23 L22.6 28.8 L16.8 23 Z"
+      />
+    </svg>
+  );
+}
 
 const commands = [
   {
@@ -55,10 +70,13 @@ const storage = [
 export default function Home() {
   return (
     <main>
+      <a className="skip-link" href="#top">
+        Skip to content
+      </a>
       <header className="site-header">
         <a className="wordmark" href="#top" aria-label="aps home">
           <span className="wordmark-mark" aria-hidden="true">
-            @
+            <OxMark />
           </span>
           <span>aps</span>
         </a>
@@ -68,12 +86,15 @@ export default function Home() {
           <a href="#architecture">Architecture</a>
           <a href="https://github.com/0xLeif/aps-cli">GitHub</a>
         </nav>
-        <a className="header-cta" href="#install">
-          Install
-        </a>
+        <div className="header-actions">
+          <ThemeToggle />
+          <a className="header-cta h-btn h-btn-primary" href="#install">
+            Install
+          </a>
+        </div>
       </header>
 
-      <section className="hero" id="top">
+      <section className="hero" id="top" tabIndex={-1}>
         <div className="hero-copy">
           <p className="eyebrow">
             <span className="status-dot" aria-hidden="true" />
@@ -97,8 +118,8 @@ export default function Home() {
             </a>
           </div>
           <div className="release-line" aria-label="Project status">
-            <span>v1.0 available</span>
-            <span>v1.1 hardening in progress</span>
+            <span>v{productVersion} ready to tag</span>
+            <span>portable Linux + Homebrew</span>
             <span>Swift 6</span>
           </div>
         </div>
@@ -250,9 +271,9 @@ export default function Home() {
         <div className="quality-copy">
           <p>
             aps ships with SpecSync contracts, cross-platform smoke tests, and
-            the CorvidLabs trust toolchain. The next release is focused on
-            filesystem safety, stronger secret handling, and end-to-end
-            distribution tests.
+            the CorvidLabs trust toolchain. Version 1.1.0 adds atomic version
+            preparation and end-to-end checks for portable Linux and Homebrew
+            distribution.
           </p>
           <div>
             <a href="https://github.com/0xLeif/aps-cli/blob/main/docs/release-readiness.md">
@@ -279,14 +300,17 @@ export default function Home() {
       <footer>
         <a className="wordmark" href="#top">
           <span className="wordmark-mark" aria-hidden="true">
-            @
+            <OxMark />
           </span>
           <span>aps</span>
         </a>
-        <p>A Swift CLI by 0xLeif. Built with AppState and CorvidLabs trust.</p>
+        <p>
+          A Swift CLI by 0xLeif. AppState, CorvidLabs trust, and tofu-ux/0x.
+        </p>
         <div>
           <a href="https://github.com/0xLeif/aps-cli">GitHub</a>
           <a href="https://github.com/0xLeif/AppState">AppState</a>
+          <a href="https://github.com/tofu-ux/0x">0x design</a>
           <a href="https://corvidlabs.xyz">CorvidLabs</a>
         </div>
       </footer>

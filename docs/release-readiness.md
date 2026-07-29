@@ -1,6 +1,6 @@
 # Release readiness
 
-Status: **not ready to tag**
+Status: **release preparation in progress**
 
 Audit basis: current `origin/main` plus issue #119 release provenance in
 SpecSync change `CHG-0052`.
@@ -57,24 +57,26 @@ not-attempted keys; mutation stats count only verified successes.
 
 ### 5. Repair Linux and Homebrew distribution
 
-The release workflow currently copies the Linux binary before rebuilding it with the portable `$ORIGIN/lib` rpath. The post-release formula workflow also requests the old `aps-linux-x86_64.sha256` while releases now publish `aps-linux-x86_64-portable.tar.gz`.
-
-Required outcome:
-
-- build the rpath-enabled executable before copying it into the archive;
-- execute the extracted archive on a clean Linux host without Swift;
-- update the Homebrew formula to preserve the executable and bundled libraries together;
-- assert that release, installer, and formula asset names agree.
+Implemented for v1.1.0 under
+[#115](https://github.com/0xLeif/aps-cli/issues/115) and
+[#116](https://github.com/0xLeif/aps-cli/issues/116). The release build now
+applies `$ORIGIN/lib` before copying the executable, inspects that runtime path,
+runs the checksum and installer extraction path against the exact archive, and
+executes the bundle in a clean Ubuntu container without Swift. Release,
+installer, and formula automation agree on
+`aps-linux-x86_64-portable.tar.gz`. The reviewed formula template installs the
+Linux bundle under `libexec` and exposes a wrapper from `bin`, preserving the
+executable beside its Swift runtime libraries.
 
 ### 6. Make versioning atomic
 
-The version appears in Swift source, schema output, smoke scripts, tests, specs, README, and `plugin.toml`. The current fledge release plan only bumps the plugin manifest.
-
-Required outcome:
-
-- one reviewed version preparation change updates every contract;
-- smoke and schema tests prove the new version;
-- the final release uses `fledge release ... --no-bump` from clean main.
+Implemented for v1.1.0 under
+[#117](https://github.com/0xLeif/aps-cli/issues/117). `VERSION` plus
+`Scripts/prepare-version.py` update or verify runtime help, schema output,
+smoke scripts, tests, specs, README, plugin metadata, release documentation,
+and the product site as one reviewed operation. The verification lane fails on
+drift. The final release uses `fledge release minor --no-bump` from clean
+main.
 
 ### 7. Harden passphrase secrets
 
@@ -109,9 +111,9 @@ Swift tools floor to 6.1 while aps retains Swift 6.0.
 
 ### 8. Enforce release provenance
 
-In progress for v1.1.0 under
+Implemented for v1.1.0 by
 [#119](https://github.com/0xLeif/aps-cli/issues/119). Pull request provenance
-remains soft so contributors do not need the release key. The proposed artifact
+remains soft so contributors do not need the release key. The artifact
 publication gate uses `.attest-release.json`: the exact selected tag commit must
 have passing-test evidence with a valid Ed25519 signature from the pinned
 `human:leif` identity.
@@ -122,21 +124,22 @@ binding immediately before upload. The deterministic contract test covers
 missing notes, failed tests, unsigned records, invalid signatures, untrusted
 keys, valid signed evidence, and moved tags. Backup, recovery, compromise, and
 rotation procedures are in [release provenance](release-provenance.md).
-This blocker is not closed until the change is accepted, hosted Actions pass,
-the protected `v*` tag ruleset is enabled, and the `release` Environment has a
-required owner review with administrator bypass disabled plus deployment
-policies that admit both `v*` tag pushes and default-branch manual backfills.
+The protected `v*` tag ruleset and `release` Environment remain operator-owned
+GitHub settings. Confirm them immediately before signing and pushing the tag.
 
 ## Release-candidate proof
 
 After the blockers merge:
 
-1. Run `fledge lanes run verify` and `fledge trust verify`.
+1. Run `Scripts/prepare-version.py --check`,
+   `fledge lanes run verify`, and
+   `fledge trust verify --range origin/main...HEAD`.
 2. Sign the exact candidate commit with passing-test evidence and verify
    `.attest-release.json`.
 3. Push `refs/notes/attest` before the tag.
 4. Require every main check to finish successfully.
-5. Run the release dry run from a clean checkout and inspect version plus notes.
+5. Run `fledge release minor --no-bump --dry-run` from a clean checkout and
+   confirm it targets v1.1.0 without edits.
 6. Publish the candidate artifacts.
 7. Verify every checksum sidecar.
 8. Execute both macOS binaries.

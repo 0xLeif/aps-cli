@@ -42,7 +42,7 @@ install_dir="$install_root/bin"
 download_dir="$install_root/download"
 mkdir -p "$install_dir" "$download_dir"
 
-base_url="https://github.com/0xLeif/aps-cli/releases/download/v${version}"
+base_url="${APS_RELEASE_BASE_URL:-https://github.com/0xLeif/aps-cli/releases/download/v${version}}"
 binary_tmp="$download_dir/${asset}.part"
 checksum_file="$download_dir/${asset}.sha256"
 binary="$install_dir/aps"

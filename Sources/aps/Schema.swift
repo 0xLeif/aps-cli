@@ -7,7 +7,7 @@ import Foundation
 /// changes; `userSchema.hash` tracks key-set drift.
 internal enum Schema {
 
-    internal static let cliVersion = "1.0.0"
+    internal static let cliVersion = "1.1.0"
     internal static let schemaVersion = 6
 
     // MARK: - Document model

@@ -1,6 +1,6 @@
 [plugin]
 name = "fledge-plugin-aps"
-version = "1.0.0"
+version = "1.1.0"
 description = "Tiny Swift CLI that dogfoods AppState with a dynamic schema.json registry"
 author = "0xLeif"
 

@@ -5,8 +5,8 @@ The product and documentation site for [aps](https://github.com/0xLeif/aps-cli).
 ## Local development
 
 ```bash
-npm install
-npm run dev
+bun install
+bun run dev
 ```
 
 Open `http://localhost:3000`.
@@ -14,10 +14,11 @@ Open `http://localhost:3000`.
 ## Validate
 
 ```bash
-npm run build
-npm run build:pages
-npm test
-npm run lint
+bun run build
+bun run build:pages
+bun test
+bun run test:a11y
+bun run lint
 ```
 
 The default build uses vinext and remains deployable through the repository's
@@ -30,12 +31,15 @@ Product claims should remain aligned with the root README,
 
 ## Design system
 
-- Midnight ink: `#071522`
-- Swift sky: `#2F9DFF`
-- Compile copper: `#F4773C`
-- State mint: `#A9FFD4`
-- Cloud paper: `#F3F8FB`
-- Display: Avenir Next with system fallbacks
-- Utility: SF Mono with cross-platform fallbacks
+The site consumes the pinned [`0xLeif/0x`](https://github.com/0xLeif/0x)
+contribution fork of [`tofu-ux/0x`](https://github.com/tofu-ux/0x). The
+vendored snapshot provides cyan and fuchsia semantic tokens, the Righteous and
+IBM Plex Mono type system, accessible components, and standard theme behavior.
 
-The signature element is the state tape: a typed value moving through an observable state transition. Keep that motif specific to state changes rather than using it as decoration.
+Run `fledge run ox-update` to stage and atomically replace the complete pinned
+snapshot. Review and update the pinned revision in `Scripts/sync-0x.sh` when
+adopting upstream work from tofu.
+
+The signature element is the state tape: a typed value moving through an
+observable state transition. Keep that motif specific to state changes rather
+than using it as decoration.

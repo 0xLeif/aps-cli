@@ -1451,7 +1451,7 @@ final class APSTests: XCTestCase {
         let document = Schema.staticDocument()
 
         XCTAssertEqual(document.schemaVersion, 6)
-        XCTAssertEqual(document.cliVersion, "1.0.0")
+        XCTAssertEqual(document.cliVersion, "1.1.0")
         XCTAssertEqual(document.keys.map(\.name), DemoKey.allCases.map(\.rawValue))
         XCTAssertEqual(document.userSchema.keyCount, document.keys.count)
         XCTAssertEqual(document.stateRoot.precedence, ["--state-dir", "APS_HOME", "~/.aps"])

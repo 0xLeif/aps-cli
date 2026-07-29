@@ -10,6 +10,10 @@ smoke = "./Scripts/smoke.sh"
 # Use aps as a CI helper under a job-scoped APS_HOME (not only smoke the binary).
 ci-dogfood = "./Scripts/ci-dogfood.sh"
 install-action-test = "./.github/actions/install-aps/test.sh"
+release-distribution-test = "./Scripts/test-release-distribution.sh"
+version-contract-test = "./Scripts/test-version-contract.sh"
+ox-vendor-test = "./Scripts/test-0x-vendor.sh"
+ox-update = "./Scripts/sync-0x.sh"
 release-provenance-test = "./Scripts/test-release-provenance.sh"
 # Manifest-only: warns if `.build/release/aps` is missing (created by release/install hooks).
 plugin-validate = "fledge plugins validate ."
@@ -27,6 +31,9 @@ steps = [
     "smoke",
     "ci-dogfood",
     "install-action-test",
+    "release-distribution-test",
+    "version-contract-test",
+    "ox-vendor-test",
     "release-provenance-test",
     "plugin-validate",
 ]

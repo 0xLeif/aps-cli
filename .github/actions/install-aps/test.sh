@@ -26,6 +26,9 @@ grep -Fq 'No aps release binary is published' "$installer"
 grep -Fq 'install-action-test' "$repo_root/fledge.toml"
 grep -Fq 'aps-linux-x86_64-portable.tar.gz' "$repo_root/.github/workflows/release.yml"
 grep -Fq -- '-Xlinker -rpath -Xlinker "\$ORIGIN/lib"' "$repo_root/.github/workflows/release.yml"
+grep -Fq 'readelf -d "$package_dir/aps"' "$repo_root/.github/workflows/release.yml"
+grep -Fq 'ubuntu:24.04 /bundle/aps --version' "$repo_root/.github/workflows/release.yml"
+grep -Fq 'APS_RELEASE_BASE_URL' "$installer"
 
 for version in 1.0.0 1.0.0-rc.1 1.0.0+build.1 1.0.0-rc.1+build.1; do
     APS_VERSION="$version" APS_VALIDATE_VERSION_ONLY=1 "$installer"

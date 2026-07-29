@@ -98,6 +98,12 @@ jobs:
         with:
           ref: ${{ needs.provenance.outputs.commit }}
           persist-credentials: false
+      - name: Verify release version contract
+        env:
+          RELEASE_TAG: ${{ needs.provenance.outputs.tag }}
+        run: |
+          ./Scripts/prepare-version.py --check
+          test "$RELEASE_TAG" = "v$(cat VERSION)"
       - run: swift build
       - run: swift test
 
@@ -133,6 +139,7 @@ jobs:
         env:
           ARCH: ${{ matrix.arch }}
           ARTIFACT: ${{ matrix.artifact }}
+          RELEASE_TAG: ${{ needs.provenance.outputs.tag }}
         run: |
           set -euo pipefail
           if [ -n "$ARCH" ]; then
@@ -142,8 +149,10 @@ jobs:
             BIN_DIR=$(swift build -c release --show-bin-path)
             # Linux 6.0.x toolchains: libswiftObservation.so has an undefined
             # swift::threading::fatal ref; tolerate it at the executable link
-            # (same flag linux-smoke.yml uses for swift test).
-            swift build -c release -Xlinker --allow-shlib-undefined
+            # (same flag linux-smoke.yml uses for swift test). Build the final
+            # portable executable before copying it into the archive.
+            swift build -c release -Xlinker --allow-shlib-undefined \
+              -Xlinker -rpath -Xlinker "\$ORIGIN/lib"
           fi
           if [ "$RUNNER_OS" = "Linux" ]; then
             package_dir="${ARTIFACT%.tar.gz}-bundle"
@@ -151,9 +160,9 @@ jobs:
             cp "$BIN_DIR/aps" "$package_dir/aps"
             # Keep Swift/Foundation/Observation shared libraries beside aps;
             # the $ORIGIN/lib rpath makes this bundle runnable without Swift.
-            swift build -c release -Xlinker --allow-shlib-undefined \
-              -Xlinker -rpath -Xlinker "\$ORIGIN/lib"
-            ldd "$BIN_DIR/aps" | awk '/=> \/|^\// { print ($3 ~ /^\// ? $3 : $1) }' | sort -u | while read -r dependency; do
+            readelf -d "$package_dir/aps" \
+              | grep -E '(RPATH|RUNPATH).*\$ORIGIN/lib'
+            ldd "$package_dir/aps" | awk '/=> \/|^\// { print ($3 ~ /^\// ? $3 : $1) }' | sort -u | while read -r dependency; do
               case "$dependency" in
                 */swift/linux/*)
                   cp -L "$dependency" "$package_dir/lib/" ;;
@@ -161,10 +170,33 @@ jobs:
             done
             test -n "$(find "$package_dir/lib" -type f -print -quit)"
             tar -C "$package_dir" -czf "$ARTIFACT" aps lib
+            sha256sum "$ARTIFACT" | sed "s|.*/||" > "$ARTIFACT.sha256"
+
+            # Exercise the same checksum and extraction path used by the
+            # composite installer against this exact local artifact.
+            installer_root="$RUNNER_TEMP/aps-installer-contract"
+            mkdir -p "$installer_root"
+            APS_RELEASE_BASE_URL="file://$PWD" \
+              APS_VERSION="${RELEASE_TAG#v}" \
+              APS_RUNNER_OS="Linux" \
+              APS_RUNNER_ARCH="X64" \
+              RUNNER_TEMP="$installer_root" \
+              GITHUB_PATH="$installer_root/github-path" \
+              GITHUB_ENV="$installer_root/github-env" \
+              GITHUB_OUTPUT="$installer_root/github-output" \
+              ./.github/actions/install-aps/install.sh
+            "$installer_root/aps/bin/aps" --version
+            test -n "$(find "$installer_root/aps/bin/lib" -type f -print -quit)"
+
+            # The base Ubuntu image has no Swift toolchain. Mount the unpacked
+            # bundle read-only and prove the executable is self-contained.
+            docker run --rm \
+              --volume "$PWD/$package_dir:/bundle:ro" \
+              ubuntu:24.04 /bundle/aps --version
           else
             cp "$BIN_DIR/aps" "$ARTIFACT"
           fi
-          "$BIN_DIR/aps" --version
+          test "$("$BIN_DIR/aps" --version)" = "${RELEASE_TAG#v}"
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

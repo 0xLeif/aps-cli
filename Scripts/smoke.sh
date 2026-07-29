@@ -19,7 +19,7 @@ fi
 bin="$APS_BIN"
 
 "$bin" --help >/dev/null
-test "$("$bin" --version)" = "1.0.0"
+test "$("$bin" --version)" = "1.1.0"
 "$bin" keys | grep -q counter
 "$bin" keys | grep -q profile
 "$bin" keys | grep -q secret
@@ -211,7 +211,7 @@ test "$SCHEMA_KEY_COUNT" = "$SCHEMA_KEYS_LENGTH"
 CLI_VER="$("$bin" schema | sed -n 's/.*"cliVersion":"\([^"]*\)".*/\1/p' | head -1)"
 test -n "$CLI_VER"
 test "$CLI_VER" = "$("$bin" --version)"
-test "$CLI_VER" = "1.0.0"
+test "$CLI_VER" = "1.1.0"
 
 # Dynamic schema: materialize schema.json, add a FileState key, round-trip.
 test -f "$APS_HOME/schema.json"

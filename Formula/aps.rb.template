@@ -1,0 +1,40 @@
+class Aps < Formula
+  desc "Tiny Swift CLI that dogfoods AppState outside SwiftUI"
+  homepage "https://github.com/0xLeif/aps-cli"
+  # Generated post-release by aps-cli. Checksums do not exist before upload.
+  version "@VERSION@"
+  license "MIT"
+
+  on_macos do
+    on_arm do
+      url "https://github.com/0xLeif/aps-cli/releases/download/v#{version}/aps-macos-aarch64"
+      sha256 "@MACOS_AARCH64_SHA256@"
+    end
+
+    on_intel do
+      url "https://github.com/0xLeif/aps-cli/releases/download/v#{version}/aps-macos-x86_64"
+      sha256 "@MACOS_X86_64_SHA256@"
+    end
+  end
+
+  on_linux do
+    on_intel do
+      url "https://github.com/0xLeif/aps-cli/releases/download/v#{version}/aps-linux-x86_64-portable.tar.gz"
+      sha256 "@LINUX_X86_64_SHA256@"
+    end
+  end
+
+  def install
+    if OS.mac?
+      binary = Hardware::CPU.arm? ? "aps-macos-aarch64" : "aps-macos-x86_64"
+      bin.install binary => "aps"
+    else
+      libexec.install "aps", "lib"
+      bin.write_exec_script libexec/"aps"
+    end
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/aps --version")
+  end
+end
