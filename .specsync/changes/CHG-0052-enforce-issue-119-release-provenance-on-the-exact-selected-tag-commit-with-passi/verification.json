@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785286141,
-  "commit": "ecb493f44161386b99bda11536b39842a4f2901c",
+  "timestamp": 1785287058,
+  "commit": "2207fbf06eb514ab9749164189484cd525a77ecd",
   "contract_digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
-  "workspace_digest": "1c52dbf30cd89df488cae91a9c7f40526d0bbc8464b0cfa6b4f806ecaa7be8a4",
-  "acceptance_input_digest": "d6acfb7d463c4160fa1e722772a7833613c089650341e77e34183fbed1cc454a",
+  "workspace_digest": "e86e1da44b45aa6e09541968442be9db5332d62ebf757f079ef976abfc5831b9",
+  "acceptance_input_digest": "2bc0d42f3fdd7baf29f58f84bb991f81e27ce6863c33b670fff21f93f3a5a7a7",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -141,8 +141,8 @@
         "path": "specs/aps-cli/requirements.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "466fac81eda8f5c3ef9b7e25600abef88757bec7048f521ea0cb6794bda3fd75",
-        "entry_digest": "927ca91bfb0f9911e02268c98d8979a485f008f37a7cd368846ff332f68edcc0",
+        "payload_digest": "85f73e4920b35b87e6b764fda9c09462a5ade9fe22065ec9e62bd71b0cde87b3",
+        "entry_digest": "6d3083a47b31c2620841496ea7c834bba2a4a933e9e9e227b0a27583a2e71884",
         "owners": [
           "aps-cli"
         ]
