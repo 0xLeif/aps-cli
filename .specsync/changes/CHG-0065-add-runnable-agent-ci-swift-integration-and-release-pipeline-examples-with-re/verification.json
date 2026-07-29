@@ -1,9 +1,9 @@
 {
-  "timestamp": 1785342053,
-  "commit": "5574c48824513a06961699b3da0d6728b7b372d3",
+  "timestamp": 1785342971,
+  "commit": "27eec40659a5756d53758309214059164f0b4286",
   "contract_digest": "85242c6d7e18a7e56480153d437ddefe8086c2a25c72df7afe6073f4e8f9ac00",
-  "workspace_digest": "e8184fcdb2e7740e5655c36f62b737aec4a60f11498d32a613d04b47a6230972",
-  "acceptance_input_digest": "5e7f0b5431c16fba6939b6209cf2b4447268ce93fa88aff554ca28ceee944842",
+  "workspace_digest": "7a25a434cb66ec5e457160fc5b866feb36e0a9368b491c46a0276063ad096dc9",
+  "acceptance_input_digest": "bfdb3ed138189aad5daabce46e422de41aba234613632b7149a1bcc062e03705",
   "acceptance_manifest": {
     "schema_version": 1,
     "entries": [
@@ -31,8 +31,8 @@
         "path": "Scripts/test-examples.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "6ef42d0fb8ca6b2282c75a25c9c10f6ce54b32f60fc569647adb04cb9d20eabc",
-        "entry_digest": "6ad985cbc5bb9558a1d43919659a0d46ef59f3fc819f60a2955a3acd1ec8f700",
+        "payload_digest": "d3d36199917c72e8e8f0e8656c933f2de25a62d8478b075185330dd526df68f0",
+        "entry_digest": "b21aebf65ebf45e3932d52d12b9114268dae065c584d188e0075e1e60d8c731d",
         "owners": [
           "@exact:delivery"
         ]
@@ -111,8 +111,8 @@
         "path": "docs/use-cases.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "6e866d95079eefd6656b0750fe5c157d5a09a10a30a304788861b7ce6c712e48",
-        "entry_digest": "093728cc13bd86bab3f36fa7fc0d30c74ef4d9c6b159631a87456fcc53ad0367",
+        "payload_digest": "0ff73c397b15f712c98e5ff0af6f5de30c276ed1aec106ba94e1e80c7e5a4006",
+        "entry_digest": "3108739f96a1883df20f8f724fee6bc7aa6bd362eed3583510141544d23089fd",
         "owners": [
           "@exact:delivery"
         ]
@@ -181,8 +181,8 @@
         "path": "examples/github-actions/workflow.yml",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "656947959de8020a59c935be59d46e134c22ba3937aa891f1f7b59eb601caed6",
-        "entry_digest": "cbbb1bbfc7fa0c473924f3fcc993d6ea843fd78c19f44669d015914346251e96",
+        "payload_digest": "26e85c734d251f9fe460b8be1612de0ff532d5f51056d8ac95ec1cba36b1b87d",
+        "entry_digest": "7dad8764a2e11a0c8bb4d416a7b08b3e2f6d3304ef5f2460cf5705cafdd85362",
         "owners": [
           "@exact:delivery"
         ]
@@ -191,8 +191,8 @@
         "path": "examples/release-pipeline/README.md",
         "kind": "file",
         "mode": 33188,
-        "payload_digest": "c7bc04262eb8c6f21b4d8e57b7e4d3f911af2c90d373458766ad92f3b6ae9f5d",
-        "entry_digest": "aa71cb5703ad1ae27d76ec2e243d48d60c1a1f16686892639f73763ac7489330",
+        "payload_digest": "0e71466a197fa8891b53094a2ec36d73f2dff142ecf0733ff2e72793970074a8",
+        "entry_digest": "cdd895463c0aaf8941a8e05d4b2692809b8fa872c6b458d8055bcc45553f8e40",
         "owners": [
           "@exact:delivery"
         ]
@@ -201,8 +201,8 @@
         "path": "examples/release-pipeline/run.sh",
         "kind": "file",
         "mode": 33261,
-        "payload_digest": "ecad9bf48d87168f04e720d16950b256876a3cac0728efdfec660e8fe0ac8553",
-        "entry_digest": "03a9bce4bdb9b0345402d2af8be837ed395f665d8b1d42d658c3bc1c5b12529a",
+        "payload_digest": "03f97fc7786320f470db9c7795bb2726e9ff9cf2f9e9ea39e05830afe7fd6d17",
+        "entry_digest": "bbaf4d8009f7e596fc912618ede87ddd7a8c980e8842f32222467eb63cd182d2",
         "owners": [
           "@exact:delivery"
         ]
