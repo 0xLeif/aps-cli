@@ -35,7 +35,7 @@ struct Aps: ParsableCommand {
 
         Built on https://github.com/0xLeif/AppState
         """,
-        version: "1.0.0",
+        version: "1.1.0",
         subcommands: [
             Get.self,
             Set.self,

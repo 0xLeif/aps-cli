@@ -4,7 +4,11 @@
 
 aps is a small Swift CLI that brings [AppState](https://github.com/0xLeif/AppState) outside SwiftUI. Declare typed state, read it, change it, watch it, and expose the same stable contract to humans, agents, and CI.
 
-Current release: **1.0.0**. The next release is a safety and distribution hardening release; see [release readiness](docs/release-readiness.md) before cutting a tag. The source and CI target **macOS**, **Linux**, and **Windows**, while published binary availability varies by platform.
+Source version: **1.1.0**. The latest published tag remains
+**1.0.0** until the reviewed v1.1.0 candidate is signed and published; see
+[release readiness](docs/release-readiness.md). The source and CI target
+**macOS**, **Linux**, and **Windows**, while published binary availability
+varies by platform.
 
 Keys live in `<state-root>/schema.json`, with demo defaults materialized on first use. Start with the [documentation map](docs/README.md) or the [dynamic schema design](docs/design/dynamic-schema.md).
 
@@ -21,7 +25,7 @@ gate before artifact upload. See the [release provenance runbook](docs/release-p
 | --- | --- |
 | Serial and four-worker Swift verification lanes | Passing |
 | macOS, Linux, and Windows source CI | Active |
-| Homebrew and release packaging | Hardening before the next tag |
+| Homebrew and release packaging | Portable bundle contract prepared for v1.1.0 |
 | Dynamic schema and secret safety | Safe paths, strict v2 envelopes, and transactional destructive operations |
 | SpecSync contracts | Passing with 2 active module specs |
 
@@ -64,7 +68,7 @@ cd aps-cli && swift build -c release
 ```yaml
 - uses: 0xLeif/aps-cli/.github/actions/install-aps@8e2108601b182584e59b3e534b67199247593a0a
   with:
-    version: 1.0.0
+    version: 1.1.0
 - run: aps set note "run-${{ github.run_id }}"
 ```
 
@@ -228,7 +232,10 @@ fledge lanes run verify
 
 ### Fledge plugin shim
 
-This repo ships a root `plugin.toml`, so aps-cli is itself the fledge plugin (`fledge-plugin-aps` v1.0.0 tracks the CLI version). Install straight from this repo: `fledge plugins install 0xLeif/aps-cli`. The earlier hub snapshot repo (0xLeif/fledge-plugin-aps) is retired; aps-cli is the only source of truth.
+This repo ships a root `plugin.toml`, so aps-cli is itself the fledge plugin
+(`fledge-plugin-aps` v1.1.0 tracks the CLI version). Install straight from this
+repo: `fledge plugins install 0xLeif/aps-cli`. The earlier hub snapshot repo
+(0xLeif/fledge-plugin-aps) is retired; aps-cli is the only source of truth.
 
 ```bash
 # From a clone of aps-cli:
@@ -413,6 +420,17 @@ The next release will:
 - rehearse installation from real release artifacts on clean hosts.
 
 The full evidence, blockers, and exit criteria live in [docs/release-readiness.md](docs/release-readiness.md).
+
+## Product site design system
+
+The aps product site consumes
+[`tofu-ux/0x`](https://github.com/tofu-ux/0x) as its token, component, and
+theme source. [`0xLeif/0x`](https://github.com/0xLeif/0x) is the contribution
+fork for collaborating with tofu-ux. Until `@tofu-ux/0x` is published to npm,
+the site vendors one reviewed upstream Git commit through
+`Scripts/sync-0x.sh`; `Scripts/test-0x-vendor.sh` verifies exact asset hashes.
+Product-specific Swift examples and the live state tape remain owned here.
+Colors, typography, theme behavior, and shared primitives remain owned by 0x.
 
 
 ## AppState surface coverage

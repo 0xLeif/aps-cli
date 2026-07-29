@@ -82,7 +82,7 @@ if (-not (Test-Path -LiteralPath $script:Bin)) {
 }
 
 $null = Invoke-ApsOk --help
-Assert-equal '1.0.0' (Invoke-ApsOk --version) 'version'
+Assert-equal '1.1.0' (Invoke-ApsOk --version) 'version'
 
 $keys = Invoke-ApsOk keys
 Assert-Match $keys 'counter' 'keys counter'
@@ -184,7 +184,7 @@ Assert-Equal `
     ([string]$schemaDocument.keys.Count) `
     ([string]$schemaDocument.userSchema.keyCount) `
     'userSchema keyCount'
-Assert-Equal '1.0.0' (Invoke-ApsOk --version) 'cli version'
+Assert-Equal '1.1.0' (Invoke-ApsOk --version) 'cli version'
 if (-not (Test-Path (Join-Path $env:APS_HOME 'schema.json'))) {
     throw 'expected schema.json to materialize under APS_HOME'
 }

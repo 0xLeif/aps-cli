@@ -1,6 +1,6 @@
 ---
 module: aps-cli
-version: 46
+version: 47
 status: active
 files:
   - Sources/aps/Aps.swift
@@ -320,3 +320,4 @@ Exit codes (sysexits-aligned):
 | 2026-07-28 | CHG-0057-close-remaining-pr-129-validation-gaps-for-encrypted-watch-slice-shapes-bool-t: Close remaining PR 129 validation gaps for encrypted watch, Slice shapes, Bool tokens, and StoredState numeric kinds |
 | 2026-07-28 | CHG-0058-reject-oversized-integral-json-without-rounding-and-validate-decrypted-plaintext: Reject oversized integral JSON without rounding and validate decrypted plaintext during encrypted disk-state preflight |
 | 2026-07-29 | CHG-0052-enforce-issue-119-release-provenance-on-the-exact-selected-tag-commit-with-passi: Enforce issue 119 release provenance on the exact selected tag commit with passing tests and a valid signature from the pinned trusted human signer before artifact publication, including manual backfills, deterministic contract tests, and recovery and key rotation documentation |
+| 2026-07-29 | CHG-0063-prepare-aps-v1-1-0-atomically-build-and-test-a-portable-linux-bundle-align-hom: Prepare aps v1.1.0 atomically: build and test a portable Linux bundle, align Homebrew and installer asset contracts, synchronize every public version surface, and adopt tofu-ux/0x as the site design-system source |

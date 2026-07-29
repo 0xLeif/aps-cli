@@ -34,7 +34,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && startsWith(github.event.workflow_run.head_branch, 'v')) }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: main
 
@@ -45,8 +45,8 @@ jobs:
           HEAD_BRANCH: ${{ github.event.workflow_run.head_branch || github.event.inputs.tag }}
         run: |
           set -euo pipefail
-          if ! [[ "$HEAD_BRANCH" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
-            echo "::error::Refusing to run with non-semver tag '$HEAD_BRANCH'"
+          if ! [[ "$HEAD_BRANCH" =~ ^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]; then
+            echo "::error::Homebrew formula updates require a stable SemVer tag; got '$HEAD_BRANCH'"
             exit 1
           fi
           {
@@ -77,7 +77,7 @@ jobs:
           {
             echo "macos_aarch64=$(validate "$(fetch aps-macos-aarch64)")"
             echo "macos_x86_64=$(validate "$(fetch aps-macos-x86_64)")"
-            echo "linux_x86_64=$(validate "$(fetch aps-linux-x86_64)")"
+            echo "linux_x86_64=$(validate "$(fetch aps-linux-x86_64-portable.tar.gz)")"
           } >> "$GITHUB_OUTPUT"
 
       - name: Sync formula to homebrew-tap
@@ -94,33 +94,14 @@ jobs:
             exit 1
           fi
           git clone "https://x-access-token:${GH_TOKEN}@github.com/0xLeif/homebrew-tap.git" /tmp/homebrew-tap
+          python3 Scripts/render-homebrew-formula.py \
+            Formula/aps.rb.template \
+            /tmp/homebrew-tap/Formula/aps.rb \
+            "$NEW_VERSION" \
+            "$MACOS_AARCH64" \
+            "$MACOS_X86_64" \
+            "$LINUX_X86_64"
           cd /tmp/homebrew-tap
-
-          # Rewrite the formula in-place
-          python3 - <<'PY'
-          import os, re, sys, pathlib
-          p = pathlib.Path("Formula/aps.rb")
-          src = p.read_text()
-          src = re.sub(
-              r'(?m)^(\s*version\s+")(\d+\.\d+\.\d+)(")',
-              rf'\g<1>{os.environ["NEW_VERSION"]}\g<3>',
-              src,
-              count=1,
-          )
-          shas = [
-              os.environ["MACOS_AARCH64"],
-              os.environ["MACOS_X86_64"],
-              os.environ["LINUX_X86_64"],
-          ]
-          parts = re.split(r'(sha256\s+"[0-9a-fA-F]{64}")', src)
-          if len(parts) - 1 != 6:
-              sys.exit(
-                  f"Expected 3 sha256 lines in Formula/aps.rb, found {(len(parts) - 1) // 2}"
-              )
-          for i, sha in enumerate(shas):
-              parts[2 * i + 1] = f'sha256 "{sha}"'
-          p.write_text("".join(parts))
-          PY
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
