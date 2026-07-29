@@ -37,8 +37,10 @@ labels and pull requests remain the shared ticket authority.
 
 Steps in one job share `APS_HOME`. Jobs use isolated machines, so transfer the
 state root with `actions/upload-artifact` and `actions/download-artifact` when a
-later job needs it. The complete [GitHub Actions example](../examples/github-actions/)
-installs the portable Linux release and demonstrates both jobs.
+later job needs FileState keys. StoredState values live in platform UserDefaults
+outside `APS_HOME` and are not included in that artifact. The complete
+[GitHub Actions example](../examples/github-actions/) installs the portable
+Linux release and demonstrates both jobs.
 
 Prefer native job outputs when only a scalar result crosses the boundary.
 Artifacts are appropriate when the schema and several state files form one

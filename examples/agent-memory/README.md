@@ -4,8 +4,15 @@ This example gives one agent a durable, typed checkpoint that survives terminal
 and model-session restarts.
 
 ```bash
-APS_HOME="$PWD/.agents/codex" ./examples/agent-memory/run.sh
-APS_HOME="$PWD/.agents/codex" aps dump --json
+APS_HOME="$PWD/.agents/codex" \
+CURRENT_ISSUE=142 \
+WORKING_BRANCH=agent/issue-142 \
+WORK_PHASE=implementing \
+TESTS_PASSED=false \
+BLOCKER="" \
+./examples/agent-memory/run.sh
+
+APS_HOME="$PWD/.agents/codex" "${APS_BIN:-aps}" dump --json
 ```
 
 The example records:

@@ -50,6 +50,14 @@ APS_HOME="$fixture_root/release" \
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseVersion)" = "9.8.7"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "true"
 test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "proceed"
+APS_BIN="$aps_bin" \
+APS_HOME="$fixture_root/release" \
+RELEASE_VERSION=9.8.8 \
+CANDIDATE_COMMIT=fedcba9876543210 \
+    "$repo_root/examples/release-pipeline/run.sh" > "$fixture_root/release-new-candidate.json"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseVersion)" = "9.8.8"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get releaseTestsPassed)" = "false"
+test "$(APS_HOME="$fixture_root/release" "$aps_bin" get riskVerdict)" = "pending"
 
 APS_BIN="$aps_bin" \
 APS_HOME="$fixture_root/swift" \
@@ -84,6 +92,9 @@ do
     grep -Fq "../examples/$example/" "$repo_root/docs/use-cases.md"
 done
 grep -Fq '../examples/' "$repo_root/docs/README.md"
+grep -Fq '${APS_BIN:-aps}' "$repo_root/examples/agent-memory/README.md"
+grep -Fq '${APS_BIN:-aps}' "$repo_root/examples/release-pipeline/README.md"
+grep -Fq 'StoredState values live in platform UserDefaults' "$repo_root/docs/use-cases.md"
 for ignored_root in \
     /.agents/ \
     /.release-state/ \
