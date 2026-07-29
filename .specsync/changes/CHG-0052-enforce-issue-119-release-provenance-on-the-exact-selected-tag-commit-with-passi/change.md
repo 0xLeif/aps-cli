@@ -1,6 +1,6 @@
 ---
 id: CHG-0052-enforce-issue-119-release-provenance-on-the-exact-selected-tag-commit-with-passi
-state: implementing
+state: accepted
 type: operations
 base_commit: 4ece8fd08dd7a76ccd327ba43df036b35c7d3778
 ---

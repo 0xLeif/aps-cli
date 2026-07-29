@@ -27,6 +27,20 @@
       "timestamp": 1785167246,
       "digest": "f20ab6ba71d14d49f43414e2878916ee0d3020f80d7fa0bf0e71c12ed9be51a3",
       "note": "Re-approved after making Attest available to hosted lifecycle contract tests"
+    },
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785286052,
+      "digest": "25cfda9944d48933e0dd29417bf9f5879f0f7520ead2da20eec61d0d5b5703c7",
+      "note": "Renumber release provenance requirement to REQ-aps-cli-036 after stacked changes merged."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785286155,
+      "digest": "27f94d4f5377b95dfdb4de0a569c66b20e31d3d86e23305518364bd128171e9a",
+      "note": "Verified after rebasing onto current main; 8-step fledge lane and 266 tests pass."
     }
   ],
   "reopenings": []

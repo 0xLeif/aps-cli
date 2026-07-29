@@ -2,7 +2,7 @@
 
 ## ADDED
 
-### REQUIREMENT REQ-aps-cli-032
+### REQUIREMENT REQ-aps-cli-036
 
 Before publishing or backfilling release artifacts, the release workflow SHALL
 resolve the selected semantic tag to one exact commit and require that commit
