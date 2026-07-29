@@ -1,0 +1,19 @@
+{
+  "approvals": [
+    {
+      "gate": "definition",
+      "actor": "codex",
+      "timestamp": 1785341042,
+      "digest": "f0d90ecbee8c34c97544d5407340331e2c4590a1d83a9585d0aeff2129354b35",
+      "note": "Approve the companion repository-hygiene change required by PR #140 review."
+    },
+    {
+      "gate": "acceptance",
+      "actor": "codex",
+      "timestamp": 1785341170,
+      "digest": "29950e2bb5d3626a5b66303538a7fc7aad5f230ba85f82d1d0049f8511c16d4c",
+      "note": "Closing approval after full 12-step verification; generated example roots are documented and ignored."
+    }
+  ],
+  "reopenings": []
+}

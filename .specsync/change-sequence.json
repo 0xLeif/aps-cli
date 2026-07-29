@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "sequence": 65,
-  "id": "CHG-0065-add-runnable-agent-ci-swift-integration-and-release-pipeline-examples-with-re",
+  "sequence": 66,
+  "id": "CHG-0066-document-and-ignore-repository-local-state-roots-generated-by-guided-examples",
   "acknowledged_collisions": []
 }
